@@ -1,0 +1,119 @@
+
+In the next few days, a new version of the Stanford Pascal compiler
+(version 10.2017) will be released - for Windows, OS/2, VM/370
+and MVS.
+
+The new release is in many ways different from the previous
+release; major rework of some critical components has been done.
+
+For example:
+
+- The old source program scanner (procedure INSYMBOL)
+has been completely replaced by a new scanner called
+PASSCAN; the new scanner is not hand-written any more,
+but it is generated using a scanner-generating tool that
+was written at the Computer Science department of the
+Stuttgart University in 1980 by four students (including
+myself). I extended this scanner generator in 1996, to
+make a usable product out of it, and I used it in many
+projects from 1996 until today. PASSCAN is an external
+module, seperate from the compiler. It does all the
+source handling and it writes the compile listing.
+
+- The new scanner will make extensions to the compiler
+symbol repertoire much easier, because it is generated
+from a "grammar", which is in fact a large regular
+expression (with attributes). The scanner generator
+works similar to the well-known Unix tool "lex".
+
+- The separation of the scanner from the rest of the compiler
+improves the internal architecture of the compiler and
+makes future extensions easier; on the other hand, the
+compiler is slower, compared to the previous release ...
+but usability is increased, see below. The slower operation
+of the compiler does not affect the generated object code;
+it is as fast as before.
+
+- With the help of the new scanner, some more extensions
+have been made - more will follow - for example:
+
+- C++ style comments: // the rest of the line is a comment
+
+- binary integer constants: 0b00010010
+
+- write integer with negative width produces leading zeroes
+
+- some strange restrictions on character strings have been removed
+
+- some errors in the set implementation have been corrected
+
+- the compiler listing has been slightly reworked; it is
+now produced by the new generated scanner procedure
+
+- this allows for lines with errors to be shown at the
+terminal, followed immediately by the error message;
+this way, the compile listing is needed no more for
+error diagnosis in most cases
+
+- the compiler now runs with the debug switch on (that is:
+subrange checks etc. are now enabled on the compiler);
+when I first tried this, I discovered that the compiler
+up to now stored out-of-range values into scalar types
+etc., so that the debug switch had to be turned off ...
+this has been fixed.
+
+- new operators (shift, more assignments like +=) and
+more operator levels now seem possible without much
+effort regarding the scanner; the extension of the
+scanner could be done within minutes. This has not yet
+been done, but it seems easy now.
+
+The following example from a compile on VM/370 shows
+the messages on the terminal, when there are syntax errors:
+
+
+pp testxb
+EXEC PASCOMPN TESTXB
+STANFORD PASCAL COMPILER (VERSION VON 2017 - ENTWICKLUNG)
+   **** STANFORD PASCAL COMPILER, OPPOLZER VERSION OF 10.2017 ****
+
+     17       [ 'a' .. X'66' ] ;    // hier Problem bei IBM
+                             !
+    +++ Error P310: LOWER ELEMENT OF SET RANGE HIGHER THAN UPPER ELEMENT
+
+    133     X'41' .. 'E' :
+                         !
+    +++ Error P156: MULTIPLY DEFINED CASE LABEL
+
+    156   S4 := [ 'A' .. X'45' ] ;
+                               !
+    +++ Error P310: LOWER ELEMENT OF SET RANGE HIGHER THAN UPPER ELEMENT
+
+    157   S5 := [ 'a' .. CHEX ] ;
+                              !
+    +++ Error P310: LOWER ELEMENT OF SET RANGE HIGHER THAN UPPER ELEMENT
+
+   **** Compiler Summary ****
+
+   **** WARNING: PASCAL EXTENSIONS USED.
+   ****       4 Errors.
+   ****     168 LINE(S) READ,    1 PROCEDURE(S) COMPILED,
+   ****     587 P_INSTRUCTIONS GENERATED,   1.49 SECONDS IN COMPILATION.
+
+   **** Last Error/Warning on Line  157
+
+   **** Error/Warning Codes for this Program:
+   **** P156: MULTIPLY DEFINED CASE LABEL
+   **** P310: LOWER ELEMENT OF SET RANGE HIGHER THAN UPPER ELEMENT
++++ R(00004) +++
+Ready; T=0.34/0.73 21:56:19
+
+
+Because the source lines with errors are shown on terminal
+output, there is often no need to look at the compiler listing;
+maybe you can spot the reason of the syntax error from the
+terminal messages alone. This is a major advance compared to
+the previous version, where only the error count was
+shown on the termin output. To find the errors, you had
+to search (!) the compile listing.
+

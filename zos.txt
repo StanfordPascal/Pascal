@@ -1,0 +1,51 @@
+IEF373I STEP/GO      /START 2017148.1858
+IEF374I STEP/GO      /STOP  2017148.1858 CPU    0MIN 00.11SEC SRB    0MIN 00.01SEC VIRT  4088K SYS   276K EXT       0K SYS   10836K
+IEF375I  JOB/PASCALN6/START 2017148.1858
+IEF376I  JOB/PASCALN6/STOP  2017148.1858 CPU    0MIN 00.84SEC SRB    0MIN 00.07SEC
+
+     **** STANFORD PASCAL COMPILER, OPPOLZER VERSION OF 05.2017
+
+     ****      NO SYNTAX ERROR(S) DETECTED.
+     ****     350 LINE(S) READ,   10 PROCEDURE(S) COMPILED,
+     ****    1526 P_INSTRUCTIONS GENERATED,   0.10 SECONDS IN COMPILATION.
+
+1  LINE #  D/NEST  LVL     < STANFORD PASCAL, OPPOLZER VERSION OF 05.2017 >    18:58:18  05-28-2017    PAGE   1
+   ------  ------  ---                                                                                 ---- ---
+
+        1           ) program KALENDER ( INPUT , OUTPUT , DRUCKER ) ;
+        2           )
+        3           )
+        4           ) type MONATE = ( JAN , FEB , MAR , APR , MAI , JUN , JUL , AUG , SEP ,
+        5           )               OKT , NOV , DEZ ) ;
+        6           )      JAHR = array [ MONATE ] of INTEGER ;
+        7           )      TSTRING = packed array [ 1 .. 24 ] of CHAR ;
+        8           )      WOCHE = array [ 1 .. 7 ] of record
+
+<snip>
+
+      350      1N  1) end (* HAUPTPROGRAMM *) .
+
+     ****      NO SYNTAX ERROR(S) DETECTED.
+     ****     350 LINE(S) READ,   10 PROCEDURE(S) COMPILED,
+     ****    1526 P_INSTRUCTIONS GENERATED,   0.10 SECONDS IN COMPILATION.
+
+
+     **** STANFORD PASCAL POST-PROCESSOR, OPPOLZER VERSION OF 05.2017
+
+     ****      NO ASSEMBLY ERROR(S) DETECTED.
+     ****    8985 BYTES OF CODE GENERATED,  0.07 SECONDS IN POST_PROCESSING.
+
+z/OS V1 R8 BINDER     18:58:18 SUNDAY MAY 28, 2017
+BATCH EMULATOR  JOB(PASCALN6) STEP(COMPGO  ) PGM= IEWL      PROCEDURE(LKED    )
+
+
+---------------
+CLASS  B_TEXT            LENGTH =    13D9C  ATTRIBUTES = CAT,   LOAD, RMODE= 24
+                         OFFSET =        0 IN SEGMENT 001       ALIGN = DBLWORD
+---------------
+
+ SECTION    CLASS                                      ------- SOURCE --------
+  OFFSET   OFFSET  NAME                TYPE    LENGTH  DDNAME   SEQ  MEMBER
+
+                0  $PASMAI#           CSECT        71  SYSLIN    01  **NULL**
+

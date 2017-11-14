@@ -1,0 +1,11 @@
+copy pcint.c            ..\tk4
+copy crash.pas          ..\tk4
+copy pascal.messages    ..\tk4
+copy passcan.pas        ..\tk4
+copy PASCAL1.PAS        ..\tk4
+copy PASCAL2.PAS        ..\tk4
+copy pasforma.pas       ..\tk4
+copy pasfa.cmd          ..\tk4
+copy pasf.cmd           ..\tk4
+copy pasform.pas        ..\tk4
+copy t.cmd              ..\tk4

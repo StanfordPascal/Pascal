@@ -1,0 +1,41 @@
+
+Kennen Sie das? Ein Batch-Job verbraucht mit zunehmender Laufzeit
+immer mehr Speicher und bricht schließlich mit Speicherproblemen
+ab; vergrößern der REGION hilft zunächst, aber irgendwann ist auch
+damit Schluss.
+
+Was ist los? Irgendeines Ihrer PL/1, C++ oder C-Module fordert
+dynamisch Speicher an (ALLOC, malloc) und gibt ihn nicht wieder
+frei - ein sogenanntes Speicher-Leck oder memory leak. Z.B.
+ALLOC und dann aufgrund einer bestimmten Bedingung RETURN aus
+der Funktion ... FREE am Ende leider vergessen.
+
+Wie findet man aus den möglicherweise hunderten von beteiligten
+Modulen das fehlerhafte heraus?
+
+LE bietet einen sogenannten Memory-Check-Speicher-Handler an,
+den man zu Diagnosezwecken anstelle des normalen Speicherhandlers
+mitlaufen lassen kann. Leider werden da erst am Ende des Programms
+endlose Reports geschrieben, die man dann eigentlich wiederum
+mit einem Tool bearbeiten muss, um die Nadel im Heuhaufen zu finden.
+(Näheres siehe LE Handbuch: "Vendor Interfaces").
+
+Ich habe eine bessere und einfachere Methode entwickelt, und zwar
+habe ich eine Routine geschrieben, die an beliebigen Stellen
+im zu untersuchenden Prozess gerufen werden kann (z.B. vor und
+nach einer kritischen Verarbeitung) und die dann anhand der LE-Kontrollblöcke
+eine Statistik der zu diesem Zeitpunkt aktiven Speicherbereiche
+erstellt. Insbesondere ist die Veränderung zwischen zwei
+Zeitpunkten interessant. Wenn nämlich eigentlich alle in diesem Zeitraum
+hinzugekommenen Bereiche eigentlich wieder
+freigegeben sein sollten, de facto aber doch Bereiche stehengeblieben
+sind. Diese übriggebliebenen Bereiche werden von dem Tool
+angezeigt, mit Länge und Inhalt, und damit ist es in der Regel
+sehr leicht möglich, das Modul ausfindig zu machen, das für die
+fehlende Speicherfreigabe verantwortlich ist.
+
+Die Methode habe ich schon mehrfach mit Erfolg bei Kunden eingesetzt.
+
+Bitte sprechen Sie mich gerne an, wenn Sie nähere Informationen
+zu diesem Verfahren wünschen.
+

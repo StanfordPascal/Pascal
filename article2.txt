@@ -1,0 +1,112 @@
+Some of the old Pascal programs of my "Diplomarbeit" establish a sort of lightweight user dialog by using the following features:
+
+- Pascal READ and READLN functions
+- Pascal WRITE and WRITELN functions
+- and a platform specific function CLRSCRN which clears the screen
+
+The CLRSCRN function is needed, because VM/CMS emulates typewriter output with 3270 terminals; when the terminal is filled with output lines (24 lines, for example), the user normally has to clear the screen to make room for more output; but using CLRSCRN, the program can do this, if the user inputs a command or data.
+
+So with these three functions, you can provide a simple, but acceptable user interface. The nice thing about this is that the same user interface can be presented at Windows and Unix, too (CLRSCRN is implemented by a call to the Windows command CLS).
+
+But:
+
+there were some problems with this.
+
+First, the CLRSCRN MODULE, which is present on the Hercules/VM system, could not be called from within Pascal. The problem was: CMS supports only two different load points for MODULEs: X'20000' and X'E000'. MODULEs have fixed entry points and are not relocatable (big difference to Load Modules from MVS, for example).
+
+The "normal" entry point X'20000' is used by the Pascal programs. The CLRSCRN MODULE, which is present on the Y disk of Hercules/VM, is linked to this load address, too. So I first had to find a way to produce a CLRSCRN MODULE variant, which runs at the transient area address X'E000'; this worked with the help of some friends from the H390-VM mailing list. 
+
+The second problem was: CLRSCRN cleared the screen not at the desired times (given the program control), but sometimes too late or too early. It turned out, that there was no synchronization between CLRSCRN and the Pascal terminal I/O (this is QSAM I/O, directed to the CMS Terminal by CMS FILEDEFs). I repaired this by issuing a WAITT macro instruction before the call of the CLRSCRN MODULE (WAITT is a CMS macro instruction, this waits for the completion of Terminal I/O).
+
+The third problem was a Pascal runtime problem and took me several days to fix.
+
+When a Pascal program issues READLN, the runtime ignores the remaining characters in the actual input buffer and reads a new buffer. For terminal files, this means that the user is prompted to enter a new line (VM READ).
+
+But for most programs this is not the expected behavior; the prompt for the next input line should be deferred until the next read. Same goes for a loop which reads single characters until EOLN; at the end, the READ function will prompt for a new line, when EOLN gets true. This also is not desired with terminal files; often programs read chars until EOLN to see if there is a nonblank char or not. 
+
+The only sound solution to this IMO was to change the behaviour of READLN and READ etc. for terminal files.
+
+With terminal files
+
+- READLN does not read the next buffer at once, instead it schedules the buffer input for the next read operation; this means that the file variable (FILENAME ->) will be undefined for terminal files after READLN (it is set to blank) 
+
+- READ of single chars does not automatically schedule a READLN (and a buffer input) at EOLN; instead it will return blanks, when EOLN is true (only for terminal files) and it will not proceed to the next buffer
+
+- this is not true for READ integer etc.; these functions will read blanks until they find a number, and they will also input new buffers, when needed
+
+- to read the next buffer, you can always use READLN with terminal files (this is recommended)
+
+At the moment, you can define terminal files using the functions TERMIN and TERMOUT. A FILEDEF xxx TERM on CMS does not set the terminal flag in the Pascal FCB at the moment (maybe later).
+
+On Windows etc., TERMIN and TERMOUT work much the same way; but also files that are assigned to stdin and stdout (using environment settings or by default - INPUT and OUTPUT) have their terminal flag set to Y.
+
+Having done all those changes, I was able to run my "Diplomarbeit" programs without problems.
+
+For example:
+
+a function that waits for user input:
+
+procedure WAIT ;
+
+(**********************************)
+(*   WARTET DARAUF, DASS EINE     *)
+(*   EINGABE ERFOLGT.             *)
+(**********************************)
+
+   var C : CHAR ;
+
+   begin (* WAIT *)
+      READLN
+   end (* WAIT *) ;
+
+
+procedure READY ;
+
+(************************************)
+(*   READY-MELDUNG, DIE QUITTIERT   *)
+(*   WERDEN MUSS.                   *)
+(************************************)
+
+
+   begin (* READY *)
+      WRITELN ;
+      WRITELN ( 'FUNKTION AUSGEFUEHRT (ENTER DRUECKEN)' ) ;
+      WAIT
+   end (* READY *) ;
+
+and a function, that prints a sort of menu and asks for a user action:
+
+procedure AMASKE ( var WAHL : INTEGER ) ;
+
+(************************************************)
+(*   GRUNDMENUE AUSGEBEN UND AUSWAHL EINLESEN   *)
+(************************************************)
+
+   label 4 ;
+
+   begin (* AMASKE *)
+     4 :
+     CLRSCRN ;
+     WRITELN ( 'TAETIGKEITSWAHL:' ) ;
+     WRITELN ;
+     WRITELN ( '(1)-HALTESTELLEN--------EINGEBEN' ) ;
+     WRITELN ( '(2)-STRECKEN------------EINGEBEN' ) ;
+     WRITELN ( '(3)-LINIEN--------------EINGEBEN' ) ;
+     WRITELN ( '(4)-LINIEN--------------LOESCHEN' ) ;
+     WRITELN ( '(5)-STRECKEN------------LOESCHEN' ) ;
+     WRITELN ( '(6)-HALTESTELLEN--------LOESCHEN' ) ;
+     WRITELN ( '(7)-BEZIRKE-------------EINGEBEN' ) ;
+     WRITELN ( '(8)-EINBINDUNG----------EINGEBEN' ) ;
+     WRITELN ( '(9)-EINBINDUNG----------LOESCHEN' ) ;
+     WRITELN ( '(10)-BEZIRKE------------LOESCHEN' ) ;
+     WRITELN ( '(11)-PARAMETER----------AENDERN' ) ;
+     WRITELN ( '(12)--------------------LISTING' ) ;
+     WRITELN ( '(13)--------------------UPDATE' ) ;
+     WRITELN ;
+     WRITELN ( 'AUSWAHL EINGEBEN:' ) ;
+     IEIN ( WAHL ) ;
+     if ( WAHL < 0 ) or ( WAHL > 13 ) then
+       goto 4
+   end (* AMASKE *) ;
+
+IEIN is a function that reads an integer value, using READLN (more or less). 

@@ -1,0 +1,100 @@
+
+Standard:
+
+INPUT -> ist immer definiert
+(Blank bei EOLN, erstes Zeichen der neuen Zeile nach READLN)
+
+RESET ”ffnet Datei und liest 1. Buffer
+implizit RESET am Anfang der Datei
+k”nnte gleich EOLN ergeben, wenn erster Buffer L„nge Null hat
+oder EOF, wenn gar keine Zeile da ist
+
+READ (CH) liest naechsten CHAR
+liefert EOLN, wenn der gelesene CHAR der letzte der Zeile war
+liefert EOF, wenn nach Zeilenende keine weitere Zeile mehr da ist
+
+READ (CH) nach EOLN entspricht READLN, liefert Blank,
+EOLN ist true, wenn naechste Zeile Null Zeichen hat
+EOF ist true, wenn es keine n„chste Zeile gibt
+
+READLN geht direkt an das Ende des Buffers, d.h. naechste Zeile
+EOLN ist falsch, wenn n„chste Zeile Zeichen hat, sonst TRUE
+EOF ist true, wenn es keine n„chste Zeile gibt
+
+if EOLN then READLN ... hat gleiche Auswirkung wie READ (CH)
+an der EOLN Position
+
+
+Terminal:
+
+INPUT -> ist am Anfang undefiniert
+
+RESET ”ffnet Datei, liest aber keinen Buffer ein
+(nur READBUF-Vormerkung)
+
+READ (CH) liest Zeichen, solange im Buffer noch etwas da ist;
+sofern READBUF-Vormerkung, vorher Buffer einlesen
+liefert EOLN, wenn der gelesene CHAR der letzte der Zeile war
+liefert niemals EOF
+
+READ (CH) nach EOLN entspricht READLN, liefert Blank;
+entspricht READLN. Es wird aber kein neuer Buffer gelesen,
+lediglich READBUF-Vormerkung wird gesetzt
+
+
+
+nach Funktionen sortiert:
+
+
+RESET:
+
+RESET ”ffnet Datei und liest 1. Buffer
+k”nnte gleich EOLN ergeben, wenn erster Buffer L„nge Null hat
+oder EOF, wenn gar keine Zeile da ist
+
+bei Terminal:
+liest keinen Buffer ein (nur READBUF-Vormerkung)
+
+
+READ (CH):
+
+liest naechsten CHAR
+sofern READBUF-Vormerkung, vorher Buffer einlesen
+liefert EOLN, wenn der gelesene CHAR der letzte der Zeile war
+
+READ (CH) nach EOLN entspricht READLN, liefert Blank;
+normalerweise: READLN = READBUF
+k”nnte EOLN ergeben, wenn n„chster Buffer L„nge Null hat
+oder EOF, wenn keine Zeile mehr da ist
+
+oder, bei TERMINAL:
+liest keinen Buffer ein (nur READBUF-Vormerkung)
+
+
+READLN:
+
+positioniert an das Ende des Buffers und liest neuen
+Buffer ein (READBUF)
+k”nnte EOLN ergeben, wenn n„chster Buffer L„nge Null hat
+oder EOF, wenn keine Zeile mehr da ist
+
+oder, bei TERMINAL:
+liest keinen Buffer ein (nur READBUF-Vormerkung)
+
+
+
+weiter:
+
+READ (CH) sollte bei TERMINAL nicht implizit neue Zeilen lesen
+statt dessen READLN erzwingen; damit k”nnte das Problem mit den
+wiederholten Leerzeilen gel”st werden
+
+neue Funktionen:
+
+IOBUF (var F: anyfile) : anyptr;
+IOPTR (var F: anyfile) : anyptr;
+IOBUFEND (var F: anyfile) : anyptr;
+FILETYPE (var F: anyfile) : char;
+FILEBUF (var F: anyfile) : anyptr ;
+FILEBSIZ (var F: anyfile ) : integer ;
+

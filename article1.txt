@@ -1,0 +1,147 @@
+The beauty of runtime checks in Stanford Pascal 
+
+For Stanford Pascal, it is the normal case to use runtime checks, that is: every array index and every reference to a subrange value is checked; the indices and the subrange values have to be inside the defined bounds. 
+
+See for example this test program: 
+
+program TESTCHK ( OUTPUT ) ;
+
+(********)
+(*$A+   *)
+(********)
+
+type SUBRG = 10 .. 30 ;
+
+var X : SUBRG ;
+    T : array [ SUBRG ] of INTEGER ;
+
+begin (* HAUPTPROGRAMM *)
+  X := 10 ;
+  X := X * 5 ;
+  T [ X ] := 27
+end (* HAUPTPROGRAMM *) .
+
+the array reference is in error, because the index X evaluates to 50, which is outside the allowed array index values; but already the assignment in the line before will lead to a runtime error, because X is of the subrange type. 
+
+On Windows, the program reacts like that: 
+
+c:\work\pascal\work>pcint prr=testchk.prr inc=paslibx,pasutils,pascalvs, pas=testchk.pas out=testchk.prrlis
+
+PCINT (Build 1.0 Mar  1 2017 23:14:12)
+
++++ runtime error RANGEERR
+    at line 18
+
+or, if you use the single step facility of the P-Code interpreter PCINT: 
+
+c:\work\pascal\work>pcint prr=testchk.prr inc=paslibx,pasutils,pascalvs, pas=testchk.pas out=testchk.prrlis debug=y
+
+PCINT (Build 1.0 Mar  1 2017 23:14:12)
+
+CUP: section label $PASSNAP not found
+ip=000001 sp=00000016 hp=02999984
+00000000 00000000:  81818181 81818181 81818181 81818181  +üüüüüüüüüüüüüüüü+
+00000016 00000010:  81818181 81818181 81818181 81818181  +üüüüüüüüüüüüüüüü+
+000001: 007       0         1           BGN TESTCHK              22:17:08 03/02/2017
+t l=9999
+*** LOC   17: ==> ENT $PASMAIN $PASMAIN
+*** LOC   17:   X := 10 ;
+*** LOC   18:   X := X * 5 ;
+
++++ runtime error RANGEERR
+    at line 18
+
+On the mainframe, the Snap dump issued by PASSNAP gives still more information: 
+
+EXEC PASRUN TESTCHK
+
+*************************
+***** SNAPSHOT DUMP *****
+*************************
+
+**** SNAPSHOT WAS CALLED BY --> PASCAL_MONITOR
+
+**** RUN ERROR: 1002  FROM LINE: 19  OF PROCEDURE $PASMAIN
+     EPA address of $PASMAIN is 00020580
+     Error offset is 00BE
+
+**** SUBRANGE VALUE  IS OUT OF RANGE.
+
+**** THE OFFENDING VALUE: 50 IS NOT IN THE RANGE: 10..30
+
+**** VARIABLES FOR $PASMAIN ****
+     Stack at address 0002F170
+     No static variables
+
+     X                   (A/0160/0002F2D0) =      10
+     T                   (A/0164/0002F2D4)
+    -                                    10: = UNDEF. INTEGER
+    -                                    11: = UNDEF. INTEGER
+    -                                    12: = UNDEF. INTEGER
+    -                                    13: = UNDEF. INTEGER
+
+    -                                    19: = UNDEF. INTEGER
+    -                                    20: = UNDEF. INTEGER
+    -                                    21: = UNDEF. INTEGER
+    -                                    22: = UNDEF. INTEGER
+
+    -                                    27: = UNDEF. INTEGER
+    -                                    28: = UNDEF. INTEGER
+    -                                    29: = UNDEF. INTEGER
+    -                                    30: = UNDEF. INTEGER
+
+**** END OF SNAPSHOT DUMP ****
+
+Note, that X shows the value before the assignment. 
+
+Now the question may arise: 
+
+How expensive is this kind of runtime check? 
+
+This is what fascinates me most; the runtime checks of this kind are done by only 4 machine instructions (in the OK case, of course). 
+
+I would like to emphasize that it is not me who invented this; the honour of course belongs to the original authors of the compiler and (in this case) the P-Code translator, who invented this kind of runtime check. I only recently optimized the ASSEMBLER listing and, BTW, introduced an error here, and, by repairing it, analyzed and unterstood the technique used here. 
+
+So, how is it done? 
+
+Look at the ASSEMBLER listing of the assignment statement from above: 
+
+-------------------- LOC  18 --------------------------------
+     00A8:           LOD  H,1,352
+     00A8:           LDC  I,5
+     00A8:           MPI
+@@ 00A8:       MH    2,=H'5'
+     00AC:           CHK  I,10,30
+@@ 00AC:       AH    2,=H'-10'
+@@ 00B0:       CL    2,=A(20,10)
+@@ 00B4:       BC    13,0
+@@ 00B8:       BAL   14,164(12)
+@@ 00BC:             =A(20,10)
+     00BE:           STR  H,1,352
+@@ 00BE:       AH    2,=H'10'
+@@ 00C2:       STH   2,352(13)
+
+at offset 00AC, the index to be checked is in Reg. 2; then the lower bound is subtracted (by AH 2,=H'-10'). Now the index to be checked is in the range 0 .. 20. Because with CL all negative values are large positive values, they are in fact LARGER than zero, and so only values from 0 to 20 are accepted by CL (never saw that before, range checking by a simple CL). Then the BC 13,0 jumps to the OK label (it is shown as zero here, which is still wrong; the target label is 00C2, which is inserted later - here the ASSEMBLER listing needs more improvement). 
+
+The BAL, on the other hand, calls the error routine. And: the literal shown (=A(20,10)) contains the two range values (upper - lower, lower); from this the error routine computes the original range values. More interesting: the literal is used twice; once after the BAL, and second as the right argument in th CL instruction (which obviously only uses the first part, upper - lower). In both cases only two bytes are stored; the base reg and displacement of the literal (2 bytes), which is stored only once. If the same check is done more often in the same compile unit, the literal will be reused over and over again. 
+
+Wow !
+
+The four instructions in the OK case are: AH (-10), CL, BC and AH (+10). The other instructions (MH and STH) are normal processing; they are present in the nocheck case, too. 
+
+With array processing, it is still cheaper, because the lower bound has to be subtracted from the index value anyway, so the final AH is not needed. See the next statement: 
+
+-------------------- LOC  19 --------------------------------
+     00C6:           LDA  1,356
+     00C6:           LOD  H,1,352
+     00C6:           CHK  J,10,30
+@@ 00C6:       AH    2,=H'-10'
+@@ 00CA:       CL    2,=A(20,10)
+@@ 00CE:       BC    13,0
+@@ 00D2:       BAL   14,152(12)
+@@ 00D6:             =A(20,10)
+     00D8:           DEC  I,10
+     00D8:           IXA  4
+@@ 00D8:       SLA   2,2
+
+This is more than 30 years old compiler technology, but in my opinion it is very interesting and still relevant today. 

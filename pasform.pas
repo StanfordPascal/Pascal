@@ -105,6 +105,8 @@ program PASFORM ( OUTPUT , EINGABE , LISTING , AUSGABE , TRACEF ) ;
 (*                                                                  *)
 (*   * Ausgabe von Protokoll auf Datei LISTING                      *)
 (*                                                                  *)
+(*   * Korrektur: Blank eingefueht bei Symbol INTDOTDOT             *)
+(*                                                                  *)
 (*   - neu: Kommentare hinter Definitionen usw. bleiben stehen      *)
 (*                                                                  *)
 (*   - kein Abbruch bei Fehler, idealerweise keine Endlos-          *)

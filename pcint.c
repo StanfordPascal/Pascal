@@ -4681,7 +4681,10 @@ static void int1 (global_store *gs)
          charp2 = ADDRSTOR (*intp);
          (gs -> sp) -= 4;
 
-         memcpy (charp2, charp, wert1);
+         if (wert1 > 0)
+         {
+            memcpy (charp2, charp, wert1);
+         }
 
          break;
 
@@ -4814,7 +4817,10 @@ static void int1 (global_store *gs)
          charp = ADDRSTOR (*intp);
          (gs -> sp) -= 4;
 
-         memset (charp, char1, wert1);
+         if (wert1 > 0)
+         {
+            memset (charp, char1, wert1);
+         }
 
          break;
 

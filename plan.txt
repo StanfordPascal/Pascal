@@ -22,10 +22,10 @@
 * Beschreibungen auf Homepage
 * ggf. P-Code-Instruktionen fuer MEMSET und MEMCPY
 * MEMCPY und MEMSET auf neue P-Code-Instruktionen umbauen
+* bei MEMCPY und MEMSET nur was machen, wenn LÑnge > 0
+* PASFORM: Åberarbeiten bei 1.. 30 usw.
 
-- bei MEMCPY und MEMSET nur was machen, wenn LÑnge > 0
 - bei konstanten LÑngen MOV statt MCP, MFI statt MSE
-- PASFORM: Åberarbeiten bei 1.. 30 usw.
 - PASFORM weiter verbessern (siehe Startkommentar)
 - Implementieren neue P-Code Instruktionen in PASCAL2
 - Aufruf externer Funktionen (ASSEMBLER, C)

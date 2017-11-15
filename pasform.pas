@@ -900,7 +900,7 @@ procedure READKOMM ( var KOMMC : KOMMCTL ) ;
      (*   traceausgaben                              *)
      (************************************************)
 
-     if false then
+     if FALSE then
        begin
          WRITELN ( TRACEF , '--------------------------------------'
                    '--------------------------------------' ) ;
@@ -1518,7 +1518,7 @@ procedure INSYMBOL ;
                               ;
                      for I := 1 to K do
                        ID [ I ] := UPSHIFT [ ID [ I ] ] ;
-                     MEMCPY ( ADDR ( SCB . SYMBOL ) , addr ( id ) , K )
+                     MEMCPY ( ADDR ( SCB . SYMBOL ) , ADDR ( ID ) , K )
                               ;
 
      (**********************************************************)
@@ -1785,6 +1785,17 @@ procedure INSYMBOL ;
          if W1ENDE > 100 then
            W1ENDE := 100 ;
          MEMCPY ( ADDR ( W1 ) , ADDR ( SCB . SYMBOL ) , W1ENDE ) ;
+         if SY = INTDOTDOT then
+           begin
+
+     (************************************************************)
+     (*   insert blank into int ..                               *)
+     (************************************************************)
+
+             W1ENDE := W1ENDE + 1 ;
+             W1 [ W1ENDE - 2 ] := ' ' ;
+             W1 [ W1ENDE ] := '.' ;
+           end (* then *)
        end (* then *) ;
    end (* INSYMBOL *) ;
 

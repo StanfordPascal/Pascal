@@ -9672,9 +9672,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                    if GATTR . TYPTR -> . FORM <> POINTER then
                      ERROR ( 190 )
                    else
-                     begin
-                       LOAD ;
-                     end (* else *) ;
+                     LOAD ;
                  if SY = SYCOMMA then
                    INSYMBOL ;
 
@@ -9698,9 +9696,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                    if GATTR . TYPTR <> CHARPTR then
                      ERROR ( 199 )
                    else
-                     begin
-                       LOAD ;
-                     end (* else *) ;
+                     LOAD ;
                  if SY = SYCOMMA then
                    INSYMBOL ;
 
@@ -9724,9 +9720,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                    if GATTR . TYPTR <> INTPTR then
                      ERROR ( 191 )
                    else
-                     begin
-                       LOAD ;
-                     end (* else *) ;
+                     LOAD ;
 
                  (******************************************)
                  (* call procedure                         *)
@@ -9760,9 +9754,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                    if GATTR . TYPTR -> . FORM <> POINTER then
                      ERROR ( 190 )
                    else
-                     begin
-                       LOAD ;
-                     end (* else *) ;
+                     LOAD ;
                  if SY = SYCOMMA then
                    INSYMBOL ;
 
@@ -9786,9 +9778,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                    if GATTR . TYPTR -> . FORM <> POINTER then
                      ERROR ( 190 )
                    else
-                     begin
-                       LOAD ;
-                     end (* else *) ;
+                     LOAD ;
                  if SY = SYCOMMA then
                    INSYMBOL ;
 
@@ -9812,9 +9802,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                    if GATTR . TYPTR <> INTPTR then
                      ERROR ( 191 )
                    else
-                     begin
-                       LOAD ;
-                     end (* else *) ;
+                     LOAD ;
 
                  (******************************************)
                  (* call procedure                         *)

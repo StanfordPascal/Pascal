@@ -4833,6 +4833,21 @@ static void int1 (global_store *gs)
 
          break;
 
+      case XXX_MZE:
+
+         /************************************************/
+         /*   get target address from SP                 */
+         /*   pop one item                               */
+         /************************************************/
+
+         intp = ADDRSTACK (gs -> sp);
+         charp = ADDRSTOR (*intp);
+         (gs -> sp) -= 4;
+
+         memset (charp, 0x00, pcode -> q);
+
+         break;
+
       case XXX_NEQ:
 
          /************************************************/

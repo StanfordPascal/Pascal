@@ -1,0 +1,328 @@
+
+* Version 10.2017 auf MVS, Webseite, deployen
+* PASCAL2 Set Datentypen konsolidieren
+* Version 10.2017 auf CMS
+* Speicherfehler S822 auf MVS verhindert mehrere Compiles hintereinander
+* SEARCHID soll Info Åber Fehler 104 zurÅckgeben
+* fehlenden Bezeichner bei Simpletype mit korrekter Klasse eintragen
+* abhÑngig von Folgesymbol, .. oder ;
+* dann auch Folgefehler bei fehlenden Bezeichnern besser abhandeln
+* PASCAL1 korrigieren wg. Folgefehlern bei PASFORMN usw.
+* Problem (Abbruch bei allen Versionen) bei PASCAL1F.PAS !!
+* PASFORM mit neuem Scanner
+* Wieso steht GET_STAT auf false trotz $U+ ???
+* Deployen Version 11.2017
+
+* PASCAL1: Zuweisung weiter mit abweichenden LÑngen
+* PASCAL1 und PASSCAN Åberarbeiten wg. Parameter bei Fehlermeldungen
+* PASCAL1: weiter mit Fehler 117
+* P-Code-Instruktion fÅr VorfÅllen mit Blanks mit fester LÑnge
+* PASCAL1: Blanks automatisch vorfÅllen bei abweichenden LÑngen
+* PASCAL1: RÅckbau Init ERRINFO nach Fehler 117
+* Beschreibungen auf Homepage
+* ggf. P-Code-Instruktionen fuer MEMSET und MEMCPY
+* MEMCPY und MEMSET auf neue P-Code-Instruktionen umbauen
+* bei MEMCPY und MEMSET nur was machen, wenn LÑnge > 0
+* PASFORM: Åberarbeiten bei 1.. 30 usw.
+* bei konstanten LÑngen MOV statt MCP, MFI statt MSE
+* evtl. neuer Befehl MZE fÅr Nullsetzen eines Bereichs
+
+- PASFORM weiter verbessern (siehe Startkommentar)
+- Implementieren neue P-Code Instruktionen in PASCAL2
+- Aufruf externer Funktionen (ASSEMBLER, C)
+
+- evtl. separates nachtrÑgliches Listing, Fehler an korrekter Stelle
+
+=======================================================================================
+
+Weiterentwicklung Compiler:
+
+* SCANGENC so anpassen, dass SCANERGX analog PASSCAN erzeugt wird
+  (Mengenabfragen anstatt Bereichsabfragen fÅr Ziffern, Gro·- und
+  Kleinbuchstaben)
+
+* Bezeichner, die mit $ starten, werden nicht akzeptiert;
+  auch gleich _ als erstes Zeichen bei IDENT zulassen
+
+* PUT vor REWRITE klappt nicht (OUTPUT, siehe COPYREAL.PAS); nur auf VM -
+  vermutlich lîst PUT kein implizites REWRITE aus ...
+
+* DFC fÅr statische Variable mit LÑnge 255 fÅhrt zu Laufzeitfehler
+
+* Hex-Konstanten fÅr Stringkonstante mit LÑnge 256 wird nicht unterstÅtzt
+
+* Problem bei Subrange mit Integers und Schreibweise 1..5 (Beispiel TESTXB.PAS)
+
+* Komisches Verhalten, wenn bei EOF der angebene File nicht definiert ist
+  (Folgefehler bei E104)
+
+* Konstanten-Definition EBCDIC-Tabelle mit CHAR erzeugt DFC C mit BinÑrkruscht,
+  hier fehlt Abfrage auf Hex-Schalter (Beispiel TESTXB.PAS)
+
+* Compiler geht evtl. nicht mit $D+
+
+* siehe COPYREAL.PAS: CSP WRE und CSP PUT sind nicht implementiert
+
+* Åbergangsweise: EOLN sollte bei nicht-offenen Dateien auf False stehen,
+  klappt bei PC, aber nicht beim Mainframe
+
+- siehe COPYTEXT.PAS: ohne RESET(INPUT) lÑuft's falsch (1. Zeile fehlt)
+  EOF/EOLN mÅssen RESET auslîsen
+  repariert auf Windows etc. (PCINT), auf dem Mainframe noch nicht,
+  da es dort nîtig wÑre, EOF und EOL als echte CSPs zu implementieren
+
+=======================================================================================
+
+Aktionen Compiler:
+
+* Letzte Zeile Source fehlt
+* Fehlernummer dreistellig mit fuehrenden Nullen
+* Fehlertexte einlesen und in Listing ausgeben
+* Ueberschrift Compiler-Listing korrekt
+* Summary korrekt / Errlog stimmt noch nicht
+* Kette aus StringConsts bei CONSTANT
+* Kette aus StringConsts bei FACTOR
+* Char-Strings korrekt zusammenbauen
+* Testen Outcome bei PDOKKNEU
+* Problem bei VM-Version mit WITH usw. (Fehler P6)
+* Compiler-Infos einsteuern via LISTTAG usw.
+* Abgleichen PASSCAN.PAS mit SCANGEN-Ergebnis
+* WRI mit negativer Weite auf Mainframe Runtime zulassen
+* SET-Logik bei PASCAL2 ueberarbeiten
+* Command-Line Parameter wieder gaengig machen
+* d.h. OPTIONS nach PASCAL1 zurueckfuehren
+* Compiler-Fehler aus PLAN.TXT untersuchen
+
+=======================================================================================
+
+Aktionen Scanner:
+
+* zeichensatz-tabelle auf char umst. / geht derzeit nicht
+* integer hex konstanten werden nicht korrekt verarbeitet
+* syrange korremt implementieren
+* fehler symb_unknown am ende ?
+* umstellen auf Module
+* verschiedene Kommentartypen implementieren (verschachtelt)
+* inklusive Optionen, Ausgabe in Optionen-Struktur
+* Optionsstring sollte bei erstem Blank enden
+* oder bei Kommentarende natuerlich
+* evtl. zurueck zu COMMENT und verschachtelte Komm. zulassen
+* Fehlerposition in Kommentar falsch
+* Fehlertexte ermoeglichen
+* Testausgaben ueber verarbeitete Optionen
+* Schneller (SCAN_CODE als Vektor)
+* Fit machen fuer Protokoll-Beduerfnisse des Compilers
+* keine Ausgabe der Zeile Null
+* PASSCANL umbauen auf neue Funktion
+* Summary ausgeben als von aussen rufbare Unterfunktion
+* Test von TESTSCAN aus
+* Einbau in Compiler
+* siehe Compiler-Probleme in Datei PLAN.TXT
+
+=======================================================================================
+
+Weiterentwicklung Compiler (09.2017):
+
+* XCOMP nach Hercules zurÅck
+* XCOMP (benîtigt $PASSYS - GETMAIN/FREEMAIN bzw. PASLIBX)
+
+* gemischte String-Konstanten
+* sizeof fÅr String-Konstanten ermîglichen
+
+* SCANGEN (TESTSCAN) lÑuft immer noch auf Fehler
+* SCANGENC weiter (Listing in Pascal generieren usw.)
+* Kommentare im C++ Stil //******
+* Pascal-Scanner generieren via SCANGENC
+* Generierten Scanner fÅr Compiler nutzen
+
+------------------------------------------------------------
+
+Weiterentwicklung Compiler (05.2017):
+
+* PASCAL3: CSP EOL korrekt implementieren
+* PASCAL3: CSP RDB implementieren
+* SHOWHEX: BinÑrdateien lesen auf Windows? Stimmt showhex mit binÑr?
+* SHOWHEX: FILEDEF auf CMS RECFM=F Dateien aufmachen bei fehlendem RECFM ?
+* ASSIGN-Funktion in PASUTILS
+* DUMPSTOR-Funktion in PASUTILS
+* Diplomarbeit in separates Unterverzeichnis und in sep. VM-User mit allen Dateien
+* OSPARM
+* kleiner Fehler bei Unterfunktion DUMPSTOR raus
+* Probleme bei PASCAL3 - Vergleichen ASMOUT bei verschiedenen Programmen
+* Probleme bei CLRSCRN behoben durch WAITT-Makroaufruf
+* Funktionen CMSX und WINX - system-call bei Windows etc.
+* erstes Einlesen bei WAIT/READY bei PC und Mainframe ???
+* READLN, wie genau ???
+* weiter mit Diplomarbeit / MSFEDIT ???
+* weiter mit Diplomarbeit IVMODED
+* Hercules/MVS (TK4-)
+* TABUNEU ...
+* PASSNAP via Runtime-Option abschalten (geht schon, NOSNAP, NOSPIE)
+* del passnapm.* /s (auch zuhause)
+* Register- und PSW-Ausgabe bei PASMONN
+* Ausgabefunktionen nach hinten, sep. Basisregister
+* Register- und PSW-Ausgabe bei PASSNAP und PASSNAP korrigieren
+* OEVMODED usw. funktioniert nicht mehr mit PCINT vom 9.3.
+* PASSNAP verstehen und Åberarbeiten wg. Pointer-Ausgabe
+* ABEND mit DUMP nach PASSNAP via Runtime-Option
+
+- Generierten Scanner fÅr PASFORM nutzen
+- PASSNAP fÅr Windows ?
+- kann Parameter wg. Stack bei CUP und CSP weg ?
+
+? Abbruch 0C1 bei PRIMZERL - eigentlich beim Integer-Einlesen und Dateiende (MVS)
+? Einlesen von char-Arrays mit Readln analog Integers (Dialog) korrekt - TESTMAJ
+- von JÅrgen MÅhle- und Reversi-Programm ?
+- direkter Zugriff analog fseek? Dann evtl. File-System analog VSAM
+- TR440 als neues Ziel ?
+
+- weitere Symbole fÅr Pascal: <<, >>, +=, ...
+- Pascal-Syntax erweitern (mehr Operatorebenen)
+- PARSGEN
+- C-Formatierer mit PARSGEN
+
+- EOF berÅcksichtigen beim Lesen von Integers und Reals ?
+
+- PCOMP.PAS: Pascal P4 Compiler von 1996 mit Strings (J. Reichmann)
+- PCOM und PINT: P5 Compiler - ebenfalls 1996
+- Evaluierungs-Programm von P5 ? geht nicht ... Abbruch
+
+------------------------------------------------------------
+
+Version 02.2017
+
+* #PASMAI# CSECT bei Modulen individuell benennen (DUPLICATE ID)
+* Herc: PRUN EXEC erweitern wg. Dazulinken und Parametern
+* Gleitkomma-Ausgabe passt nicht
+* Herc: CLOSE auf Hercules korrekt behandeln
+* Herc: PASCALVS und TESTVS gÑngig machen
+* Herc: SatzlÑnge bei Ausgabedateien aus LRECL holen, nicht aus BLKSIZE !!
+* PCINT: RDR implementieren
+* TRUNC auf Herc und Windows vergleichen, insbesondere bei negativ
+* FLR in PASCAL2 implementieren
+* PASMATH Bibliotheksmodul neu: ROUNDX (mit FLOOR anstelle TRUNC)
+* Unbekannte Funktion: Fehler 186, Default Ergebnistyp Integer
+* Rundung bei letzter Stelle bei WRR auf Hercules
+* Fehler Compiler bei Arithmetik nach TRUNC-Aufruf usw.
+* ASMOUT-Ausgabe Gleitkommakonstanten bei PASCAL2 anpassen
+* Ergebnisse bei TZZBRX - Ausgabe Fahrkurven Rundung ?
+* TZZBRX gÑngig machen auf Windows, Ergebnisse mit Herc vergleichen
+* Unterschied bei TZZBRX zwischen Hercules und Windows klÑren
+* andere Ausgabe bei E-Ausgabe auf Windows
+* XOR als neues Keyword bei PASFORM aufnehmen
+* PASFORM anders bei Kommentaren au·erhalb von Funktionen
+* PASMONN (PASCSP) Re-Engineering weiter
+* Neue Version kommunizieren Åber Hercules-Liste und Webseite
+
+------------------------------------------------------------
+
+alte Aktionen:
+
+* Linux: Compilerwarnungen in linux.wx Files
+* COMPILER.LIS: Ausgabe der statischen CSECTs erfolgt anders, verschoben,
+* Endlosschleife beim Compiler bei Set-Konstanten of char, siehe PASFORM
+* ansonsten: etliche Programme gehen, z.B. KALENDER, TESTINP, ...
+* Compiler geht !!! - 18.12.2016
+* checken, ob er auf allen Plattformen geht (OS/2, Linux)
+* Linux: Problem beim Einlesen der Textfiles, vermutlich 0x0d Issue
+* Summary auf Konsole trotz Umleitung auf Liste
+* WRR fehlt (Gleitkomma-Ausgabe)
+* Fehler bei SMV wg. öberlappung bzw. Einsparen, wenn Adressen gleich (PCINT)
+* effektive Adressen auch bei LDA, STR, SLD
+* Sets bei char (on ASCII) sind zu kurz wg. Zeichensatz-Problematik
+* parm3 noch nicht implementiert: vermutlich BinÑrfile / ermîglichen
+* Module ermîglichen (zusammenlinken)
+* VOIDPTR als Typ externalisieren
+* Fehler Ausgabedatei bei TESTFILE (Fehler in PASCAL2.PAS)
+* UXJ und XLB funktionieren nicht (PCINT auf Windows usw., Compile SCANGEN)
+* Hex-Constanten in Pascal zugelassen
+* PASFORM bezÅglich 0x0... fit machen
+* SQL-Formatierer auf der Basis von SCANGEN usw.
+* SCANGEN nach Pascal (zurÅck) portieren (ausgesetzt, C-Variante ok)
+* operators "and", "or", "xor" and "not" logical or bitwise
+* ... depending on the arguments
+* PCINT: Sourcelines bei Untermodulen korrekt einmischen
+* PCINT: CUP bei unbekannten Untermodulen ($PASSYS) ggf. auf Minus 1
+* PCINT: CUP mit negativer Adresse nicht BADBRANCH, sondern interpret.
+* Fehler STACKNEG bei TZWB ... / DSQRT implementieren
+* ALLOC bei $PASSYS ist implementiert, XCOMP lÑuft (kleiner Fehler: BADFILE)
+* Fehler 126 bei unbekannten Prozeduren eliminieren
+* Fehler 184 statt Fehler 104 bei unbekannten Prozeduren
+* Code erzeugen bei unbekannten Prozeduren
+* fehlende Funktionen von Pascal-VS wie TERMIN, TERMOUT, CLOSE, DATETIME, HALT hinzuf.
+* Logik bei WORK_PARAMETER anders (einfacher) wg. LLC4
+* Value-öbergabe Integer nach Float zulassen
+* Unterschiedliche String-LÑngen ?
+
+------------------------------------------------------------
+
+Test mit PASCAL1:
+
+x f=simpletype
+x f=searchid
+LSP1 ist undefiniert, deshalb Abbruch, weiter untersuchen
+mehr Parameter bei D = Display, z.B. Adresse in hex und 2. Adresse mit + angeben
+Beispiel: d x1190 +20
+bei x: unbekannte Eingaben ignorieren mit entsprechender Meldung;
+derzeit werden nur akzeptiert:
+x r oder x ret
+x f=funktionsnamen
+x l=loc
+
+------------------------------------------------------------
+
+TESTINP:
+000007: 011       0        40           CSP FDF
++++ parm3 noch nicht implementiert !! (vermutlich Text/binÑr)
+
+TESTREAD passt
+
+TEST1 passt
+
+TESTDUPL passt
+
+FIBOK: passt
+
+TESTSCAL: CSP WRX fehlt
+
+FIBDEMO: Snapshot usw.
+
+TESTSTAT: Dazulinken von Untermodulen fehlt
+
+TESTSET: Mengenoperationen
+
+PASFORM: etliches fehlt
+
+------------------------------------------------------------
+
+weiter:
+
+* Test mit rekursiver Prozedur
+* Dateien zuordnen via Environment
+* Test mit PASFORM, bricht ab bei STR B,2,232 (LOC 1582)
+* Pasform ist ok
+
+- Test mit PASCAL1
+a) PASCAL1.PRR nach COMPILER.PRR kopiert
+b) OSPARM ist nicht vorhanden, deshalb Patch in COMPILER.PRR
+c) korrekte Lîsung fÅr OSPARM folgt spÑter
+d) CSP RDS implementieren als nÑchstes
+
+------------------------------------------------------------
+
+PortabilitÑts-Issues:
+
+? INIT-Pattern zunÑchst auch auf X'81' gesetzt, passt das ???
+
+* Sets of CHAR werden binÑr dargestellt (EBCDIC), daher nicht portabel
+
+* verkÅrzte Sets wird nicht funktionieren bei CHAR
+  (Set-Konstanten nur in der LÑnge MAXELEM, aber MAXELEM ist codeabhÑngig)
+
+------------------------------------------------------------
+
+irgendwann spÑter:
+
+- konkrete Offsets abschaffen, statt dessen symbolische Adressierung
+- und symbolisches Layout der Data Section
+

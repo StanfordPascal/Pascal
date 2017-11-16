@@ -463,38 +463,39 @@ static const filecb nullfcb_bin =
 #define XXX_MPR    51
 #define XXX_MSE    52
 #define XXX_MST    53
-#define XXX_NEQ    54
-#define XXX_NEW    55
-#define XXX_NGI    56
-#define XXX_NGR    57
-#define XXX_NOT    58
-#define XXX_ODD    59
-#define XXX_ORD    60
-#define XXX_PAK    61
-#define XXX_POP    62
-#define XXX_RET    63
-#define XXX_RND    64
-#define XXX_RST    65
-#define XXX_SAV    66
-#define XXX_SBA    67
-#define XXX_SBI    68
-#define XXX_SBR    69
-#define XXX_SCL    70
-#define XXX_SLD    71
-#define XXX_SMV    72
-#define XXX_SQI    73
-#define XXX_SQR    74
-#define XXX_STO    75
-#define XXX_STP    76
-#define XXX_STR    77
-#define XXX_TRC    78
-#define XXX_UJP    79
-#define XXX_UNI    80
-#define XXX_UXJ    81
-#define XXX_XJP    82
-#define XXX_XLB    83
-#define XXX_XOR    84
-#define XXX_XPO    85
+#define XXX_MZE    54
+#define XXX_NEQ    55
+#define XXX_NEW    56
+#define XXX_NGI    57
+#define XXX_NGR    58
+#define XXX_NOT    59
+#define XXX_ODD    60
+#define XXX_ORD    61
+#define XXX_PAK    62
+#define XXX_POP    63
+#define XXX_RET    64
+#define XXX_RND    65
+#define XXX_RST    66
+#define XXX_SAV    67
+#define XXX_SBA    68
+#define XXX_SBI    69
+#define XXX_SBR    70
+#define XXX_SCL    71
+#define XXX_SLD    72
+#define XXX_SMV    73
+#define XXX_SQI    74
+#define XXX_SQR    75
+#define XXX_STO    76
+#define XXX_STP    77
+#define XXX_STR    78
+#define XXX_TRC    79
+#define XXX_UJP    80
+#define XXX_UNI    81
+#define XXX_UXJ    82
+#define XXX_XJP    83
+#define XXX_XLB    84
+#define XXX_XOR    85
+#define XXX_XPO    86
 
 
 
@@ -582,6 +583,7 @@ static opctab ot [] =
    { "MPR", XXX_MPR, 0, '0' },
    { "MSE", XXX_MSE, 0, '0' },    /* neu 2017: Memset Instrukt.*/
    { "MST", XXX_MST, 0, 'B' },
+   { "MZE", XXX_MZE, 0, 'A' },    /* neu 2017: Mem Zero fest.L.*/
    { "NEQ", XXX_NEQ, 0, 'V' },
    { "NEW", XXX_NEW, 0, 'B' },
    { "NGI", XXX_NGI, 0, '0' },

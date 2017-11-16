@@ -883,9 +883,6 @@ L6 LAB
        '            '
  MOV 120
  LOC 405
- MST 0,0
- LDC I,2
- STR I,2,416
  LDA 2,140
  LOD A,2,132
  LOD I,2,292
@@ -1050,9 +1047,6 @@ L17 LAB
        '            '
  MOV 120
  LOC 455
- MST 0,0
- LDC I,2
- STR I,2,416
  LDA 2,140
  LOD A,2,132
  LOD I,2,292
@@ -3727,9 +3721,6 @@ L27 LAB
  LOD I,2,260
  STO I
  LOC 1250
- MST 0,0
- LDC I,2
- STR I,2,384
  LOD A,2,264
  IND A,0
  LDA 2,124

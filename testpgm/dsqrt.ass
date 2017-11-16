@@ -1,0 +1,84 @@
+LSQR   TITLE   'SQUARE ROOT FUNCTION (LONG)'                            00010018
+         PRINT NOGEN                                                    00010100
+         DISK                                                           00010200
+         PRINT GEN                                                      00010300
+         SPACE 2                                                        00010400
+DSQRT#   CSECT                                                          00020018
+*                                                                       00030018
+*      SQUARE ROOT FUNCTION (LONG)                                      00040018
+*              1. WRITE X = M*16**(2P+Q), M MANTISSA, Q = 0 OR 1.       00050018
+*              2. THEN SQRT(X) = SQRT(M*16**-Q)*16**(P+Q).              00060018
+*                   P+Q IS THE EXPONENT OF THE ANSWER.                  00070018
+       SPACE                                                            00120000
+       ENTRY   DSQRT                                                    00160000
+         ENTRY     SQRT                                                 00161000
+       SPACE                                                            00180000
+GRA    EQU     1               ARGUMENT POINTER                         00190018
+GRS    EQU     13              SAVE AREA POINTER                        00200018
+GRR    EQU     14              RETURN REGISTER                          00210018
+GRL    EQU     15              LINK REGISTER                            00220018
+GR0    EQU     0               SCRATCH REGISTERS                        00230018
+GR1    EQU     1                                                        00240018
+GR2    EQU     14                                                       00250018
+FR0    EQU     0               ANSWER REGISTER                          00260018
+FR2    EQU     2               SCRATCH REGISTERS                        00270018
+FR4    EQU     4                                                        00280018
+       SPACE                                                            00290018
+SQRT     CALLDUBL  DSQRT,1                                              00291000
+         SPACE     1                                                    00292000
+DSQRT    FENTZ                                                          00293000
+       SPACE                                                            00340018
+LSQRT  STM     GRR,GRL,12(GRS) SAVE REGISTERS                           00350018
+         CHCKA     0(GRA),REAL8                                         00351000
+       L       GR2,0(GRA)                                               00360018
+         CHCKL     4(GRA),REAL8                                         00361000
+         CHCKDEF   REAL8,0(GR2)                                         00362000
+BEGIN  LD      FR0,0(GR2)      OBTAIN ARGUMENT                          00370018
+       LTDR    FR4,FR0                                                  00380018
+       BC      4,ERROR         IF NEGATIVE ARG, ERROR                   00390018
+       BC      8,EXIT          IF ARG IS 0, ANSWER IS 0. RETURN         00400018
+       STE     FR4,BUFF                                                 00410018
+       SPACE                                                            00420018
+       L       GR0,BUFF        COMPUTE TARGET CHARACTERISTIC - 8        00430018
+       AL      GR0,BIAS          = X'31000000' CHAR OF X'41' MINUS 2*8  00440018
+       SRDL    GR0,25            LOW GR0 = X'40'+P+Q-8                  00450018
+       STC     GR0,BUFF        GIVE THIS CHARACTERISTIC TO M AND B      00460018
+       STC     GR0,B             THIS SEEMINGLY ARTIFICIAL CHAR WAS     00470018
+       LE      FR2,BUFF            CHOSEN TO AID THE FINAL ROUNDING     00480018
+       AE      FR2,B           (M+B)*16**(P+Q-8)                        00490018
+       ME      FR2,A           A*(M+B)*16**(P+Q), A IS SCALED BY 8      00500018
+       LTR     GR1,GR1                                                  00510018
+       BC      10,*+8          IF Q=1, 1ST APPROX. Y0 IS READY          00520018
+       AER     FR2,FR2         IF Q=0, MULTIPLY BY 4 TO OBTAIN Y0       00530018
+       AER     FR2,FR2                                                  00540018
+       SPACE                                                            00550018
+       DER     FR4,FR2         NEWTON-RAPHSON ITERATIONS                00560018
+       AUR     FR4,FR2                                                  00570018
+       HER     FR4,FR4         Y1 = (Y0+ARG/Y0)/2  IN SHORT PRECISION   00580018
+       LER     FR2,FR0                                                  00590018
+       DER     FR2,FR4                                                  00600018
+       AUR     FR2,FR4                                                  00610018
+       HER     FR2,FR2         Y2 = (Y1+ARG/Y1)/2  IN SHORT PRECISION   00620018
+       LDR     FR4,FR0                                                  00630018
+       DDR     FR4,FR2                                                  00640018
+       AWR     FR4,FR2                                                  00650018
+       HDR     FR4,FR4         Y3 = (Y2+ARG/Y2)/2  IN LONG PRECISION    00660018
+       SPACE                                                            00670018
+       DDR     FR0,FR4         Y4 = (ARG/Y3-Y3)/2-D+D+Y3 FOR ROUNDING   00680018
+       SDR     FR0,FR4           1ST APPOXROX IS SO CHOSEN THAT         00690018
+       HER     FR0,FR0             ARG/Y3-Y3 IS LESS THAN 16**(P+Q-8)   00700018
+       SU      FR0,B                 HENCE 'HER' IS GOOD ENOUGH         00710018
+       AU      FR0,B             -D+D IS TO CHOP OFF EXCESS DIGITS OF   00720018
+       ADR     FR0,FR4             NEGATIVE VALUE (ARG/Y3-Y3)/2         00730018
+       SPACE                                                            00740018
+EXIT   L       GRR,12(GRS)                                              00750018
+       BCR     15,GRR          RETURN                                   00770018
+       SPACE                                                            01280000
+*  LI-C   ARGUMENT IS NEGATIVE                                          01281000
+ERROR    $ERROR    (TRAZ,LI,C)                                     V1L5 01282000
+       SPACE                                                            01380000
+BUFF   DS      F                                                        01400000
+BIAS   DC      X'31000000'                                              01430018
+B      DC      X'00423A2A'     0.2587,  TARGET CHAR -8 TO BE AFFIXED    01440018
+A      DC      X'48385F07'     0.2202*16**8                             01450018
+       END                                                              01520000

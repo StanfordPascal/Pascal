@@ -1,0 +1,11 @@
+rename IVMODED.pas   ivmoded.pas
+rename KALENDER.pas  kalender.pas
+rename MSAUS2.pas    msaus2.pas
+rename MSFEDIT.pas   msfedit.pas
+rename TEST1.PAS     test1.pas
+rename TESTDUPL.PAS  testdupl.pas
+rename TESTINP.PAS   testinp.pas
+rename TESTLSTR.PAS  testlstr.pas
+rename TESTSCAL.PAS  testscal.pas
+rename TESTSETH.PAS  testseth.pas
+rename TESTSTAT.PAS  teststat.pas

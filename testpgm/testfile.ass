@@ -1,0 +1,107 @@
+TESTFILE CSECT
+*
+         REGEQU
+*
+         STM   14,12,12(13)
+         LR    12,15
+         USING TESTFILE,12
+         LA    15,SAVEA
+         ST    15,8(13)
+         ST    13,4(15)
+         LR    13,15
+*
+         OPEN  (EINGABE,INPUT)
+*
+         MVC   ABUFFER,=CL80' '
+         XR    2,2
+         IC    2,(DCBRECFM-IHADCB)+EINGABE
+         CVD   2,DOWO
+         UNPK  ABUFFER+1(9),DOWO+3(5)
+         OI    ABUFFER+9,X'F0'
+*
+         OPEN  (AUSGABE,OUTPUT)
+         PUT   AUSGABE,ABUFFER
+         CLOSE AUSGABE
+*
+         GET   EINGABE,BUFFER
+*
+         CLOSE EINGABE
+*
+ENDE     DS    0H
+         L     13,4(13)
+         LM    14,12,12(13)
+         XR    15,15
+         BR    14
+*
+EINGABE  DCB   DDNAME=EINGABE,DSORG=PS,MACRF=GM,EODAD=ENDE,EXLST=XL
+*
+AUSGABE  DCB   DDNAME=AUSGABE,DSORG=PS,MACRF=PM,LRECL=80,RECFM=F
+*
+SAVEA    DS    18F
+DOWO     DS    D
+BUFFER   DS    CL1024
+ABUFFER  DS    CL80
+*
+XL       DC    X'85',AL3(XLSTRTIN)
+*
+*
+************************************************************
+*        DEFAULT AND TARGET VALUES FOR FILES OTHER THAN "OUTPUT"
+*        opp 2017: blocksize was 1600, changed to 0 for cms
+*        opp 2017: make it equal to lrecl in exit routine
+************************************************************
+*
+DEFAULTS DC    H'80'               TARGET DATA BYTES PER RECORD
+         DC    H'0'                TARGET BYTES PER BLOCK
+         DC    AL1(3)              DEFAULT BUFNO VALUE
+         DC    X'00'               DEFAULT RECFM = VB
+*
+*
+*
+*
+         DROP  ,
+*
+         USING IHADCB,R1
+         USING XLSTRTIN,R15
+*
+XLSTRTIN DS    0H
+         L     R5,=A(DEFAULTS)     ENTRY FOR INPUT AND INOUT FILES
+*
+******************************************************************
+*        BUFNO ggf. setzen
+******************************************************************
+*
+XLSTRT2  DS    0H
+         SR    R4,R4
+         CLI   DCBBUFNO,0
+         BNE   XLSTRT3             JUMP IF BUFNO PROVIDED
+         MVC   DCBBUFNO(1),4(R5)
+*
+******************************************************************
+*        RECFM ggf. setzen
+******************************************************************
+*
+XLSTRT3  DS    0H
+         TM    DCBRECFM,X'FE'
+         BNZ   XLSTRT4             JUMP IF RECFM SPECIFIED
+         OC    DCBRECFM(1),5(R5)
+*
+******************************************************************
+*        LRECL ggf. setzen - Nicht Textfile
+******************************************************************
+*
+XLSTRT4  DS    0H
+         BR    R14
+*
+*
+*
+*
+         PUSH  PRINT
+         PRINT NOGEN
+         DCBD  DSORG=PS,DEVD=DA
+*        IHADCB DSECT=YES
+         POP   PRINT
+*
+TESTFILE CSECT
+*
+         END   TESTFILE

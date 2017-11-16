@@ -1,0 +1,13 @@
+  **** CALL STACK:
+  CALLED                ENTRY                 CALLER                CALLOFFS
+  FIBONACCIx....x....x (XXXXXXXX)  CALLED BY  FIBONACCIx....x....x (XXXXXXXX)
+  FIBONACCIx....x....x (XXXXXXXX)  CALLED BY  FIBONACCIx....x....x (XXXXXXXX)
+  FIBONACCIx....x....x (XXXXXXXX)  CALLED BY  FIBONACCIx....x....x (XXXXXXXX)
+  $PASMAINxx....x....x (XXXXXXXX)  CALLED BY  Pascal Monitor Programm
+
+  **** ENTRY POINT $PASENT AT  : xxxxxxxx
+  **** BOTTOM OF RUNTIME STACK : xxxxxxxx
+  **** CURRENT STACK FRAME     : xxxxxxxx
+  **** CURRENT HEAP POINTER    : xxxxxxxx
+  **** POINTER TO TOP OF HEAP  : xxxxxxxx
+

@@ -1456,7 +1456,7 @@ procedure INSYMBOL ;
          SY := SCB . SYMBOLNR ;
          SYLENGTH := SCB . LSYMBOL ;
          LINECNT := SCB . LINENR ;
-         WRITELN ( TRACEF , 'nach passcan: sy = ', sy ',
+         WRITELN ( TRACEF , 'nach passcan: sy = ', sy , ',
                   ' zeile/spalte = ' , SCB .
                    LINENR , SCB . LINEPOS ) ;
 

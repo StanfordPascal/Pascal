@@ -844,6 +844,7 @@ const VERSION = '12.2017' ;
       PCODE_CSP = 30 ;
       PCODE_MOV = 40 ;
       PCODE_LDC = 51 ;
+      PCODE_ORD = 61 ;
       PCODE_MFI = 80 ;
       PCODE_MCP = 81 ;
       PCODE_MSE = 82 ;
@@ -4871,7 +4872,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                FSP := LSP ;
                if SY = SYDOTDOT then
                  begin
-                   ERROR ( 61 ) ;
+                   ERROR ( PCODE_ORD ) ;
                    INSYMBOL ;
                  end (* then *) ;
                if not ( SY in FSYS ) then
@@ -10159,12 +10160,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                      if GATTR . TYPTR -> . FORM >= POWER then
                        ERROR ( 125 ) ;
                    end (* then *) ;
-
-                 (********)
-                 (*ORD   *)
-                 (********)
-
-                 GEN0 ( 61 ) ;
+                 GEN0 ( PCODE_ORD ) ;
                  GATTR . TYPTR := INTPTR
                end (* ORD1 *) ;
 
@@ -11269,12 +11265,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                             begin
                               LOAD ;
                               if GATTR . TYPTR <> INTPTR then
-
-                          (********)
-                          (*ORD   *)
-                          (********)
-
-                                GEN0 ( 61 ) ;
+                                GEN0 ( PCODE_ORD ) ;
                               if PSI -> . VARS_IN_SET = 0 then
                                 begin
                                   FACT_SET_UP := FALSE ;
@@ -12076,12 +12067,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                   LOP := SY ;
                   if LOP = SYIN then
                     if GATTR . TYPTR <> INTPTR then
-
-              (********)
-              (*ORD   *)
-              (********)
-
-                      GEN0 ( 61 ) ;
+                      GEN0 ( PCODE_ORD ) ;
                   INSYMBOL ;
                   SIMPLEEXPRESSION ( FSYS ) ;
 
@@ -12624,12 +12610,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                   end (* then *)
                 else
                   if COMPTYPES ( LSP , INTPTR ) <> 1 then
-
-              (********)
-              (*ORD   *)
-              (********)
-
-                    GEN0 ( 61 ) ;
+                    GEN0 ( PCODE_ORD ) ;
               if OPT . DEBUG then
                 CHKBNDS ( GATTR . TYPTR ) ;
               if SY = SYOF then
@@ -13184,12 +13165,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                               ALIGN ( LCOUNTER , INTSIZE ) ;
                               LLC := LCOUNTER ;
                               if GATTR . TYPTR <> INTPTR then
-
-              (********)
-              (*ORD   *)
-              (********)
-
-                                GEN0 ( 61 ) ;
+                                GEN0 ( PCODE_ORD ) ;
 
               (********)
               (*STR   *)
@@ -13222,12 +13198,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                                   GATTR := LATTR ;
                                   LOAD ;
                                   if GATTR . TYPTR <> INTPTR then
-
-              (********)
-              (*ORD   *)
-              (********)
-
-                                    GEN0 ( 61 ) ;
+                                    GEN0 ( PCODE_ORD ) ;
                                 end (* else *) ;
                               if CB2 then
                                 begin
@@ -13235,7 +13206,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                                   if GATTR . TYPTR = CHARPTR then
                                     begin
                                       GEN2 ( PCODE_LDC , 0 , CV2 ) ;
-                                      GEN0 ( 61 )
+                                      GEN0 ( PCODE_ORD )
                                     end (* then *)
                                   else
                                     GEN2 ( PCODE_LDC , 1 , CV2 )
@@ -13300,19 +13271,14 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
               GATTR := LATTR ;
               LOAD ;
               if GATTR . TYPTR <> INTPTR then
-
-              (********)
-              (*ORD   *)
-              (********)
-
-                GEN0 ( 61 ) ;
+                GEN0 ( PCODE_ORD ) ;
               if CB2 then
                 begin
                   GATTR := LATTR ;
                   if GATTR . TYPTR = CHARPTR then
                     begin
                       GEN2 ( PCODE_LDC , 0 , CV2 ) ;
-                      GEN0 ( 61 )
+                      GEN0 ( PCODE_ORD )
                     end (* then *)
                   else
                     GEN2 ( PCODE_LDC , 1 , CV2 )

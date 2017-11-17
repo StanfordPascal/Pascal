@@ -6162,6 +6162,7 @@ static void interpreter (global_store *gs)
    char addr_arg [80];
    char sch_break;
    char sch_trace;
+   char sch_traceproc;
    int *intp;
 
    int is_ret;
@@ -6271,6 +6272,7 @@ static void interpreter (global_store *gs)
       //***************************************************************
       //   X oder T = Trace
       //   T = mit Anzeige der Zwischenschritte
+      //   TP = mit Anzeige der Prozeduraufrufe
       //   X = ohne
       //   in beiden Faellen muessen Abbruchkriterien
       //   angegeben werden:
@@ -6280,7 +6282,8 @@ static void interpreter (global_store *gs)
       //***************************************************************
 
       else if (strcmp (cmd, "X") == 0 ||
-               strcmp (cmd, "T") == 0)
+               strcmp (cmd, "T") == 0 ||
+               strcmp (cmd, "TP") == 0)
       {
          sc_code *pcoden;
          ent_section *pent;
@@ -6288,6 +6291,7 @@ static void interpreter (global_store *gs)
          gs -> stepanz = 999999999;
 
          sch_trace = (strcmp (cmd, "T") == 0);
+         sch_traceproc = (strcmp (cmd, "TP") == 0);
          sch_break = ' ';
 
          if (strcmp_ignore (p1, "RET") == 0 ||
@@ -6379,6 +6383,17 @@ static void interpreter (global_store *gs)
 
             if (sch_trace)
                show (gs, 1);
+
+            if (sch_traceproc)
+            {
+               if (memcmp (gs -> ot [pcoden -> op] . opcode,
+                           "RET", 3) == 0 ||
+                   memcmp (gs -> ot [pcoden -> op] . opcode,
+                           "ENT", 3) == 0)
+               {
+                  show (gs, 1);
+               }
+            }
 
             if (gs -> stepanz > 1 &&
                 pcoden -> psource == NULL &&

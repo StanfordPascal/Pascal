@@ -93,13 +93,13 @@ type CHARPTR = -> CHAR ;
 
      SCANF_PTR = -> SCAN_FEHLER ;
      SCAN_FEHLER = record
-                     ERRLEVEL : CHAR ;
-                     ERRCLASS : CHAR ;
-                     NUMMER : INTEGER ;
-                     INFO : CHAR32 ;
-                     ZEILNR : INTEGER ;
-                     POSITION : INTEGER ;
-                     NAECHST : SCANF_PTR ;
+                     ERRLEVEL : CHAR ;       // error level
+                     ERRCLASS : CHAR ;       // error class
+                     NUMMER : INTEGER ;      // error number
+                     INFO : CHAR32 ;         // additional info
+                     ZEILNR : INTEGER ;      // line number of err
+                     POSITION : INTEGER ;    // position of err
+                     NAECHST : SCANF_PTR ;   // ptr to next
                    end ;
 
      /***********************************/
@@ -111,48 +111,48 @@ type CHARPTR = -> CHAR ;
 
      OPTIONS_PTR = -> COMP_OPTIONS ;
      SCAN_BLOCK = record
-                    MODUS : INTEGER ;
-                    DATEIENDE : INTEGER ;
-                    ENDOFLINE : BOOLEAN ;
-                    SLINE : SOURCELINE ;
-                    LINENR : INTEGER ;
-                    LINEPOS : INTEGER ;
-                    LINELEN : INTEGER ;
-                    LOOKAHEAD : CHAR ;
-                    SYMBOLNR : SYMB ;
-                    SYMBOL : SOURCELINE ;
-                    LSYMBOL : INTEGER ;
-                    MAXLSYMBOL : INTEGER ;
-                    UFZAHL : INTEGER ;
-                    SFZAHL : INTEGER ;
-                    FEZAHL : INTEGER ;
-                    WAZAHL : INTEGER ;
-                    INZAHL : INTEGER ;
-                    FEANFANG : SCANF_PTR ;
-                    FEAKT : SCANF_PTR ;
-                    FTTAB : SCANFT_PTR ;
-                    FTTABA : SCANFT_PTR ;
-                    OPTLINE : SOURCELINE ;
-                    POPT : OPTIONS_PTR ;
+                    MODUS : INTEGER ;        // modus of scanner
+                    DATEIENDE : INTEGER ;    // end of file indicator
+                    ENDOFLINE : BOOLEAN ;    // end of line indicator
+                    SLINE : SOURCELINE ;     // stored source line
+                    LINENR : INTEGER ;       // line number of symbol
+                    LINEPOS : INTEGER ;      // line position of symb
+                    LINELEN : INTEGER ;      // line length
+                    LOOKAHEAD : CHAR ;       // lookahead character
+                    SYMBOLNR : SYMB ;        // symbol read
+                    SYMBOL : SOURCELINE ;    // characters of symb
+                    LSYMBOL : INTEGER ;      // no of chars in symb
+                    MAXLSYMBOL : INTEGER ;   //
+                    UFZAHL : INTEGER ;       // no of undef errors
+                    SFZAHL : INTEGER ;       // no of severe errors
+                    FEZAHL : INTEGER ;       // no of errors
+                    WAZAHL : INTEGER ;       // no of warnings
+                    INZAHL : INTEGER ;       // no of informations
+                    FEANFANG : SCANF_PTR ;   // anchor to err list
+                    FEAKT : SCANF_PTR ;      // actual err elem
+                    FTTAB : SCANFT_PTR ;     // error text table
+                    FTTABA : SCANFT_PTR ;    // same for applic.
+                    OPTLINE : SOURCELINE ;   // options line
+                    POPT : OPTIONS_PTR ;     // ptr to opt struct
 
      /******************************************/
      /* felder fuer sofortige Protokollausgabe */
      /******************************************/
 
-                    PROTOUT : BOOLEAN ;
-                    TERMOUT : BOOLEAN ;
-                    FEAKT_ALT : SCANF_PTR ;
-                    LINEINFO : CHAR32 ;
-                    LINEINFO_SIZE : INTEGER ;
+                    PROTOUT : BOOLEAN ;        // switch for prot out
+                    TERMOUT : BOOLEAN ;        // switch for term out
+                    FEAKT_ALT : SCANF_PTR ;    // old feakt
+                    LINEINFO : CHAR32 ;        // line information
+                    LINEINFO_SIZE : INTEGER ;  // size of lineinfo
 
      /******************************************/
      /* felder fuer ueberschrift               */
      /******************************************/
 
-                    LINECOUNT : INTEGER ;
-                    HEADLINE : SOURCELINE ;
-                    HEADLINE_SIZE : INTEGER ;
-                    PAGENR : INTEGER ;
+                    LINECOUNT : INTEGER ;      // linecount f. heading
+                    HEADLINE : SOURCELINE ;    // header line
+                    HEADLINE_SIZE : INTEGER ;  // size of header line
+                    PAGENR : INTEGER ;         // page number
                   end ;
 
      /***********************************/
@@ -163,23 +163,23 @@ type CHARPTR = -> CHAR ;
      /***********************************/
 
      COMP_OPTIONS = record
-                      LMARGIN : INTEGER ;
-                      RMARGIN : INTEGER ;
-                      PAGESIZE : INTEGER ;
-                      LIST : BOOLEAN ;
-                      PRCODE : BOOLEAN ;
-                      GET_STAT : BOOLEAN ;
-                      SAVEREGS : BOOLEAN ;
-                      SAVEFPRS : BOOLEAN ;
-                      DEBUG : BOOLEAN ;
-                      MWARN : BOOLEAN ;
-                      DEBUG_LEV : 0 .. 9 ;
-                      NOPACKING : BOOLEAN ;
-                      NESTCOMM : BOOLEAN ;
-                      WARNING : BOOLEAN ;
-                      ASSEMBLE : BOOLEAN ;
-                      ASMVERB : BOOLEAN ;
-                      CTROPTION : BOOLEAN ;
+                      LMARGIN : INTEGER ;    // left margin
+                      RMARGIN : INTEGER ;    // right margin
+                      PAGESIZE : INTEGER ;   // pagesize of listing
+                      LIST : BOOLEAN ;       // write listing
+                      PRCODE : BOOLEAN ;     // print code
+                      GET_STAT : BOOLEAN ;   // get statistics
+                      SAVEREGS : BOOLEAN ;   // saveregs
+                      SAVEFPRS : BOOLEAN ;   // save fp regs
+                      DEBUG : BOOLEAN ;      // debug switch
+                      MWARN : BOOLEAN ;      //
+                      DEBUG_LEV : 0 .. 9 ;   // debug level
+                      NOPACKING : BOOLEAN ;  // no packing
+                      NESTCOMM : BOOLEAN ;   // nested comments
+                      WARNING : BOOLEAN ;    // show warnings
+                      ASSEMBLE : BOOLEAN ;   // show assembly
+                      ASMVERB : BOOLEAN ;    // show verbose ass.
+                      CTROPTION : BOOLEAN ;  // show counters
                     end ;
 
 
@@ -1368,6 +1368,7 @@ procedure PASSCAN ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB :
             MSG3 = 'unexpected char in options string' ;
             MSG4 = 'closing paranthese expected in options string' ;
             MSG5 = 'the rest of the options string will be ignored' ;
+            MSG6 = 'line ends within string constant' ;
 
       var C : SCAN_ERRCLASS ;
           N : INTEGER ;
@@ -1386,6 +1387,7 @@ procedure PASSCAN ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB :
         PASSCANF ( SCB , 'S' , 'S' , 3 , MSG3 , SIZEOF ( MSG3 ) ) ;
         PASSCANF ( SCB , 'S' , 'S' , 4 , MSG4 , SIZEOF ( MSG4 ) ) ;
         PASSCANF ( SCB , 'S' , 'S' , 5 , MSG5 , SIZEOF ( MSG5 ) ) ;
+        PASSCANF ( SCB , 'S' , 'S' , 6 , MSG6 , SIZEOF ( MSG6 ) ) ;
       end (* INIT *) ;
 
 
@@ -2194,7 +2196,14 @@ procedure PASSCAN ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB :
                begin
                  SCB . LSYMBOL := SCB . LSYMBOL + 1 ;
                  SCB . SYMBOL [ SCB . LSYMBOL ] := CH ;
-               end (* then *)
+               end (* then *) ;
+             if ( ZUST in [ 12 , 13 ] ) and SCB . ENDOFLINE then
+               begin
+                 PASSCANE ( SCB , 'F' , 'S' , 6 , ' ' , SCB . LINENR ,
+                            SCB . LINEPOS ) ;
+                 ALTZUST := 117 ;
+                 break ;
+               end (* then *) ;
            end (* then *)
        end (* while *) ;
      if SCB . LSYMBOL <= 1 then

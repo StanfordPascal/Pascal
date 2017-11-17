@@ -1,18 +1,4 @@
 
-* Version 10.2017 auf MVS, Webseite, deployen
-* PASCAL2 Set Datentypen konsolidieren
-* Version 10.2017 auf CMS
-* Speicherfehler S822 auf MVS verhindert mehrere Compiles hintereinander
-* SEARCHID soll Info Åber Fehler 104 zurÅckgeben
-* fehlenden Bezeichner bei Simpletype mit korrekter Klasse eintragen
-* abhÑngig von Folgesymbol, .. oder ;
-* dann auch Folgefehler bei fehlenden Bezeichnern besser abhandeln
-* PASCAL1 korrigieren wg. Folgefehlern bei PASFORMN usw.
-* Problem (Abbruch bei allen Versionen) bei PASCAL1F.PAS !!
-* PASFORM mit neuem Scanner
-* Wieso steht GET_STAT auf false trotz $U+ ???
-* Deployen Version 11.2017
-
 * PASCAL1: Zuweisung weiter mit abweichenden LÑngen
 * PASCAL1 und PASSCAN Åberarbeiten wg. Parameter bei Fehlermeldungen
 * PASCAL1: weiter mit Fehler 117
@@ -26,12 +12,32 @@
 * PASFORM: Åberarbeiten bei 1.. 30 usw.
 * bei konstanten LÑngen MOV statt MCP, MFI statt MSE
 * evtl. neuer Befehl MZE fÅr Nullsetzen eines Bereichs
+* PASFORM weiter verbessern (siehe Startkommentar)
 
-- PASFORM weiter verbessern (siehe Startkommentar)
+- Fehler: Endlosschleife bei PFEHL.PAS
 - Implementieren neue P-Code Instruktionen in PASCAL2
 - Aufruf externer Funktionen (ASSEMBLER, C)
 
+spÑter:
+
 - evtl. separates nachtrÑgliches Listing, Fehler an korrekter Stelle
+- PASFORM besseres Fehlerhandling bei Syntaxfehlern (analog Compiler)
+
+=======================================================================================
+
+* Version 10.2017 auf MVS, Webseite, deployen
+* PASCAL2 Set Datentypen konsolidieren
+* Version 10.2017 auf CMS
+* Speicherfehler S822 auf MVS verhindert mehrere Compiles hintereinander
+* SEARCHID soll Info Åber Fehler 104 zurÅckgeben
+* fehlenden Bezeichner bei Simpletype mit korrekter Klasse eintragen
+* abhÑngig von Folgesymbol, .. oder ;
+* dann auch Folgefehler bei fehlenden Bezeichnern besser abhandeln
+* PASCAL1 korrigieren wg. Folgefehlern bei PASFORMN usw.
+* Problem (Abbruch bei allen Versionen) bei PASCAL1F.PAS !!
+* PASFORM mit neuem Scanner
+* Wieso steht GET_STAT auf false trotz $U+ ???
+* Deployen Version 11.2017
 
 =======================================================================================
 

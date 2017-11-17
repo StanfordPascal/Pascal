@@ -108,13 +108,6 @@ program PASFORM ( OUTPUT , EINGABE , LISTING , AUSGABE , TRACEF ) ;
 (*   * Korrektur: Blank eingefueht bei Symbol INTDOTDOT             *)
 (*                                                                  *)
 (*   - neu: Kommentare hinter Definitionen usw. bleiben stehen      *)
-(*     d.h.: Kommentare, denen in derselben Zeile ein anderes       *)
-(*     Symbol (ausser Separator) vorangeht, werden anders           *)
-(*     behandelt als bisher. Sie behalten idealerweise ihre         *)
-(*     Position. Wenn von der letzten Zeile her ein solcher         *)
-(*     Kommentar bereits vorhanden ist, wird versucht, den          *)
-(*     neuen Kommentar ebenfalls an dieser Position                 *)
-(*     auszurichten                                                 *)
 (*                                                                  *)
 (*   - kein Abbruch bei Fehler, idealerweise keine Endlos-          *)
 (*     schleife, sondern Diagnose wie beim Compiler und             *)
@@ -139,8 +132,8 @@ const VERSION = '11.2017' ;
       MAXRWLEN = 9 ;
 
       //**********************************************************
-      // longest reserved word has length = 9                     
-      // controls size of table frw                               
+      // longest reserved word has length = 9
+      // controls size of table frw
       //**********************************************************
 
       IDLNGTH = 20 ;
@@ -186,8 +179,8 @@ type WORT = array [ 1 .. 100 ] of CHAR ;
                  end ;
 
      //************************************************************
-     // muss mit Def. beim Scanner                                 
-     // uebereinstimmen                                            
+     // muss mit Def. beim Scanner
+     // uebereinstimmen
      //************************************************************
 
      SYMB = ( SYMB_EOF , SYMB_UNKNOWN , EOLCHAR , SEPARATOR , COMMENT1
@@ -207,37 +200,26 @@ type WORT = array [ 1 .. 100 ] of CHAR ;
             SYCONTINUE , SYRETURN , SYMODULE , SYLOCAL , SYSTATIC ,
             SYSQLBEGIN , SYSQLEND , SYSQLVAR , SYOVERLAY , NOTUSED ) ;
      SYMSET = set of SYMB ;
-
-     //************************************************************
-     // struktur, die den Zustand fuer die                         
-     // kommentarroutinen festhaelt                                
-     //************************************************************
-
      KOMMCTL = record
-                 KOMMP : WORT ;             // teil des kommentars
-                 KOMML : INTEGER ;          // kommentarlaenge
-                 ENDOFKOMM : BOOLEAN ;      // ende kommentar
-                 ANZKOMM : INTEGER ;        // anz. kommentare
-                 ZUSTAND : INTEGER ;        // zustand fuer fsm
-                 KOMMTYPE : CHAR ;          // welcher typ
-                 NURSTERNE : BOOLEAN ;      // nur sterne ?
-                 KOMMSTATUS : INTEGER ;     // zustand bzgl. kasten
-                 KOMML_AUS : INTEGER ;      // kommlaenge ausgabe
-                 UEBERLESEN : INTEGER ;     // ueberlesen ?
-                 KOMM_VOR_PROC : BOOLEAN ;  // vor prozedur ?
-                 LINENR : INTEGER ;         // zeilennr aus scb
-                 LINEPOS : INTEGER ;        // linepos scb minus 2
-                 SYMB_VOR_KOMM : BOOLEAN ;  // symb in zeile vorh.
-                 LINENR_LAST : INTEGER ;    // linenr letzt. komm
-                 LINEPOS_LAST : INTEGER ;   // linepos letzt. komm
-                 KOMML_MAX : INTEGER ;      // max. komml. in set
+                 KOMMP : WORT ;
+                 KOMML : INTEGER ;
+                 ENDOFKOMM : BOOLEAN ;
+                 ANZKOMM : INTEGER ;
+                 ZUSTAND : INTEGER ;
+                 KOMMTYPE : CHAR ;
+                 NURSTERNE : BOOLEAN ;
+                 KOMMSTATUS : INTEGER ;
+                 KOMML_AUS : INTEGER ;
+                 UEBERLESEN : INTEGER ;
+                 LINENR : INTEGER ;
+                 KOMM_VOR_PROC : BOOLEAN ;
                end ;
 
      //************************************************************
-     // zentraler Scan-Block                                       
+     // zentraler Scan-Block
      //************************************************************
-     // muss mit Def. beim Scanner                                 
-     // uebereinstimmen                                            
+     // muss mit Def. beim Scanner
+     // uebereinstimmen
      //************************************************************
 
      CHAR32 = array [ 1 .. 32 ] of CHAR ;
@@ -270,7 +252,7 @@ type WORT = array [ 1 .. 100 ] of CHAR ;
                     POPT : OPTIONS_PTR ;
 
      //************************************************************
-     // felder fuer sofortige Protokollausgabe                     
+     // felder fuer sofortige Protokollausgabe
      //************************************************************
 
                     PROTOUT : BOOLEAN ;
@@ -280,7 +262,7 @@ type WORT = array [ 1 .. 100 ] of CHAR ;
                     LINEINFO_SIZE : INTEGER ;
 
      //************************************************************
-     // felder fuer ueberschrift                                   
+     // felder fuer ueberschrift
      //************************************************************
 
                     LINECOUNT : INTEGER ;
@@ -290,10 +272,10 @@ type WORT = array [ 1 .. 100 ] of CHAR ;
                   end ;
 
      //************************************************************
-     // Optionen fuer Compiler                                     
+     // Optionen fuer Compiler
      //************************************************************
-     // muss mit Def. beim Scanner                                 
-     // uebereinstimmen                                            
+     // muss mit Def. beim Scanner
+     // uebereinstimmen
      //************************************************************
 
      COMP_OPTIONS = record
@@ -731,6 +713,7 @@ procedure READKOMM ( var KOMMC : KOMMCTL ) ;
      (*   - fuer alle faelle                         *)
      (************************************************)
 
+     KOMMC . LINENR := SCB . LINENR ;
      case KOMMC . KOMMTYPE of
        ')' : begin
                KOMMC . KOMMP [ 1 ] := '(' ;
@@ -1141,7 +1124,6 @@ procedure KOMMENTAR ( var KOMMC : KOMMCTL ) ;
        DICHTSAVE : BOOLEAN ;
        KOMMKASTEN : BOOLEAN ;
        SCANCH : CHAR ;
-       KOMMOUT : INTEGER ;
 
    begin (* KOMMENTAR *)
      KOMMKASTEN := FALSE ;
@@ -1181,63 +1163,16 @@ procedure KOMMENTAR ( var KOMMC : KOMMCTL ) ;
              NEUZEILEKOMM ( FALSE ) ;
              NEUZEILEKOMM ( FALSE ) ;
              KOMMC . KOMM_VOR_PROC := FALSE ;
-             KOMMC . SYMB_VOR_KOMM := FALSE ;
-           end (* then *) ;
-         if not KOMMC . SYMB_VOR_KOMM then
-           begin
-             KOMMC . LINENR_LAST := - 1 ;
-             KOMMC . LINEPOS_LAST := - 1 ;
-             KOMMC . KOMML_MAX := - 1 ;
            end (* then *) ;
          case KOMMC . KOMMSTATUS of
            0 : begin
-                 if KOMMC . SYMB_VOR_KOMM then
+                 if VERARB_MODUS > 2 then
                    begin
-                     if TRUE then
-                       begin
-                         WRITELN ( TRACEF , 'symb_vor_komm' ) ;
-                         WRITELN ( TRACEF , 'komml      = ' , KOMMC .
-                                   KOMML ) ;
-                         WRITELN ( TRACEF , 'komml_aus  = ' , KOMMC .
-                                   KOMML_AUS ) ;
-                         WRITELN ( TRACEF , 'linepos    = ' , KOMMC .
-                                   LINEPOS ) ;
-                         WRITELN ( TRACEF , 'outpointer = ' ,
-                                   OUTPOINTER ) ;
-                       end (* then *) ;
-                     if KOMMC . LINENR = KOMMC . LINENR_LAST + 1 then
-                       begin
-                         KOMMOUT := KOMMC . LINEPOS_LAST ;
-                         if KOMMC . KOMML_MAX < KOMMC . KOMML then
-                           KOMMC . KOMML_MAX := KOMMC . KOMML ;
-                       end (* then *)
-                     else
-                       begin
-                         KOMMOUT := KOMMC . LINEPOS ;
-                         KOMMC . KOMML_MAX := KOMMC . KOMML ;
-                       end (* else *) ;
-                     if SY = COMMENT5 then
-                       KOMMC . KOMML_AUS := KOMMC . KOMML
-                     else
-                       KOMMC . KOMML_AUS := KOMMC . KOMML_MAX ;
-                     if OUTPOINTER < KOMMOUT then
-                       begin
-                         WRITE ( AUSGABE , ' ' : KOMMOUT - OUTPOINTER )
-                                 ;
-                         OUTPOINTER := KOMMOUT ;
-                       end (* then *) ;
-                     KOMMC . LINENR_LAST := KOMMC . LINENR ;
-                     KOMMC . LINEPOS_LAST := KOMMOUT ;
-                   end (* then *)
-                 else
-                   begin
-                     if VERARB_MODUS > 2 then
-                       begin
-                         NEUZEILEKOMM ( FALSE ) ;
-                         NEUZEILEKOMM ( TRUE ) ;
-                       end (* then *) ;
-                     if VERARB_MODUS = 2 then
-                       NEUZEILEKOMM ( TRUE ) ;
+                     NEUZEILEKOMM ( FALSE ) ;
+                     NEUZEILEKOMM ( TRUE ) ;
+                   end (* then *) ;
+                 if VERARB_MODUS = 2 then
+                   NEUZEILEKOMM ( TRUE ) ;
 
      /*************************************************/
      /* SCHAUEN, OB KASTEN EINGEFUEGT WERDEN MUSS     */
@@ -1248,45 +1183,44 @@ procedure KOMMENTAR ( var KOMMC : KOMMCTL ) ;
      /*    unvollstaendig                             */
      /*************************************************/
 
-                     if KOMMC . NURSTERNE then
-                       begin
-                         KOMMKASTEN := FALSE ;
-                         KOMMC . KOMML_AUS := KOMMC . KOMML ;
-                       end (* then *)
-                     else
-                       begin
-                         KOMMKASTEN := TRUE ;
-                         KOMMC . KOMML_AUS := MAXWIDTH - 2 * EINRKOMM ;
-                       end (* else *) ;
-                     if not KOMMC . ENDOFKOMM then
-                       begin
-                         KOMMKASTEN := TRUE ;
-                         KOMMC . KOMML_AUS := MAXWIDTH - 2 * EINRKOMM ;
-                       end (* then *) ;
-                     if KOMMC . KOMML > KOMMC . KOMML_AUS then
-                       KOMMC . KOMML_AUS := MAXWIDTH - EINRKOMM ;
-                     if KOMMC . KOMML > KOMMC . KOMML_AUS then
-                       KOMMKASTEN := TRUE ;
+                 if KOMMC . NURSTERNE then
+                   begin
+                     KOMMKASTEN := FALSE ;
+                     KOMMC . KOMML_AUS := KOMMC . KOMML ;
+                   end (* then *)
+                 else
+                   begin
+                     KOMMKASTEN := TRUE ;
+                     KOMMC . KOMML_AUS := MAXWIDTH - 2 * EINRKOMM ;
+                   end (* else *) ;
+                 if not KOMMC . ENDOFKOMM then
+                   begin
+                     KOMMKASTEN := TRUE ;
+                     KOMMC . KOMML_AUS := MAXWIDTH - 2 * EINRKOMM ;
+                   end (* then *) ;
+                 if KOMMC . KOMML > KOMMC . KOMML_AUS then
+                   KOMMC . KOMML_AUS := MAXWIDTH - EINRKOMM ;
+                 if KOMMC . KOMML > KOMMC . KOMML_AUS then
+                   KOMMKASTEN := TRUE ;
 
      (************************************************)
      (*   NEUER KOMMC.KOMMSTATUS ABH. VOM KASTEN     *)
      (************************************************)
 
-                     if KOMMKASTEN then
-                       KOMMC . KOMMSTATUS := 1
-                     else
-                       KOMMC . KOMMSTATUS := 2 ;
+                 if KOMMKASTEN then
+                   KOMMC . KOMMSTATUS := 1
+                 else
+                   KOMMC . KOMMSTATUS := 2 ;
 
      (************************************************)
      (*   KOMMC.KOMML_AUS FESTLEGEN                  *)
      (*                                              *)
      (************************************************)
 
-                     if KOMMC . KOMML_AUS < 10 then
-                       KOMMC . KOMML_AUS := 10 ;
-                     if KOMMC . KOMML_AUS > MAXWIDTH - EINRKOMM then
-                       KOMMC . KOMML_AUS := MAXWIDTH - EINRKOMM ;
-                   end (* else *)
+                 if KOMMC . KOMML_AUS < 10 then
+                   KOMMC . KOMML_AUS := 10 ;
+                 if KOMMC . KOMML_AUS > MAXWIDTH - EINRKOMM then
+                   KOMMC . KOMML_AUS := MAXWIDTH - EINRKOMM ;
                end (* tag/ca *) ;
            1 : begin
                  if VERARB_MODUS >= 2 then
@@ -1522,35 +1456,14 @@ procedure INSYMBOL ;
          SY := SCB . SYMBOLNR ;
          SYLENGTH := SCB . LSYMBOL ;
          LINECNT := SCB . LINENR ;
-         if FALSE then
-           WRITELN ( TRACEF , 'nach passcan: sy = ' , SY : 30 ,
-                     ' zeile/spalte = ' , SCB . LINENR , SCB . LINEPOS
-                     , KOMMC . LINENR ) ;
-         if SCB . LINENR <> KOMMC . LINENR then
-           begin
+         WRITELN ( TRACEF , 'nach passcan: sy = ', sy ',
+                  ' zeile/spalte = ' , SCB .
+                   LINENR , SCB . LINEPOS ) ;
 
-     //**************************************************
-     // zeilenwechsel seit letztem Passcan-Aufruf        
-     //**************************************************
-
-             KOMMC . LINENR := SCB . LINENR ;
-             KOMMC . SYMB_VOR_KOMM := FALSE ;
-           end (* then *) ;
-         if not ( SY in [ SEPARATOR , COMMENT1 , COMMENT2 , COMMENT3 ,
-         COMMENT4 , COMMENT5 ] ) then
-           begin
-
-     //**************************************************
-     // ein "echtes" symbol wurde gefunden               
-     //**************************************************
-
-             KOMMC . SYMB_VOR_KOMM := TRUE ;
-           end (* then *) ;
-
-     (*****************************************************)
-     (*   look what has to be done depending on symbol    *)
-     (*   (some symbols need additional work)             *)
-     (*****************************************************)
+     (**********************************************************)
+     (*   look what has to be done depending on symbol         *)
+     (*   (some symbols need additional work)                  *)
+     (**********************************************************)
 
          case SY of
 
@@ -1562,40 +1475,40 @@ procedure INSYMBOL ;
              continue ;
            COMMENT1 :
              begin
+               WRITELN ( TRACEF , 'nach passcan: comment1' ) ;
                KOMMC . KOMMTYPE := '/' ;
-               KOMMC . LINEPOS := SCB . LINEPOS - 2 ;
                KOMMENTAR ( KOMMC ) ;
                KOMMC . UEBERLESEN := 0 ;
                continue ;
              end (* tag/ca *) ;
            COMMENT2 :
              begin
+               WRITELN ( TRACEF , 'nach passcan: comment2' ) ;
                KOMMC . KOMMTYPE := ')' ;
-               KOMMC . LINEPOS := SCB . LINEPOS - 2 ;
                KOMMENTAR ( KOMMC ) ;
                KOMMC . UEBERLESEN := 0 ;
                continue ;
              end (* tag/ca *) ;
            COMMENT3 :
              begin
+               WRITELN ( TRACEF , 'nach passcan: comment3' ) ;
                KOMMC . KOMMTYPE := '}' ;
-               KOMMC . LINEPOS := SCB . LINEPOS - 2 ;
                KOMMENTAR ( KOMMC ) ;
                KOMMC . UEBERLESEN := 0 ;
                continue ;
              end (* tag/ca *) ;
            COMMENT4 :
              begin
+               WRITELN ( TRACEF , 'nach passcan: comment4' ) ;
                KOMMC . KOMMTYPE := '"' ;
-               KOMMC . LINEPOS := SCB . LINEPOS - 2 ;
                KOMMENTAR ( KOMMC ) ;
                KOMMC . UEBERLESEN := 0 ;
                continue ;
              end (* tag/ca *) ;
            COMMENT5 :
              begin
+               WRITELN ( TRACEF , 'nach passcan: comment5' ) ;
                KOMMC . KOMMTYPE := '+' ;
-               KOMMC . LINEPOS := SCB . LINEPOS - 2 ;
                KOMMENTAR ( KOMMC ) ;
                KOMMC . UEBERLESEN := 0 ;
                continue ;
@@ -1822,9 +1735,9 @@ procedure INSYMBOL ;
                    end (* else *)
              end (* tag/ca *) ;
 
-     (**********************************)
-     (*   realconst ...                *)
-     (**********************************)
+     (**********************************************************)
+     (*   realconst ...                                        *)
+     (**********************************************************)
 
            REALCONST :
              begin
@@ -1844,7 +1757,7 @@ procedure INSYMBOL ;
                  end (* else *)
              end (* tag/ca *) ;
            otherwise
-             
+
          end (* case *) ;
 
      (**********************************************************)
@@ -2013,7 +1926,7 @@ procedure OUTSYMBOL ( S : SYMB ) ;
            W1ENDE := 1 ;
          end (* tag/ca *) ;
        otherwise
-         
+
      end (* case *) ;
      if not DICHT then
        begin
@@ -3211,11 +3124,6 @@ begin (* HAUPTPROGRAMM *)
   KOMMC . NURSTERNE := FALSE ;
   KOMMC . KOMMSTATUS := 0 ;
   KOMMC . KOMM_VOR_PROC := FALSE ;
-  KOMMC . LINENR := - 1 ;
-  KOMMC . LINEPOS := - 1 ;
-  KOMMC . LINENR_LAST := - 1 ;
-  KOMMC . LINEPOS_LAST := - 1 ;
-  KOMMC . KOMML_MAX := - 1 ;
 
   (***********************************************)
   (*   HIER UNTERSCHIED PASCAL/VS ZU TURBO/3     *)

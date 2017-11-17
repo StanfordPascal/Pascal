@@ -1,82 +1,44 @@
-program TESTINP ( INPUT , OUTPUT , EINGABE ) ;
+program TESTSVAR ( OUTPUT ) ;
 
-(**********************************************************************)
-(*                                                                    *)
-(*   das ist ein kommentar                                            *)
-(*   und noch einer, diesmal etwas laenger                            *)
-(*   und ein dritter                                                  *)
-(*                                                                    *)
-(**********************************************************************)
+(************************************************)
+(*                                              *)
+(*                                              *)
+(*                                              *)
+(************************************************)
 
 
 
-var ZAHL1 : INTEGER ;
+type CHAR10 = array [ 1 .. 10 ] of CHAR ;
+     CHAR30 = array [ 1 .. 30 ] of CHAR ;
+     CHAR21 = array [ 20 .. 40 ] of CHAR ;
 
-    /**************************************************************/
-    /* kommentar in einer zeile                                   */
-    /**************************************************************/
 
-    ZAHL2 : INTEGER ;
-
-    /**************************************************************/
-    /* kommentar                                                  */
-    /*       der in der naechsten zeile weitergeht                */
-    /**************************************************************/
-
-    ZAHL3 : INTEGER ;
+var F10 : CHAR10 ;   // should be char (10), maybe ??
+    F30 : CHAR30 ;   // char (30)
+    F21 : CHAR21 ;   /* char (21)                  */
+    L : INTEGER ;
     CH : CHAR ;
-    EINGABE : TEXT ;
-    I : INTEGER ;
-
-    //**************************************************************
-    // ein c++ kommentar                                            
-    // noch ein c++ kommentar                                       
-    //**************************************************************
-
 
 
 begin (* HAUPTPROGRAMM *)
-  WRITELN ( 'eof/input = ' , EOF ( INPUT ) ) ;
-  WRITELN ( 'eof/output = ' , EOF ( OUTPUT ) ) ;
-
-  //******************************************************************
-  // sind am Anfang undefiniert                                       
-  //******************************************************************
-
-  CH := INPUT -> ;
-
-  //******************************************************************
-  // dieser Kommentar in derselben Zeile                              
-  //******************************************************************
-
-  WRITELN ( 'ORD (INPUT ->) = ' , ORD ( CH ) ) ;
-  CH := EINGABE -> ;
-  WRITELN ( 'ORD (EINGABE ->) = ' , ORD ( CH ) ) ;
-  WRITELN ( 'bitte zahl1 eingeben' ) ;
-  READ ( ZAHL1 ) ;
-  WRITELN ( 'bitte zahl2 eingeben' ) ;
-  READ ( ZAHL2 ) ;
-  WRITELN ( 'bitte zahl3 eingeben' ) ;
-  READ ( ZAHL3 ) ;
-  WRITELN ( 'zahl1 = ' , ZAHL1 ) ;
-  WRITELN ( 'zahl2 = ' , ZAHL2 ) ;
-  WRITELN ( 'zahl3 = ' , ZAHL3 ) ;
-  READ ( EINGABE , ZAHL1 ) ;
-  WRITELN ( 'EINGABE:ZAHL1 = ' , ZAHL1 ) ;
-  WRITE ( 'PROGRAMMENDE (OHNE WRITELN)' ) ;
-  WRITELN ;
-  WRITELN ( 'UND NOCH NE ZEILE MIT WRITELN DAHINTER' ) ;
-
-  //**************************************************************
-  // ein c++ kommentar                                            
-  // noch ein c++ kommentar                                       
-  //**************************************************************
-
-  if FALSE then
-    begin
-      for I := 1 to 20 do
-        WRITELN ( 'es klappt, i = ' , I : 4 ) ;
-      for CH := 'A' to 'Z' do
-        WRITELN ( 'ch = ' , CH , ' ord = ' , ORD ( CH ) ) ;
-    end (* then *)
+  F10 := 'Oppolzer' ;
+  F30 := F10 ;
+  WRITELN ( F30 ) ;
+  F21 := 'Teststring Length 21' ;
+  F30 := F21 ;
+  WRITELN ( F30 ) ;
+  F30 := 'Test123456Test123456Test123456' ;
+  F21 := F30 ;
+  L := 21 ;
+  CH := '*' ;
+  MEMSET ( ADDR ( F21 ) , x'00' , 21 ) ;
+  MEMSET ( ADDR ( F21 ) , CHR ( 0 ) , 21 ) ;
+  MEMSET ( ADDR ( F21 ) , ' ' , 21 ) ;
+  MEMSET ( ADDR ( F21 ) , ' ' , L ) ;
+  MEMSET ( ADDR ( F21 ) , CH , L ) ;
+  MEMCPY ( ADDR ( F21 ) , ADDR ( F30 ) , 21 ) ;
+  WRITELN ( F21 ) ;
+  L := 21 ;
+  MEMCPY ( ADDR ( F21 ) , ADDR ( F30 ) , L ) ;
+  WRITELN ( F21 ) ;
 end (* HAUPTPROGRAMM *) .

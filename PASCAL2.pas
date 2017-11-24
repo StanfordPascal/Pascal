@@ -318,7 +318,9 @@ program PCODE_TRANSLATOR ( INPUT , OUTPUT , PRR , ASMOUT , DBGINFO ,
 
 
 
-const VERSION = '12.2017' ;
+const VERSION = '12.2017' ;        // Version for display message
+      VERSION2 = 0x1712 ;          // Version for load module
+      VERSION3 = 'XL2''1712''' ;   // Version for ASMOUT listing
       MXADR = 65535 ;
       SHRTINT = 4095 ;
       HALFINT = 32700 ;
@@ -1551,59 +1553,55 @@ procedure CHECKFREEREGS ;
 
 procedure ENTERLOOKUP ;
 
-   label 10 ;
-
-   const STEP = 17 ;
-
-         (*****************************)
-         (* MUST BE COPRIME TO HTSIZE *)
-         (*****************************)
-
+   const STEP = 17 ;     // MUST BE COPRIME TO HTSIZE
 
    var H : 0 .. HTSIZE ;
 
    begin (* ENTERLOOKUP *)
-     H := ( ORD ( NMCDE [ 1 ] ) * 64 + ORD ( NMCDE [ 2 ] ) * 4096 + ORD
-          ( NMCDE [ 3 ] ) ) MOD HTSIZE ;
-     10 :
-     with HTBL [ H ] do
-       if NAME <> NMCDE then
-         if NAME <> EMPTY then
-           begin
-             H := H + STEP ;
-             if H >= HTSIZE then
-               H := H - HTSIZE ;
-             goto 10 ;
+     H := ( ORD ( NMCDE [ 1 ] ) * 64 +         // hashcode part 1
+          ORD ( NMCDE [ 2 ] ) * 4096 +         // hashcode part 2
+          ORD ( NMCDE [ 3 ] ) ) MOD HTSIZE ;   // hashcode part 3
+     repeat
+       with HTBL [ H ] do
+         if NAME <> NMCDE then
+           if NAME <> EMPTY then
+             begin
+               H := H + STEP ;
+               if H >= HTSIZE then
+                 H := H - HTSIZE ;
+               continue ;
 
      (************************)
      (* NO CHECK FOR CYCLES! *)
      (************************)
 
-           end (* then *)
-         else
-           if INIT then
-             begin
+             end (* then *)
+           else
+             if INIT then
+               begin
 
      (******************)
      (* ENTER THE ITEM *)
      (******************)
 
-               NAME := NMCDE ;
-               if OP_SP then
-                 OPCDE := OPC
-               else
-                 SPCDE := CSP
-             end (* then *)
-           else
-             if OP_SP then
-               OPC := UNDEF_OP
+                 NAME := NMCDE ;
+                 if OP_SP then
+                   OPCDE := OPC
+                 else
+                   SPCDE := CSP
+               end (* then *)
              else
-               CSP := UNDEF_CSP
-       else
-         if OP_SP then
-           OPC := OPCDE
+               if OP_SP then
+                 OPC := UNDEF_OP
+               else
+                 CSP := UNDEF_CSP
          else
-           CSP := SPCDE ;
+           if OP_SP then
+             OPC := OPCDE
+           else
+             CSP := SPCDE ;
+       break ;
+     until FALSE ;
    end (* ENTERLOOKUP *) ;
 
 
@@ -3296,8 +3294,6 @@ procedure ASMNXTINST ;
 
    procedure GENRR ( OP : BYTE ; R1 , R2 : RGRNG ) ;
 
-      label 10 ;
-
       begin (* GENRR *)
         if R1 = TRG14 then
           TXR_CONTENTS . VALID := FALSE ;
@@ -3315,7 +3311,7 @@ procedure ASMNXTINST ;
                     if OP = XLTDR then
                       if LOP in [ XAD , XSD , XLCDR , XLPDR , XADR ,
                       XSDR , XAD , XSD ] then
-                        goto 10
+                        return
                       else
                         
                     else
@@ -3327,7 +3323,7 @@ procedure ASMNXTINST ;
                       if LOP in [ XLPR , XLCR , XNR , XORX , XXR , XAR
                       , XSR , XAH , XSH , XO , XX , XN , XSLA , XSRA ,
                       XA , XS ] then
-                        goto 10 ;
+                        return ;
 
         (**********************************)
         (* write symbolic instr to asmout *)
@@ -3358,8 +3354,6 @@ procedure ASMNXTINST ;
             LR := R1 ;
             LOP := OP
           end (* with *) ;
-        10 :
-        
       end (* GENRR *) ;
 
 
@@ -3945,6 +3939,23 @@ procedure ASMNXTINST ;
                                      2 ) ;
         ASM := SAVEASM ;
       end (* GENRELRX *) ;
+
+
+   procedure CONS_REGS ( var BASEREG : LVLRNG ; var INDEXREG : LVLRNG )
+                       ;
+
+      begin (* CONS_REGS *)
+        if INDEXREG = 0 then
+          return ;
+        if BASEREG = 0 then
+          begin
+            BASEREG := INDEXREG ;
+            INDEXREG := 0 ;
+            return
+          end (* then *) ;
+        GENRR ( XAR , BASEREG , INDEXREG ) ;
+        INDEXREG := 0 ;
+      end (* CONS_REGS *) ;
 
 
    procedure BRANCH_CHAIN ( LPC : ICRNG ) ;
@@ -4840,6 +4851,33 @@ procedure ASMNXTINST ;
             end (* case *) ;
           end (* with *) ;
       end (* GETOP_SIMPLE *) ;
+
+
+   procedure GEN_MOVECHAR ( var Q1 : ADRRNG ; var B1 : RGRNG ; var STE
+                          : DATUM ) ;
+
+      var P2 , B2 : LVLRNG ;
+          Q2 : ADRRNG ;
+
+      begin (* GEN_MOVECHAR *)
+        with STE do
+          begin
+            case VPA of
+              RGS : GENRX ( XSTC , RGADR , Q1 , 0 , B1 ) ;
+              MEM : begin
+                      P2 := MEMADR . LVL ;
+                      Q2 := MEMADR . DSPLMT ;
+                      BASE ( Q2 , P2 , B2 ) ;
+                      CONS_REGS ( B2 , P2 ) ;
+                      GENSS ( XMVC , 1 , Q1 , B1 , Q2 , B2 ) ;
+                    end (* tag/ca *) ;
+              NEITHER :
+                GENSI ( XMVI , Q1 , B1 , FPA . DSPLMT ) ;
+              otherwise
+                
+            end (* case *) ;
+          end (* with *) ;
+      end (* GEN_MOVECHAR *) ;
 
 
    procedure GETOPERAND ( var STE : DATUM ; var Q1 : ADRRNG ; var P1 ,
@@ -8303,7 +8341,7 @@ procedure ASMNXTINST ;
                                         ;
            CODE . H [ PCOUNTER - 7 ] := ORD ( 'S' ) * 256 + ORD ( 'C' )
                                         ;
-           CODE . H [ PCOUNTER - 6 ] := 0X1702 ;
+           CODE . H [ PCOUNTER - 6 ] := VERSION2 ;
            CODE . H [ PCOUNTER - 5 ] := 0 ;
            CODE . H [ PCOUNTER - 4 ] := DEBUG_LEV ;
            CODE . H [ PCOUNTER - 3 ] := 0 ;
@@ -8386,7 +8424,7 @@ procedure ASMNXTINST ;
                HEXHW ( POSOFPROCLEN - 6 , HEXPC ) ;
                WRITE ( ASMOUT , ASMTAG , HEXPC , ': ' ) ;
                WRITE ( ASMOUT , 'DC  ' : COLASMI , ' ' : SPACEASMI ) ;
-               WRITELN ( ASMOUT , 'XL2''1702'''
+               WRITELN ( ASMOUT , VERSION3 ,
                          '      -- Compiler version' ) ;
                HEXHW ( POSOFPROCLEN - 4 , HEXPC ) ;
                WRITE ( ASMOUT , ASMTAG , HEXPC , ': ' ) ;
@@ -10508,31 +10546,273 @@ procedure ASMNXTINST ;
       end (* PACK_UNPACK *) ;
 
 
-   procedure MFIOPERATION ( var L , R : DATUM ) ;
+   procedure MFIOPERATION ( var L , PAT : DATUM ; LEN : INTEGER ) ;
 
    //****************************************************************
    // generate overlapping MVC for short MFI                         
    // and MVCL for long MFI                                          
-   // error 993 as long as implementation is missing                 
    //****************************************************************
 
 
+      var P1 , B1 , P2 , B2 , PX , BX : LVLRNG ;
+          Q1 , Q2 , QX : ADRRNG ;
+
       begin (* MFIOPERATION *)
-        ERROR ( 993 ) ;
+        if LEN > 0 then
+
+        //******************************************************
+        // if length <= 256 generate overlapping MVC            
+        //******************************************************
+
+          if LEN <= 256 then
+            begin
+
+        //******************************************************
+        // get address of left operand                          
+        //******************************************************
+
+              GETADR ( L , Q1 , P1 , B1 ) ;
+              if not L . DRCT then
+                begin
+                  GENRX ( XL , TXRG , Q1 , B1 , P1 ) ;
+                  Q1 := 0 ;
+                  B1 := 0 ;
+                  P1 := TXRG ;
+                end (* then *) ;
+
+        //******************************************************
+        // consolidate index and base reg to base reg b1        
+        //******************************************************
+
+              CONS_REGS ( B1 , P1 ) ;
+
+        //******************************************************
+        // move pattern to byte 1                               
+        //******************************************************
+
+              GEN_MOVECHAR ( Q1 , B1 , PAT ) ;
+
+        //******************************************************
+        // operlapping MVC                                      
+        //******************************************************
+
+              if LEN > 1 then
+                GENSS ( XMVC , LEN - 1 , Q1 + 1 , B1 , Q1 , B1 ) ;
+            end (* then *)
+          else
+            begin
+
+        //******************************************************
+        // get address of left operand                          
+        //******************************************************
+
+              GETADR ( L , Q1 , P1 , B1 ) ;
+              if not L . DRCT then
+                begin
+                  GENRX ( XL , TXRG , Q1 , B1 , P1 ) ;
+                  Q1 := 0 ;
+                  B1 := 0 ;
+                  P1 := TXRG ;
+                end (* then *) ;
+
+        //******************************************************
+        // get init pattern                                     
+        //******************************************************
+
+              if FALSE then
+                begin
+                  WRITELN ( TRACEF , 'pat.drct   = ' , PAT . DRCT ) ;
+                  WRITELN ( TRACEF , 'pat.vrbl   = ' , PAT . VRBL ) ;
+                  WRITELN ( TRACEF , 'pat.dtype  = ' , PAT . DTYPE ) ;
+                  WRITELN ( TRACEF , 'pat.vpa    = ' , PAT . VPA ) ;
+                  WRITELN ( TRACEF , 'pat.rgadr  = ' , PAT . RGADR ) ;
+                end (* then *) ;
+
+        //******************************************************
+        // RESTORE THE OLD MIDLEVEL BASE REG                    
+        //******************************************************
+
+              if P1 < 0 then
+                begin
+                  B1 := P1 ;
+                  P1 := 0 ;
+                end (* then *) ;
+
+        //**************************************************
+        // THIS IS ONLY VALID FOR THE 370,                  
+        // FOR THE 360 THE 'MVCL' INSTRUNCTION SHOULD BE    
+        // REPLACED BY A subroutine or a loop or MVC;       
+        // because the length of the operands is not        
+        // known at compile time in this case, a fix list   
+        // of MVCs is not sufficient                        
+        //**************************************************
+
+              if B1 < 0 then
+                ERROR ( 202 ) ;
+              FINDRP ;
+              GENRX ( XLA , NXTRG , Q1 , B1 , P1 ) ;
+              P1 := NXTRG ;
+              B1 := NXTRG + 1 ;
+              FINDRP ;
+              P2 := NXTRG ;
+              B2 := NXTRG + 1 ;
+
+        //******************************************************
+        // const length operand                                 
+        // generate LA                                          
+        //******************************************************
+
+              GENRX ( XLA , B1 , LEN , 0 , 0 ) ;
+
+        //******************************************************
+        // source address is zero                               
+        //******************************************************
+
+              GENRR ( XXR , P2 , P2 ) ;
+
+        //******************************************************
+        // pattern operand                                      
+        // generate L or LR                                     
+        //******************************************************
+
+              GETOP_SIMPLE ( PAT , QX , PX , BX , B2 , FALSE ) ;
+              GENRX ( XSLL , B2 , 24 , 0 , 0 ) ;
+
+        //******************************************************
+        // generate MVCL instruction                            
+        //******************************************************
+
+              GENRR ( XMVCL , P1 , P2 ) ;
+              AVAIL [ P1 ] := TRUE ;
+              AVAIL [ B1 ] := TRUE ;
+              AVAIL [ P2 ] := TRUE ;
+              AVAIL [ B2 ] := TRUE ;
+              S370CNT := S370CNT + 1 ;
+            end (* else *) ;
+        FREEREG ( L ) ;
+        FREEREG ( PAT ) ;
       end (* MFIOPERATION *) ;
 
 
-   procedure MZEOPERATION ( var X : DATUM ) ;
+   procedure MZEOPERATION ( var L : DATUM ; LEN : INTEGER ) ;
 
    //****************************************************************
    // generate XC for short MZE                                      
    // and MVCL for long MZE                                          
-   // error 994 as long as implementation is missing                 
    //****************************************************************
 
 
       begin (* MZEOPERATION *)
-        ERROR ( 994 ) ;
+        if LEN > 0 then
+
+        //******************************************************
+        // if length <= 256 generate XC                         
+        //******************************************************
+
+          if LEN <= 256 then
+            begin
+
+        //******************************************************
+        // get address of left operand                          
+        //******************************************************
+
+              GETADR ( L , Q1 , P1 , B1 ) ;
+              if not L . DRCT then
+                begin
+                  GENRX ( XL , TXRG , Q1 , B1 , P1 ) ;
+                  Q1 := 0 ;
+                  B1 := 0 ;
+                  P1 := TXRG ;
+                end (* then *) ;
+
+        //******************************************************
+        // consolidate index and base reg to base reg b1        
+        //******************************************************
+
+              CONS_REGS ( B1 , P1 ) ;
+
+        //******************************************************
+        // XC is used to zero the area                          
+        //******************************************************
+
+              GENSS ( XXC , LEN , Q1 , B1 , Q1 , B1 ) ;
+            end (* then *)
+          else
+            begin
+
+        //******************************************************
+        // get address of left operand                          
+        //******************************************************
+
+              GETADR ( L , Q1 , P1 , B1 ) ;
+              if not L . DRCT then
+                begin
+                  GENRX ( XL , TXRG , Q1 , B1 , P1 ) ;
+                  Q1 := 0 ;
+                  B1 := 0 ;
+                  P1 := TXRG ;
+                end (* then *) ;
+
+        //******************************************************
+        // RESTORE THE OLD MIDLEVEL BASE REG                    
+        //******************************************************
+
+              if P1 < 0 then
+                begin
+                  B1 := P1 ;
+                  P1 := 0 ;
+                end (* then *) ;
+
+        //**************************************************
+        // THIS IS ONLY VALID FOR THE 370,                  
+        // FOR THE 360 THE 'MVCL' INSTRUNCTION SHOULD BE    
+        // REPLACED BY A subroutine or a loop or MVC;       
+        // because the length of the operands is not        
+        // known at compile time in this case, a fix list   
+        // of MVCs is not sufficient                        
+        //**************************************************
+
+              if B1 < 0 then
+                ERROR ( 202 ) ;
+              FINDRP ;
+              GENRX ( XLA , NXTRG , Q1 , B1 , P1 ) ;
+              P1 := NXTRG ;
+              B1 := NXTRG + 1 ;
+              FINDRP ;
+              P2 := NXTRG ;
+              B2 := NXTRG + 1 ;
+
+        //******************************************************
+        // const length operand                                 
+        // generate LA                                          
+        //******************************************************
+
+              GENRX ( XLA , B1 , LEN , 0 , 0 ) ;
+
+        //******************************************************
+        // source address is zero                               
+        //******************************************************
+
+              GENRR ( XXR , P2 , P2 ) ;
+
+        //******************************************************
+        // pattern is zero                                      
+        //******************************************************
+
+              GENRR ( XXR , B2 , B2 ) ;
+
+        //******************************************************
+        // generate MVCL instruction                            
+        //******************************************************
+
+              GENRR ( XMVCL , P1 , P2 ) ;
+              AVAIL [ P1 ] := TRUE ;
+              AVAIL [ B1 ] := TRUE ;
+              AVAIL [ P2 ] := TRUE ;
+              AVAIL [ B2 ] := TRUE ;
+              S370CNT := S370CNT + 1 ;
+            end (* else *) ;
+        FREEREG ( L ) ;
       end (* MZEOPERATION *) ;
 
 
@@ -10547,6 +10827,7 @@ procedure ASMNXTINST ;
 
       var P1 , B1 , P2 , B2 , PX , BX : LVLRNG ;
           Q1 , Q2 , QX : ADRRNG ;
+          BPC : ICRNG ;
 
       begin (* MCPOPERATION *)
 
@@ -10633,23 +10914,44 @@ procedure ASMNXTINST ;
         B2 := NXTRG + 1 ;
 
         //******************************************************
-        // if length operand is not a direct operand            
-        // error 991 ... will have to be fixed later            
+        // length operand                                       
+        // generate L or LR                                     
         //******************************************************
 
         GETOP_SIMPLE ( LEN , QX , PX , BX , B1 , TRUE ) ;
 
         //******************************************************
         // copy length in register b1 to register b2            
+        // and test                                             
         //******************************************************
 
-        GENRR ( XLR , B2 , B1 ) ;
+        GENRR ( XLTR , B2 , B1 ) ;
+
+        //******************************************************
+        // check length for positive                            
+        // address of branch will be filled in later            
+        //******************************************************
+
+        GENRX ( XBC , LEQCND , 0 , 0 , 0 ) ;
+        BPC := PCOUNTER ;
+        if ASM then
+          WRITELN ( ASMOUT , '## ' , ' ' : SPACEASMX , 'BNP   @NOMV' )
+                    ;
 
         //******************************************************
         // generate MVCL instruction                            
         //******************************************************
 
         GENRR ( XMVCL , P1 , P2 ) ;
+
+        //******************************************************
+        // generate label after MVCL                            
+        //******************************************************
+
+        CODE . H [ BPC - 1 ] := BASE_DSPLMT ( PCOUNTER ) ;
+        if ASM then
+          WRITELN ( ASMOUT , '## ' , ' ' : SPACEASML ,
+                    '@NOMV  DS    0H' ) ;
         AVAIL [ P1 ] := TRUE ;
         AVAIL [ B1 ] := TRUE ;
         AVAIL [ P2 ] := TRUE ;
@@ -10672,6 +10974,7 @@ procedure ASMNXTINST ;
 
       var P1 , B1 , P2 , B2 , PX , BX : LVLRNG ;
           Q1 , Q2 , QX : ADRRNG ;
+          BPC : ICRNG ;
 
       begin (* MSEOPERATION *)
 
@@ -10733,7 +11036,7 @@ procedure ASMNXTINST ;
         // of MVCs is not sufficient                        
         //**************************************************
 
-        if ( B1 < 0 ) or ( B2 < 0 ) then
+        if B1 < 0 then
           ERROR ( 202 ) ;
         FINDRP ;
         GENRX ( XLA , NXTRG , Q1 , B1 , P1 ) ;
@@ -10751,6 +11054,18 @@ procedure ASMNXTINST ;
         GETOP_SIMPLE ( LEN , QX , PX , BX , B1 , TRUE ) ;
 
         //******************************************************
+        // check length for positive                            
+        // address of branch will be filled in later *)         
+        //******************************************************
+
+        GENRR ( XLTR , B1 , B1 ) ;
+        GENRX ( XBC , LEQCND , 0 , 0 , 0 ) ;
+        BPC := PCOUNTER ;
+        if ASM then
+          WRITELN ( ASMOUT , '## ' , ' ' : SPACEASMX , 'BNP   @NOMV' )
+                    ;
+
+        //******************************************************
         // source address is zero                               
         //******************************************************
 
@@ -10765,11 +11080,19 @@ procedure ASMNXTINST ;
         GENRX ( XSLL , B2 , 24 , 0 , 0 ) ;
 
         //******************************************************
-        // pattern operand                                      
-        // generate L or LR                                     
+        // generate MVCL instruction                            
         //******************************************************
 
         GENRR ( XMVCL , P1 , P2 ) ;
+
+        //******************************************************
+        // generate label after MVCL                            
+        //******************************************************
+
+        CODE . H [ BPC - 1 ] := BASE_DSPLMT ( PCOUNTER ) ;
+        if ASM then
+          WRITELN ( ASMOUT , '## ' , ' ' : SPACEASML ,
+                    '@NOMV  DS    0H' ) ;
         AVAIL [ P1 ] := TRUE ;
         AVAIL [ B1 ] := TRUE ;
         AVAIL [ P2 ] := TRUE ;
@@ -12181,18 +12504,18 @@ procedure ASMNXTINST ;
                 if Q > 0 then
                   begin
                     TOP := TOP - 2 ;
-                    MFIOPERATION ( STK [ TOP ] , STK [ TOP + 1 ] )
+                    MFIOPERATION ( STK [ TOP ] , STK [ TOP + 1 ] , Q )
                   end (* then *)
                 else
                   begin
                     Q := ABS ( Q ) ;
                     TOP := TOP - 1 ;
-                    MFIOPERATION ( STK [ TOP - 2 ] , STK [ TOP ] )
+                    MFIOPERATION ( STK [ TOP - 2 ] , STK [ TOP ] , Q )
                   end (* else *) ;
               end (* tag/ca *) ;
        PMZE : begin
                 TOP := TOP - 1 ;
-                MZEOPERATION ( STK [ TOP ] ) ;
+                MZEOPERATION ( STK [ TOP ] , Q ) ;
               end (* tag/ca *) ;
        PMCP : begin
                 TOP := TOP - 3 ;

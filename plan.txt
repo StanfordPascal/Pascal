@@ -14,8 +14,11 @@
 * evtl. neuer Befehl MZE fÅr Nullsetzen eines Bereichs
 * PASFORM weiter verbessern (siehe Startkommentar)
 * Fehler: Endlosschleife bei PFEHL.PAS
-- Implementieren neue P-Code Instruktionen in PASCAL2
-- Aufruf externer Funktionen (ASSEMBLER, C)
+* Implementieren neue P-Code Instruktionen in PASCAL2
+* Fehler bei PASFORM bei C++ Kommentaren innerhalb Expressions
+- Testen neue P-Code Instruktionen auf VM (Hercules)
+- Aufruf externer Funktionen (ASSEMBLER)
+- Aufruf externer Funktionen (C)
 
 spÑter:
 

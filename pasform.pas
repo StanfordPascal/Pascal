@@ -139,8 +139,8 @@ const VERSION = '11.2017' ;
       MAXRWLEN = 9 ;
 
       //**********************************************************
-      // longest reserved word has length = 9
-      // controls size of table frw
+      // longest reserved word has length = 9                     
+      // controls size of table frw                               
       //**********************************************************
 
       IDLNGTH = 20 ;
@@ -186,8 +186,8 @@ type WORT = array [ 1 .. 100 ] of CHAR ;
                  end ;
 
      //************************************************************
-     // muss mit Def. beim Scanner
-     // uebereinstimmen
+     // muss mit Def. beim Scanner                                 
+     // uebereinstimmen                                            
      //************************************************************
 
      SYMB = ( SYMB_EOF , SYMB_UNKNOWN , EOLCHAR , SEPARATOR , COMMENT1
@@ -209,8 +209,8 @@ type WORT = array [ 1 .. 100 ] of CHAR ;
      SYMSET = set of SYMB ;
 
      //************************************************************
-     // struktur, die den Zustand fuer die
-     // kommentarroutinen festhaelt
+     // struktur, die den Zustand fuer die                         
+     // kommentarroutinen festhaelt                                
      //************************************************************
 
      KOMMCTL = record
@@ -222,7 +222,7 @@ type WORT = array [ 1 .. 100 ] of CHAR ;
                  KOMMTYPE : CHAR ;          // welcher typ
                  NURSTERNE : BOOLEAN ;      // nur sterne ?
                  KOMMSTATUS : INTEGER ;     // zustand bzgl. kasten
-                 einrkasten : INTEGER ;     // einr waehrend kasten
+                 EINRKASTEN : INTEGER ;     // einr waehrend kasten
                  KOMML_AUS : INTEGER ;      // kommlaenge ausgabe
                  UEBERLESEN : INTEGER ;     // ueberlesen ?
                  KOMM_VOR_PROC : BOOLEAN ;  // vor prozedur ?
@@ -232,13 +232,14 @@ type WORT = array [ 1 .. 100 ] of CHAR ;
                  LINENR_LAST : INTEGER ;    // linenr letzt. komm
                  LINEPOS_LAST : INTEGER ;   // linepos letzt. komm
                  KOMML_MAX : INTEGER ;      // max. komml. in set
+                 NEUZEILE_VORM : BOOLEAN ;  // neuzeile-Vormerkung
                end ;
 
      //************************************************************
-     // zentraler Scan-Block
+     // zentraler Scan-Block                                       
      //************************************************************
-     // muss mit Def. beim Scanner
-     // uebereinstimmen
+     // muss mit Def. beim Scanner                                 
+     // uebereinstimmen                                            
      //************************************************************
 
      CHAR32 = array [ 1 .. 32 ] of CHAR ;
@@ -271,7 +272,7 @@ type WORT = array [ 1 .. 100 ] of CHAR ;
                     POPT : OPTIONS_PTR ;
 
      //************************************************************
-     // felder fuer sofortige Protokollausgabe
+     // felder fuer sofortige Protokollausgabe                     
      //************************************************************
 
                     PROTOUT : BOOLEAN ;
@@ -281,7 +282,7 @@ type WORT = array [ 1 .. 100 ] of CHAR ;
                     LINEINFO_SIZE : INTEGER ;
 
      //************************************************************
-     // felder fuer ueberschrift
+     // felder fuer ueberschrift                                   
      //************************************************************
 
                     LINECOUNT : INTEGER ;
@@ -291,10 +292,10 @@ type WORT = array [ 1 .. 100 ] of CHAR ;
                   end ;
 
      //************************************************************
-     // Optionen fuer Compiler
+     // Optionen fuer Compiler                                     
      //************************************************************
-     // muss mit Def. beim Scanner
-     // uebereinstimmen
+     // muss mit Def. beim Scanner                                 
+     // uebereinstimmen                                            
      //************************************************************
 
      COMP_OPTIONS = record
@@ -705,8 +706,8 @@ procedure KOMMENDEKASTEN ;
    begin (* KOMMENDEKASTEN *)
      if ENDEKASTEN <> ' ' then
        begin
-         if kommc.einrkasten <> 0 then
-           WRITE ( AUSGABE , ' ' : kommc.einrkasten ) ;
+         if KOMMC . EINRKASTEN <> 0 then
+           WRITE ( AUSGABE , ' ' : KOMMC . EINRKASTEN ) ;
          KOMMSTERNZEILE ;
          WRITELN ( AUSGABE ) ;
          ZZAUS := ZZAUS + 1 ;
@@ -951,6 +952,7 @@ procedure WRITEKOMM ( var KOMMC : KOMMCTL ) ;
        FILLCH : CHAR ;
 
    begin (* WRITEKOMM *)
+     KOMMC . NEUZEILE_VORM := FALSE ;
      while TRUE do
        begin
          if KOMMC . KOMML < KOMMC . KOMML_AUS then
@@ -1053,6 +1055,8 @@ procedure WRITEKOMM ( var KOMMC : KOMMCTL ) ;
              end (* then *) ;
          for I := 1 to KOMMC . KOMML_AUS do
            WRITE ( AUSGABE , KOMMC . KOMMP [ I ] ) ;
+         if KOMMC . KOMMTYPE = '+' then
+           KOMMC . NEUZEILE_VORM := TRUE ;
          if KOMMC . KOMML > KOMMC . KOMML_AUS then
            begin
              NEUZEILEKOMM ( TRUE ) ;
@@ -1084,11 +1088,6 @@ procedure WRITEKOMM ( var KOMMC : KOMMCTL ) ;
                '"' : begin
                        KOMMC . KOMMP [ 1 ] := '"' ;
                        KOMMC . KOMMP [ 2 ] := CH1 ;
-                       X := 2 ;
-                     end (* tag/ca *) ;
-               '+' : begin
-                       KOMMC . KOMMP [ 1 ] := '/' ;
-                       KOMMC . KOMMP [ 2 ] := '/' ;
                        X := 2 ;
                      end (* tag/ca *) ;
              end (* case *) ;
@@ -1194,7 +1193,7 @@ procedure KOMMENTAR ( var KOMMC : KOMMCTL ) ;
            0 : begin
                  if KOMMC . SYMB_VOR_KOMM then
                    begin
-                     if false then
+                     if FALSE then
                        begin
                          WRITELN ( TRACEF , 'symb_vor_komm' ) ;
                          WRITELN ( TRACEF , 'komml      = ' , KOMMC .
@@ -1274,10 +1273,10 @@ procedure KOMMENTAR ( var KOMMC : KOMMCTL ) ;
      (************************************************)
 
                      if KOMMKASTEN then
-                     begin
-                       KOMMC . KOMMSTATUS := 1 ;
-                       KOMMC . einrkasten := einrkomm;
-                     end
+                       begin
+                         KOMMC . KOMMSTATUS := 1 ;
+                         KOMMC . EINRKASTEN := EINRKOMM ;
+                       end (* then *)
                      else
                        KOMMC . KOMMSTATUS := 2 ;
 
@@ -1533,7 +1532,7 @@ procedure INSYMBOL ;
            begin
 
      //**************************************************
-     // zeilenwechsel seit letztem Passcan-Aufruf
+     // zeilenwechsel seit letztem Passcan-Aufruf        
      //**************************************************
 
              KOMMC . LINENR := SCB . LINENR ;
@@ -1544,7 +1543,7 @@ procedure INSYMBOL ;
            begin
 
      //**************************************************
-     // ein "echtes" symbol wurde gefunden
+     // ein "echtes" symbol wurde gefunden               
      //**************************************************
 
              KOMMC . SYMB_VOR_KOMM := TRUE ;
@@ -1847,7 +1846,7 @@ procedure INSYMBOL ;
                  end (* else *)
              end (* tag/ca *) ;
            otherwise
-
+             
          end (* case *) ;
 
      (**********************************************************)
@@ -1935,6 +1934,15 @@ procedure NEUZEILE ( BLANKS : BOOLEAN ) ;
      else
        OUTPOINTER := 0 ;
      BLANKSVORHANDEN := FALSE ;
+
+     //************************************************************
+     // neuzeile_vorm loeschen                                     
+     // von c++ kommentar getriggerte leerzeile                    
+     // soll nur geschrieben werden, wenn nicht schon              
+     // eine andere leerzeile sowieso erzeugt wird                 
+     //************************************************************
+
+     KOMMC . NEUZEILE_VORM := FALSE ;
    end (* NEUZEILE *) ;
 
 
@@ -1994,6 +2002,16 @@ procedure OUTSYMBOL ( S : SYMB ) ;
          end (* then *) ;
      KOMMC . KOMMSTATUS := 0 ;
 
+     //************************************************************
+     // letztes symbol war c++ kommentar                           
+     //************************************************************
+
+     if KOMMC . NEUZEILE_VORM then
+       begin
+         NEUZEILE ( TRUE ) ;
+         KOMMC . NEUZEILE_VORM := FALSE ;
+       end (* then *) ;
+
      (*****************************)
      (* SYMBOLE GGF. MODIFIZIEREN *)
      (*****************************)
@@ -2016,7 +2034,7 @@ procedure OUTSYMBOL ( S : SYMB ) ;
            W1ENDE := 1 ;
          end (* tag/ca *) ;
        otherwise
-
+         
      end (* case *) ;
      if not DICHT then
        begin
@@ -3219,6 +3237,7 @@ begin (* HAUPTPROGRAMM *)
   KOMMC . LINENR_LAST := - 1 ;
   KOMMC . LINEPOS_LAST := - 1 ;
   KOMMC . KOMML_MAX := - 1 ;
+  KOMMC . NEUZEILE_VORM := FALSE ;
 
   (***********************************************)
   (*   HIER UNTERSCHIED PASCAL/VS ZU TURBO/3     *)

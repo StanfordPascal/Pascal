@@ -40,16 +40,10 @@ begin (* HAUPTPROGRAMM *)
   MEMSET ( ADDR ( F21 ) , ' ' , L ) ;
   MEMSET ( ADDR ( F21 ) , '$' , L ) ;
   MEMSET ( ADDR ( F21 ) , CH , L ) ;
-
-  /******************************************************************/
-  /*                                                                */
-  /*  MEMSET ( ADDR ( BUF ) , CH , 2000 ) ;                         */
-  /*  P := ADDR ( BUF ) ;                                           */
-  /*  P := PTRADD ( P , 2000 ) ;                                    */
-  /*  MEMSET ( P , CH , 2000 ) ;                                    */
-  /*                                                                */
-  /******************************************************************/
-
+  MEMSET ( ADDR ( BUF ) , CH , 2000 ) ;
+  P := ADDR ( BUF ) ;
+  P := PTRADD ( P , 2000 ) ;
+  MEMSET ( P , CH , 2000 ) ;
   L := 2000 ;
   MEMSET ( ADDR ( BUF ) , CH , L ) ;
   P := ADDR ( BUF ) ;

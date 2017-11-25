@@ -4835,14 +4835,16 @@ procedure ASMNXTINST ;
                       P1 := MEMADR . LVL ;
                       Q1 := MEMADR . DSPLMT ;
                       BASE ( Q1 , P1 , B1 ) ;
-                      if DTYPE = CHRC then
-                        begin
-                          if INIT_ON_CHAR then
-                            GENRR ( XXR , TXRG , TXRG ) ;
-                          GENRX ( XIC , TXRG , Q1 , B1 , P1 )
-                        end (* then *)
-                      else
-                        GENRX ( XL , TXRG , Q1 , B1 , P1 ) ;
+                      case DTYPE of
+                        CHRC : begin
+                                 if INIT_ON_CHAR then
+                                   GENRR ( XXR , TXRG , TXRG ) ;
+                                 GENRX ( XIC , TXRG , Q1 , B1 , P1 )
+                               end (* tag/ca *) ;
+                        HINT : GENRX ( XLH , TXRG , Q1 , B1 , P1 ) ;
+                        otherwise
+                          GENRX ( XL , TXRG , Q1 , B1 , P1 ) ;
+                      end (* case *) ;
                     end (* tag/ca *) ;
               NEITHER :
                 GENRX ( XLA , TXRG , FPA . DSPLMT , 0 , 0 ) ;

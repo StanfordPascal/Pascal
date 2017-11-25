@@ -2693,7 +2693,7 @@ procedure INSYMBOL ;
                  end (* else *)
              end (* tag/ca *) ;
            otherwise
-             
+
          end (* case *) ;
 
      (**********************************************************)
@@ -4826,7 +4826,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                                  FLAG := TRUE
                              end (* then *)
                            else
-                             
+
                          else
                            if FORM = SUBRANGE then
                              if MIN . IVAL >= 0 then
@@ -6332,7 +6332,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
         (* differing lengths is fully implemented    *)
         (*********************************************)
 
-            ERRINFO := FWPTR -> . NAME ;
+            // ERRINFO := FWPTR -> . NAME ;
             ERROR_POS ( 'E' , 117 , ERRINFO , SCB . LINENR , SCB .
                         LINEPOS ) ;
             FWPTR := FWPTR -> . NEXT
@@ -6458,7 +6458,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
 
         if FWPTR <> NIL then
           repeat
-            ERRINFO := FWPTR -> . NAME ;
+            // ERRINFO := FWPTR -> . NAME ;
             ERROR_POS ( 'E' , 117 , ERRINFO , SCB . LINENR , SCB .
                         LINEPOS ) ;
             FWPTR := FWPTR -> . NEXT
@@ -6580,7 +6580,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
         LISTTAG := ' ' ;
         if FWPTR <> NIL then
           repeat
-            ERRINFO := FWPTR -> . NAME ;
+            // ERRINFO := FWPTR -> . NAME ;
             ERROR_POS ( 'E' , 117 , ERRINFO , SCB . LINENR , SCB .
                         LINEPOS ) ;
             FWPTR := FWPTR -> . NEXT
@@ -9241,7 +9241,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                              else
                                ERROR ( 116 ) ;
                      1 :
-                     
+
                    end (* while *) ;
                  ALIGN ( LSIZE , INTSIZE ) ;
 
@@ -13195,7 +13195,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                                 if CV1 > CV2 then
                                   XT := 0
                                 else
-                                  
+
                               else
                                 if CV1 < CV2 then
                                   XT := 0 ;

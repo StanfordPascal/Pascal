@@ -16,6 +16,7 @@
 *.bak
 *.obj
 *.map
+*.tmp
 *.exe
 !pcint.exe
 

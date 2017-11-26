@@ -31,24 +31,34 @@ begin (* HAUPTPROGRAMM *)
   F30 := F21 ;
   WRITELN ( F30 ) ;
   F30 := 'Test123456Test123456Test123456' ;
-  F21 := F30 ;
+
+  //******************************************************************
+  // F21 := F30 ;                                                     
+  //******************************************************************
+
   L := 21 ;
   CH := '*' ;
   MEMSET ( ADDR ( F21 ) , x'00' , 21 ) ;
   MEMSET ( ADDR ( F21 ) , CHR ( 0 ) , 21 ) ;
   MEMSET ( ADDR ( F21 ) , ' ' , 21 ) ;
   MEMSET ( ADDR ( F21 ) , ' ' , L ) ;
+  WRITELN ( '<' , F21 , '>' ) ;
   MEMSET ( ADDR ( F21 ) , '$' , L ) ;
+  WRITELN ( '<' , F21 , '>' ) ;
   MEMSET ( ADDR ( F21 ) , CH , L ) ;
+  WRITELN ( '<' , F21 , '>' ) ;
   MEMSET ( ADDR ( BUF ) , CH , 2000 ) ;
   P := ADDR ( BUF ) ;
   P := PTRADD ( P , 2000 ) ;
   MEMSET ( P , CH , 2000 ) ;
+  WRITELN ( '<' , BUF , '>' ) ;
   L := 2000 ;
   MEMSET ( ADDR ( BUF ) , CH , L ) ;
+  WRITELN ( '<' , BUF , '>' ) ;
   P := ADDR ( BUF ) ;
   P := PTRADD ( P , L ) ;
   MEMSET ( P , CH , L ) ;
+  WRITELN ( '<' , BUF , '>' ) ;
   MEMCPY ( ADDR ( F21 ) , ADDR ( F30 ) , 21 ) ;
   WRITELN ( F21 ) ;
   L := 21 ;

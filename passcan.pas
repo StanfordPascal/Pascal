@@ -377,6 +377,7 @@ local procedure SCAN_FEHLER_AUSGEBEN ( var SCANOUT : TEXT ; var SCB :
        L : INTEGER ;
        I : INTEGER ;
        INFO_POS : INTEGER ;
+       CP : -> CHAR ;
 
    begin (* SCAN_FEHLER_AUSGEBEN *)
      ERRCLASS := FELAUF -> . ERRCLASS ;
@@ -427,9 +428,11 @@ local procedure SCAN_FEHLER_AUSGEBEN ( var SCANOUT : TEXT ; var SCB :
                  WRITEPTR_LEN ( SCANOUT , ADDR ( FEINFO ) , 32 , TRUE ,
                                 TRUE ) ;
                  if L > INFO_POS then
-                   WRITEPTR_LEN ( SCANOUT , PTRADD ( ADDR ( FTEXT ) ,
-                                  INFO_POS ) , L - INFO_POS , FALSE ,
-                                  FALSE ) ;
+                   begin
+                     WRITEPTR_LEN ( SCANOUT , PTRADD ( ADDR ( FTEXT ) ,
+                                    INFO_POS ) , L - INFO_POS , FALSE ,
+                                    FALSE ) ;
+                   end (* then *)
                end (* then *)
              else
                WRITE ( SCANOUT , FTEXT : L ) ;
@@ -477,9 +480,11 @@ local procedure SCAN_FEHLER_AUSGEBEN ( var SCANOUT : TEXT ; var SCB :
                  WRITEPTR_LEN ( SCANOUT , ADDR ( FEINFO ) , 32 , TRUE ,
                                 TRUE ) ;
                  if L > INFO_POS then
-                   WRITEPTR_LEN ( SCANOUT , PTRADD ( ADDR ( FTEXT ) ,
-                                  INFO_POS ) , L - INFO_POS , FALSE ,
-                                  FALSE ) ;
+                   begin
+                     WRITEPTR_LEN ( SCANOUT , PTRADD ( ADDR ( FTEXT ) ,
+                                    INFO_POS ) , L - INFO_POS , FALSE ,
+                                    FALSE ) ;
+                   end (* then *)
                end (* then *)
              else
                WRITE ( SCANOUT , FTEXT : L ) ;

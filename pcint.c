@@ -1820,7 +1820,7 @@ static void *cspf_wrp (void *vgs,
 {
    global_store *gs = vgs;
    filecb *fcb;
-   char buf [9];
+   char buf [30];
 
 #if 0
 
@@ -1837,15 +1837,15 @@ static void *cspf_wrp (void *vgs,
    if (parm3 <= 0)
       return NULL;
 
-   if (parm3 > 8)
-      fprintf (fcb -> fhandle, "%*c", parm3 - 8, ' ');
+   if (parm3 < 8)
+      parm3 = 8;
 
    if (parm2 == -1)
-      sprintf (buf, "%-*.*s", parm3, parm3, "nil");
+      strcpy (buf, "nil");
    else
-      sprintf (buf, "%*p", parm3, ADDRSTOR (parm2));
+      sprintf (buf, "%p", ADDRSTOR (parm2));
 
-   fprintf (fcb -> fhandle, "%s", buf);
+   fprintf (fcb -> fhandle, "%*.*s", parm3, parm3, buf);
 
    return NULL;
 }

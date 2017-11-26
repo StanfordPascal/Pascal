@@ -222,7 +222,7 @@ procedure ASSIGNMEM ( var X : ANYFILE ; MEMBNAME : CHARPTR ; LEN :
        CHECK_PLATFORM ;
      if PLATF = PLATF_INTEL then
        begin
-         
+
        end (* then *)
      else
        begin
@@ -493,6 +493,7 @@ procedure WRITEPTR_LEN ( var F : TEXT ; CPSTART : VOIDPTR ; LEN :
          CP := PTRADD ( CP , 1 ) ;
          LEN := PTRDIFF ( CP , CPSTART ) ;
        end (* then *) ;
+     CP := CPSTART ;
      TRIGGER := FALSE ;
      for I := 1 to LEN do
        begin
@@ -587,5 +588,5 @@ procedure READSYMB ( var F : TEXT ; X : VOIDPTR ; LEN : INTEGER ) ;
 
 
 begin (* HAUPTPROGRAMM *)
-  
+
 end (* HAUPTPROGRAMM *) .

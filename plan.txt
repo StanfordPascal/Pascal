@@ -16,16 +16,19 @@
 * Fehler: Endlosschleife bei PFEHL.PAS
 * Implementieren neue P-Code Instruktionen in PASCAL2
 * Fehler bei PASFORM bei C++ Kommentaren innerhalb Expressions
-- Testen neue P-Code Instruktionen auf VM (Hercules)
-- wieso geht TESTLAB nicht korrekt auf VM?
-- TESTSVAR ausfÅhrlicher testen (neue P-Code Instruktionen)
+* wieso geht TESTLAB nicht korrekt auf VM?
+* Testen neue P-Code Instruktionen auf VM (Hercules)
+* TESTERR1: CSP WRP gibt am PC merkwÅrdige LÑnge aus
+* TESTERR1: P-Code ADA wird durch PASCAL2 falsch Åbersetzt
+* TESTSVAR ausfÅhrlicher testen (neue P-Code Instruktionen)
 - Aufruf externer Funktionen (ASSEMBLER)
-- Aufruf externer Funktionen (C)
+- Andere Installations-Prozedur fÅr MVS
 
 spÑter:
 
 - evtl. separates nachtrÑgliches Listing, Fehler an korrekter Stelle
 - PASFORM besseres Fehlerhandling bei Syntaxfehlern (analog Compiler)
+- Aufruf externer Funktionen (C)
 
 =======================================================================================
 

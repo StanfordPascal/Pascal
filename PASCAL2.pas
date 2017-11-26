@@ -2625,30 +2625,10 @@ procedure ASMNXTINST ;
 
    label 20 ;
 
-   const SL8 = 256 ;
-
-         (**********************)
-         (* SHIFT LEFT 8 BITS  *)
-         (**********************)
-
-         SL12 = 4096 ;
-
-         (**********************)
-         (*            12      *)
-         (**********************)
-
-         SL16 = 65536 ;
-
-         (**********************)
-         (*           16       *)
-         (**********************)
-
-         SL24 = 16777216 ;
-
-         (**********************)
-         (*           24       *)
-         (**********************)
-
+   const SL8 = 256 ;          // SHIFT LEFT  8 BITS
+         SL12 = 4096 ;        //            12
+         SL16 = 65536 ;       //            16
+         SL24 = 16777216 ;    //            24
 
    var OP : BYTE ;
        P1 , P2 , B1 , B2 : LVLRNG ;
@@ -4554,9 +4534,9 @@ procedure ASMNXTINST ;
                 end (* case *)
               else
 
-        (***************)
-        (* IF NOT DRCT *)
-        (***************)
+        //******************************************************
+        // if not drct                                          
+        //******************************************************
 
                 begin
                   GETADR ( STE , Q , P , B ) ;
@@ -4619,9 +4599,9 @@ procedure ASMNXTINST ;
                 end (* else *)
             else
 
-        (***********************************)
-        (* IF NOT VRBL, I.E. LOAD CONSTANT *)
-        (***********************************)
+        //******************************************************
+        // IF NOT VRBL, I.E. LOAD CONSTANT                      
+        //******************************************************
 
               begin
                 case DTYPE of
@@ -4684,9 +4664,9 @@ procedure ASMNXTINST ;
                                end (* then *)
                              else
 
-        (************)
-        (* PLEN = 0 *)
-        (************)
+        //******************************************************
+        // PLEN = 0                                             
+        //******************************************************
 
                                begin
                                  FINDRG ;
@@ -11276,6 +11256,7 @@ procedure ASMNXTINST ;
       label 10 , 20 , 30 ;
 
       var L , R : DATUM ;
+          X : DATUM ;
 
           (*************************)
           (*LEFT AND RIGHT OPERANDS*)
@@ -11431,10 +11412,38 @@ procedure ASMNXTINST ;
             end (* tag/ca *) ;
 
         (****************************************************)
-        (* neu 09.2019 : addiere int zu adresse / oppolzer  *)
+        (* neu 09.2016 : addiere int zu adresse / oppolzer  *)
+        (* chg 11.2017 : error, when adr is second operand  *)
         (****************************************************)
 
           PADA : begin
+
+        //******************************************************
+        // if type of right operand = adr                       
+        // exchange operands                                    
+        //******************************************************
+
+                   if R . DTYPE = ADR then
+                     begin
+                       X := R ;
+                       R := L ;
+                       L := X ;
+                     end (* then *) ;
+                   if FALSE then
+                     begin
+                       WRITELN ( TRACEF , 'pada0: l.dtype = ' , L .
+                                 DTYPE ) ;
+                       WRITELN ( TRACEF , 'pada0: r.dtype = ' , R .
+                                 DTYPE ) ;
+                       WRITELN ( TRACEF , 'pada0: l.drct  = ' , L .
+                                 DRCT ) ;
+                       WRITELN ( TRACEF , 'pada0: r.drct  = ' , R .
+                                 DRCT ) ;
+                       WRITELN ( TRACEF , 'pada0: l.displ = ' , L . FPA
+                                 . DSPLMT ) ;
+                       WRITELN ( TRACEF , 'pada0: r.displ = ' , R . FPA
+                                 . DSPLMT ) ;
+                     end (* then *) ;
                    if not L . DRCT then
                      LOAD ( L ) ;
                    if R . DRCT then
@@ -11447,8 +11456,12 @@ procedure ASMNXTINST ;
                    OP2 := XA ;
                    if R . VRBL then
                      begin
-                       Q := L . FPA . DSPLMT ;
-                       L . FPA . DSPLMT := 0 ;
+
+        //******************************************************
+        // Q := L . FPA . DSPLMT ;                              
+        // L . FPA . DSPLMT := 0 ;                              
+        //******************************************************
+
                        LOAD ( L ) ;
                        if R . DTYPE <> INT then
                          if R . DTYPE = HINT then

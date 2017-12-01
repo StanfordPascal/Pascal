@@ -134,13 +134,13 @@ const VERSION = '11.2017' ;
       MAXIDSIZE = 20 ;
       MAXSETL = 252 ;
       MAXSTRL = 254 ;
-      REALLNGTH = 8 ;
+      REALLNGTH = 20 ;
       MAXRW = 60 ;
       MAXRWLEN = 9 ;
 
       //**********************************************************
-      // longest reserved word has length = 9                     
-      // controls size of table frw                               
+      // longest reserved word has length = 9
+      // controls size of table frw
       //**********************************************************
 
       IDLNGTH = 20 ;
@@ -186,8 +186,8 @@ type WORT = array [ 1 .. 100 ] of CHAR ;
                  end ;
 
      //************************************************************
-     // muss mit Def. beim Scanner                                 
-     // uebereinstimmen                                            
+     // muss mit Def. beim Scanner
+     // uebereinstimmen
      //************************************************************
 
      SYMB = ( SYMB_EOF , SYMB_UNKNOWN , EOLCHAR , SEPARATOR , COMMENT1
@@ -209,8 +209,8 @@ type WORT = array [ 1 .. 100 ] of CHAR ;
      SYMSET = set of SYMB ;
 
      //************************************************************
-     // struktur, die den Zustand fuer die                         
-     // kommentarroutinen festhaelt                                
+     // struktur, die den Zustand fuer die
+     // kommentarroutinen festhaelt
      //************************************************************
 
      KOMMCTL = record
@@ -236,10 +236,10 @@ type WORT = array [ 1 .. 100 ] of CHAR ;
                end ;
 
      //************************************************************
-     // zentraler Scan-Block                                       
+     // zentraler Scan-Block
      //************************************************************
-     // muss mit Def. beim Scanner                                 
-     // uebereinstimmen                                            
+     // muss mit Def. beim Scanner
+     // uebereinstimmen
      //************************************************************
 
      CHAR32 = array [ 1 .. 32 ] of CHAR ;
@@ -272,7 +272,7 @@ type WORT = array [ 1 .. 100 ] of CHAR ;
                     POPT : OPTIONS_PTR ;
 
      //************************************************************
-     // felder fuer sofortige Protokollausgabe                     
+     // felder fuer sofortige Protokollausgabe
      //************************************************************
 
                     PROTOUT : BOOLEAN ;
@@ -282,7 +282,7 @@ type WORT = array [ 1 .. 100 ] of CHAR ;
                     LINEINFO_SIZE : INTEGER ;
 
      //************************************************************
-     // felder fuer ueberschrift                                   
+     // felder fuer ueberschrift
      //************************************************************
 
                     LINECOUNT : INTEGER ;
@@ -292,10 +292,10 @@ type WORT = array [ 1 .. 100 ] of CHAR ;
                   end ;
 
      //************************************************************
-     // Optionen fuer Compiler                                     
+     // Optionen fuer Compiler
      //************************************************************
-     // muss mit Def. beim Scanner                                 
-     // uebereinstimmen                                            
+     // muss mit Def. beim Scanner
+     // uebereinstimmen
      //************************************************************
 
      COMP_OPTIONS = record
@@ -1532,7 +1532,7 @@ procedure INSYMBOL ;
            begin
 
      //**************************************************
-     // zeilenwechsel seit letztem Passcan-Aufruf        
+     // zeilenwechsel seit letztem Passcan-Aufruf
      //**************************************************
 
              KOMMC . LINENR := SCB . LINENR ;
@@ -1543,7 +1543,7 @@ procedure INSYMBOL ;
            begin
 
      //**************************************************
-     // ein "echtes" symbol wurde gefunden               
+     // ein "echtes" symbol wurde gefunden
      //**************************************************
 
              KOMMC . SYMB_VOR_KOMM := TRUE ;
@@ -1846,7 +1846,7 @@ procedure INSYMBOL ;
                  end (* else *)
              end (* tag/ca *) ;
            otherwise
-             
+
          end (* case *) ;
 
      (**********************************************************)
@@ -1936,10 +1936,10 @@ procedure NEUZEILE ( BLANKS : BOOLEAN ) ;
      BLANKSVORHANDEN := FALSE ;
 
      //************************************************************
-     // neuzeile_vorm loeschen                                     
-     // von c++ kommentar getriggerte leerzeile                    
-     // soll nur geschrieben werden, wenn nicht schon              
-     // eine andere leerzeile sowieso erzeugt wird                 
+     // neuzeile_vorm loeschen
+     // von c++ kommentar getriggerte leerzeile
+     // soll nur geschrieben werden, wenn nicht schon
+     // eine andere leerzeile sowieso erzeugt wird
      //************************************************************
 
      KOMMC . NEUZEILE_VORM := FALSE ;
@@ -2003,7 +2003,7 @@ procedure OUTSYMBOL ( S : SYMB ) ;
      KOMMC . KOMMSTATUS := 0 ;
 
      //************************************************************
-     // letztes symbol war c++ kommentar                           
+     // letztes symbol war c++ kommentar
      //************************************************************
 
      if KOMMC . NEUZEILE_VORM then
@@ -2034,7 +2034,7 @@ procedure OUTSYMBOL ( S : SYMB ) ;
            W1ENDE := 1 ;
          end (* tag/ca *) ;
        otherwise
-         
+
      end (* case *) ;
      if not DICHT then
        begin
@@ -2716,6 +2716,23 @@ procedure CBODY ( FSYS : SYMSET ; FUELLWORT : PWORT ; BLOCKLEVEL :
            OUTSYMBOL ( S ) ;
            INSYMBOL ;
            S := SY ;
+
+
+
+           if S in [ident, syfrtrn, stringconst ] then
+             begin
+               OUTSYMBOL ( S ) ;
+               INSYMBOL ;
+               S := SY ;
+             end (* then *) ;
+
+           if S = stringconst then
+             begin
+               OUTSYMBOL ( S ) ;
+               INSYMBOL ;
+               S := SY ;
+             end (* then *) ;
+
            if S = SYSEMICOLON then
              begin
                OUTSYMBOL ( S ) ;

@@ -671,45 +671,6 @@ program PASCALCOMPILER ( INPUT , OUTPUT , PRR , LISTING , DBGINFO ,
 (*    overlapping MVC on the mainframe)                             *)
 (*                                                                  *)
 (********************************************************************)
-(*                                                                  *)
-(*  Dec.2017 - Extensions to the Compiler by Bernd Oppolzer         *)
-(*             (berndoppolzer@yahoo.com)                            *)
-(*                                                                  *)
-(*  - Extensions to EXTERNAL procedure declarations: the            *)
-(*    language of the external procedure may be specified,          *)
-(*    and an additional external name (8 chars), which is           *)
-(*    used instead of the Pascal name (which may be longer).        *)
-(*    Supported languages are FORTRAN and ASSEMBLER on the          *)
-(*    mainframe and Pascal, of course. On the PC only               *)
-(*    Pascal, at the moment, because the P-Code interpreter         *)
-(*    cannot call external C objects at the moment.                 *)
-(*                                                                  *)
-(*    Example:                                                      *)
-(*                                                                  *)
-(*    procedure PASCAL_TO_ASSEMBLER ( X1 : INTEGER ;                *)
-(*                                    var X2 : INTEGER ;            *)
-(*                                    T1 : CHAR20 ;                 *)
-(*                                    var T2 : CHAR20 ) ;           *)
-(*                                                                  *)
-(*       EXTERNAL ASSEMBLER 'PAS2ASM' ;                             *)
-(*                                                                  *)
-(*  - For ASSEMBLER and FORTRAN, different call sequences           *)
-(*    are created. ASSEMBLER and FORTRAN both use normal            *)
-(*    OS linkage conventions, and FORTRAN expects all parameters    *)
-(*    passed by reference, so the Pascal compiler creates           *)
-(*    dummy arguments for every Pascal by-value parameter.          *)
-(*                                                                  *)
-(*  - Example programs for both languages, showing external         *)
-(*    procedures and functions implemented in ASSEMBLER and         *)
-(*    FORTRAN, will be created.                                     *)
-(*                                                                  *)
-(*  - More advanced topics: using the Pascal stack in the           *)
-(*    external procedures (allowing, maybe, recursive calls         *)
-(*    of the ASSEMBLER subfunctions), and calling some              *)
-(*    functions of the Pascal runtime library.                      *)
-(*    This will be possible, too, but has not been tested yet.      *)
-(*                                                                  *)
-(********************************************************************)
 
 
 
@@ -883,10 +844,8 @@ const VERSION = '12.2017' ;
       PCODE_CSP = 30 ;
       PCODE_ENT = 32 ;
       PCODE_MOV = 40 ;
-      PCODE_RET = 42 ;
       PCODE_CUP = 46 ;
       PCODE_LDC = 51 ;
-      PCODE_STR = 56 ;
       PCODE_ORD = 61 ;
       PCODE_BGN = 72 ;
       PCODE_MFI = 80 ;
@@ -1101,42 +1060,9 @@ type ALPHA = array [ 1 .. IDLNGTH ] of CHAR ;
 
      STORAGE_CLASS = ( XAUTO , XSTATIC ) ;
 
-     (******************************************************)
-     (* identifier entries                                 *)
-     (*                                                    *)
-     (* some comments on new fields (since 2011):          *)
-     (*                                                    *)
-     (* konst - values: contains the value (xconstant)     *)
-     (* structkonst: skownerproc is the external name of   *)
-     (*       the proc which implements the                *)
-     (*       structured constant ... the name             *)
-     (*       of the static csect is derived from          *)
-     (*       this; skaddr is the displ. there             *)
-     (* vars: same for vownerproc and vaddr, if stklass    *)
-     (*       is static. special ind., if the variable     *)
-     (*       needs special treatment (TIME, DATE, for     *)
-     (*       example; call a CSP at every reference)      *)
-     (* proc/func: made extrn, extlang, extname global     *)
-     (*       for both flavors of proc / func              *)
-     (* proc/func standard: libname etc. for library       *)
-     (*       functions which are not simply csps.         *)
-     (*       the compiler generates calls to libname,     *)
-     (*       where the first parameter is funccode.       *)
-     (*       proctyp is omitted; the type of the          *)
-     (*       standard function is known via proctype      *)
-     (*       as in the declared case; idtype is set       *)
-     (*       accordingly during enterstdnames.            *)
-     (* proc/func declared: declmissing is used for        *)
-     (*       procs and funcs which have no decl           *)
-     (*       (works anyway, W184 and W186).               *)
-     (*       frtrn attribute has been omitted.            *)
-     (*       we now have extrn and extname and extlang;   *)
-     (*       extname can be a different name from the     *)
-     (*       (longer) internal name and extlang can be    *)
-     (*       blank for Pascal or A / F for ASSEMBLER      *)
-     (*       resp. FORTRAN. A and F generate different    *)
-     (*       calling sequences.                           *)
-     (******************************************************)
+     (******************************)
+     (* identifier entries         *)
+     (******************************)
 
      IDENTIFIER = record
                     NAME : ALPHA ;
@@ -1160,22 +1086,22 @@ type ALPHA = array [ 1 .. IDLNGTH ] of CHAR ;
                         ( FLDADDR : ADDRRANGE ;
                           OWNER : TTP ) ;
                       PROC , FUNC :
-                        ( EXTRN : BOOLEAN ;
-                          EXTLANG : CHAR ;
-                          EXTNAME : EXTNAMTP ;
-                          case PFDECKIND : DECLKIND of
+                        ( case PFDECKIND : DECLKIND of
                             STANDARD :
                               ( KEY : INTEGER ;
                                 LIBNAME : EXTNAMTP ;
                                 FUNCCODE : INTEGER ;
-                                PARMCNT : INTEGER ) ;
+                                PARMCNT : INTEGER ;
+                                PROCTYP : CHAR ) ;
                             DECLARED :
-                              ( FWDECL : BOOLEAN ;
-                                PFLEV : INTEGER ;
+                              ( PFLEV : INTEGER ;
                                 PFNAME : LABELRNG ;
                                 PRMPTR , NXTFWRD : IDP ;
                                 PFKIND : IDKIND ;
+                                FWDECL , EXTRN : BOOLEAN ;
                                 DECLMISSING : BOOLEAN ;
+                                EXTNAME : EXTNAMTP ;
+                                EXTLANG : CHAR ;
                                 CSTNAME : EXTNAMTP ) )
                   end ;
      DISPRANGE = 0 .. DISPLIMIT ;
@@ -6824,9 +6750,9 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                                NEXT := NIL ;
                                PFDECKIND := DECLARED ;
                                PFKIND := FORMAL ;
-                               DECLMISSING := FALSE ;
-                               EXTRN := FALSE ;
                                EXTLANG := ' ' ;
+                               EXTRN := FALSE ;
+                               DECLMISSING := FALSE ;
                                EXTNAME := '*PFPARM*' ;
                                PFLEV := LCOUNTER * 10 + LEVEL ;
 
@@ -7085,9 +7011,9 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                                  ;
                     EXTRN := not INTERN ;
                     EXTLANG := ' ' ;
-                    PACK ( ID , 1 , EXTNAME ) ;
                     FWDECL := FALSE ;
                     DECLMISSING := FALSE ;
+                    PACK ( ID , 1 , EXTNAME ) ;
                     PROC_TO_STATNAME ( EXTNAME , EXTRN , CSTNAME ) ;
                     if FSY = SYPROC then
                       KLASS := PROC
@@ -7310,10 +7236,10 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
       end (* PROCDECLARATION *) ;
 
 
-   function PROCTYPE ( FPROCP : IDP ) : CHAR ;
+   function PROCTYPE ( FPROCP : IDP ) : INTEGER ;
 
       begin (* PROCTYPE *)
-        PROCTYPE := 'P' ;
+        PROCTYPE := ORD ( 'P' ) ;
         if FPROCP = NIL then
           return ;
         if FPROCP -> . IDTYPE = NIL then
@@ -7321,21 +7247,21 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
         with FPROCP -> do
           begin
             if IDTYPE = REALPTR then
-              PROCTYPE := 'R'
+              PROCTYPE := ORD ( 'R' )
             else
               if IDTYPE = BOOLPTR then
-                PROCTYPE := 'B'
+                PROCTYPE := ORD ( 'B' )
               else
                 if IDTYPE -> . FORM = POINTER then
-                  PROCTYPE := 'A'
+                  PROCTYPE := ORD ( 'A' )
                 else
                   if IDTYPE -> . SIZE = 1 then
-                    PROCTYPE := 'C'
+                    PROCTYPE := ORD ( 'C' )
                   else
                     if IDTYPE -> . SIZE = HINTSIZE then
-                      PROCTYPE := 'H'
+                      PROCTYPE := ORD ( 'H' )
                     else
-                      PROCTYPE := 'I' ;
+                      PROCTYPE := ORD ( 'I' ) ;
           end (* with *)
       end (* PROCTYPE *) ;
 
@@ -7645,8 +7571,13 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
            with FATTR do
              if TYPTR <> NIL then
                case ACCESS of
-                 DRCT : GEN3 ( PCODE_STR , GETTYPE ( BTYPE ) , VLEVEL ,
-                               DPLMT ) ;
+
+           (********)
+           (*STR   *)
+           (********)
+
+                 DRCT : GEN3 ( 56 , GETTYPE ( BTYPE ) , VLEVEL , DPLMT
+                               ) ;
                  INDRCT :
                    if IDPLMT <> 0 then
                      ERROR ( 400 )
@@ -8403,7 +8334,9 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                    begin
                      PUTIC ;
                      WRITE ( PRR , MN [ PCODE_CUP ] ) ;
-                     WRITE ( PRR , PROCTYPE ( FCP ) : 2 ) ;
+                     WRITE ( PRR , FCP -> . PROCTYP : 2 ) ;
+                     if FCP -> . EXTLANG <> ' ' then
+                       WRITE ( PRR , FCP -> . EXTLANG ) ;
                      WRITE ( PRR , ',' , FCP -> . PARMCNT * 2 + 3 : 1 )
                              ;
                      WRITE ( PRR , ',' , FCP -> . LIBNAME ) ;
@@ -9550,7 +9483,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                      ERROR ( 191 )
                    else
                      LOAD ;
-                 GEN3 ( PCODE_STR , ORD ( 'I' ) , LEVEL , LCPARM ) ;
+                 GEN3 ( 56 , ORD ( 'I' ) , LEVEL , LCPARM ) ;
                  LCPARM := LCPARM + INTSIZE ;
                  CALLLIBRARYFUNC ( FCP , LCCALLER ) ;
                  GATTR . TYPTR := ANYPTR ;
@@ -9573,7 +9506,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                      ERROR ( 191 )
                    else
                      LOAD ;
-                 GEN3 ( PCODE_STR , ORD ( 'I' ) , LEVEL , LCPARM ) ;
+                 GEN3 ( 56 , ORD ( 'I' ) , LEVEL , LCPARM ) ;
                  LCPARM := LCPARM + INTSIZE ;
                  CALLLIBRARYFUNC ( FCP , LCCALLER ) ;
                  GATTR . TYPTR := ANYPTR ;
@@ -9594,7 +9527,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                      ERROR ( 190 )
                    else
                      LOAD ;
-                 GEN3 ( PCODE_STR , ORD ( 'A' ) , LEVEL , LCPARM ) ;
+                 GEN3 ( 56 , ORD ( 'A' ) , LEVEL , LCPARM ) ;
                  LCPARM := LCPARM + PTRSIZE ;
                  CALLLIBRARYFUNC ( FCP , LCCALLER ) ;
                end (* FREE1 *) ;
@@ -9614,7 +9547,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                      ERROR ( 190 )
                    else
                      LOAD ;
-                 GEN3 ( PCODE_STR , ORD ( 'A' ) , LEVEL , LCPARM ) ;
+                 GEN3 ( 56 , ORD ( 'A' ) , LEVEL , LCPARM ) ;
                  LCPARM := LCPARM + PTRSIZE ;
                  CALLLIBRARYFUNC ( FCP , LCCALLER ) ;
                end (* FREEX1 *) ;
@@ -9634,7 +9567,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                      ERROR ( 191 )
                    else
                      LOAD ;
-                 GEN3 ( PCODE_STR , ORD ( 'I' ) , LEVEL , LCPARM ) ;
+                 GEN3 ( 56 , ORD ( 'I' ) , LEVEL , LCPARM ) ;
                  LCPARM := LCPARM + INTSIZE ;
                  CALLLIBRARYFUNC ( FCP , LCCALLER ) ;
                end (* CHKHEAP1 *) ;
@@ -9647,7 +9580,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                    ERROR ( 193 ) ;
                  FILESETUP ( INPUTPTR , FALSE ) ;
                  RWFILE := NIL ;
-                 GEN3 ( PCODE_STR , ORD ( 'A' ) , LEVEL , LCPARM ) ;
+                 GEN3 ( 56 , ORD ( 'A' ) , LEVEL , LCPARM ) ;
                  LCPARM := LCPARM + PTRSIZE ;
                  CALLLIBRARYFUNC ( FCP , LCCALLER ) ;
                  GATTR . TYPTR := ANYPTR ;
@@ -9670,7 +9603,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                      ERROR ( 190 )
                    else
                      LOAD ;
-                 GEN3 ( PCODE_STR , ORD ( 'A' ) , LEVEL , LCPARM ) ;
+                 GEN3 ( 56 , ORD ( 'A' ) , LEVEL , LCPARM ) ;
                  LCPARM := LCPARM + PTRSIZE ;
                  CALLLIBRARYFUNC ( FCP , LCCALLER ) ;
                  GATTR . TYPTR := ANYPTR ;
@@ -9993,8 +9926,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                    else
                      begin
                        LOAD ;
-                       GEN3 ( PCODE_STR , ORD ( 'R' ) , LEVEL , LCPARM1
-                              ) ;
+                       GEN3 ( 56 , ORD ( 'R' ) , LEVEL , LCPARM1 ) ;
                      end (* else *) ;
                  if SY = SYCOMMA then
                    INSYMBOL ;
@@ -10021,8 +9953,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                    else
                      begin
                        LOAD ;
-                       GEN3 ( PCODE_STR , ORD ( 'I' ) , LEVEL , LCPARM2
-                              ) ;
+                       GEN3 ( 56 , ORD ( 'I' ) , LEVEL , LCPARM2 ) ;
                      end (* else *) ;
 
                  (******************************************)
@@ -10545,8 +10476,13 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                                   end (* with *) ;
                                 STORE ( GATTR ) ;
                                 LOADADDRESS ;
-                                GEN3 ( PCODE_STR , ORD ( 'A' ) , LEVEL
-                                       , LLC3 ) ;
+
+                    (********)
+                    (*STR   *)
+                    (********)
+
+                                GEN3 ( 56 , ORD ( 'A' ) , LEVEL , LLC3
+                                       ) ;
                                 LLC3 := LLC3 + PTRSIZE ;
                                 LLC2 := LLC2 + PARMTYPE -> . SIZE ;
                               end (* then *)
@@ -10557,8 +10493,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
 
                             else
                               begin
-                                GEN3 ( PCODE_STR , GETTYPE ( PARMTYPE )
-                                       , LEVEL , LLC_PARM ) ;
+                                GEN3 ( 56 , GETTYPE ( PARMTYPE ) ,
+                                       LEVEL , LLC_PARM ) ;
                                 LSIZE := PARMTYPE -> . SIZE ;
                               end (* else *)
                           end (* then *)
@@ -10607,8 +10543,13 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                                   end (* then *)
                                 else
                                   LOADADDRESS ;
-                                GEN3 ( PCODE_STR , ORD ( 'A' ) , LEVEL
-                                       , LLC3 ) ;
+
+                    (********)
+                    (*STR   *)
+                    (********)
+
+                                GEN3 ( 56 , ORD ( 'A' ) , LEVEL , LLC3
+                                       ) ;
                                 LLC3 := LLC3 + PTRSIZE ;
                                 LSIZE := 0 ;
                               end (* then *)
@@ -10664,14 +10605,13 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                         LOADADDRESS ;
                         if FCP -> . EXTLANG <> 'F' then
                           begin
-                            GEN3 ( PCODE_STR , ORD ( 'A' ) , LEVEL ,
-                                   LLC_PARM ) ;
+                            GEN3 ( 56 , ORD ( 'A' ) , LEVEL , LLC_PARM
+                                   ) ;
                             LSIZE := PTRSIZE ;
                           end (* then *)
                         else
                           begin
-                            GEN3 ( PCODE_STR , ORD ( 'A' ) , LEVEL ,
-                                   LLC3 ) ;
+                            GEN3 ( 56 , ORD ( 'A' ) , LEVEL , LLC3 ) ;
                             LLC3 := LLC3 + PTRSIZE ;
                           end (* else *) ;
                         if GATTR . ACCESS = STKEXPR then
@@ -10861,8 +10801,6 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                                                begin
                                                  NAME := '            '
                                                    ;
-                                                 EXTRN := FALSE ;
-                                                 EXTLANG := ' ' ;
                                                  UNPACK ( EXTNAME ,
                                                    NAME , 1 ) ;
                                                  PROCLAB := PROCLAB + 1
@@ -10886,8 +10824,13 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                  (********)
 
                                          GEN1 ( 37 , ORD ( 'P' ) ) ;
-                                         GEN3 ( PCODE_STR , ORD ( 'A' )
-                                                , LEVEL , LLC_PARM ) ;
+
+                 (********)
+                 (*STR   *)
+                 (********)
+
+                                         GEN3 ( 56 , ORD ( 'A' ) ,
+                                                LEVEL , LLC_PARM ) ;
 
                  (********)
                  (*LDA   *)
@@ -10990,12 +10933,11 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                        begin
                          PUTIC ;
                          WRITE ( PRR , MN [ PCODE_CUP ] ) ;
-                         WRITE ( PRR , PROCTYPE ( FCP ) : 2 ) ;
-                         if FCP -> . EXTLANG <> ' ' then
+                         WRITE ( PRR , CHR ( PROCTYPE ( FCP ) ) : 2 ) ;
+                         if FCP -> EXTLANG . <> ' ' then
                            WRITE ( PRR , FCP -> . EXTLANG ) ;
-                         WRITE ( PRR , ',' , LOCPAR : 1 ) ;
-                         WRITE ( PRR , ',' , EXTNAME ) ;
-                         WRITELN ( PRR , ',' , LLC1 : 1 ) ;
+                         WRITE ( PRR , ',' , LOCPAR : 1 , ',' , EXTNAME
+                                 , ',' , LLC1 : 1 ) ;
                        end (* then *) ;
                    end (* with *) ;
                  with GATTR do
@@ -11025,8 +10967,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                     begin
                       PREPLIBRARYFUNC ( LCCALLER , LCPARM ) ;
                       GEN2 ( PCODE_LDC , 1 , FCP -> . FUNCCODE ) ;
-                      GEN3 ( PCODE_STR , ORD ( 'I' ) , LEVEL , LCPARM )
-                             ;
+                      GEN3 ( 56 , ORD ( 'I' ) , LEVEL , LCPARM ) ;
                       LCPARM := LCPARM + INTSIZE ;
                     end (* then *) ;
 
@@ -13252,8 +13193,12 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                               LLC := LCOUNTER ;
                               if GATTR . TYPTR <> INTPTR then
                                 GEN0 ( PCODE_ORD ) ;
-                              GEN3 ( PCODE_STR , ORD ( 'I' ) , LEVEL ,
-                                     LLC ) ;
+
+              (********)
+              (*STR   *)
+              (********)
+
+                              GEN3 ( 56 , ORD ( 'I' ) , LEVEL , LLC ) ;
                               LCOUNTER := LCOUNTER + INTSIZE ;
                               if LCOUNTER > LCMAX then
                                 LCMAX := LCOUNTER ;
@@ -13459,7 +13404,12 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                             begin
                               LOADADDRESS ;
                               ALIGN ( LCOUNTER , PTRSIZE ) ;
-                              GEN3 ( PCODE_STR , ORD ( 'A' ) , LEVEL ,
+
+              (********)
+              (*STR   *)
+              (********)
+
+                              GEN3 ( 56 , ORD ( 'A' ) , LEVEL ,
                                      LCOUNTER ) ;
                               OCCUR := VREC ;
                               VDSPL := LCOUNTER ;
@@ -13694,11 +13644,10 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
       (*********************************)
 
 
-         var LOCPAR : INTEGER ;
+         var PT , LOCPAR : INTEGER ;
              LLC , LCM : ADDRRANGE ;
              LCP1 : IDP ;
              FNAME : ALPHA ;
-             PT : CHAR ;
 
          begin (* FRTPARMS *)
            LEVEL := LEVEL + 1 ;
@@ -13707,20 +13656,18 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
              with FRTPARHD -> do
                begin
                  ICOUNTER := 0 ;
+                 EXTLANG := ' ' ;
                  PT := PROCTYPE ( FRTPARHD ) ;
                  FNAME := NAME ;
                  MKPROCNAME ( FNAME , NAME_PATTERN , PFNAME , TRUE ) ;
                  WRITE ( PRR , FNAME : 8 , MN [ PCODE_ENT ] ) ;
-                 WRITE ( PRR , PT : 2 ) ;
-                 WRITE ( PRR , ',' , LEVEL : 1 ) ;
-                 WRITE ( PRR , ',L' , SEGSIZE : 1 ) ;
-                 WRITE ( PRR , NAME : IDLNGTH + 2 ) ;
-                 WRITE ( PRR , ',' , OPT . SAVEREGS : 1 ) ;
-                 WRITE ( PRR , ',' , OPT . ASSEMBLE : 1 ) ;
-                 WRITE ( PRR , ',' , OPT . GET_STAT : 1 ) ;
-                 WRITE ( PRR , ',' , OPT . ASMVERB : 1 ) ;
-                 WRITE ( PRR , ',' , OPT . DEBUG_LEV : 1 ) ;
-                 WRITE ( PRR , ',' , PFNAME : 1 , ',,' ) ;
+                 WRITE ( PRR , CHR ( PT ) : 2 ) ;
+                 WRITE ( PRR , ',' , LEVEL : 1 , ',L' , SEGSIZE : 1 ,
+                         NAME : IDLNGTH + 2 , ',' , OPT . SAVEREGS : 1
+                         , ',' , OPT . ASSEMBLE : 1 , ',' , OPT .
+                         GET_STAT : 1 , ',' , OPT . ASMVERB : 1 , ',' ,
+                         OPT . DEBUG_LEV : 1 , ',' , PFNAME : 1 , ',,'
+                         ) ;
                  if OPT . DEBUG_LEV > 0 then
                    begin
                      WRITE ( PRR , SOURCENAME ) ;
@@ -13769,23 +13716,35 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
            (********)
 
                                GEN2 ( 50 , LEVEL , VADDR ) ;
-                             GEN3 ( PCODE_STR , ORD ( 'A' ) , LEVEL ,
-                                    LLC ) ;
+
+           (********)
+           (*STR   *)
+           (********)
+
+                             GEN3 ( 56 , ORD ( 'A' ) , LEVEL , LLC ) ;
                              LLC := LLC + PTRSIZE ;
                            end (* then *) ;
                        LCP1 := NEXT ;
                      end (* with *) ;
+                 EXTLANG := 'F' ;
                  LOCPAR := ( LLC - LCOUNTER ) DIV 2 + 1 ;
                  PUTIC ;
-                 WRITE ( PRR , MN [ PCODE_CUP ] ) ;
-                 WRITE ( PRR , PROCTYPE ( FRTPARHD ) : 2 ) ;
-                 WRITE ( PRR , 'F' ) ;
-                 WRITE ( PRR , ',' , LOCPAR : 1 ) ;
-                 WRITE ( PRR , ',' , EXTNAME ) ;
-                 WRITELN ( PRR , ',' , LCOUNTER : 1 ) ;
+                 WRITELN ( PRR , MN [ PCODE_CUP ] , CHR ( PROCTYPE (
+                           FRTPARHD ) ) : 2 , EXTLANG , ',' , LOCPAR :
+                           1 , ',' , EXTNAME , ',' , LCOUNTER : 1 ) ;
                  if KLASS = FUNC then
-                   GEN3 ( PCODE_STR , ORD ( PT ) , LEVEL , FNCRSLT ) ;
-                 GEN1 ( PCODE_RET , ORD ( PT ) ) ;
+
+           (********)
+           (*STR   *)
+           (********)
+
+                   GEN3 ( 56 , PT , LEVEL , FNCRSLT ) ;
+
+           (********)
+           (*RET   *)
+           (********)
+
+                 GEN1 ( 42 , PT ) ;
                  GENDEF ( SEGSIZE , 'I' , LLC ) ;
                  WRITELN ( DBGINFO , '#PROC   ' , NAME : IDLNGTH , ' '
                            , PFNAME : 4 , ' ' , FALSE : 1 , ICOUNTER :
@@ -13809,16 +13768,14 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
           WRITELN ( PRR , MN [ PCODE_BGN ] , ' ' , PROGNAME , ' ' ,
                     TIME : 8 , ' ' , DATE ) ;
         WRITE ( PRR , FPROCP -> . EXTNAME , MN [ PCODE_ENT ] ) ;
-        WRITE ( PRR , PROCTYPE ( FPROCP ) : 2 ) ;
-        WRITE ( PRR , ',' , LEVEL : 1 ) ;
-        WRITE ( PRR , ',L' , SEGSIZE : 1 ) ;
-        WRITE ( PRR , FPROCP -> . NAME : IDLNGTH + 2 ) ;
-        WRITE ( PRR , ',' , OPT . SAVEREGS : 1 ) ;
-        WRITE ( PRR , ',' , OPT . ASSEMBLE : 1 ) ;
-        WRITE ( PRR , ',' , OPT . GET_STAT : 1 ) ;
-        WRITE ( PRR , ',' , OPT . ASMVERB : 1 ) ;
-        WRITE ( PRR , ',' , OPT . DEBUG_LEV : 1 ) ;
-        WRITE ( PRR , ',' , FPROCP -> . PFNAME : 1 , ',' ) ;
+        WRITE ( PRR , CHR ( PROCTYPE ( FPROCP ) ) : 2 ) ;
+        if FPROCP -> . EXTLANG <> ' ' then
+          WRITE ( PRR , FPROCP -> . EXTLANG ) ;
+        WRITE ( PRR , ',' , LEVEL : 1 , ',L' , SEGSIZE : 1 , FPROCP ->
+                . NAME : IDLNGTH + 2 , ',' , OPT . SAVEREGS : 1 , ',' ,
+                OPT . ASSEMBLE : 1 , ',' , OPT . GET_STAT : 1 , ',' ,
+                OPT . ASMVERB : 1 , ',' , OPT . DEBUG_LEV : 1 , ',' : 1
+                , FPROCP -> . PFNAME : 1 , ',' ) ;
         if STATIC_VORHANDEN then
           begin
             CSTEXTNAME := FPROCP -> . CSTNAME ;
@@ -14054,7 +14011,12 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
             if OPT . CTROPTION then
               GENDEF ( CTRCNTLBL , 'I' , CTRCNT ) ;
           end (* then *) ;
-        GEN1 ( PCODE_RET , ORD ( PROCTYPE ( FPROCP ) ) ) ;
+
+        (********)
+        (*RET   *)
+        (********)
+
+        GEN1 ( 42 , PROCTYPE ( FPROCP ) ) ;
         ALIGN ( LCMAX , MXDATASZE ) ;
         if OPT . PRCODE then
           GENDEF ( SEGSIZE , 'I' , LCMAX ) ;
@@ -14347,8 +14309,6 @@ procedure PROGRAMME ( FSYS : SYMSET ) ;
      with MAINPROG -> do
        begin
          NAME := '$PASMAIN    ' ;
-         EXTRN := FALSE ;
-         EXTLANG := ' ' ;
          EXTNAME := '$PASMAIN' ;
          CSTNAME := '$PASMAI#' ;
          PFNAME := 0 ;
@@ -14360,6 +14320,8 @@ procedure PROGRAMME ( FSYS : SYMSET ) ;
          NEXT := NIL ;
          NEXT_IN_BKT := NIL ;
          DECL_LEV := 0 ;
+         EXTLANG := ' ' ;
+         EXTRN := FALSE ;
          DECLMISSING := FALSE ;
          if IS_MODULE then
            begin
@@ -14462,9 +14424,9 @@ procedure ENTERSTDTYPES ;
          UFLD : IDENTIFIER =
          ( BLANKID , NIL , NIL , NIL , 0 , FIELD , 0 , NIL ) ;
          UPF : IDENTIFIER =
-         ( BLANKID , NIL , NIL , NIL , 0 , PROC , FALSE , ' ' ,
-           '$UNK_PF ' , DECLARED , FALSE , 0 , 0 , NIL , NIL , ACTUAL ,
-           FALSE , '$UNK_PF ' ) ;
+         ( BLANKID , NIL , NIL , NIL , 0 , PROC , DECLARED , 0 , 0 ,
+           NIL , NIL , ACTUAL , FALSE , FALSE , TRUE , '$UNK_PF ' , ' '
+           , '$UNK_PF ' ) ;
          UREC : TYPEREC =
          ( 1 , 1 , FALSE , RECORDS , NIL , NIL , 0 , 0 ) ;
 
@@ -15012,9 +14974,6 @@ procedure ENTSTDNAMES ;
              PARMCNT := 0 ;
              KLASS := SP . KLASS ;
              PFDECKIND := STANDARD ;
-             EXTRN := FALSE ;
-             EXTLANG := ' ' ;
-             EXTNAME := ' ' ;
            end (* with *) ;
          ENTERID ( CP )
        end (* for *) ;
@@ -15057,14 +15016,14 @@ procedure ENTSTDNAMES ;
              NEXT := NIL ;
              PRMPTR := CP1 ;
              FWDECL := FALSE ;
-             EXTRN := TRUE ;
+             EXTRN := FALSE ;
              EXTLANG := 'F' ;
-             EXTNAME := ESP . EXTNAM ;
              KLASS := FUNC ;
              PFDECKIND := DECLARED ;
              PFKIND := ACTUAL ;
              PFLEV := 0 ;
              PFNAME := 0 ;
+             EXTNAME := ESP . EXTNAM ;
              CSTNAME := ' ' ;
            end (* with *) ;
          ENTERID ( CP ) ;
@@ -15083,9 +15042,6 @@ procedure ENTSTDNAMES ;
          with CP -> do
            begin
              NAME := XSP . NAME ;
-             EXTRN := FALSE ;
-             EXTLANG := ' ' ;
-             EXTNAME := ' ' ;
              IDTYPE := NIL ;
              NEXT := NIL ;
              KEY := XSP . KEY ;
@@ -15094,14 +15050,7 @@ procedure ENTSTDNAMES ;
              LIBNAME := XSP . LIBNAME ;
              FUNCCODE := XSP . FUNCCODE ;
              PARMCNT := XSP . PARMCNT ;
-             case XSP . PROCTYP of
-               'P' : IDTYPE := NIL ;
-               'R' : IDTYPE := REALPTR ;
-               'B' : IDTYPE := BOOLPTR ;
-               'C' : IDTYPE := CHARPTR ;
-               'I' : IDTYPE := INTPTR ;
-               'A' : IDTYPE := ANYPTR ;
-             end (* case *) ;
+             PROCTYP := XSP . PROCTYP ;
            end (* with *) ;
          ENTERID ( CP ) ;
        end (* for *) ;
@@ -15115,15 +15064,15 @@ procedure ENTSTDNAMES ;
        begin
          NAME := 'SNAPSHOT    ' ;
          IDTYPE := NIL ;
-         EXTRN := TRUE ;
          EXTLANG := ' ' ;
-         EXTNAME := '$PASSNAP' ;
          FWDECL := FALSE ;
+         EXTRN := TRUE ;
          PFLEV := 0 ;
          PFNAME := 0 ;
          KLASS := PROC ;
          PFDECKIND := DECLARED ;
          PFKIND := ACTUAL ;
+         EXTNAME := '$PASSNAP' ;
          CSTNAME := ' ' ;
          DECLMISSING := FALSE ;
          NEXT := NIL ;

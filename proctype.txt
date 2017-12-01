@@ -1,0 +1,39 @@
+   function PROCTYPE ( FPROCP : IDP ) : INTEGER ;
+
+      begin (* PROCTYPE *)
+        PROCTYPE := ORD ( 'P' ) ;
+        if FPROCP <> NIL then
+          with FPROCP -> do
+            begin
+              PROCTYPE := ORD ( extlang ) ;
+              if FPROCP -> . IDTYPE <> NIL then
+                with FPROCP -> do
+                  begin
+                    if IDTYPE = REALPTR then
+                      if EXTLANG = 'F' then
+                        PROCTYPE := ORD ( 'Z' )
+                      else
+                        PROCTYPE := ORD ( 'R' )
+                    else
+                      if IDTYPE = BOOLPTR then
+                        if EXTLANG = 'F' then
+                          PROCTYPE := ORD ( 'X' )
+                        else
+                          PROCTYPE := ORD ( 'B' )
+                      else
+                        if IDTYPE -> . FORM = POINTER then
+                          PROCTYPE := ORD ( 'A' )
+                        else
+                          if IDTYPE -> . SIZE = 1 then
+                            PROCTYPE := ORD ( 'C' )
+                          else
+                            if EXTLANG = 'F' then
+                              PROCTYPE := ORD ( 'Y' )
+                            else
+                              if IDTYPE -> . SIZE = HINTSIZE then
+                                PROCTYPE := ORD ( 'H' )
+                              else
+                                PROCTYPE := ORD ( 'I' ) ;
+                  end (* with *)
+            end (* with *) ;
+      end (* PROCTYPE *) ;

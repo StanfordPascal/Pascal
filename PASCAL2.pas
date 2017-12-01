@@ -729,7 +729,7 @@ type OPTYPE = ( PCTS , PCTI , PLOD , PSTR , PLDA , PLOC , PSTO , PLDC ,
                , PCLS , PDAT , PTIM , PFLR , PTRC , PRND , UNDEF_CSP )
                ;
      DATATYPE = ( BOOL , CHRC , ADR , HINT , INT , PSET , REEL , PROC ,
-                STRG , INX , FORT , FINT , FBOOL , FREAL , NON ) ;
+                STRG , INX , NON ) ;
      BETA = array [ 1 .. 3 ] of CHAR ;
      DUMMYRNG = 0 .. 1 ;
      HINTEGER = - 32768 .. 32767 ;
@@ -895,6 +895,7 @@ var OPC , OLDOPC : OPTYPE ;
 
     XJPFLAG : CHAR ;
     OPNDTYPE : DATATYPE ;
+    EXTLANG : CHAR ;
 
     (*******************************************)
     (* TYPE OF OPERAND OF INSTRUCTION          *)
@@ -1736,7 +1737,7 @@ procedure READNXTINST ;
             if EOL ( INPUT ) then
               ERROR ( 618 ) ;
             repeat
-              READ ( INPUT , CH ) ;
+              READ ( CH ) ;
               LEN := LEN + 1 ;
               NAM [ LEN ] := CH ;
             until ( INPUT -> = ' ' ) or ( LEN = 8 ) ;
@@ -1778,7 +1779,7 @@ procedure READNXTINST ;
           Z : INTEGER ;
 
       begin (* READSET *)
-        READ ( INPUT , CH , CH ) ;
+        READ ( CH , CH ) ;
 
         (****************************)
         (* typ = e - d.h. empty set *)
@@ -1801,9 +1802,9 @@ procedure READNXTINST ;
 
         if CH = 'X' then
           begin
-            READ ( INPUT , PSLNGTH ) ;
+            READ ( PSLNGTH ) ;
             Z := 30 ;
-            READ ( INPUT , CH ) ;
+            READ ( CH ) ;
             if ASM then
               WRITE ( ASMOUT , '  S,X' , PSLNGTH : 1 , '''' ) ;
             if FALSE then
@@ -1811,7 +1812,7 @@ procedure READNXTINST ;
             I := 0 ;
             while TRUE do
               begin
-                READ ( INPUT , CH1 ) ;
+                READ ( CH1 ) ;
                 if CH1 = '''' then
                   begin
                     if INPUT -> <> ',' then
@@ -1822,11 +1823,11 @@ procedure READNXTINST ;
                       end (* then *) ;
                     READLN ( INPUT ) ;
                     repeat
-                      READ ( INPUT , CH ) ;
+                      READ ( CH ) ;
                     until CH = '''' ;
                     continue ;
                   end (* then *) ;
-                READ ( INPUT , CH2 ) ;
+                READ ( CH2 ) ;
                 if FALSE then
                   WRITE ( TRACEF , CH1 , CH2 ) ;
                 I := I + 1 ;
@@ -1860,9 +1861,9 @@ procedure READNXTINST ;
 
         if CH = 'C' then
           begin
-            READ ( INPUT , PSLNGTH ) ;
+            READ ( PSLNGTH ) ;
             Z := 30 ;
-            READ ( INPUT , CH ) ;
+            READ ( CH ) ;
             if ASM then
               WRITE ( ASMOUT , '  S,C' , PSLNGTH : 1 , '''' ) ;
             if FALSE then
@@ -1870,18 +1871,18 @@ procedure READNXTINST ;
             X := [ ] ;
             while TRUE do
               begin
-                READ ( INPUT , CH ) ;
+                READ ( CH ) ;
                 if CH = '''' then
                   begin
                     CH := INPUT -> ;
                     if CH = '''' then
-                      READ ( INPUT , CH )
+                      READ ( CH )
                     else
                       if CH = ',' then
                         begin
                           READLN ( INPUT ) ;
                           repeat
-                            READ ( INPUT , CH ) ;
+                            READ ( CH ) ;
                           until CH = '''' ;
                           continue ;
                         end (* then *)
@@ -1955,8 +1956,8 @@ procedure READNXTINST ;
         if ( OPC = PDFC ) and ( INPUT -> = '0' ) then
           begin
             OPNDTYPE := NON ;
-            READ ( INPUT , CH1 ) ;
-            READLN ( INPUT , CH , IVAL ) ;
+            READ ( CH1 ) ;
+            READLN ( CH , IVAL ) ;
             SLNGTH := IVAL ;
             if ASM then
               WRITELN ( ASMOUT , CH1 : 3 , ',' , IVAL : 1 ) ;
@@ -1964,22 +1965,22 @@ procedure READNXTINST ;
         else
           begin
             OPNDTYPE := TYPCDE [ INPUT -> ] ;
-            READ ( INPUT , CH1 ) ;
+            READ ( CH1 ) ;
             case OPNDTYPE of
               HINT , BOOL , INT :
                 begin
-                  READLN ( INPUT , CH , IVAL ) ;
+                  READLN ( CH , IVAL ) ;
                   if ASM then
                     WRITELN ( ASMOUT , CH1 : 3 , ',' , IVAL : 1 ) ;
                 end (* tag/ca *) ;
               CHRC : begin
-                       READLN ( INPUT , CH , CH , CH ) ;
+                       READLN ( CH , CH , CH ) ;
                        IVAL := ORD ( CH ) ;
                        if ASM then
                          WRITELN ( ASMOUT , 'C,''' : 5 , CH , '''' ) ;
                      end (* tag/ca *) ;
               REEL : begin
-                       READLN ( INPUT , CH , RVAL ) ;
+                       READLN ( CH , RVAL ) ;
                        if ASM then
                          WRITELN ( ASMOUT , 'R,' : 4 , RVAL : 20 ) ;
                      end (* tag/ca *) ;
@@ -1993,7 +1994,7 @@ procedure READNXTINST ;
                        READSET
                      end (* tag/ca *) ;
               PROC : begin
-                       READ ( INPUT , CH ) ;
+                       READ ( CH ) ;
                        READLBL ( LBL2 ) ;
                        READLN ( INPUT ) ;
                        if ASM then
@@ -2199,7 +2200,7 @@ procedure READNXTINST ;
      GET ( INPUT ) ;
      if INPUT -> = ' ' then
        SKIPBLANKS ;
-     READ ( INPUT , NMCDE ) ;
+     READ ( NMCDE ) ;
      if ASM and ( NMCDE <> 'LOC' ) then
        begin
          HEXHW ( 2 * PCOUNTER , HLOC ) ;
@@ -2231,7 +2232,7 @@ procedure READNXTINST ;
                 SKIPBLANKS ;
                 if INPUT -> = 'C' then
                   begin
-                    READLN ( INPUT , CH , CH , CH , CH1 , CH ) ;
+                    READLN ( CH , CH , CH , CH1 , CH ) ;
                     if ASM then
                       WRITELN ( ASMOUT , '  C,''' , CH1 : 1 , '''' ) ;
                     Q := ORD ( CH1 ) ;
@@ -2240,14 +2241,14 @@ procedure READNXTINST ;
                 else
                   if INPUT -> = 'I' then
                     begin
-                      READLN ( INPUT , CH , CH , Q ) ;
+                      READLN ( CH , CH , Q ) ;
                       if ASM then
                         WRITELN ( ASMOUT , '  I,' , Q : 1 ) ;
                       OPNDTYPE := TYPCDE [ 'I' ] ;
                     end (* then *)
                   else
                     begin
-                      READLN ( INPUT , Q ) ;
+                      READLN ( Q ) ;
                       if ASM then
                         WRITELN ( ASMOUT , ' ' : 2 , Q : 1 ) ;
                       OPNDTYPE := TYPCDE [ 'I' ] ;
@@ -2260,7 +2261,7 @@ procedure READNXTINST ;
      (* INTEGER OPERAND *)
      (*******************)
 
-           READLN ( INPUT , Q ) ;
+           READLN ( Q ) ;
            if ASM then
              WRITELN ( ASMOUT , ' ' : 2 , Q : 1 ) ;
          end (* tag/ca *) ;
@@ -2270,7 +2271,7 @@ procedure READNXTINST ;
      (* INTEGER OPERAND *)
      (*******************)
 
-                READLN ( INPUT , Q ) ;
+                READLN ( Q ) ;
                 if ASM then
                   WRITELN ( ASMOUT , '-------------------- LOC  ' , Q :
                             1 , ' --------------------------------' ) ;
@@ -2300,7 +2301,7 @@ procedure READNXTINST ;
 
            SKIPBLANKS ;
            OPNDTYPE := TYPCDE [ INPUT -> ] ;
-           READLN ( INPUT , CH1 , CH , Q ) ;
+           READLN ( CH1 , CH , Q ) ;
            if ASM then
              WRITELN ( ASMOUT , CH1 : 3 , ',' , Q : 1 ) ;
          end (* tag/ca *) ;
@@ -2311,7 +2312,7 @@ procedure READNXTINST ;
      (* TWO INTEGER OPERANDS *)
      (************************)
 
-           READLN ( INPUT , P , CH , Q ) ;
+           READLN ( P , CH , Q ) ;
            if ASM then
              WRITELN ( ASMOUT , ' ' : 2 , P : 1 , ',' , Q : 1 ) ;
          end (* tag/ca *) ;
@@ -2324,7 +2325,7 @@ procedure READNXTINST ;
 
            SKIPBLANKS ;
            OPNDTYPE := TYPCDE [ INPUT -> ] ;
-           READLN ( INPUT , CH1 , CH , P , CH , Q ) ;
+           READLN ( CH1 , CH , P , CH , Q ) ;
            if ASM then
              WRITELN ( ASMOUT , CH1 : 3 , ',' , P : 1 , ',' , Q : 1 ) ;
          end (* tag/ca *) ;
@@ -2334,7 +2335,7 @@ procedure READNXTINST ;
      (* THREE INTEGER OPERANDS *)
      (**************************)
 
-                READLN ( INPUT , IVAL , CH , P , CH , Q ) ;
+                READLN ( IVAL , CH , P , CH , Q ) ;
                 if ASM then
                   WRITELN ( ASMOUT , ' ' : 2 , IVAL : 1 , ',' , P : 1 ,
                             ',' , Q : 1 ) ;
@@ -2347,7 +2348,7 @@ procedure READNXTINST ;
 
                 SKIPBLANKS ;
                 OPNDTYPE := TYPCDE [ INPUT -> ] ;
-                READLN ( INPUT , CH1 , CH , P , CH , Q ) ;
+                READLN ( CH1 , CH , P , CH , Q ) ;
                 if ASM then
                   WRITELN ( ASMOUT , CH1 : 3 , ',' , P : 1 , ',' , Q :
                             1 ) ;
@@ -2363,13 +2364,13 @@ procedure READNXTINST ;
            OPNDTYPE := TYPCDE [ INPUT -> ] ;
            if OPNDTYPE = STRG then
              begin
-               READLN ( INPUT , CH1 , CH , Q ) ;
+               READLN ( CH1 , CH , Q ) ;
                if ASM then
                  WRITELN ( ASMOUT , CH1 : 3 , ',' , Q : 1 ) ;
              end (* then *)
            else
              begin
-               READLN ( INPUT , CH1 ) ;
+               READLN ( CH1 ) ;
                if ASM then
                  WRITELN ( ASMOUT , CH1 : 3 ) ;
              end (* else *) ;
@@ -2393,7 +2394,7 @@ procedure READNXTINST ;
      (**********************)
 
                 SKIPBLANKS ;
-                READLN ( INPUT , BUF20 ) ;
+                READLN ( BUF20 ) ;
                 if ( BUF20 [ 1 ] in [ 'N' , 'O' ] ) and ( BUF20 [ 2 ] =
                 ',' ) then
                   begin
@@ -2432,8 +2433,8 @@ procedure READNXTINST ;
      (* PROCEDURE NAME & NUMBER OPERANDS *)
      (************************************)
 
-                READLN ( INPUT , CH1 , CURPNAME , CURPNO , CH , ASM ,
-                         CH , GET_STAT , CH , ASMVERB ) ;
+                READLN ( CH1 , CURPNAME , CURPNO , CH , ASM , CH ,
+                         GET_STAT , CH , ASMVERB ) ;
                 if ASM then
                   begin
                     if FIRST_ASMOUT then
@@ -2457,14 +2458,28 @@ procedure READNXTINST ;
 
                 SKIPBLANKS ;
                 OPNDTYPE := TYPCDE [ INPUT -> ] ;
-                READ ( INPUT , CH1 , CH , P , CH ) ;
+                READ ( CH1 ) ;
+                EXTLANG := ' ' ;
+                if INPUT -> <> ',' then
+                  begin
+                    EXTLANG := INPUT -> ;
+                    READ ( CH ) ;
+                  end (* then *) ;
+                READ ( CH , P , CH ) ;
                 READLBL ( LBL2 ) ;
                 if INPUT -> = ' ' then
                   SKIPBLANKS ;
-                READLN ( INPUT , CH , Q ) ;
+                READLN ( CH , Q ) ;
                 if ASM then
-                  WRITELN ( ASMOUT , CH1 : 3 , ',' , P : 1 , ',' , LBL2
-                            . NAM : LBL2 . LEN , ',' , Q : 1 ) ;
+                  begin
+                    WRITE ( ASMOUT , CH1 : 3 ) ;
+                    if EXTLANG <> ' ' then
+                      WRITE ( ASMOUT , EXTLANG ) ;
+                    WRITE ( ASMOUT , ',' , P : 1 ) ;
+                    WRITE ( ASMOUT , ',' , LBL2 . NAM : LBL2 . LEN ) ;
+                    WRITE ( ASMOUT , ',' , Q : 1 ) ;
+                    WRITELN ( ASMOUT ) ;
+                  end (* then *)
               end (* tag/ca *) ;
        PBGN : begin
 
@@ -2472,7 +2487,7 @@ procedure READNXTINST ;
      (* STRING OPERAND *)
      (******************)
 
-                READLN ( INPUT , CH , PROGHDR ) ;
+                READLN ( CH , PROGHDR ) ;
                 if ASM then
                   WRITELN ( ASMOUT , ' ' , PROGHDR ) ;
               end (* tag/ca *) ;
@@ -2484,20 +2499,20 @@ procedure READNXTINST ;
 
                 SKIPBLANKS ;
                 OPNDTYPE := TYPCDE [ INPUT -> ] ;
-                READ ( INPUT , CH1 , CH , P , CH ) ;
+                READ ( CH1 , CH , P , CH ) ;
                 READLBL ( SEGSZE ) ;
                 if INPUT -> = ' ' then
                   SKIPBLANKS ;
-                READ ( INPUT , CURPNAME , CH , SAVERGS , CH , ASM , CH
-                       , GET_STAT , CH , ASMVERB , CH , DEBUG_LEV , CH
-                       , CURPNO , CH ) ;
+                READ ( CURPNAME , CH , SAVERGS , CH , ASM , CH ,
+                       GET_STAT , CH , ASMVERB , CH , DEBUG_LEV , CH ,
+                       CURPNO , CH ) ;
                 STATNAME := ' ' ;
                 SOURCENAME := ' ' ;
                 if INPUT -> <> ',' then
-                  READ ( INPUT , STATNAME , CH )
+                  READ ( STATNAME , CH )
                 else
-                  READ ( INPUT , CH ) ;
-                READ ( INPUT , SOURCENAME ) ;
+                  READ ( CH ) ;
+                READ ( SOURCENAME ) ;
                 READLN ( INPUT ) ;
                 DEBUG := DEBUG_LEV >= 2 ;
                 FLOW_TRACE := DEBUG_LEV >= 3 ;
@@ -2555,12 +2570,12 @@ procedure READNXTINST ;
      (*************************************)
 
                 SKIPBLANKS ;
-                READ ( INPUT , NMCDE ) ;
+                READ ( NMCDE ) ;
                 if FALSE then
                   WRITE ( TRACEF , 'read = ' , NMCDE ) ;
                 if INPUT -> = ',' then
                   begin
-                    READLN ( INPUT , CH , PROCOFFSET ) ;
+                    READLN ( CH , PROCOFFSET ) ;
                   end (* then *)
                 else
                   begin
@@ -5127,27 +5142,52 @@ procedure ASMNXTINST ;
             GENRR ( XLR , TRG1 , LBR ) ;
             GENRXLIT ( XA , TRG1 , Q , 0 ) ;
           end (* else *) ;
-        if OPNDTYPE in [ FORT , FBOOL , FINT , FREAL ] then
-          begin
-            K := P * 2 ;
 
-        (***************************)
-        (* K = LENGTH OF PARM LIST *)
-        (***************************)
+        //******************************************************
+        // generate different call sequences depending on       
+        // external language; for fortran all parameters        
+        // are call by reference, so dummy arguments are        
+        // created for every by-value parameter ... this has    
+        // been done elsewhere                                  
+        //******************************************************
 
-            if K > 0 then
-              GENSI ( XMVI , K - 4 , TRG1 , 128 ) ;
-            K := ALIGN ( K , REALSIZE ) ;
-            GENRX ( XST , TRG13 , K + 4 , TRG1 , 0 ) ;
+        case EXTLANG of
+          'F' : begin
+                  K := P * 2 ;
 
-        (****************)
-        (* S/A CHAINING *)
-        (****************)
+        //******************************************************
+        // K = LENGTH OF PARM LIST                              
+        //******************************************************
 
-            GENRR ( XLR , TRG14 , TRG13 ) ;
-            GENRX ( XLA , TRG13 , K , TRG1 , 0 ) ;
-            GENRX ( XST , TRG13 , 8 , TRG14 , 0 ) ;
-          end (* then *) ;
+                  if K > 0 then
+                    GENSI ( XMVI , K - 4 , TRG1 , 128 ) ;
+                  K := ALIGN ( K , REALSIZE ) ;
+                  GENRX ( XST , TRG13 , K + 4 , TRG1 , 0 ) ;
+
+        //******************************************************
+        // S/A CHAINING                                         
+        // provide r13 as usable sa base addr                   
+        //******************************************************
+
+                  GENRR ( XLR , TRG14 , TRG13 ) ;
+                  GENRX ( XLA , TRG13 , K , TRG1 , 0 ) ;
+                  GENRX ( XST , TRG13 , 8 , TRG14 , 0 ) ;
+                end (* tag/ca *) ;
+          'A' : begin
+
+        //******************************************************
+        // S/A CHAINING                                         
+        // provide r13 as usable sa base addr                   
+        //******************************************************
+
+                  GENRX ( XST , TRG1 , 8 , TRG13 , 0 ) ;
+                  GENRX ( XST , TRG13 , 4 , TRG1 , 0 ) ;
+                  GENRR ( XLR , TRG13 , TRG1 ) ;
+                  GENRX ( XLA , TRG1 , 112 , TRG1 , 0 ) ;
+                end (* tag/ca *) ;
+          otherwise
+            
+        end (* case *) ;
         if not FLOW_TRACE then
           begin
             if not PPCALL then
@@ -5211,8 +5251,22 @@ procedure ASMNXTINST ;
             AVAIL [ DSREG ] := TRUE ;
           end (* then *) ;
         CALDPTH := CALDPTH - 1 ;
-        if OPNDTYPE in [ FORT , FBOOL , FINT , FREAL ] then
-          GENRX ( XL , TRG13 , 4 , TRG13 , 0 ) ;
+
+        //******************************************************
+        // on return: different call seq. depending on extlang  
+        //******************************************************
+
+        case EXTLANG of
+          'F' : begin
+                  GENRX ( XL , TRG13 , 4 , TRG13 , 0 ) ;
+                end (* tag/ca *) ;
+          'A' : begin
+                  GENRR ( XLR , TRG1 , TRG13 ) ;
+                  GENRX ( XL , TRG13 , 4 , TRG13 , 0 ) ;
+                end (* tag/ca *) ;
+          otherwise
+            
+        end (* case *) ;
         if SAVEFPRS then
           begin
             FPR := 0 ;
@@ -9926,69 +9980,73 @@ procedure ASMNXTINST ;
                    ERROR ( 259 ) ;
           PCUP : begin
                    CALLSUB ;
-                   if ( OPNDTYPE <> PROC ) and ( OPNDTYPE <> FORT )
-                   then
+                   if OPNDTYPE <> PROC then
                      with STK [ TOP ] do
                        begin
                          VRBL := TRUE ;
                          DRCT := TRUE ;
                          FPA := ZEROBL ;
                          VPA := RGS ;
-                         case OPNDTYPE of
-                           ADR , INT :
-                             begin
-                               FINDRG ;
-                               GENRX ( XL , NXTRG , FNCRSLT , TRG1 , 0
-                                       )
-                             end (* tag/ca *) ;
-                           HINT : begin
-                                    FINDRG ;
-                                    GENRX ( XLH , NXTRG , FNCRSLT ,
-                                            TRG1 , 0 ) ;
-                                  end (* tag/ca *) ;
-                           BOOL , CHRC :
-                             begin
-                               FINDRG ;
-                               GENRR ( XSR , NXTRG , NXTRG ) ;
-                               GENRX ( XIC , NXTRG , FNCRSLT , TRG1 , 0
-                                       ) ;
-                             end (* tag/ca *) ;
-                           PSET : ERROR ( 616 ) ;
-                           REEL : begin
-                                    FINDFP ;
-                                    GENRX ( XLD , NXTRG , FNCRSLT ,
-                                            TRG1 , 0 )
-                                  end (* tag/ca *) ;
-                           FBOOL : begin
-                                     FINDRG ;
-                                     OPNDTYPE := BOOL ;
-                                     GENRR ( XLR , NXTRG , 0 )
+                         case EXTLANG of
+                           'F' : case OPNDTYPE of
+                                   BOOL : begin
+                                            FINDRG ;
+                                            OPNDTYPE := BOOL ;
+                                            GENRR ( XLR , NXTRG , 0 )
 
         (********************************)
         (*COPY RESULT FROM REGISTER ZERO*)
         (********************************)
 
-                                   end (* tag/ca *) ;
-                           FINT : begin
-                                    FINDRG ;
-                                    OPNDTYPE := INT ;
-                                    GENRR ( XLR , NXTRG , 0 )
+                                          end (* tag/ca *) ;
+                                   INT : begin
+                                           FINDRG ;
+                                           OPNDTYPE := INT ;
+                                           GENRR ( XLR , NXTRG , 0 )
 
         (********************************)
         (*COPY RESULT FROM REGISTER ZERO*)
         (********************************)
 
-                                  end (* tag/ca *) ;
-                           FREAL : begin
-                                     FINDFP ;
-                                     OPNDTYPE := REEL ;
-                                     GENRR ( XLDR , NXTRG , 0 )
+                                         end (* tag/ca *) ;
+                                   REEL : begin
+                                            FINDFP ;
+                                            OPNDTYPE := REEL ;
+                                            GENRR ( XLDR , NXTRG , 0 )
 
         (********************************)
         (*COPY RESULT FROM REGISTER ZERO*)
         (********************************)
 
-                                   end (* tag/ca *) ;
+                                          end (* tag/ca *) ;
+                                 end (* case *) ;
+                           otherwise
+                             case OPNDTYPE of
+                               ADR , INT :
+                                 begin
+                                   FINDRG ;
+                                   GENRX ( XL , NXTRG , FNCRSLT , TRG1
+                                           , 0 )
+                                 end (* tag/ca *) ;
+                               HINT : begin
+                                        FINDRG ;
+                                        GENRX ( XLH , NXTRG , FNCRSLT ,
+                                                TRG1 , 0 ) ;
+                                      end (* tag/ca *) ;
+                               BOOL , CHRC :
+                                 begin
+                                   FINDRG ;
+                                   GENRR ( XSR , NXTRG , NXTRG ) ;
+                                   GENRX ( XIC , NXTRG , FNCRSLT , TRG1
+                                           , 0 ) ;
+                                 end (* tag/ca *) ;
+                               PSET : ERROR ( 616 ) ;
+                               REEL : begin
+                                        FINDFP ;
+                                        GENRX ( XLD , NXTRG , FNCRSLT ,
+                                                TRG1 , 0 )
+                                      end (* tag/ca *) ;
+                             end (* case *)
                          end (* case *) ;
                          RGADR := NXTRG ;
                          DTYPE := OPNDTYPE ;
@@ -12657,10 +12715,14 @@ procedure SETUP ;
      TYPCDE [ 'R' ] := REEL ;
      TYPCDE [ 'N' ] := ADR ;
      TYPCDE [ 'J' ] := INX ;
-     TYPCDE [ 'F' ] := FORT ;
-     TYPCDE [ 'X' ] := FBOOL ;
-     TYPCDE [ 'Y' ] := FINT ;
-     TYPCDE [ 'Z' ] := FREAL ;
+
+     //************************************************************
+     // TYPCDE [ 'F' ] := FORT ;                                   
+     // TYPCDE [ 'X' ] := FBOOL ;                                  
+     // TYPCDE [ 'Y' ] := FINT ;                                   
+     // TYPCDE [ 'Z' ] := FREAL ;                                  
+     //************************************************************
+
      TOP := 1 ;
      CURLVL := 1 ;
      BRCND := - 1 ;

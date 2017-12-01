@@ -534,6 +534,7 @@ static void load (void *vgs,
 
    pcode -> op = pot - gs -> ot;
    pcode -> t = ' ' ;
+   pcode -> t2 = ' ' ;
    pcode -> p = 0;
    pcode -> q = 0;
    pcode -> x = 0;
@@ -1058,6 +1059,11 @@ static void load (void *vgs,
                break;
             pcode -> t = *cp;
             cp ++;
+            if (*cp != ',')
+            {
+               pcode -> t2 = *cp;
+               cp ++;
+            }
             while (*cp == ',' && *cp != 0x00)
                cp ++;
             if (*cp == 0x00)
@@ -2413,10 +2419,11 @@ void listing (global_store *gs)
       }
 
       fprintf (gs -> outfile,
-               "%06d: %03d %c %5d %9d %9d  %-8s %-3s %s\n",
+               "%06d: %03d %c%c %4d %9d %9d  %-8s %-3s %s\n",
                pcode - gs -> code0,
                pcode -> op,
                pcode -> t,
+               pcode -> t2,
                pcode -> p,
                pcode -> q,
                pcode -> x,

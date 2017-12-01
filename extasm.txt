@@ -1,0 +1,19 @@
+Important extension for the New Stanford Pascal compiler in the upcoming 12.2017 release: calling external ASSEMBLER routines will be possible (FORTRAN should already work)
+
+- Extensions to EXTERNAL procedure declarations: the language of the external procedure may be specified, and an additional external name (8 chars), which is used instead of the Pascal name (which may be longer). Supported languages are FORTRAN and ASSEMBLER on the mainframe and Pascal, of course. On the PC only Pascal, at the moment, because the P-Code interpreter cannot call external C objects at the moment.
+
+  Example:
+
+  procedure PASCAL_TO_ASSEMBLER ( X1 : INTEGER ;
+                                  var X2 : INTEGER ;
+                                  T1 : CHAR20 ;
+                                  var T2 : CHAR20 ) ;
+
+     EXTERNAL ASSEMBLER 'PAS2ASM' ;
+
+- For ASSEMBLER and FORTRAN, different call sequences are created. ASSEMBLER and FORTRAN both use normal OS linkage conventions, and FORTRAN expects all parameters passed by reference, so the Pascal compiler creates dummy arguments for every Pascal by-value parameter. 
+
+- Example programs for both languages, showing external procedures and functions implemented in ASSEMBLER and FORTRAN, will be created.
+
+- More advanced topics: using the Pascal stack in the external procedures (allowing, maybe, recursive calls of the ASSEMBLER subfunctions), and calling some functions of the Pascal runtime library. This will be possible, too, but has not been tested yet.
+

@@ -197,6 +197,8 @@ typedef struct
 {                 /*******************************/
    char op;       /* operation code              */
    char t;        /* type field                  */
+   char t2;       /* type field 2                */
+                  /* (only CUP extlang ...)      */
    int  p;        /* lexical level               */
    int  q;        /* address                     */
    int  x;        /* bei CUP: Addr neues Display */

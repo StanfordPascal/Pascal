@@ -21,8 +21,16 @@
 * TESTERR1: CSP WRP gibt am PC merkwÅrdige LÑnge aus
 * TESTERR1: P-Code ADA wird durch PASCAL2 falsch Åbersetzt
 * TESTSVAR ausfÅhrlicher testen (neue P-Code Instruktionen)
-- Aufruf externer Funktionen (ASSEMBLER)
+* PCINT: CUP hat zwei Parameter - Typ und EXTLANG
+* PASCAL2 umbauen wg. neuem Parameter bei CUP (EXTLANG)
+* Aufruf externer Prozeduren (ASSEMBLER)
+- Fehler bei TESTSTAT ???
+- Beispielprogramm erweitern wg. externer Funktion
+- Testen Aufruf von externen Funktionen
+- Fehler PASCAL1 bei PFEHL.PAS und PFEHL2.PAS
 - Andere Installations-Prozedur fÅr MVS
+- PCINT: korrekte Fehlermeldung bei nicht implementierter EXTLANG
+- DSIN usw. geht auf PC nicht :-)
 
 spÑter:
 

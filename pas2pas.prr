@@ -67,5 +67,16 @@ PAS2PAS  ENT P,2,L1  PAS2PAS             ,T,T,F,F,2,1,,
  LOC 23
  RET P
 L1 DEF I,144
- LOC 29
+ LOC 30
+PAS2PF   ENT I,2,L1  PAS2PF              ,T,T,F,F,2,2,,        
+ LOD I,2,112
+ LOD I,2,116
+ ADI
+ LDC I,2
+ DVI
+ STR I,2,72
+ LOC 31
+ RET I
+L1 DEF I,120
+ LOC 37
  STP

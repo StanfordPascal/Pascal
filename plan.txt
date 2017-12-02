@@ -24,9 +24,9 @@
 * PCINT: CUP hat zwei Parameter - Typ und EXTLANG
 * PASCAL2 umbauen wg. neuem Parameter bei CUP (EXTLANG)
 * Aufruf externer Prozeduren (ASSEMBLER)
+* Beispielprogramm erweitern wg. externer Funktion
+* Testen Aufruf von externen Funktionen
 - Fehler bei TESTSTAT ???
-- Beispielprogramm erweitern wg. externer Funktion
-- Testen Aufruf von externen Funktionen
 - Fehler PASCAL1 bei PFEHL.PAS und PFEHL2.PAS
 - Andere Installations-Prozedur fÅr MVS
 - PCINT: korrekte Fehlermeldung bei nicht implementierter EXTLANG

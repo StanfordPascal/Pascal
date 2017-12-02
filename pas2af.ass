@@ -1,20 +1,18 @@
-PAS2ASM  TITLE 'ASSEMBLER SUBROUTINE CALLABLE FROM PASCAL'
+PAS2AF   TITLE 'ASSEMBLER FUNCTION CALLABLE FROM PASCAL'
 *
 **************************************************************
 *        Pascal prototype =
 *
-*        procedure PAS2ASM ( X1 : INTEGER ;
-*                            var X2 : INTEGER ;
-*                            T1 : CHAR20 ;
-*                            var T2 : CHAR20 ) ;
+*        function PAS_TO_ASM_FUNC ( X1 : INTEGER ;
+*                                   X2 : INTEGER ) : INTEGER ;
 *
-*           EXTERNAL ASSEMBLER 'PAS2FTN' ;
+*           EXTERNAL ASSEMBLER 'PAS2AF' ;
 **************************************************************
 *
-PAS2ASM  CSECT
+PAS2AF   CSECT
          STM   R14,R12,12(R13)
          LR    R11,R15             LOAD BASE REGISTER
-         USING PAS2ASM,R11
+         USING PAS2AF,R11
          LA    R15,SAVEAREA
          ST    R15,8(R13)
          ST    R13,4(R15)
@@ -25,18 +23,15 @@ PAS2ASM  CSECT
 **************************************************************
 *
          L     R2,0(R1)            = X1 (by value)
-         L     R3,4(R1)            = ADDR of X2 (by addr)
-         LA    R4,8(R1)            = ADDR of T1 (by value)
-         L     R5,28(R1)           = ADDR of T2 (by addr)
+         L     R3,4(R1)            = X2 (by addr)
 *
 **************************************************************
 *        work on parameters
 **************************************************************
 *
-         LA    R6,7
-         ST    R6,0(R3)            set X2 to 7
-*
-         MVC   0(20,R5),=CL20'String from PAS2ASM'   set T2
+         AR    R2,R3
+         SRA   R2,1
+         LR    R0,R2               function result in R0
 *
 **************************************************************
 *        exit (return to caller)
@@ -44,7 +39,8 @@ PAS2ASM  CSECT
 *
 EXIT     DS    0H
          L     R13,4(R13)
-         LM    R14,R12,12(R13)
+         LM    R14,R15,12(R13)     restore regs
+         LM    R1,R12,24(R13)      but omit R0 (function result)
          XR    R15,R15
          BR    R14
          EJECT

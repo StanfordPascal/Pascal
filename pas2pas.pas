@@ -1,7 +1,7 @@
 module $PAS2PAS ;
 
 //**********************************************************************
-//$A+                                                                   
+//$A+
 //**********************************************************************
 
 
@@ -24,6 +24,14 @@ procedure PAS2PAS ( X1 : INTEGER ; var X2 : INTEGER ; T1 : CHAR20 ; var
 
 
 
+function PAS2Pf ( X1 : INTEGER ; x2 : INTEGER ) : integer ;
+
+   begin (* PAS2pf *)
+     pas2pf := ( x1 + x2 ) div 2 ;
+   end (* PAS2PAS *) ;
+
+
+
 begin (* HAUPTPROGRAMM *)
-  
+
 end (* HAUPTPROGRAMM *) .

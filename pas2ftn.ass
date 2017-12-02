@@ -8,7 +8,7 @@ PAS2FTN  TITLE 'ASSEMBLER SUBROUTINE CALLABLE FROM PASCAL'
 *                                      T1 : CHAR20 ;
 *                                      var T2 : CHAR20 ) ;
 *
-*        EXTERNAL FORTRAN 'PAS2FTN' ;
+*           EXTERNAL FORTRAN 'PAS2FTN' ;
 *
 *        because the subroutine is specified as
 *        EXTERNAL FORTRAN, all parameters are passed

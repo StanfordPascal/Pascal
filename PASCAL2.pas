@@ -9987,39 +9987,60 @@ procedure ASMNXTINST ;
                          DRCT := TRUE ;
                          FPA := ZEROBL ;
                          VPA := RGS ;
+
+        //******************************************************
+        // extlang = fortran:                                   
+        // COPY RESULT FROM REGISTER ZERO                       
+        //******************************************************
+
                          case EXTLANG of
                            'F' : case OPNDTYPE of
                                    BOOL : begin
                                             FINDRG ;
-                                            OPNDTYPE := BOOL ;
                                             GENRR ( XLR , NXTRG , 0 )
-
-        (********************************)
-        (*COPY RESULT FROM REGISTER ZERO*)
-        (********************************)
-
                                           end (* tag/ca *) ;
                                    INT : begin
                                            FINDRG ;
-                                           OPNDTYPE := INT ;
                                            GENRR ( XLR , NXTRG , 0 )
-
-        (********************************)
-        (*COPY RESULT FROM REGISTER ZERO*)
-        (********************************)
-
                                          end (* tag/ca *) ;
                                    REEL : begin
                                             FINDFP ;
-                                            OPNDTYPE := REEL ;
                                             GENRR ( XLDR , NXTRG , 0 )
-
-        (********************************)
-        (*COPY RESULT FROM REGISTER ZERO*)
-        (********************************)
-
                                           end (* tag/ca *) ;
                                  end (* case *) ;
+
+        //******************************************************
+        // extlang = assembler:                                 
+        // COPY RESULT FROM REGISTER ZERO                       
+        //******************************************************
+
+                           'A' : case OPNDTYPE of
+                                   ADR , INT :
+                                     begin
+                                       FINDRG ;
+                                       GENRR ( XLR , NXTRG , 0 )
+                                     end (* tag/ca *) ;
+                                   HINT : begin
+                                            FINDRG ;
+                                            GENRR ( XLR , NXTRG , 0 )
+                                          end (* tag/ca *) ;
+                                   BOOL , CHRC :
+                                     begin
+                                       FINDRG ;
+                                       GENRR ( XLR , NXTRG , 0 )
+                                     end (* tag/ca *) ;
+                                   PSET : ERROR ( 616 ) ;
+                                   REEL : begin
+                                            FINDFP ;
+                                            GENRR ( XLDR , NXTRG , 0 )
+                                          end (* tag/ca *) ;
+                                 end (* case *) ;
+
+        //******************************************************
+        // extlang = pascal:                                    
+        // COPY RESULT FROM 72 (R1)                             
+        //******************************************************
+
                            otherwise
                              case OPNDTYPE of
                                ADR , INT :

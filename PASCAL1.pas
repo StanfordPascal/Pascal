@@ -695,19 +695,23 @@ program PASCALCOMPILER ( INPUT , OUTPUT , PRR , LISTING , DBGINFO ,
 (*                                                                  *)
 (*  - For ASSEMBLER and FORTRAN, different call sequences           *)
 (*    are created. ASSEMBLER and FORTRAN both use normal            *)
-(*    OS linkage conventions, and FORTRAN expects all parameters    *)
+(*    OS linkage conventions, and FORTRAN expects all parms         *)
 (*    passed by reference, so the Pascal compiler creates           *)
 (*    dummy arguments for every Pascal by-value parameter.          *)
 (*                                                                  *)
+(*  - External ASSEMBLER functions must return their result         *)
+(*    in general register 0 (or FP register 0, for double           *)
+(*    float results). This is also what FORTRAN does.               *)
+(*                                                                  *)
 (*  - Example programs for both languages, showing external         *)
 (*    procedures and functions implemented in ASSEMBLER and         *)
-(*    FORTRAN, will be created.                                     *)
+(*    FORTRAN, have been created.                                   *)
 (*                                                                  *)
 (*  - More advanced topics: using the Pascal stack in the           *)
 (*    external procedures (allowing, maybe, recursive calls         *)
 (*    of the ASSEMBLER subfunctions), and calling some              *)
 (*    functions of the Pascal runtime library.                      *)
-(*    This will be possible, too, but has not been tested yet.      *)
+(*    This is possible, too, but has not been tested yet.           *)
 (*                                                                  *)
 (********************************************************************)
 
@@ -882,10 +886,13 @@ const VERSION = '12.2017' ;
 
       PCODE_CSP = 30 ;
       PCODE_ENT = 32 ;
+      PCODE_LCA = 37 ;
       PCODE_MOV = 40 ;
       PCODE_RET = 42 ;
       PCODE_CUP = 46 ;
+      PCODE_LDA = 50 ;
       PCODE_LDC = 51 ;
+      PCODE_LOD = 54 ;
       PCODE_STR = 56 ;
       PCODE_ORD = 61 ;
       PCODE_BGN = 72 ;
@@ -7398,12 +7405,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
            if OPT . PRCODE then
              begin
                PUTIC ;
-               WRITE ( PRR , MN [ 37 ] : 4 ) ;
-
-           (********)
-           (*LCA S *)
-           (********)
-
+               WRITE ( PRR , MN [ PCODE_LCA ] : 4 ) ;
                WRITE ( PRR , ' S,' ) ;
                WRITESET ( VAL , ELTYPE ) ;
              end (* then *) ;
@@ -7417,12 +7419,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
            if OPT . PRCODE then
              begin
                PUTIC ;
-               WRITE ( PRR , MN [ 37 ] : 4 ) ;
-
-           (********)
-           (*LCA M *)
-           (********)
-
+               WRITE ( PRR , MN [ PCODE_LCA ] : 4 ) ;
                WRITE ( PRR , ' M,' ) ;
                GEN_STRCONST ( VAL ) ;
                STRCOUNTER := STRCOUNTER + VAL . SVAL -> . LENGTH ;
@@ -7455,10 +7452,11 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
            (*LCA P = LOAD PROCEDURE ADDRESS *)
            (*********************************)
 
-                 37 : begin
-                        if FP2 = ORD ( 'P' ) then
-                          WRITELN ( PRR , ' P,' , ID : EXTNAMSZ )
-                      end (* tag/ca *) ;
+                 PCODE_LCA :
+                   begin
+                     if FP2 = ORD ( 'P' ) then
+                       WRITELN ( PRR , ' P,' , ID : EXTNAMSZ )
+                   end (* tag/ca *) ;
 
            (*********)
            (*STO,RET*)
@@ -7612,13 +7610,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                                  GEN2 ( PCODE_LDC , 5 , 0 )
                              end (* else *) ;
                    VARBL : case ACCESS of
-
-           (********)
-           (*LOD   *)
-           (********)
-
-                             DRCT : GEN3 ( 54 , GETTYPE ( BTYPE ) ,
-                                           VLEVEL , DPLMT ) ;
+                             DRCT : GEN3 ( PCODE_LOD , GETTYPE ( BTYPE
+                                           ) , VLEVEL , DPLMT ) ;
 
            (********)
            (*IND   *)
@@ -7681,12 +7674,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                              else
                                ERROR ( 400 ) ;
                    VARBL : case ACCESS of
-
-           (********)
-           (*LDA   *)
-           (********)
-
-                             DRCT : GEN2 ( 50 , VLEVEL , DPLMT ) ;
+                             DRCT : GEN2 ( PCODE_LDA , VLEVEL , DPLMT )
+                                           ;
                              INDRCT :
                                if IDPLMT <> 0 then
 
@@ -7943,7 +7932,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
             end (* FORCETEMPSET *) ;
 
 
-         procedure SELECTOR ( FSYS : SYMSET ; FCP : IDP ) ;
+         procedure SELECTOR ( FSYS : SYMSET ; FCP : IDP ; GEN : BOOLEAN
+                            ) ;
 
             var LATTR : ATTR ;
                 LCP : IDP ;
@@ -7992,13 +7982,9 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                                  end (* then *)
                                else
                                  begin
-
-              (********)
-              (*LOD   *)
-              (********)
-
-                                   GEN3 ( 54 , ORD ( 'A' ) , VLEV ,
-                                          VADDR ) ;
+                                   if GEN then
+                                     GEN3 ( PCODE_LOD , ORD ( 'A' ) ,
+                                            VLEV , VADDR ) ;
                                    ACCESS := INDRCT ;
                                    IDPLMT := 0
                                  end (* else *)
@@ -8007,12 +7993,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                              begin
                                ID := ' ' ;
                                UNPACK ( VOWNERPROC , ID , 1 ) ;
-
-              (********)
-              (*LCA   *)
-              (********)
-
-                               GEN1 ( 37 , ORD ( 'P' ) ) ;
+                               if GEN then
+                                 GEN1 ( PCODE_LCA , ORD ( 'P' ) ) ;
                                ACCESS := INDRCT ;
                                VLEVEL := VLEV ;
                                IDPLMT := VADDR
@@ -8026,13 +8008,9 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                                 end (* then *)
                               else
                                 begin
-
-              (********)
-              (*LOD   *)
-              (********)
-
-                                  GEN3 ( 54 , ORD ( 'A' ) , LEVEL ,
-                                         VDSPL ) ;
+                                  if GEN then
+                                    GEN3 ( PCODE_LOD , ORD ( 'A' ) ,
+                                           LEVEL , VDSPL ) ;
                                   ACCESS := INDRCT ;
                                   IDPLMT := FLDADDR
                                 end (* else *) ;
@@ -8040,12 +8018,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                       begin
                         ID := ' ' ;
                         UNPACK ( SKOWNERPROC , ID , 1 ) ;
-
-              (********)
-              (*LCA   *)
-              (********)
-
-                        GEN1 ( 37 , ORD ( 'P' ) ) ;
+                        if GEN then
+                          GEN1 ( PCODE_LCA , ORD ( 'P' ) ) ;
                         ACCESS := INDRCT ;
                         IDPLMT := SKADDR
                       end (* tag/ca *) ;
@@ -8175,16 +8149,20 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
               (*CHK   *)
               (********)
 
-                                        GEN3 ( 45 , ORD ( 'J' ) , LMIN
-                                               , LMAX ) ;
+                                        if GEN then
+                                          GEN3 ( 45 , ORD ( 'J' ) ,
+                                                 LMIN , LMAX ) ;
                                       if LMIN > 0 then
 
               (********)
               (*DEC   *)
               (********)
 
-                                        GEN2 ( 22 , GETTYPE ( GATTR .
-                                               TYPTR ) , LMIN )
+                                        begin
+                                          if GEN then
+                                            GEN2 ( 22 , GETTYPE ( GATTR
+                                                   . TYPTR ) , LMIN )
+                                        end (* then *)
                                       else
                                         if LMIN < 0 then
 
@@ -8192,12 +8170,17 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
               (*INC   *)
               (********)
 
-                                          GEN2 ( 23 , GETTYPE ( GATTR .
-                                                 TYPTR ) , - LMIN )
+                                          begin
+                                            if GEN then
+                                              GEN2 ( 23 , GETTYPE (
+                                                   GATTR . TYPTR ) , -
+                                                   LMIN )
+                                          end (* then *)
 
-              (**************************)
-              (*OR SIMPLY GEN1(31, LMIN)*)
-              (**************************)
+              (******************************************)
+              (*OR SIMPLY GEN1(31, LMIN)                *)
+              (*************************                *)
+              (******************************************)
 
                                     end (* then *)
                                 end (* else *) ;
@@ -8216,7 +8199,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
               (*IXA   *)
               (********)
 
-                                      GEN1 ( 36 , LMIN )
+                                      if GEN then
+                                        GEN1 ( 36 , LMIN )
                                     end (* then *) ;
                                 end (* with *) ;
                             end (* with *)
@@ -8354,7 +8338,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                 LCPARM : ADDRRANGE ;
 
 
-            procedure VARIABLE ( FSYS : SYMSET ) ;
+            procedure VARIABLE ( FSYS : SYMSET ; GEN : BOOLEAN ) ;
 
                var LCP : IDP ;
 
@@ -8370,7 +8354,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                      ERROR ( 2 ) ;
                      LCP := UVARPTR
                    end (* else *) ;
-                 SELECTOR ( FSYS , LCP )
+                 SELECTOR ( FSYS , LCP , GEN )
                end (* VARIABLE *) ;
 
 
@@ -8450,7 +8434,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                        ERROR ( 185 ) ;
                      LCP := DFILE ;
                    end (* then *) ;
-                 SELECTOR ( FSYS + [ SYRPARENT ] , LCP ) ;
+                 SELECTOR ( FSYS + [ SYRPARENT ] , LCP , TRUE ) ;
                  with GATTR do
                    if COMPTYPES ( TYPTR , TEXTPTR ) <> 1 then
                      if TYPTR <> NIL then
@@ -8523,7 +8507,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                    end (* then *)
                  else
                    INSYMBOL ;
-                 SELECTOR ( FSYS + [ SYCOMMA , SYRPARENT ] , LCP ) ;
+                 SELECTOR ( FSYS + [ SYCOMMA , SYRPARENT ] , LCP , TRUE
+                            ) ;
                  with GATTR do
                    if COMPTYPES ( TYPTR , TEXTPTR ) <> 1 then
                      if TYPTR <> NIL then
@@ -8609,7 +8594,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                      TEST := FALSE ;
                      if SY = IDENT then
                        repeat
-                         VARIABLE ( FSYS + [ SYCOMMA , SYRPARENT ] ) ;
+                         VARIABLE ( FSYS + [ SYCOMMA , SYRPARENT ] ,
+                                    TRUE ) ;
                          LOADADDRESS ;
                          if GATTR . TYPTR <> NIL then
                            if RWFILE = NIL then
@@ -8771,7 +8757,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
 
                         ID := ' ' ;
                         UNPACK ( LSP -> . CSTNAME , ID , 1 ) ;
-                        GEN1 ( 37 , ORD ( 'P' ) ) ;
+                        GEN1 ( PCODE_LCA , ORD ( 'P' ) ) ;
 
                     (********)
                     (*INC A *)
@@ -9031,7 +9017,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                    INSYMBOL
                  else
                    ERROR ( 20 ) ;
-                 VARIABLE ( FSYS + [ SYRPARENT ] ) ;
+                 VARIABLE ( FSYS + [ SYRPARENT ] , TRUE ) ;
                  if GATTR . TYPTR <> NIL then
                    with GATTR . TYPTR -> do
                      if FORM = ARRAYS then
@@ -9108,7 +9094,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                    INSYMBOL
                  else
                    ERROR ( 20 ) ;
-                 VARIABLE ( FSYS + [ SYCOMMA , SYRPARENT ] ) ;
+                 VARIABLE ( FSYS + [ SYCOMMA , SYRPARENT ] , TRUE ) ;
                  if GATTR . TYPTR <> NIL then
                    with GATTR , GATTR . TYPTR -> do
                      if FORM = ARRAYS then
@@ -9207,7 +9193,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                    LALN : ALNRNG ;
 
                begin (* NEW1 *)
-                 VARIABLE ( FSYS + [ SYCOMMA , SYRPARENT ] ) ;
+                 VARIABLE ( FSYS + [ SYCOMMA , SYRPARENT ] , TRUE ) ;
                  LOADADDRESS ;
                  LSP := NIL ;
                  VARTS := 0 ;
@@ -9287,7 +9273,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
             procedure MARKRELEASE ;
 
                begin (* MARKRELEASE *)
-                 VARIABLE ( FSYS + [ SYRPARENT ] ) ;
+                 VARIABLE ( FSYS + [ SYRPARENT ] , TRUE ) ;
                  if GATTR . TYPTR <> NIL then
                    if GATTR . TYPTR -> . FORM = POINTER then
                      if LKEY = 13
@@ -9330,7 +9316,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
             procedure ADDR1 ;
 
                begin (* ADDR1 *)
-                 VARIABLE ( FSYS + [ SYRPARENT ] ) ;
+                 VARIABLE ( FSYS + [ SYRPARENT ] , TRUE ) ;
 
                  (*******************************)
                  (* load addr of variable and   *)
@@ -9523,14 +9509,22 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                  (* then load size of that type     *)
                  (***********************************)
 
-                     VARIABLE ( FSYS + [ SYRPARENT ] ) ;
+                     VARIABLE ( FSYS + [ SYRPARENT ] , FALSE ) ;
                      if GATTR . TYPTR <> NIL then
                        begin
                          SIZE := GATTR . TYPTR -> . SIZE ;
                        end (* then *)
                    end (* then *) ;
                  GATTR . TYPTR := INTPTR ;
-                 GEN2 ( PCODE_LDC , 1 , SIZE ) ;
+
+                 //*****************************************************
+                 // dont gen ldc, set constant instead ...              
+                 // GEN2 ( PCODE_LDC , 1 , SIZE ) ;                     
+                 //*****************************************************
+
+                 GATTR . KIND := CST ;
+                 GATTR . CVAL . STRTYPE := ' ' ;
+                 GATTR . CVAL . IVAL := SIZE ;
                end (* SIZEOF1 *) ;
 
 
@@ -9679,10 +9673,18 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
 
             procedure MEMSET1 ;
 
+            //**********************************************
+            // somehow sophisticated variant of memset      
+            // which generates different p-codes            
+            // depending on situation                       
+            //**********************************************
+
+
                var L : INTEGER ;
                    L_CONST : BOOLEAN ;
                    PATTERN : XCONSTANT ;
                    PATTERN_CONST : BOOLEAN ;
+                   REVERSE : BOOLEAN ;
 
 
                procedure LOAD_PATTERN ;
@@ -9696,6 +9698,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
 
 
                begin (* MEMSET1 *)
+                 REVERSE := FALSE ;
                  L_CONST := FALSE ;
                  PATTERN_CONST := FALSE ;
                  EXPRESSION ( FSYS + [ SYCOMMA , SYRPARENT ] ) ;
@@ -9719,7 +9722,9 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                    if GATTR . TYPTR -> . FORM <> POINTER then
                      ERROR ( 190 )
                    else
-                     LOAD ;
+                     begin
+                       LOAD ;
+                     end (* else *) ;
                  if SY = SYCOMMA then
                    INSYMBOL ;
 
@@ -9758,7 +9763,9 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                            PATTERN_CONST := TRUE ;
                          end (* then *)
                        else
-                         LOAD ;
+                         begin
+                           LOAD ;
+                         end (* else *)
                      end (* else *) ;
                  if SY = SYCOMMA then
                    INSYMBOL ;
@@ -9801,12 +9808,24 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                          end (* then *)
                        else
                          begin
+
+                 //**********************************************
+                 // problem here:                                
+                 // if length is not constant, but pattern       
+                 // was const, then MSE has to be generated      
+                 // but length is maybe already loaded by        
+                 // expression call. so we need a reverse        
+                 // variant of MSE (length and pattern           
+                 // reversed) - opp 03.12.2017                   
+                 //**********************************************
+
+                           LOAD ;
                            if PATTERN_CONST then
                              begin
                                LOAD_PATTERN ;
                                PATTERN_CONST := FALSE ;
+                               REVERSE := TRUE ;
                              end (* then *) ;
-                           LOAD ;
                          end (* else *) ;
                      end (* else *) ;
 
@@ -9844,11 +9863,21 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                          GEN1 ( PCODE_MFI , 0 )
                    end (* then *)
                  else
-                   GEN0 ( PCODE_MSE ) ;
+                   if REVERSE then
+                     GEN1 ( PCODE_MSE , 1 )
+                   else
+                     GEN1 ( PCODE_MSE , 0 ) ;
                end (* MEMSET1 *) ;
 
 
             procedure MEMCPY1 ;
+
+            //**********************************************
+            // memcpy generates inline code                 
+            // P-Code mov if length is known at compile time
+            // P-Code mcp otherwise                         
+            //**********************************************
+
 
                var L : INTEGER ;
                    L_CONST : BOOLEAN ;
@@ -10584,12 +10613,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                                             ;
                                     FORCETEMPSET ;
                                     LSIZE := OPNDSETSIZE ( GATTR ) ;
-
-                    (********)
-                    (*LDA   *)
-                    (********)
-
-                                    GEN2 ( 50 , LEVEL , LLC2 ) ;
+                                    GEN2 ( PCODE_LDA , LEVEL , LLC2 ) ;
 
                     (********)
                     (*SMV   *)
@@ -10597,12 +10621,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
 
                                     GEN2 ( 69 , - PARMTYPE -> . SIZE ,
                                            LSIZE ) ;
-
-                    (********)
-                    (*LDA   *)
-                    (********)
-
-                                    GEN2 ( 50 , LEVEL , LLC2 ) ;
+                                    GEN2 ( PCODE_LDA , LEVEL , LLC2 ) ;
                                     LLC2 := LLC2 + PARMTYPE -> . SIZE ;
                                   end (* then *)
                                 else
@@ -10622,12 +10641,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                                 begin
                                   LSIZE := OPNDSETSIZE ( GATTR ) ;
                                   LOADADDRESS ;
-
-                    (********)
-                    (*LDA   *)
-                    (********)
-
-                                  GEN2 ( 50 , LEVEL , LLC_PARM ) ;
+                                  GEN2 ( PCODE_LDA , LEVEL , LLC_PARM )
+                                         ;
 
                     (********)
                     (*SMV   *)
@@ -10639,12 +10654,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                               else
                                 begin
                                   LOADADDRESS ;
-
-                    (********)
-                    (*LDA   *)
-                    (********)
-
-                                  GEN2 ( 50 , LEVEL , LLC_PARM ) ;
+                                  GEN2 ( PCODE_LDA , LEVEL , LLC_PARM )
+                                         ;
                                   GEN1 ( PCODE_MOV , - PARMTYPE -> .
                                          SIZE ) ;
                                   LSIZE := PARMTYPE -> . SIZE ;
@@ -10880,28 +10891,14 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                  (*****************)
 
                                          UNPACK ( EXTNAME , ID , 1 ) ;
-
-                 (********)
-                 (*LCA   *)
-                 (********)
-
-                                         GEN1 ( 37 , ORD ( 'P' ) ) ;
+                                         GEN1 ( PCODE_LCA , ORD ( 'P' )
+                                                ) ;
                                          GEN3 ( PCODE_STR , ORD ( 'A' )
                                                 , LEVEL , LLC_PARM ) ;
-
-                 (********)
-                 (*LDA   *)
-                 (********)
-
-                                         GEN2 ( 50 , LEVEL , LLC_PARM +
-                                                PTRSIZE ) ;
-
-                 (********)
-                 (*LDA   *)
-                 (********)
-
-                                         GEN2 ( 50 , 1 , DISPADR +
-                                                PTRSIZE ) ;
+                                         GEN2 ( PCODE_LDA , LEVEL ,
+                                                LLC_PARM + PTRSIZE ) ;
+                                         GEN2 ( PCODE_LDA , 1 , DISPADR
+                                                + PTRSIZE ) ;
                                          GEN1 ( PCODE_MOV , DISPAREA -
                                                 PTRSIZE ) ;
                                        end (* with *)
@@ -10912,19 +10909,15 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                  (***************************************)
 
                                      begin
-
-                 (********)
-                 (*LDA   *)
-                 (********)
-
-                                       GEN2 ( 50 , LEVEL , LLC_PARM ) ;
+                                       GEN2 ( PCODE_LDA , LEVEL ,
+                                              LLC_PARM ) ;
 
                  (*******************************************)
                  (* COPY ENTIRE PROC RECORD INTO PARM LIST  *)
                  (*******************************************)
 
-                                       GEN2 ( 50 , LEVEL , LCP -> .
-                                              PFLEV DIV 10 ) ;
+                                       GEN2 ( PCODE_LDA , LEVEL , LCP
+                                              -> . PFLEV DIV 10 ) ;
                                        GEN1 ( PCODE_MOV , DISPAREA ) ;
                                      end (* else *) ;
                                    LLC_PARM := LLC_PARM + LSIZE ;
@@ -11471,14 +11464,15 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                           if LCP -> . KLASS = FUNC then
                             begin
                               CALL ( FSYS , LCP ) ;
-                              GATTR . KIND := EXPR
+                              if STARTID <> 'SIZEOF' then
+                                GATTR . KIND := EXPR
                             end (* then *)
                           else
                             if LCP -> . KLASS = KONST then
                               FACT_KONST
                             else
                               begin
-                                SELECTOR ( FSYS , LCP ) ;
+                                SELECTOR ( FSYS , LCP , TRUE ) ;
                               end (* else *)
                         end (* FACTOR_IDENT *) ;
 
@@ -12327,7 +12321,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
 
             begin (* ASSIGNMENT *)
               LLC := LCOUNTER ;
-              SELECTOR ( FSYS + [ SYASSIGN ] , FCP ) ;
+              SELECTOR ( FSYS + [ SYASSIGN ] , FCP , TRUE ) ;
               VAR_MOD := VAR_MOD + 1 ;
               if SY = SYASSIGN then
                 begin
@@ -13294,13 +13288,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                                     GEN2 ( PCODE_LDC , 1 , CV2 )
                                 end (* then *)
                               else
-
-              (********)
-              (*LOD   *)
-              (********)
-
-                                GEN3 ( 54 , ORD ( 'I' ) , LEVEL , LLC )
-                                       ;
+                                GEN3 ( PCODE_LOD , ORD ( 'I' ) , LEVEL
+                                       , LLC ) ;
                               if LSY = SYTO then
                                 LOP := 52
                               else
@@ -13366,12 +13355,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                     GEN2 ( PCODE_LDC , 1 , CV2 )
                 end (* then *)
               else
-
-              (********)
-              (*LOD   *)
-              (********)
-
-                GEN3 ( 54 , ORD ( 'I' ) , LEVEL , LLC ) ;
+                GEN3 ( PCODE_LOD , ORD ( 'I' ) , LEVEL , LLC ) ;
 
               (********)
               (*NEQ   *)
@@ -13438,7 +13422,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                   ERROR ( 2 ) ;
                   LCP := UVARPTR
                 end (* else *) ;
-              SELECTOR ( FSYS + [ SYCOMMA , SYDO ] , LCP ) ;
+              SELECTOR ( FSYS + [ SYCOMMA , SYDO ] , LCP , TRUE ) ;
               REC_STR := GATTR . TYPTR ;
               if GATTR . TYPTR <> NIL then
                 if GATTR . TYPTR -> . FORM = RECORDS then
@@ -13755,20 +13739,10 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                          if IDTYPE <> NIL then
                            begin
                              if VKIND = FORMAL then
-
-           (********)
-           (*LOD   *)
-           (********)
-
-                               GEN3 ( 54 , ORD ( 'A' ) , LEVEL , VADDR
-                                      )
+                               GEN3 ( PCODE_LOD , ORD ( 'A' ) , LEVEL ,
+                                      VADDR )
                              else
-
-           (********)
-           (*LDA   *)
-           (********)
-
-                               GEN2 ( 50 , LEVEL , VADDR ) ;
+                               GEN2 ( PCODE_LDA , LEVEL , VADDR ) ;
                              GEN3 ( PCODE_STR , ORD ( 'A' ) , LEVEL ,
                                     LLC ) ;
                              LLC := LLC + PTRSIZE ;
@@ -13886,12 +13860,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
 
                     with FILIDPTR -> do
                       begin
-
-        (********)
-        (*LDA   *)
-        (********)
-
-                        GEN2 ( 50 , 1 , VADDR ) ;
+                        GEN2 ( PCODE_LDA , 1 , VADDR ) ;
                         GEN1 ( PCODE_CSP , ORD ( PSIO ) ) ;
                         if VADDR >= FIRSTGVAR then
 

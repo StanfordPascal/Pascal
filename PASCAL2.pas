@@ -801,7 +801,8 @@ type OPTYPE = ( PCTS , PCTI , PLOD , PSTR , PLDA , PLOC , PSTO , PLDC ,
      MNEM_TABLE = array [ 0 .. 255 ] of array [ 1 .. 4 ] of CHAR ;
      PLABEL = record
                 NAM : ALFA ;
-                LEN : 0 .. IDLNGTH
+                LEN : 0 .. IDLNGTH ;
+                CADDR : ADRRNG ;
               end ;
      DATUM = record
                RCNST : REAL ;
@@ -906,9 +907,6 @@ var OPC , OLDOPC : OPTYPE ;
     (*******************************************)
     (* P_Q FIELDS OF INSTRUCTION               *)
     (*******************************************)
-
-    CADDR : ADRRNG ;
-
     (*******************************************)
     (* LOC. OF STRUCT. CONSTANT ITEM           *)
     (*******************************************)
@@ -1732,6 +1730,7 @@ procedure READNXTINST ;
       begin (* READLBL *)
         with LBL do
           begin
+            CADDR := 0 ;
             NAM := '        ' ;
             LEN := 0 ;
             if EOL ( INPUT ) then
@@ -1743,7 +1742,6 @@ procedure READNXTINST ;
             until ( INPUT -> = ' ' ) or ( LEN = 8 ) ;
             if NAM [ 1 ] in [ '0' .. '9' ] then
               begin
-                CADDR := 0 ;
                 I := 1 ;
                 CH := NAM [ 1 ] ;
                 repeat
@@ -2203,7 +2201,10 @@ procedure READNXTINST ;
      READ ( NMCDE ) ;
      if ASM and ( NMCDE <> 'LOC' ) then
        begin
-         HEXHW ( 2 * PCOUNTER , HLOC ) ;
+         if NMCDE = 'DFC' then
+           HEXHW ( LBL1 . CADDR , HLOC )
+         else
+           HEXHW ( 2 * PCOUNTER , HLOC ) ;
          WRITE ( ASMOUT , HLOC : 9 , ':  ' , LBL1 . NAM : LBL1 . LEN ,
                  ' ' : 6 - LBL1 . LEN , NMCDE : 6 ) ;
        end (* then *) ;
@@ -2212,17 +2213,17 @@ procedure READNXTINST ;
        PADI , PADR , PSBI , PSBR , PFLT , PFLO , PNGI , PNGR , PSQI ,
        PSQR , PABI , PABR , PMOD , PODD , PMPI , PMPR , PDVI , PDVR ,
        PSTP , PUNI , PINT , PDIF , PINN , PCRD , PLAB , PSAV , PRST ,
-       PCHR , PORD , PXPO , PPOP , PXLB , PEND , PADA , PSBA , PMCP ,
-       PMSE : begin
+       PCHR , PORD , PXPO , PPOP , PXLB , PEND , PADA , PSBA , PMCP :
+         begin
 
      (***************)
      (* NO OPERANDS *)
      (***************)
 
-                READLN ( INPUT ) ;
-                if ASM then
-                  WRITELN ( ASMOUT ) ;
-              end (* tag/ca *) ;
+           READLN ( INPUT ) ;
+           if ASM then
+             WRITELN ( ASMOUT ) ;
+         end (* tag/ca *) ;
        PDEF : begin
 
      (*****************************************)
@@ -2254,7 +2255,7 @@ procedure READNXTINST ;
                       OPNDTYPE := TYPCDE [ 'I' ] ;
                     end (* else *)
               end (* tag/ca *) ;
-       PCTI , PIXA , PASE , PMOV , PMFI , PMZE , PDBG :
+       PCTI , PIXA , PASE , PMOV , PMFI , PMZE , PMSE , PDBG :
          begin
 
      (*******************)
@@ -10087,14 +10088,12 @@ procedure ASMNXTINST ;
                    otherwise
                      CALLSTNDRD ;
                  end (* case *) ;
-          PCST :
+          PCST : begin
 
         (************************************************)
         (* BEGINNING OF A CSECT OF STRUCTURED CONSTANTS *)
         (************************************************)
 
-
-                 begin
                    PRCTBL [ 0 ] . NAME := LBL1 . NAM ;
                    PRCTBL [ 0 ] . LNK := 0 ;
                    for CPCOUNTER := 0 to 7 do
@@ -10108,84 +10107,86 @@ procedure ASMNXTINST ;
                    CSEGSTRT := 0 ;
                    CSEGLIMIT := TXTCHUNK * 145 ;
                  end (* tag/ca *) ;
-          PDFC :
+          PDFC : begin
 
         (********************************************)
         (* A SIMPLE CONSTANT IN THE CONSTANTS CSECT *)
         (********************************************)
 
-
-                 if CSTBLK then
-                   if CADDR <= 32767 then
-                     begin
-                       if CPCOUNTER > CADDR then
-                         ERROR ( 617 ) ;
-                       while CPCOUNTER < CADDR do
-                         begin
-                           if CPCOUNTER = CSEGLIMIT then
-                             DUMPCONSTBLK ( FALSE ) ;
-                           CODE . C [ CPCOUNTER - CSEGSTRT ] := CHR ( 0
-                                                   ) ;
-                           CPCOUNTER := CPCOUNTER + 1 ;
-                         end (* while *) ;
-                       PCOUNTER := CADDR ;
-                       Q := PCOUNTER - CSEGSTRT ;
-                       case OPNDTYPE of
-                         NON : begin
-                                 CPCOUNTER := CADDR + SLNGTH ;
-                               end (* tag/ca *) ;
-                         BOOL , CHRC :
+                   if CSTBLK then
+                     if LBL1 . CADDR <= 32767 then
+                       begin
+                         if CPCOUNTER > LBL1 . CADDR then
+                           ERROR ( 617 ) ;
+                         while CPCOUNTER < LBL1 . CADDR do
                            begin
-                             if not ( IVAL in [ 0 .. 255 ] ) then
-                               ERROR ( 301 ) ;
-                             CODE . C [ Q ] := CHR ( IVAL ) ;
+                             if CPCOUNTER = CSEGLIMIT then
+                               DUMPCONSTBLK ( FALSE ) ;
+                             CODE . C [ CPCOUNTER - CSEGSTRT ] := CHR (
+                                                   0 ) ;
                              CPCOUNTER := CPCOUNTER + 1 ;
-                           end (* tag/ca *) ;
-                         HINT : begin
-                                  if ( IVAL < - 32768 ) or ( IVAL >
-                                  32767 ) then
-                                    ERROR ( 301 ) ;
-                                  if ODD ( Q ) then
-                                    ERROR ( 610 ) ;
-                                  CODE . H [ Q DIV 2 ] := IVAL ;
-                                  CPCOUNTER := CPCOUNTER + 2 ;
-                                end (* tag/ca *) ;
-                         INT , ADR :
-                           begin
-                             if Q MOD 4 <> 0 then
-                               ERROR ( 611 ) ;
-                             CODE . I [ Q DIV 4 ] := IVAL ;
-                             CPCOUNTER := CPCOUNTER + 4 ;
-                           end (* tag/ca *) ;
-                         PSET : begin
-                                  if Q MOD 4 <> 0 then
-                                    ERROR ( 611 ) ;
-                                  for P := 1 to PSLNGTH do
-                                    begin
-                                      CODE . C [ Q ] := PSVAL . C [ P ]
-                                                   ;
-                                      Q := Q + 1 ;
-                                    end (* for *) ;
-                                  CPCOUNTER := CADDR + PSLNGTH ;
-                                end (* tag/ca *) ;
-                         STRG : begin
-                                  for P := 1 to SLNGTH do
-                                    begin
-                                      CODE . C [ Q ] := SVAL [ P ] ;
-                                      Q := Q + 1 ;
-                                    end (* for *) ;
-                                  CPCOUNTER := CADDR + SLNGTH ;
-                                end (* tag/ca *) ;
-                         REEL : begin
-                                  if Q MOD 8 <> 0 then
-                                    ERROR ( 612 ) ;
-                                  CODE . R [ Q DIV 8 ] := RVAL ;
-                                  CPCOUNTER := CPCOUNTER + 8 ;
-                                end (* tag/ca *) ;
-                       end (* case *) ;
-                     end (* then *)
-                   else
-                     ERROR ( 251 ) ;
+                           end (* while *) ;
+                         PCOUNTER := LBL1 . CADDR ;
+                         Q := PCOUNTER - CSEGSTRT ;
+                         case OPNDTYPE of
+                           NON : begin
+                                   CPCOUNTER := LBL1 . CADDR + SLNGTH ;
+                                 end (* tag/ca *) ;
+                           BOOL , CHRC :
+                             begin
+                               if not ( IVAL in [ 0 .. 255 ] ) then
+                                 ERROR ( 301 ) ;
+                               CODE . C [ Q ] := CHR ( IVAL ) ;
+                               CPCOUNTER := CPCOUNTER + 1 ;
+                             end (* tag/ca *) ;
+                           HINT : begin
+                                    if ( IVAL < - 32768 ) or ( IVAL >
+                                    32767 ) then
+                                      ERROR ( 301 ) ;
+                                    if ODD ( Q ) then
+                                      ERROR ( 610 ) ;
+                                    CODE . H [ Q DIV 2 ] := IVAL ;
+                                    CPCOUNTER := CPCOUNTER + 2 ;
+                                  end (* tag/ca *) ;
+                           INT , ADR :
+                             begin
+                               if Q MOD 4 <> 0 then
+                                 ERROR ( 611 ) ;
+                               CODE . I [ Q DIV 4 ] := IVAL ;
+                               CPCOUNTER := CPCOUNTER + 4 ;
+                             end (* tag/ca *) ;
+                           PSET : begin
+                                    if Q MOD 4 <> 0 then
+                                      ERROR ( 611 ) ;
+                                    for P := 1 to PSLNGTH do
+                                      begin
+                                        CODE . C [ Q ] := PSVAL . C [ P
+                                                   ] ;
+                                        Q := Q + 1 ;
+                                      end (* for *) ;
+                                    CPCOUNTER := LBL1 . CADDR + PSLNGTH
+                                                 ;
+                                  end (* tag/ca *) ;
+                           STRG : begin
+                                    for P := 1 to SLNGTH do
+                                      begin
+                                        CODE . C [ Q ] := SVAL [ P ] ;
+                                        Q := Q + 1 ;
+                                      end (* for *) ;
+                                    CPCOUNTER := LBL1 . CADDR + SLNGTH
+                                                 ;
+                                  end (* tag/ca *) ;
+                           REEL : begin
+                                    if Q MOD 8 <> 0 then
+                                      ERROR ( 612 ) ;
+                                    CODE . R [ Q DIV 8 ] := RVAL ;
+                                    CPCOUNTER := CPCOUNTER + 8 ;
+                                  end (* tag/ca *) ;
+                         end (* case *) ;
+                       end (* then *)
+                     else
+                       ERROR ( 251 ) ;
+                 end (* tag/ca *) ;
           PEND : if CSTBLK then
                    begin
 
@@ -11024,7 +11025,8 @@ procedure ASMNXTINST ;
       end (* MCPOPERATION *) ;
 
 
-   procedure MSEOPERATION ( var L , PAT , LEN : DATUM ) ;
+   procedure MSEOPERATION ( var L , PAT , LEN : DATUM ; REVERSE :
+                          INTEGER ) ;
 
    //****************************************************************
    // generate MVCL instruction for MEMSET                           
@@ -11036,8 +11038,24 @@ procedure ASMNXTINST ;
       var P1 , B1 , P2 , B2 , PX , BX : LVLRNG ;
           Q1 , Q2 , QX : ADRRNG ;
           BPC : ICRNG ;
+          XPAT , XLEN : DATUM ;
 
       begin (* MSEOPERATION *)
+
+        //******************************************************
+        // get address of left operand                          
+        //******************************************************
+
+        if REVERSE > 0 then
+          begin
+            XPAT := LEN ;
+            XLEN := PAT ;
+          end (* then *)
+        else
+          begin
+            XPAT := PAT ;
+            XLEN := LEN ;
+          end (* else *) ;
 
         //******************************************************
         // get address of left operand                          
@@ -11058,11 +11076,11 @@ procedure ASMNXTINST ;
 
         if FALSE then
           begin
-            WRITELN ( TRACEF , 'pat.drct   = ' , PAT . DRCT ) ;
-            WRITELN ( TRACEF , 'pat.vrbl   = ' , PAT . VRBL ) ;
-            WRITELN ( TRACEF , 'pat.dtype  = ' , PAT . DTYPE ) ;
-            WRITELN ( TRACEF , 'pat.vpa    = ' , PAT . VPA ) ;
-            WRITELN ( TRACEF , 'pat.rgadr  = ' , PAT . RGADR ) ;
+            WRITELN ( TRACEF , 'pat.drct   = ' , XPAT . DRCT ) ;
+            WRITELN ( TRACEF , 'pat.vrbl   = ' , XPAT . VRBL ) ;
+            WRITELN ( TRACEF , 'pat.dtype  = ' , XPAT . DTYPE ) ;
+            WRITELN ( TRACEF , 'pat.vpa    = ' , XPAT . VPA ) ;
+            WRITELN ( TRACEF , 'pat.rgadr  = ' , XPAT . RGADR ) ;
           end (* then *) ;
 
         //******************************************************
@@ -11071,11 +11089,11 @@ procedure ASMNXTINST ;
 
         if FALSE then
           begin
-            WRITELN ( TRACEF , 'len.drct   = ' , LEN . DRCT ) ;
-            WRITELN ( TRACEF , 'len.vrbl   = ' , LEN . VRBL ) ;
-            WRITELN ( TRACEF , 'len.dtype  = ' , LEN . DTYPE ) ;
-            WRITELN ( TRACEF , 'len.vpa    = ' , LEN . VPA ) ;
-            WRITELN ( TRACEF , 'len.rgadr  = ' , LEN . RGADR ) ;
+            WRITELN ( TRACEF , 'len.drct   = ' , XLEN . DRCT ) ;
+            WRITELN ( TRACEF , 'len.vrbl   = ' , XLEN . VRBL ) ;
+            WRITELN ( TRACEF , 'len.dtype  = ' , XLEN . DTYPE ) ;
+            WRITELN ( TRACEF , 'len.vpa    = ' , XLEN . VPA ) ;
+            WRITELN ( TRACEF , 'len.rgadr  = ' , XLEN . RGADR ) ;
           end (* then *) ;
 
         //******************************************************
@@ -11112,7 +11130,7 @@ procedure ASMNXTINST ;
         // generate L or LR                                     
         //******************************************************
 
-        GETOP_SIMPLE ( LEN , QX , PX , BX , B1 , TRUE ) ;
+        GETOP_SIMPLE ( XLEN , QX , PX , BX , B1 , TRUE ) ;
 
         //******************************************************
         // check length for positive                            
@@ -11137,7 +11155,7 @@ procedure ASMNXTINST ;
         // generate L or LR                                     
         //******************************************************
 
-        GETOP_SIMPLE ( PAT , QX , PX , BX , B2 , FALSE ) ;
+        GETOP_SIMPLE ( XPAT , QX , PX , BX , B2 , FALSE ) ;
         GENRX ( XSLL , B2 , 24 , 0 , 0 ) ;
 
         //******************************************************
@@ -11160,8 +11178,8 @@ procedure ASMNXTINST ;
         AVAIL [ B2 ] := TRUE ;
         S370CNT := S370CNT + 1 ;
         FREEREG ( L ) ;
-        FREEREG ( PAT ) ;
-        FREEREG ( LEN ) ;
+        FREEREG ( XPAT ) ;
+        FREEREG ( XLEN ) ;
       end (* MSEOPERATION *) ;
 
 
@@ -12619,7 +12637,7 @@ procedure ASMNXTINST ;
        PMSE : begin
                 TOP := TOP - 3 ;
                 MSEOPERATION ( STK [ TOP ] , STK [ TOP + 1 ] , STK [
-                               TOP + 2 ] ) ;
+                               TOP + 2 ] , Q ) ;
               end (* tag/ca *) ;
 
      (*****************************)

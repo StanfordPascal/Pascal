@@ -439,6 +439,13 @@ static void conv_const (void *vgs,
 /*   Konvertiere Konstante je nach Typ                    */
 /*                                                        */
 /**********************************************************/
+/*                                                        */
+/*   Erweiterung am 03.12.2017:                           */
+/*                                                        */
+/*   Typ = 0 fuer DFC 0,xx - setzt Buffer auf Hex 0       */
+/*   xx ist dabei die definierte Laenge (*len_used)       */
+/*                                                        */
+/**********************************************************/
 
 {
    global_store *gs = vgs;
@@ -449,6 +456,10 @@ static void conv_const (void *vgs,
       case 'H':
       case 'I':
          *ivalue = atoi (cp);
+         break;
+
+      case '0':
+         *len_used = atoi (cp);
          break;
 
       case 'C':
@@ -1302,6 +1313,7 @@ static void load (void *vgs,
             {
                intp = (int *) (pcst -> cst0 + pcode -> q);
                *intp = -1;
+               pcst -> cst_used = pcode -> q + 4;
                break;
             }
 
@@ -1398,6 +1410,11 @@ static void load (void *vgs,
 
                case 'S':
                   memcpy (pcst -> cst0 + pcode -> q, buffer, len_used);
+                  pcst -> cst_used = pcode -> q + len_used;
+                  break;
+
+               case '0':
+                  memset (pcst -> cst0 + pcode -> q, 0x00, len_used);
                   pcst -> cst_used = pcode -> q + len_used;
                   break;
 

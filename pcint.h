@@ -583,7 +583,7 @@ static opctab ot [] =
    { "MOV", XXX_MOV, 0, 'A' },
    { "MPI", XXX_MPI, 0, '0' },
    { "MPR", XXX_MPR, 0, '0' },
-   { "MSE", XXX_MSE, 0, '0' },    /* neu 2017: Memset Instrukt.*/
+   { "MSE", XXX_MSE, 0, 'A' },    /* neu 2017: Memset Instrukt.*/
    { "MST", XXX_MST, 0, 'B' },
    { "MZE", XXX_MZE, 0, 'A' },    /* neu 2017: Mem Zero fest.L.*/
    { "NEQ", XXX_NEQ, 0, 'V' },

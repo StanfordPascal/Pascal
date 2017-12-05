@@ -4799,19 +4799,34 @@ static void int1 (global_store *gs)
 
       case XXX_MSE:
 
-         /************************************************/
-         /*   memset inline                              */
-         /*   get length from SP                         */
-         /*   get pattern from SP - 1                    */
-         /*   get target address from SP - 2             */
-         /*   pop all three items                        */
-         /************************************************/
+         /*****************************************************/
+         /*   memset inline                                   */
+         /*   get length from SP                              */
+         /*   get pattern from SP - 1                         */
+         /*   get target address from SP - 2                  */
+         /*   pop all three items                             */
+         /*****************************************************/
+         /*   03.12.2017 - MSE gets operand in pcode -> q     */
+         /*   if 0, works like described above                */
+         /*   if 1, length and pattern are reversed           */
+         /*****************************************************/
 
-         wert1 = STACK_I (gs -> sp);
-         (gs -> sp) -= 4;
+         if (pcode -> q > 0)
+         {
+            char1 = STACK_C (gs -> sp);
+            (gs -> sp) -= 4;
 
-         char1 = STACK_C (gs -> sp);
-         (gs -> sp) -= 4;
+            wert1 = STACK_I (gs -> sp);
+            (gs -> sp) -= 4;
+         }
+         else
+         {
+            wert1 = STACK_I (gs -> sp);
+            (gs -> sp) -= 4;
+
+            char1 = STACK_C (gs -> sp);
+            (gs -> sp) -= 4;
+         }
 
          intp = ADDRSTACK (gs -> sp);
          charp = ADDRSTOR (*intp);

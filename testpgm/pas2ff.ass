@@ -7,6 +7,13 @@ PAS2FF   TITLE 'ASSEMBLER FUNCTION CALLABLE FROM PASCAL'
 *                                   X2 : INTEGER ) : INTEGER ;
 *
 *           EXTERNAL FORTRAN 'PAS2FF' ;
+*
+*        With FORTRAN, all parameters are passed by reference
+*        the compiler generates dummy arguments for every
+*        Pascal by-value parameter and passes the addresses
+*        of these dummy arguments. The original variables or
+*        constants (or results of expressions) will not be
+*        touched by the subroutine.
 **************************************************************
 *
 PAS2FF   CSECT

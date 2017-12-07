@@ -14,11 +14,11 @@
 *.dbginfo
 *.lis
 *.bak
-*.obj
 *.map
 *.tmp
 *.exe
 !pcint.exe
+!mvsinst\*.obj
 
 # locally used file gitcmd
 

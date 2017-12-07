@@ -159,28 +159,31 @@ procedure COPYLINE ( var F : TEXT ; HEXFLAG : CHAR ) ;
      /*********************************************/
 
      if HEXFLAG = 'H' then
-       CNTOUT := MAXOUT DIV 2
-     else
-       CNTOUT := MAXOUT ;
-     START := 1 ;
-     TAG := '1' ;
-     while TRUE do
        begin
-         WRITE ( 'DATA' , TAG , CNT : 5 , START - 1 : 5 , ' ' ) ;
-         for I := START to START + CNTOUT - 1 do
-           if I <= CNT then
-             if HEXFLAG = 'H' then
-               WRITEHEX ( LINEBUF [ I ] )
-             else
-               WRITE ( LINEBUF [ I ] )
-           else
-             break ;
-         WRITELN ;
-         START := START + CNTOUT ;
-         if START > CNT then
-           break ;
-         TAG := CHR ( ORD ( TAG ) + 1 ) ;
-       end (* while *) ;
+         CNTOUT := 30 ;
+         START := 1 ;
+         TAG := '1' ;
+         while TRUE do
+           begin
+             WRITE ( '++DATA' , TAG , CNT : 5 , START - 1 : 5 , ' ' ) ;
+             for I := START to START + CNTOUT - 1 do
+               if I <= CNT then
+                 WRITEHEX ( LINEBUF [ I ] )
+               else
+                 break ;
+             WRITELN ;
+             START := START + CNTOUT ;
+             if START > CNT then
+               break ;
+             TAG := CHR ( ORD ( TAG ) + 1 ) ;
+           end (* while *) ;
+       end (* then *)
+     else
+       begin
+         for I := 1 to CNT do
+           WRITE ( LINEBUF [ I ] ) ;
+         WRITELN
+       end (* else *)
    end (* COPYLINE *) ;
 
 
@@ -219,8 +222,8 @@ procedure WRITE_FILE ( var F : TEXT ; PDSN : CHARPTR ; PMEMB : CHARPTR
      /*   write header info into transfer file    */
      /*********************************************/
 
-     WRITELN ( 'FILE ' , DSNAME , ' MEMB ' , MEMBNAME , ' EXT ' , EXT ,
-               ' HEX ' , HEXFLAG ) ;
+     WRITELN ( '++FILE ' , DSNAME , ' MEMB ' , MEMBNAME , ' EXT ' , EXT
+               , ' HEX ' , HEXFLAG ) ;
 
      /*********************************************/
      /*   copy lines until eof of input member    */

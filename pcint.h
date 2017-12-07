@@ -127,6 +127,7 @@
 #define TOOMUCHFILES  10
 #define NOMOREHEAP    11
 #define BADBOOL       12
+#define EXTLANGNSUP    13
 
 static const char *runtime_errmsg [] =
 
@@ -143,6 +144,7 @@ static const char *runtime_errmsg [] =
    "TOOMUCHFILES",
    "NOMOREHEAP",
    "BADBOOL",
+   "EXTLANGNSUP",
    NULL
 };
 

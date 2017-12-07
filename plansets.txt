@@ -1,0 +1,157 @@
+
+* LCA M: Konstante hat Typenkennung ... PCINT und PASCAL2 anpassen
+* DFC M: Konstante hat Typenkennung ... PCINT und PASCAL2 anpassen
+* DFC M: öbertrag in nÑchste Zeile funkt nicht (hÑngt von def LÑnge ab)
+* DEF C bei case wird ggf. als DEF I erzeugt (wenn X oder B)
+* SETS (LCA S) mit Hex erzeugen, wenn X oder B vorhanden
+* TESTXB funktioniert aktuell nicht korrekt
+* PASCAL1: WRITESETs Vorschub um 2 Zeichen bei X-Ausgabe
+* PASCAL2: mit gesplitteter Konstante bei LCA S umgehen kînnen
+* Sets neu: bis zu 2048 Elementen (Laenge 256), andere Darstellung
+* Test auf Mainframe
+* CONST mit Hex
+* CONST mit gemischten Sets
+* Fehler in PASCAL2.PAS bei Zeilenumbruch bei LCA S mit X
+* Fehler bei gro·em Set weg, siehe Beispiel in TESTSET1.PAS
+* TESTSET1 muss komplett korrekt sein
+* PASCAL2: Fehler bei Testfall test12 - falsches Ergebnis
+* PASCAL2: Fehler bei Testfall test16 - falsches Ergebnis
+* PASCAL2: Fehler bei Testfall test17 - komplett falsches Ergebnis
+* PASCAL2: Fehler bei Testfall test09 - geht nicht
+* Traces in PASCAL2 ausschalten
+* Logik mit alter Set-Implementierung im Compiler umstellen
+
+* Neue Version deployen, Beschreibung auf Webseite und FB
+
+- SLD nach LCA S ist unnîtig, evtl. eliminieren
+- Warnungen bei gemischten Cases (wg. PortabilitÑtsproblem)
+- Warnungen bei gemischten Sets (wg. PortabilitÑtsproblem)
+- Subrange mit gemischt ??
+- Warnungen bei gemischten Subranges (wg. PortabilitÑtsproblem)
+- Const mit X oder B, Kennung durchreichen
+
+- Gelegentlich P-Code-Beschreibung aktualisieren
+
+-----------------------------------------------------------------------
+
+Korrekturen SET-Befehle (siehe TESTSETS.PAS - spÑter):
+
+* SCL ebenfalls mit LDA vorher, wie SLD usw.
+- 130, 131: S1 := X1;                 --- Ladebefehle fuer Konstanten fehlen
+* 145: S1 := [ 'J' .. 'R' ] ;         --- SLD statt SMV
+- 146: PRINT_SET ( [ 'A' .. 'D' ] ) ; --- Syntaxfehler 396
+- 154: S3 := S3 + [ '7' ] ;           --- falsche LÑnge 5
+- 157: S4 := [ GELB , BLAU ] ;        --- erzeugten Code ÅberprÅfen
+- 158: S5 := [ 20 .. 30 ] ;           --- erzeugten Code ÅberprÅfen
+- 161: S6 := S5 ;                     --- Zuweisung mit untersch. Offsets ?
+- 165: S7 := [ 120 .. 140 ] ;         --- erzeugten Code ÅberprÅfen
+
+wenn alles passt:
+
+- Implementierung in PCINT (neu)
+- neuen Compiler testen
+- Beschreibung in PCODE.TXT Ñndern
+- PASCAL2.PAS Ñndern
+
+-----------------------------------------------------------------------
+
+Beispiele fuer LCA S:
+
+LCA S,0,C'JKLMNOPQR'
+LCA S,0,C'ABCDEFGHIJKLMNOPQR'
+LCA S,8,X2'7fff'
+LCA S,4,X5'ffffffffe0'
+LCA S,0,C'JKLMNOPQR'
+LCA S,0,C'CDE'
+LCA S,0,C'123456'
+LCA S,0,C'7'
+LCA S,0,C'5'
+LCA S,0,X1'50'
+LCA S,2,X2'0ffe'
+LCA S,15,X3'fffff8'
+LCA S,-2,X1'50'
+LCA S,-3,X2'01f8'
+LCA S,1262,X39'0fffffffffffffffffffffffff8000000000000000000000',
+    '000fffffffffffffffffffffffff80'
+
+
+dazu passt:
+
+S1 := [ 'J' .. 'R' , CH ] ;
+S1 := [ 'B' , CH , 'A' .. 'R' , CH ] ;
+S1 := [ 'B' , 'A' .. CH_CONST ] ;
+S1 := [ 'B' , CH_BLANK .. 'A' ] ;
+S1 := [ 'J' .. 'R' ] ;
+S2 := [ 'C' .. 'E' ] ;
+S3 := [ '1' .. '6' ] ;
+S3 := S3 + [ '7' ] ;
+S3 := S3 - [ '5' ] ;
+S4 := [ GELB , BLAU ] ;
+S5 := [ 20 .. 30 ] ;
+S7 := [ 120 .. 140 ] ;
+S11 := [ I_NEGATIV1 , I_NEGATIV2 ] ;
+S11 := [ - 13 , - 15 , - 17 .. - 12 ] ;
+S8 := [ 10100 .. 10200 , 10300 .. 10400 ] ;
+
+
+Zuweisungen zwischen verschiedenen SET-Typen:
+
+ SET5 = set of 10 .. 50 ;
+ SET6 = set of 0 .. 255 ;
+
+ S5 := [ 20 .. 30 ] ;          /* 127 */
+ S := S5 ;
+ PRINT_SET2 ( S ) ;
+ S6 := S5 ;                    /* 130 */
+ S5 := S6 ;
+ S := S6 ;
+ PRINT_SET2 ( S ) ;            /* 133 */
+
+
+énderungen bei verschiedenen P-Code Instruktionen:
+
+a) LCA S - ist fertig !!!
+
+   siehe oben; LCA S hat drei Parameter:
+
+   LCA S,-2,X1'50'
+   S = Typ
+   -2 = Offset (wo beginnt der Set logisch, -2 entspricht - 16)
+   X1 = LÑnge der Bitkette
+   '50' = Bitkette in Hex
+
+   alternativ:
+
+   LCA S,0,C'123456'
+
+   Zeichenkette mit C, dann LÑnge immer 32 (entspricht 256 Bits)
+   Offset dann immer = 0
+
+b) SLD - ist fertig !!!
+
+   SLD -36,0
+
+   Set Load mit zwei Parametern: LÑnge und neues Offset;
+   altes Offset kann abweichen, und SLD muss dann die
+   Bitkette entsprechend ausrichten. Hier ist ein
+   Laufzeitfehler mîglich
+
+   wenn LÑnge negativ, sind die Parameter (Quelle und Ziel)
+   vertauscht.
+
+c) SMV - ist fertig !!!
+
+   nur noch ein Parameter, eine LÑnge (evtl. negativ,
+   dann Quelle/Ziel vertauscht)
+
+   einfacher Move, keine VerÑnderung bei den Offsets erlaubt,
+   LÑngen mÅssen Åbereinstimmen
+
+d) ASE - ist fertig !!!
+
+   nur noch ein Parameter, LÑnge des SETS
+
+e) SCL - ist fertig !!!
+
+   kommt noch ...
+

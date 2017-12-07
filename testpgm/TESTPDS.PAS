@@ -1,4 +1,4 @@
-program TESTPDS ( INPUT , OUTPUT , PDS ) ;
+program TESTPDS ( INPUT , OUTPUT , PDS , PDSOUT ) ;
 
 
 type CHAR8 = array [ 1 .. 8 ] of CHAR ;
@@ -6,6 +6,7 @@ type CHAR8 = array [ 1 .. 8 ] of CHAR ;
 
 
 var PDS : TEXT ;
+    PDSOUT : TEXT ;
     MEMBERNAME : CHAR8 ;
     ZEILE : CHAR80 ;
 
@@ -28,10 +29,28 @@ procedure TESTREAD ;
 
 
 
+procedure TESTWRITE ;
+
+   begin (* TESTWRITE *)
+     RESET ( PDS ) ;
+     REWRITE ( PDSOUT ) ;
+     repeat
+       READLN ( PDS , ZEILE ) ;
+       WRITELN ( PDSOUT , ZEILE ) ;
+     until EOF ( PDS ) ;
+   end (* TESTWRITE *) ;
+
+
+
 begin (* HAUPTPROGRAMM *)
-  MEMBERNAME := 'RUNKAL' ;
+  MEMBERNAME := 'KALENDER' ;
   WRITELN ( ' ' , 'vor assignmem' ) ;
   ASSIGNMEM ( PDS , ADDR ( MEMBERNAME ) , 8 ) ;
   WRITELN ( ' ' , 'nach assignmem' ) ;
-  TESTREAD
+  TESTREAD ;
+  WRITELN ( ' ' , 'vor assignmem' ) ;
+  ASSIGNMEM ( PDS , ADDR ( MEMBERNAME ) , 8 ) ;
+  ASSIGNMEM ( PDSOUT , ADDR ( MEMBERNAME ) , 8 ) ;
+  WRITELN ( ' ' , 'nach assignmem' ) ;
+  TESTWRITE ;
 end (* HAUPTPROGRAMM *) .

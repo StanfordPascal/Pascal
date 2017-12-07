@@ -1700,9 +1700,9 @@ const BLANKID : ALPHA = '            ' ;
       PROCCALLENDSYS : SYMSET =
       [ SYLPARENT , SYSEMICOLON , SYEND , SYELSE , SYUNTIL ] ;
       FACTOROPS : SYMSET =
-      [ SYMULT , SYSLASH , SYDIV , SYMOD , SYAND ] ;
+      [ SYMULT , SYSLASH , SYDIV , SYMOD , SYAND , SYANDOP ] ;
       TERMOPS : SYMSET =
-      [ SYPLUS , SYMINUS , SYOR , SYXOR ] ;
+      [ SYPLUS , SYMINUS , SYOR , SYOROP , SYXOR ] ;
       EXPROPS : SYMSET =
       [ SYEQOP , SYNEOP , SYGTOP , SYLTOP , SYGEOP , SYLEOP , SYIN ] ;
 
@@ -11899,28 +11899,29 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                                         ERROR ( 134 ) ;
                                         GATTR . TYPTR := NIL
                                       end (* else *) ;
-                            SYAND : if ( LATTR . TYPTR = BOOLPTR ) and
-                                    ( GATTR . TYPTR = BOOLPTR ) then
+                            SYANDOP , SYAND :
+                              if ( LATTR . TYPTR = BOOLPTR ) and (
+                              GATTR . TYPTR = BOOLPTR ) then
 
                     (********)
                     (*AND   *)
                     (********)
 
-                                      GEN2 ( 4 , ORD ( 'B' ) , 0 )
-                                    else
-                                      if ( LATTR . TYPTR = INTPTR ) and
-                                      ( GATTR . TYPTR = INTPTR ) then
+                                GEN2 ( 4 , ORD ( 'B' ) , 0 )
+                              else
+                                if ( LATTR . TYPTR = INTPTR ) and (
+                                GATTR . TYPTR = INTPTR ) then
 
                     (********)
                     (*AND   *)
                     (********)
 
-                                        GEN2 ( 4 , ORD ( 'I' ) , 0 )
-                                      else
-                                        begin
-                                          ERROR ( 134 ) ;
-                                          GATTR . TYPTR := NIL
-                                        end (* else *)
+                                  GEN2 ( 4 , ORD ( 'I' ) , 0 )
+                                else
+                                  begin
+                                    ERROR ( 134 ) ;
+                                    GATTR . TYPTR := NIL
+                                  end (* else *)
                           end (* case *)
                         else
                           GATTR . TYPTR := NIL ;
@@ -12074,28 +12075,29 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
 
                                  GENSETOP ( LATTR , 5 ) ;
                              end (* else *) ;
-                         SYOR : if ( LATTR . TYPTR = BOOLPTR ) and (
-                                GATTR . TYPTR = BOOLPTR ) then
+                         SYOROP , SYOR :
+                           if ( LATTR . TYPTR = BOOLPTR ) and ( GATTR .
+                           TYPTR = BOOLPTR ) then
 
                  (********)
                  (*IOR   *)
                  (********)
 
-                                  GEN2 ( 13 , ORD ( 'B' ) , 0 )
-                                else
-                                  if ( LATTR . TYPTR = INTPTR ) and (
-                                  GATTR . TYPTR = INTPTR ) then
+                             GEN2 ( 13 , ORD ( 'B' ) , 0 )
+                           else
+                             if ( LATTR . TYPTR = INTPTR ) and ( GATTR
+                             . TYPTR = INTPTR ) then
 
                  (********)
                  (*IOR   *)
                  (********)
 
-                                    GEN2 ( 13 , ORD ( 'I' ) , 0 )
-                                  else
-                                    begin
-                                      ERROR ( 134 ) ;
-                                      GATTR . TYPTR := NIL
-                                    end (* else *) ;
+                               GEN2 ( 13 , ORD ( 'I' ) , 0 )
+                             else
+                               begin
+                                 ERROR ( 134 ) ;
+                                 GATTR . TYPTR := NIL
+                               end (* else *) ;
                          SYXOR : if ( LATTR . TYPTR = BOOLPTR ) and (
                                  GATTR . TYPTR = BOOLPTR ) then
 

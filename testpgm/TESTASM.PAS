@@ -1,14 +1,14 @@
 program TESTASM ( OUTPUT ) ;
 
 //**********************************************************************
-//
-// test program to test calls of external subroutines
-// from Stanford Pascal
-// written in ASSEMBLER and FORTRAN (and Pascal)
-//
-// Bernd Oppolzer - 12.2017
-//
-//$A+
+//                                                                      
+// test program to test calls of external subroutines                   
+// from Stanford Pascal                                                 
+// written in ASSEMBLER and FORTRAN (and Pascal)                        
+//                                                                      
+// Bernd Oppolzer - 12.2017                                             
+//                                                                      
+//$A+                                                                   
 //**********************************************************************
 
 
@@ -71,7 +71,7 @@ begin (* HAUPTPROGRAMM *)
   WRITELN ( 'Test external calls from Pascal' ) ;
 
   //******************************************************************
-  // set variables and test call of PASCAL proc
+  // set variables and test call of PASCAL proc                       
   //******************************************************************
 
   I := 42 ;
@@ -91,10 +91,10 @@ begin (* HAUPTPROGRAMM *)
   WRITELN ( 'c2  = <' , C2 , '>' ) ;
 
   //******************************************************************
-  // set variables and test call of ASSEMBLER proc
+  // set variables and test call of ASSEMBLER proc                    
   //******************************************************************
 
-  if not WINDOWS then
+  if TRUE then
     begin
       I := 42 ;
       N := 42 ;
@@ -114,7 +114,7 @@ begin (* HAUPTPROGRAMM *)
     end (* then *) ;
 
   //******************************************************************
-  // set variables and test call of FORTRAN subroutine
+  // set variables and test call of FORTRAN subroutine                
   //******************************************************************
 
   if not WINDOWS then
@@ -137,7 +137,7 @@ begin (* HAUPTPROGRAMM *)
     end (* then *) ;
 
   //******************************************************************
-  // test call of external functions
+  // test call of external functions                                  
   //******************************************************************
 
   XRES := PAS_TO_PAS_FUNC ( 20 , 30 ) ;

@@ -1,4 +1,36 @@
 
+* PCINT: CUP hat zwei Parameter - Typ und EXTLANG
+* PASCAL2 umbauen wg. neuem Parameter bei CUP (EXTLANG)
+* Aufruf externer Prozeduren (ASSEMBLER)
+* Beispielprogramm erweitern wg. externer Funktion
+* Testen Aufruf von externen Funktionen
+* Fehler PASCAL1 bei PFEHL.PAS und PFEHL2.PAS
+* Fehler bei TESTSTAT ??? repariert ...
+* PASCAL2: DFC 0 und DFC N korrekt implementieren
+* PASCAL2: MSE hat Parameter 0 und 1 (reverse)
+* PASCAL2: Testen TESTERR2 und TESTSTAT auf CMS
+* sizeof liefert korrekt Konstante zur Compilezeit
+* Testen alles auf MVS
+* Testjobs MVS Åberarbeiten
+* Symbole fÅr AND und OR klappen auf MVS nicht (siehe TESTAND)
+* PCINT: korrekte Fehlermeldung bei nicht implementierter EXTLANG
+- Andere Installations-Prozedur fÅr MVS
+- Dokument fÅr MVS-Installation
+- Dokument fÅr Aufruf externer Module (FORTRAN, ASSEMBLER)
+- Freigabe auf Webseite, Facebook, Mailingliste
+- Info an G. Postpischil, Moshix, J. Winckelmann
+
+- DSIN usw. geht auf PC nicht :-)
+
+spÑter:
+
+- const Parameter (richtig sinnvoll)
+- evtl. separates nachtrÑgliches Listing, Fehler an korrekter Stelle
+- PASFORM besseres Fehlerhandling bei Syntaxfehlern (analog Compiler)
+- Aufruf externer Funktionen (C)
+
+=======================================================================================
+
 * PASCAL1: Zuweisung weiter mit abweichenden LÑngen
 * PASCAL1 und PASSCAN Åberarbeiten wg. Parameter bei Fehlermeldungen
 * PASCAL1: weiter mit Fehler 117
@@ -21,34 +53,6 @@
 * TESTERR1: CSP WRP gibt am PC merkwÅrdige LÑnge aus
 * TESTERR1: P-Code ADA wird durch PASCAL2 falsch Åbersetzt
 * TESTSVAR ausfÅhrlicher testen (neue P-Code Instruktionen)
-* PCINT: CUP hat zwei Parameter - Typ und EXTLANG
-* PASCAL2 umbauen wg. neuem Parameter bei CUP (EXTLANG)
-* Aufruf externer Prozeduren (ASSEMBLER)
-* Beispielprogramm erweitern wg. externer Funktion
-* Testen Aufruf von externen Funktionen
-* Fehler PASCAL1 bei PFEHL.PAS und PFEHL2.PAS
-* Fehler bei TESTSTAT ??? repariert ...
-* PASCAL2: DFC 0 und DFC N korrekt implementieren
-* PASCAL2: MSE hat Parameter 0 und 1 (reverse)
-* PASCAL2: Testen TESTERR2 und TESTSTAT auf CMS
-* sizeof liefert korrekt Konstante zur Compilezeit
-* Testen alles auf MVS
-- PCINT: korrekte Fehlermeldung bei nicht implementierter EXTLANG
-- Testjobs MVS Åberarbeiten
-- Andere Installations-Prozedur fÅr MVS
-- Dokument fÅr MVS-Installation
-- Dokument fÅr Aufruf externer Module (FORTRAN, ASSEMBLER)
-- Freigabe auf Webseite, Facebook, Mailingliste
-- Info an G. Postpischil, Moshix, J. Winckelmann
-
-- DSIN usw. geht auf PC nicht :-)
-
-spÑter:
-
-- const Parameter (richtig sinnvoll)
-- evtl. separates nachtrÑgliches Listing, Fehler an korrekter Stelle
-- PASFORM besseres Fehlerhandling bei Syntaxfehlern (analog Compiler)
-- Aufruf externer Funktionen (C)
 
 =======================================================================================
 

@@ -3459,6 +3459,22 @@ static void int1 (global_store *gs)
 
       case XXX_CUP:
 
+         if (pcode -> t2 != ' ')
+         {
+            //*************************************************
+            // external languages like ASSEMBLER and FORTRAN
+            // cannot be handled by PCINT
+            //*************************************************
+
+            char extlang [80];
+
+            sprintf (extlang,
+                     "%c - instr = CUP %s",
+                     pcode -> t2, pcode -> poper);
+
+            runtime_error (gs, EXTLANGNSUP, extlang);
+         }
+
          if (pcode -> q == 0)
             runtime_error (gs, BADBRANCH, pcode -> poper);
 

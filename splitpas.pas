@@ -42,7 +42,7 @@ const SIZEDSN = 44 ;
 
 
 type CHARPTR = -> CHAR ;
-     CHAR4 = array [ 1 .. 4 ] of CHAR ;
+     CHAR6 = array [ 1 .. 6 ] of CHAR ;
      CHAR80 = array [ 1 .. 80 ] of CHAR ;
      ZEILE = array [ 1 .. 128 ] of CHAR ;
      RECBIN = record
@@ -58,7 +58,7 @@ var OUTTEXT : TEXT ;
     LOUT : INTEGER ;
     OUTPOS : INTEGER ;
     CPOUT : CHARPTR ;
-    TAG : CHAR4 ;
+    TAG : CHAR6 ;
     DSN : array [ 1 .. SIZEDSN ] of CHAR ;
     MEM : array [ 1 .. SIZEMEM ] of CHAR ;
     EXT : array [ 1 .. SIZEEXT ] of CHAR ;
@@ -237,19 +237,19 @@ begin (* HAUPTPROGRAMM *)
   READLN ( ZINP ) ;
   while not EOF ( INPUT ) do
     begin
-      MEMCPY ( ADDR ( TAG ) , ADDR ( ZINP ) , 4 ) ;
+      MEMCPY ( ADDR ( TAG ) , ADDR ( ZINP ) , 6 ) ;
 
   (***********************************************************)
   (*   the record tagged with FILE contains the              *)
   (*   meta information (DSN, MEM, EXT, Hex Flag)            *)
   (***********************************************************)
 
-      if TAG = 'FILE' then
+      if TAG = '++FILE' then
         begin
-          MEMCPY ( ADDR ( DSN ) , ADDR ( ZINP [ 6 ] ) , SIZEDSN ) ;
-          MEMCPY ( ADDR ( MEM ) , ADDR ( ZINP [ 56 ] ) , SIZEMEM ) ;
-          MEMCPY ( ADDR ( EXT ) , ADDR ( ZINP [ 69 ] ) , SIZEEXT ) ;
-          HEXFLAG := ZINP [ 77 ] ;
+          MEMCPY ( ADDR ( DSN ) , ADDR ( ZINP [ 8 ] ) , SIZEDSN ) ;
+          MEMCPY ( ADDR ( MEM ) , ADDR ( ZINP [ 58 ] ) , SIZEMEM ) ;
+          MEMCPY ( ADDR ( EXT ) , ADDR ( ZINP [ 71 ] ) , SIZEEXT ) ;
+          HEXFLAG := ZINP [ 79 ] ;
           ASSIGN_FILE ( ADDR ( DSN ) , ADDR ( MEM ) , ADDR ( EXT ) ,
                         HEXFLAG ) ;
           if HEXFLAG = 'H' then
@@ -261,7 +261,7 @@ begin (* HAUPTPROGRAMM *)
             if EOF ( INPUT ) then
               break ;
             READLN ( ZINP ) ;
-            MEMCPY ( ADDR ( TAG ) , ADDR ( ZINP ) , 4 ) ;
+            MEMCPY ( ADDR ( TAG ) , ADDR ( ZINP ) , 6 ) ;
 
   (***********************************************************)
   (*   the other records (DATA) are collected into           *)
@@ -269,29 +269,35 @@ begin (* HAUPTPROGRAMM *)
   (*   WRITEBUF is called to flush the buffer.               *)
   (***********************************************************)
 
-            if TAG = 'DATA' then
+            if HEXFLAG = 'H' then
               begin
-                if ZINP [ 5 ] = '1' then
+                if TAG = '++DATA' then
                   begin
-                    if LOUT > 0 then
-                      WRITEBUF ( HEXFLAG , ADDR ( ZOUT ) , LOUT ) ;
-                    LOUT := IVALSTR ( ADDR ( ZINP [ 6 ] ) , 5 ) ;
-                    OUTPOS := IVALSTR ( ADDR ( ZINP [ 11 ] ) , 5 ) ;
-                    if HEXFLAG = 'H' then
-                      OUTPOS := OUTPOS * 2 ;
-                    CPOUT := PTRADD ( ADDR ( ZOUT ) , OUTPOS ) ;
-                    MEMCPY ( CPOUT , ADDR ( ZINP [ 17 ] ) , 100 ) ;
+                    if ZINP [ 7 ] = '1' then
+                      begin
+                        if LOUT > 0 then
+                          WRITEBUF ( HEXFLAG , ADDR ( ZOUT ) , LOUT ) ;
+                        LOUT := IVALSTR ( ADDR ( ZINP [ 8 ] ) , 5 ) ;
+                        OUTPOS := IVALSTR ( ADDR ( ZINP [ 13 ] ) , 5 )
+                                  ;
+                        OUTPOS := OUTPOS * 2 ;
+                        CPOUT := PTRADD ( ADDR ( ZOUT ) , OUTPOS ) ;
+                        MEMCPY ( CPOUT , ADDR ( ZINP [ 19 ] ) , 100 ) ;
+                      end (* then *)
+                    else
+                      begin
+                        OUTPOS := IVALSTR ( ADDR ( ZINP [ 13 ] ) , 5 )
+                                  ;
+                        OUTPOS := OUTPOS * 2 ;
+                        CPOUT := PTRADD ( ADDR ( ZOUT ) , OUTPOS ) ;
+                        MEMCPY ( CPOUT , ADDR ( ZINP [ 19 ] ) , 100 ) ;
+                      end (* else *)
                   end (* then *)
-                else
-                  begin
-                    OUTPOS := IVALSTR ( ADDR ( ZINP [ 11 ] ) , 5 ) ;
-                    if HEXFLAG = 'H' then
-                      OUTPOS := OUTPOS * 2 ;
-                    CPOUT := PTRADD ( ADDR ( ZOUT ) , OUTPOS ) ;
-                    MEMCPY ( CPOUT , ADDR ( ZINP [ 17 ] ) , 100 ) ;
-                  end (* else *)
               end (* then *)
-          until TAG <> 'DATA' ;
+            else
+              if TAG <> '++FILE' then
+                WRITEBUF ( HEXFLAG , ADDR ( ZINP ) , 80 ) ;
+          until TAG = '++FILE' ;
           if LOUT > 0 then
             WRITEBUF ( HEXFLAG , ADDR ( ZOUT ) , LOUT ) ;
           if HEXFLAG = 'H' then

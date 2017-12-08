@@ -1,22 +1,22 @@
-//PASCALNI JOB (PASCAL),'CL SPLITMVS',CLASS=A,MSGCLASS=X,               00000101
-//             TIME=1440,REGION=0M,MSGLEVEL=(1,1)                       00000201
-//*                                                                     00000300
-//********************************************************************  00000400
-//* link SPLITMVS utility                                               00000501
-//* needed to SPLIT transfer file into individual members               00000601
-//* distributed as object file on RUNTIME.TEXT                          00000701
-//********************************************************************  00000900
-//*                                                                     00001401
-//LNKSPLIT EXEC PGM=IEWLF880                                            00001501
-//SYSLIB   DD  DISP=SHR,DSN=PASCALN.RUNTIME.TEXT                        00001601
-//SYSLMOD  DD  DISP=SHR,DSN=PASCALN.TESTPGM.LOAD                        00001701
-//SYSPRINT DD  SYSOUT=*                                                 00001801
-//SYSUT1   DD  UNIT=SYSDA,SPACE=(CYL,(1,1))                             00001901
-//SYSLIN   DD  DDNAME=SYSIN                                             00002001
-//SYSIN    DD  *                                                        00002101
-  INCLUDE SYSLIB(SPLITMVS)                                              00002201
-  INCLUDE SYSLIB(PASMONN)                                               00002301
-  INCLUDE SYSLIB(PASLIBX)                                               00002401
-  INCLUDE SYSLIB(PASUTILS)                                              00002501
-  NAME SPLITMVS(R)                                                      00002601
-//*                                                                     00002701
+//PASCALNI JOB (PASCAL),'CL SPLITMVS',CLASS=A,MSGCLASS=X,
+//             TIME=1440,REGION=0M,MSGLEVEL=(1,1)
+//*
+//********************************************************************
+//* link SPLITMVS utility
+//* needed to SPLIT transfer file into individual members
+//* distributed as object file on RUNTIME.TEXT
+//********************************************************************
+//*
+//LNKSPLIT EXEC PGM=IEWLF880
+//SYSLIB   DD  DISP=SHR,DSN=PASCALN.RUNTIME.TEXT
+//SYSLMOD  DD  DISP=SHR,DSN=PASCALN.TESTPGM.LOAD
+//SYSPRINT DD  SYSOUT=*
+//SYSUT1   DD  UNIT=SYSDA,SPACE=(CYL,(1,1))
+//SYSLIN   DD  DDNAME=SYSIN
+//SYSIN    DD  *
+  INCLUDE SYSLIB(SPLITMVS)
+  INCLUDE SYSLIB(PASMONN)
+  INCLUDE SYSLIB(PASLIBX)
+  INCLUDE SYSLIB(PASUTILS)
+  NAME SPLITMVS(R)
+//*

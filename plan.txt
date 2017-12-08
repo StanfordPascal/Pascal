@@ -14,8 +14,8 @@
 * Testjobs MVS Åberarbeiten
 * Symbole fÅr AND und OR klappen auf MVS nicht (siehe TESTAND)
 * PCINT: korrekte Fehlermeldung bei nicht implementierter EXTLANG
-- Andere Installations-Prozedur fÅr MVS
-- Dokument fÅr MVS-Installation
+* Andere Installations-Prozedur fÅr MVS
+* Dokument fÅr MVS-Installation
 - Dokument fÅr Aufruf externer Module (FORTRAN, ASSEMBLER)
 - Freigabe auf Webseite, Facebook, Mailingliste
 - Info an G. Postpischil, Moshix, J. Winckelmann

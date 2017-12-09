@@ -8,9 +8,9 @@
 * PCINT2.EXE neu bauen
 * PCINT*.EXE auf Homepage und in GitHub
 * OS/2 richtigstellen
-- VM-Version erstellen und verteilen
+* VM-Version erstellen und verteilen
+* Webseite passt, Freigabe auf Facebook, Mailingliste
 - weitere Doku auf Homepage
-- Webseite passt, Freigabe auf Facebook, Mailingliste
 
 - DSIN usw. geht auf PC nicht :-)
 

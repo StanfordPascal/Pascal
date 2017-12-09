@@ -1,0 +1,28 @@
+
+Erstellen eines AWSTAPE-Files fÅr CMS
+-------------------------------------
+
+a) Anmelden bei User PASPROD usw.
+
+dann COPYPROD - relevante Dateien werden von PASCAL kopiert
+dann COMPTEST - Test Compiler und FIBDEMO usw.
+(Vorsicht, wenn sich zentrale Dateinamen Ñndern)
+
+b) AWSTAPE an User PASPROD anhÑngen
+
+kopiere EMPTY.AWS auf \HERC370\VM nach Datei mit neuem Namen
+dann auf Hercules-Konsole:
+
+detach 580
+attach 580 3420 /herc370/vm/<neuer_name.aws>
+
+dann auf VM-Masterkonsole:
+
+attach 580 pasprod 181
+
+im User PASPROD kann man dann das Skript AWSTAPE laufen lassen
+
+dann Tape abhÑngen
+dann Datei zippen usw.
+und in Homepage-Verzeichnis
+

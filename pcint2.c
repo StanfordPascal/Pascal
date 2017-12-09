@@ -46,7 +46,8 @@
 /*  30.05.2017 ! Oppolzer    ! Terminal-Flag in Pascal-FCB            */
 /*  30.05.2017 ! Oppolzer    ! some corrections in Terminal-I/O       */
 /*  18.06.2017 ! Oppolzer    ! DFC M and LCA M with opt. type tag     */
-/*  .......... ! ........    ! .....................................  */
+/*  10.11.2017 ! Oppolzer    ! new instruction MFI                    */
+/*  11.11.2017 ! Oppolzer    ! new instructions MCP, MSE, DBG         */
 /*  .......... ! ........    ! .....................................  */
 /*  .......... ! ........    ! .....................................  */
 /*  .......... ! ........    ! .....................................  */
@@ -1819,7 +1820,7 @@ static void *cspf_wrp (void *vgs,
 {
    global_store *gs = vgs;
    filecb *fcb;
-   char buf [9];
+   char buf [30];
 
 #if 0
 
@@ -1836,15 +1837,15 @@ static void *cspf_wrp (void *vgs,
    if (parm3 <= 0)
       return NULL;
 
-   if (parm3 > 8)
-      fprintf (fcb -> fhandle, "%*c", parm3 - 8, ' ');
+   if (parm3 < 8)
+      parm3 = 8;
 
    if (parm2 == -1)
-      sprintf (buf, "%-*.*s", parm3, parm3, "nil");
+      strcpy (buf, "nil");
    else
-      sprintf (buf, "%*p", parm3, ADDRSTOR (parm2));
+      sprintf (buf, "%p", ADDRSTOR (parm2));
 
-   fprintf (fcb -> fhandle, "%s", buf);
+   fprintf (fcb -> fhandle, "%*.*s", parm3, parm3, buf);
 
    return NULL;
 }
@@ -3081,6 +3082,7 @@ static void int1 (global_store *gs)
    char bool;
    char bool1;
    char bool2;
+   char char1;
    int res;
    int addr;
    int addr1;
@@ -3353,7 +3355,7 @@ static void int1 (global_store *gs)
          pft = ft + pcode -> q;
          if (pft -> cspnum != pcode -> q)
          {
-            fprintf (stderr, "+++ fatal error in csp-table, "
+            fprintf (stderr, "+++ Fatal Error in CSP-Table, "
                              "terminating\n");
             exit (1000);
          }
@@ -3456,6 +3458,22 @@ static void int1 (global_store *gs)
          break;
 
       case XXX_CUP:
+
+         if (pcode -> t2 != ' ')
+         {
+            //*************************************************
+            // external languages like ASSEMBLER and FORTRAN
+            // cannot be handled by PCINT
+            //*************************************************
+
+            char extlang [80];
+
+            sprintf (extlang,
+                     "%c - instr = CUP %s",
+                     pcode -> t2, pcode -> poper);
+
+            runtime_error (gs, EXTLANGNSUP, extlang);
+         }
 
          if (pcode -> q == 0)
             runtime_error (gs, BADBRANCH, pcode -> poper);
@@ -3606,6 +3624,10 @@ static void int1 (global_store *gs)
          gs -> ip = pcode -> q;
          incr_ip = 0;
 
+         break;
+
+      case XXX_DBG:
+         gs -> stepanz = 0;
          break;
 
       case XXX_DEC:
@@ -4654,6 +4676,76 @@ static void int1 (global_store *gs)
 
          break;
 
+      case XXX_MCP:
+
+         /************************************************/
+         /*   memcpy inline                              */
+         /*   get length from SP                         */
+         /*   get source address from SP - 1             */
+         /*   get target address from SP - 2             */
+         /*   pop all three items                        */
+         /************************************************/
+
+         wert1 = STACK_I (gs -> sp);
+         (gs -> sp) -= 4;
+
+         intp = ADDRSTACK (gs -> sp);
+         charp = ADDRSTOR (*intp);
+         (gs -> sp) -= 4;
+
+         intp = ADDRSTACK (gs -> sp);
+         charp2 = ADDRSTOR (*intp);
+         (gs -> sp) -= 4;
+
+         if (wert1 > 0)
+         {
+            memcpy (charp2, charp, wert1);
+         }
+
+         break;
+
+      case XXX_MFI:
+
+         if (pcode -> q < 0)
+         {
+            /************************************************/
+            /*   get char pattern from SP                   */
+            /*   ignore SP - 1                              */
+            /*   get target address from SP - 2             */
+            /*   only pop char pattern                      */
+            /*   (because two addresses on stack are        */
+            /*   use for subsequent MOV)                    */
+            /************************************************/
+
+            char1 = STACK_C (gs -> sp);
+
+            (gs -> sp) -= 8;
+            intp = ADDRSTACK (gs -> sp);
+            charp = ADDRSTOR (*intp);
+            (gs -> sp) += 4;
+
+            memset (charp, char1, - (pcode -> q));
+         }
+         else
+         {
+            /************************************************/
+            /*   get char pattern from SP                   */
+            /*   get target address from SP - 1             */
+            /*   pop two items                              */
+            /************************************************/
+
+            char1 = STACK_C (gs -> sp);
+
+            (gs -> sp) -= 4;
+            intp = ADDRSTACK (gs -> sp);
+            charp = ADDRSTOR (*intp);
+            (gs -> sp) -= 4;
+
+            memset (charp, char1, pcode -> q);
+         }
+
+         break;
+
       case XXX_MOV:
 
          /************************************************/
@@ -4721,12 +4813,69 @@ static void int1 (global_store *gs)
 
          break;
 
+      case XXX_MSE:
+
+         /*****************************************************/
+         /*   memset inline                                   */
+         /*   get length from SP                              */
+         /*   get pattern from SP - 1                         */
+         /*   get target address from SP - 2                  */
+         /*   pop all three items                             */
+         /*****************************************************/
+         /*   03.12.2017 - MSE gets operand in pcode -> q     */
+         /*   if 0, works like described above                */
+         /*   if 1, length and pattern are reversed           */
+         /*****************************************************/
+
+         if (pcode -> q > 0)
+         {
+            char1 = STACK_C (gs -> sp);
+            (gs -> sp) -= 4;
+
+            wert1 = STACK_I (gs -> sp);
+            (gs -> sp) -= 4;
+         }
+         else
+         {
+            wert1 = STACK_I (gs -> sp);
+            (gs -> sp) -= 4;
+
+            char1 = STACK_C (gs -> sp);
+            (gs -> sp) -= 4;
+         }
+
+         intp = ADDRSTACK (gs -> sp);
+         charp = ADDRSTOR (*intp);
+         (gs -> sp) -= 4;
+
+         if (wert1 > 0)
+         {
+            memset (charp, char1, wert1);
+         }
+
+         break;
+
       case XXX_MST:
 
          /************************************************/
          /*   do nothing, the relevant actions           */
          /*   are carried out by CUP                     */
          /************************************************/
+
+         break;
+
+      case XXX_MZE:
+
+         /************************************************/
+         /*   get target address from SP                 */
+         /*   pop one item                               */
+         /************************************************/
+
+         intp = ADDRSTACK (gs -> sp);
+         charp = ADDRSTOR (*intp);
+         (gs -> sp) -= 4;
+
+         memset (charp, 0x00, pcode -> q);
 
          break;
 
@@ -5903,13 +6052,15 @@ static void show (global_store *gs, int nur_pascal)
    {
       pent = pcode -> psect;
       fprintf (stderr,
-               "*** LOC %4d: %s\n", pcode -> loc, "<== RET");
+               "*** LOC %4d: %s\n",
+               pcode -> loc, "<== RET");
    }
 
    if (pcode -> psource != NULL)
    {
       fprintf (stderr,
-               "*** LOC %4d: %s\n", pcode -> loc, pcode -> psource);
+               "*** LOC %4d: %s\n",
+               pcode -> loc, pcode -> psource);
    }
 }
 
@@ -6042,6 +6193,7 @@ static void interpreter (global_store *gs)
    char addr_arg [80];
    char sch_break;
    char sch_trace;
+   char sch_traceproc;
    int *intp;
 
    int is_ret;
@@ -6084,6 +6236,11 @@ static void interpreter (global_store *gs)
 
    for (;;)
    {
+      //***************************************************
+      //   im Debug-Fall:
+      //   Kommando und bis zu vier Parameter einlesen
+      //***************************************************
+
       if (gs -> sch_debug != 'N')
       {
          show (gs, 0);
@@ -6105,6 +6262,11 @@ static void interpreter (global_store *gs)
          if (anzahl < 2)
             *p1 = 0x00;
       }
+
+      //***************************************************
+      //   andernfalls: Kommando G und keine Parameter
+      //***************************************************
+
       else
       {
          strcpy (cmd, "G");
@@ -6115,7 +6277,21 @@ static void interpreter (global_store *gs)
          *p1 = 0x00;
       }
 
+#if 0
+
+      fprintf (stderr,
+               "*** Kommando gelesen: (%d) "
+               "cmd=<%s> p1=<%s> p2=<%s> p3=<%s> p4=<%s>\n",
+               anzahl, cmd, p1, p2, p3, p4);
+
+#endif
+
       gs -> stepanz = 1;
+
+      //***************************************************
+      //   Kommandos abarbeiten
+      //   E = Ende der Verarbeitung
+      //***************************************************
 
       s_toupper (cmd);
 
@@ -6123,8 +6299,22 @@ static void interpreter (global_store *gs)
       {
          break;
       }
+
+      //***************************************************************
+      //   X oder T = Trace
+      //   T = mit Anzeige der Zwischenschritte
+      //   TP = mit Anzeige der Prozeduraufrufe
+      //   X = ohne
+      //   in beiden Faellen muessen Abbruchkriterien
+      //   angegeben werden:
+      //   R oder RET, d.h. wenn Funktionsende erreicht wird
+      //   F=funktionsname, d.h. beim Erreichen einer best. Funktion
+      //   L=nnn, d.h. beim Erreichen einer Statememtnummer
+      //***************************************************************
+
       else if (strcmp (cmd, "X") == 0 ||
-               strcmp (cmd, "T") == 0)
+               strcmp (cmd, "T") == 0 ||
+               strcmp (cmd, "TP") == 0)
       {
          sc_code *pcoden;
          ent_section *pent;
@@ -6132,6 +6322,7 @@ static void interpreter (global_store *gs)
          gs -> stepanz = 999999999;
 
          sch_trace = (strcmp (cmd, "T") == 0);
+         sch_traceproc = (strcmp (cmd, "TP") == 0);
          sch_break = ' ';
 
          if (strcmp_ignore (p1, "RET") == 0 ||
@@ -6152,11 +6343,18 @@ static void interpreter (global_store *gs)
          }
          else
          {
-            fprintf (stderr, "Parameter: ret, f=, l=\n");
+            fprintf (stderr, "*** Parameter: ret, f=, l=\n");
             continue;
          }
 
          callno = 0;
+
+#if 0
+
+         fprintf (stderr,
+                  "*** sch_trace = %d\n", sch_trace);
+
+#endif
 
          for (;;)
          {
@@ -6216,6 +6414,17 @@ static void interpreter (global_store *gs)
 
             if (sch_trace)
                show (gs, 1);
+
+            if (sch_traceproc)
+            {
+               if (memcmp (gs -> ot [pcoden -> op] . opcode,
+                           "RET", 3) == 0 ||
+                   memcmp (gs -> ot [pcoden -> op] . opcode,
+                           "ENT", 3) == 0)
+               {
+                  show (gs, 1);
+               }
+            }
 
             if (gs -> stepanz > 1 &&
                 pcoden -> psource == NULL &&
@@ -6349,7 +6558,6 @@ static void interpreter (global_store *gs)
             for (;;)
             {
                int1 (gs);
-
                (gs -> stepanz) --;
                if (gs -> stepanz <= 0)
                   break;
@@ -6436,31 +6644,31 @@ static void interpreter (global_store *gs)
       {
          gs -> ip = atoi (p1);
          fprintf (stderr,
-                  "\nIP set to %d\n\n", gs -> ip);
+                  "\n*** IP set to %d\n\n", gs -> ip);
       }
       else if (strcmp (cmd, "SP") == 0)
       {
          gs -> sp = atoi (p1);
          fprintf (stderr,
-                  "\nSP set to %d\n\n", gs -> sp);
+                  "\n*** SP set to %d\n\n", gs -> sp);
       }
       else if (strcmp (cmd, "HP") == 0)
       {
          gs -> hp = atoi (p1);
          fprintf (stderr,
-                  "\nHP set to %d\n\n", gs -> hp);
+                  "\n*** HP set to %d\n\n", gs -> hp);
       }
       else if (strcmp (cmd, "ASM") == 0)
       {
          mode = 'A';
          fprintf (stderr,
-                  "\nMode ASM set\n\n");
+                  "\n*** Mode ASM set\n\n");
       }
       else if (strcmp (cmd, "PAS") == 0)
       {
          mode = 'P';
          fprintf (stderr,
-                  "\nMode PAS set\n\n");
+                  "\n*** Mode PAS set\n\n");
       }
       else if (strcmp (cmd, "\?") == 0)
       {
@@ -6716,6 +6924,13 @@ int main (int argc, char **argv)
    gs.sch_debug = *(parmvalues [8]);
    gs.sch_listing = *(parmvalues [9]);
 
+   //**************************************************
+   //   Debug geht nur mit Listing an (wg. Source)
+   //**************************************************
+
+   if (gs.sch_debug == 'J')
+      gs.sch_listing = 'J';
+
    inpfile = fopen (inpfilename, "r");
 
    if (inpfile == NULL)
@@ -6828,7 +7043,7 @@ int main (int argc, char **argv)
       inpfile = fopen (incfilename, "r");
       if (inpfile == NULL)
       {
-         fprintf (stderr, "include file %s could not be opened\n",
+         fprintf (stderr, "+++ Include File %s could not be opened\n",
                   incfilename);
       }
       else
@@ -6842,7 +7057,7 @@ int main (int argc, char **argv)
       if (inpfile == NULL)
       {
          fprintf (stderr,
-                  "include source file %s could not be opened\n",
+                  "++ Include Source File %s could not be opened\n",
                   incfilepasname);
       }
       else

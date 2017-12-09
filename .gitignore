@@ -18,6 +18,7 @@
 *.tmp
 *.exe
 !pcint.exe
+!pcint2.exe
 !mvsinst\*.obj
 
 # locally used file gitcmd

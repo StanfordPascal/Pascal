@@ -1,24 +1,16 @@
 
-* PCINT: CUP hat zwei Parameter - Typ und EXTLANG
-* PASCAL2 umbauen wg. neuem Parameter bei CUP (EXTLANG)
-* Aufruf externer Prozeduren (ASSEMBLER)
-* Beispielprogramm erweitern wg. externer Funktion
-* Testen Aufruf von externen Funktionen
-* Fehler PASCAL1 bei PFEHL.PAS und PFEHL2.PAS
-* Fehler bei TESTSTAT ??? repariert ...
-* PASCAL2: DFC 0 und DFC N korrekt implementieren
-* PASCAL2: MSE hat Parameter 0 und 1 (reverse)
-* PASCAL2: Testen TESTERR2 und TESTSTAT auf CMS
-* sizeof liefert korrekt Konstante zur Compilezeit
-* Testen alles auf MVS
-* Testjobs MVS Åberarbeiten
-* Symbole fÅr AND und OR klappen auf MVS nicht (siehe TESTAND)
-* PCINT: korrekte Fehlermeldung bei nicht implementierter EXTLANG
 * Andere Installations-Prozedur fÅr MVS
 * Dokument fÅr MVS-Installation
-- Dokument fÅr Aufruf externer Module (FORTRAN, ASSEMBLER)
-- Freigabe auf Webseite, Facebook, Mailingliste
-- Info an G. Postpischil, Moshix, J. Winckelmann
+* Dokument fÅr Aufruf externer Module (FORTRAN, ASSEMBLER)
+* Info an G. Postpischil, Moshix, J. Winckelmann
+* Doku-Files auf Homepage verankern
+* Backup-Version korrigieren auf 11.2017
+* PCINT2.EXE neu bauen
+* PCINT*.EXE auf Homepage und in GitHub
+* OS/2 richtigstellen
+- VM-Version erstellen und verteilen
+- weitere Doku auf Homepage
+- Webseite passt, Freigabe auf Facebook, Mailingliste
 
 - DSIN usw. geht auf PC nicht :-)
 
@@ -53,6 +45,21 @@ spÑter:
 * TESTERR1: CSP WRP gibt am PC merkwÅrdige LÑnge aus
 * TESTERR1: P-Code ADA wird durch PASCAL2 falsch Åbersetzt
 * TESTSVAR ausfÅhrlicher testen (neue P-Code Instruktionen)
+* PCINT: CUP hat zwei Parameter - Typ und EXTLANG
+* PASCAL2 umbauen wg. neuem Parameter bei CUP (EXTLANG)
+* Aufruf externer Prozeduren (ASSEMBLER)
+* Beispielprogramm erweitern wg. externer Funktion
+* Testen Aufruf von externen Funktionen
+* Fehler PASCAL1 bei PFEHL.PAS und PFEHL2.PAS
+* Fehler bei TESTSTAT ??? repariert ...
+* PASCAL2: DFC 0 und DFC N korrekt implementieren
+* PASCAL2: MSE hat Parameter 0 und 1 (reverse)
+* PASCAL2: Testen TESTERR2 und TESTSTAT auf CMS
+* sizeof liefert korrekt Konstante zur Compilezeit
+* Testen alles auf MVS
+* Testjobs MVS Åberarbeiten
+* Symbole fÅr AND und OR klappen auf MVS nicht (siehe TESTAND)
+* PCINT: korrekte Fehlermeldung bei nicht implementierter EXTLANG
 
 =======================================================================================
 

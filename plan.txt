@@ -10,16 +10,31 @@
 * OS/2 richtigstellen
 * VM-Version erstellen und verteilen
 * Webseite passt, Freigabe auf Facebook, Mailingliste
+* Datentyp CHAR (n)
+* Datentyp STRING bzw. VARCHAR (n)
+* Datentyp DECIMAL (n, m)
+
 - weitere Doku auf Homepage
+- precisionof
+- scaleof
+- DECIMAL-Attribute bei WRITE berÅcksichtigen ?
+- const Parameter
+
+- Makroprozessor
+- Logik fÅr VARCHARs implementieren
+- Logik fÅr DECIMALs implementieren
+- native Code auf Windows etc.
+- externe Funktionen in C
+- DB2 Precompiler
+- Lîsung fÅr Templates, z.B. AVL BÑume
+- 31 Bit Adressierung
 
 - DSIN usw. geht auf PC nicht :-)
 
 spÑter:
 
-- const Parameter (richtig sinnvoll)
 - evtl. separates nachtrÑgliches Listing, Fehler an korrekter Stelle
 - PASFORM besseres Fehlerhandling bei Syntaxfehlern (analog Compiler)
-- Aufruf externer Funktionen (C)
 
 =======================================================================================
 

@@ -7390,12 +7390,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                                      begin
                                        ERROR ( 121 ) ;
                                        LKIND := FORMAL
-                                     end (* then *)
-                                   else
-                                     begin
-                                       LEN := LSP -> . SIZE ;
-                                       LALN := LSP -> . ALN
-                                     end (* else *) ;
+                                     end (* then *) ;
 
            //************************************************
            // read next symbol                               
@@ -7405,11 +7400,21 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
            // has to be moved after this                     
            // function call - 13.12.2017                     
            //************************************************
+           // len and laln assignment                        
+           // has to be moved after parm checking            
+           // 17.12.2017                                     
+           //************************************************
 
                                INSYMBOL ;
                                TYPE_WITH_PARMS ( FSYS + [ SYSEMICOLON ,
                                                  SYRPARENT ] , ID , LSP
                                                  ) ;
+                               if LSP <> NIL then
+                                 if ( LKIND = ACTUAL ) then
+                                   begin
+                                     LEN := LSP -> . SIZE ;
+                                     LALN := LSP -> . ALN
+                                   end (* then *) ;
                                LCP4 := LCP3 ;
                                while LCP4 <> NIL do
                                  begin

@@ -27,14 +27,14 @@ var CH : CHAR ;
     V2 : VARCHAR ( 3000 ) ;
 
     //************************************
-    // IFALSCH : INTEGER ( 2 ) ;
-    // D3 : DECIMAL ;
-    // S4 : STRING ;
-    // V4 : VARCHAR ;
-    // D5 : DECIMAL ( 7 , 13 ) ;
-    // D6 : DECIMAL ( 50 , 0 ) ;
-    // S3 : STRING ( 0 ) ;
-    // V3 : VARCHAR ( 0 ) ;
+    // IFALSCH : INTEGER ( 2 ) ;          
+    // D3 : DECIMAL ;                     
+    // S4 : STRING ;                      
+    // V4 : VARCHAR ;                     
+    // D5 : DECIMAL ( 7 , 13 ) ;          
+    // D6 : DECIMAL ( 50 , 0 ) ;          
+    // S3 : STRING ( 0 ) ;                
+    // V3 : VARCHAR ( 0 ) ;               
     //************************************
 
     TESTCP : -> CHAR ;
@@ -75,13 +75,11 @@ begin (* HAUPTPROGRAMM *)
   CH2 := CH3 ;
   D2 := 1234.56 ;
   S1 := 'das ist ein String' ;
-  ch5 := ch2;
+  CH5 := CH2 ;
   TESTWRITE ( CH2 ) ;
   TESTWRITE ( CH5 ) ;
   CH5 := 'das ist ein String' ;
   CH2 := CH5 ;
   TESTWRITE2 ( CH5 ) ;
   WRITELN ( 'test1: ch2 = <' , CH2 , '>' ) ;
-  D2 := D2 + 1234 ;
-  WRITELN ( 'test1: d2  = ' , D2 ) ;
 end (* HAUPTPROGRAMM *) .

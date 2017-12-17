@@ -730,14 +730,15 @@ program PASCALCOMPILER ( INPUT , OUTPUT , PRR , LISTING , DBGINFO ,
 (*    parameters to functions). CHAR (n) is an abbreviation         *)
 (*    for "array [1..n] of char" ... no need to define it.          *)
 (*                                                                  *)
-(*  - DECIMAL (n, m) is the same as REAL at the moment              *)
+(*  - DECIMAL (n, m) is implemented internally as REAL              *)
+(*    (at the moment)                                               *)
 (*                                                                  *)
-(*  - New functions PRECISIONOF and SCALEOF, to be used on          *)
+(*  - New functions DIGITSOF and PRECISIONOF, to be used on         *)
 (*    DECIMAL data; WRITE with DECIMALs will by default             *)
 (*    use these options:                                            *)
 (*    WRITE (D);                                                    *)
 (*    with D of type DECIMAL will be the same as                    *)
-(*    WRITE (D: PRECISIONOF(D) + 3 : SCALEOF(D));                   *)
+(*    WRITE (D: DIGITSOF(D) + 3 : PRECISIONOF(D));                  *)
 (*                                                                  *)
 (*  - STRING aka VARCHAR still has to be implemented ...            *)
 (*    an implementation like that of VS Pascal is desired           *)
@@ -1426,12 +1427,16 @@ var MXINT2 : INTEGER ;
     (*                                       *********     *)
     (* SY       - symbol read                              *)
     (* SYLENGTH - length of symbol or constant             *)
+    (* SYdigits - digits of symbol (if const number)       *)
+    (* SYprec   - precision of symbol (if decimal const)   *)
     (* VAL      - constant (if symbol was constant)        *)
     (* ID       - identifier (if symbol was ident)         *)
     (*******************************************************)
 
     SY : SYMB ;
     SYLENGTH : INTEGER ;
+    SYDIGITS : INTEGER ;
+    SYPREC : INTEGER ;
     VAL : XCONSTANT ;
     ID : ALPHA ;
 
@@ -2330,6 +2335,8 @@ procedure INSYMBOL ;
    var I , K : INTEGER ;
        DIGIT : array [ 1 .. 40 ] of CHAR ;
        XSTRING : array [ 1 .. MAXSTRL ] of CHAR ;
+       SCH_DIG : BOOLEAN ;
+       SCH_PREC : BOOLEAN ;
 
 
    procedure MODSTRING ( STRTYPE : CHAR ; var L : INTEGER ) ;
@@ -2551,6 +2558,8 @@ procedure INSYMBOL ;
 
      while TRUE do
        begin
+         SYDIGITS := 0 ;
+         SYPREC := 0 ;
 
      (**********************************************************)
      (*   scanner aufrufen (externes modul)                    *)
@@ -2793,15 +2802,18 @@ procedure INSYMBOL ;
                      with VAL do
                        for I := 1 to K do
                          if DIGIT [ I ] <> '_' then
-                           if IVAL <= MXINT10 then
-                             IVAL := IVAL * 10 + ( ORD ( DIGIT [ I ] )
-                                     - ORD ( '0' ) )
-                           else
-                             begin
-                               ERROR ( 203 ) ;
-                               IVAL := 0 ;
-                               break
-                             end (* else *)
+                           begin
+                             SYDIGITS := SYDIGITS + 1 ;
+                             if IVAL <= MXINT10 then
+                               IVAL := IVAL * 10 + ( ORD ( DIGIT [ I ]
+                                       ) - ORD ( '0' ) )
+                             else
+                               begin
+                                 ERROR ( 203 ) ;
+                                 IVAL := 0 ;
+                                 break
+                               end (* else *)
+                           end (* then *)
                    end (* else *)
              end (* tag/ca *) ;
 
@@ -2818,8 +2830,29 @@ procedure INSYMBOL ;
                MEMCPY ( ADDR ( DIGIT ) , ADDR ( SCB . SYMBOL ) , K ) ;
                VAL . RVAL := ' ' ;
                if K <= DIGMAX then
-                 for I := 2 to K + 1 do
-                   VAL . RVAL [ I ] := DIGIT [ I - 1 ]
+                 begin
+                   SCH_DIG := TRUE ;
+                   SCH_PREC := FALSE ;
+                   for I := 2 to K + 1 do
+                     begin
+                       VAL . RVAL [ I ] := DIGIT [ I - 1 ] ;
+                       if VAL . RVAL [ I ] = '.' then
+                         SCH_PREC := TRUE ;
+                       if ( VAL . RVAL [ I ] = 'e' ) or ( VAL . RVAL [
+                       I ] = 'E' ) then
+                         begin
+                           SCH_DIG := FALSE ;
+                           SCH_PREC := FALSE ;
+                         end (* then *) ;
+                       if VAL . RVAL [ I ] in [ '0' .. '9' ] then
+                         begin
+                           if SCH_DIG then
+                             SYDIGITS := SYDIGITS + 1 ;
+                           if SCH_PREC then
+                             SYPREC := SYPREC + 1 ;
+                         end (* then *)
+                     end (* for *)
+                 end (* then *)
                else
                  begin
                    ERROR ( 203 ) ;
@@ -3870,6 +3903,155 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
       end (* STRCONCAT *) ;
 
 
+   procedure MODIFY_TYPE_PARMS ( var FSP : TTP ; ID : ALPHA ; PARAM1 :
+                               INTEGER ; PARAM2 : INTEGER ) ;
+
+   //******************************************************
+   // build new type from existing type and params         
+   //******************************************************
+
+
+      var TYPENEW : ALPHA ;
+          I : INTEGER ;
+          CP : -> CHAR ;
+          NEWIDP : IDP ;
+
+      begin (* MODIFY_TYPE_PARMS *)
+        with FSP -> do
+          begin
+
+        //************************************************
+        // no action needed, if default is ok             
+        // and minparamcount = 1 (e.g. CHAR (1)).         
+        //************************************************
+
+            if ( MINPARAMCOUNT = 0 ) and ( DEFAULTPARAM = PARAM1 ) then
+              return ;
+            if FALSE then
+              begin
+                WRITELN ( TRACEF , 'modify_type_parms' ) ;
+                WRITELN ( TRACEF , 'fsp.form          = ' , FORM ) ;
+                WRITELN ( TRACEF , 'fsp.scalkind      = ' , SCALKIND )
+                          ;
+                WRITELN ( TRACEF , 'fsp.minparamcount = ' ,
+                          MINPARAMCOUNT ) ;
+                WRITELN ( TRACEF , 'fsp.defaultparam  = ' ,
+                          DEFAULTPARAM ) ;
+                WRITELN ( TRACEF , 'id                = ' , ID ) ;
+                WRITELN ( TRACEF , 'param1            = ' , PARAM1 ) ;
+                WRITELN ( TRACEF , 'param2            = ' , PARAM2 ) ;
+              end (* then *) ;
+
+        //************************************************
+        // construct name of new type in variable typenew 
+        //************************************************
+
+            TYPENEW := '*' ;
+            CP := ADDR ( TYPENEW ) ;
+            CP := PTRADD ( CP , 1 ) ;
+            MEMCPY ( CP , ADDR ( ID ) , SIZEOF ( ALPHA ) - 1 ) ;
+            for I := 1 to SIZEOF ( ALPHA ) do
+              if TYPENEW [ I ] = ' ' then
+                break ;
+            CP := ADDR ( TYPENEW [ I ] ) ;
+            CP -> := '_' ;
+            CP := PTRADD ( CP , 1 ) ;
+            INTTOSTR ( CP , 5 , PARAM1 , TRUE ) ;
+            CP := PTRADD ( CP , 5 ) ;
+            CP -> := '_' ;
+            CP := PTRADD ( CP , 1 ) ;
+            INTTOSTR ( CP , 3 , PARAM2 , TRUE ) ;
+
+        //************************************************
+        // look, if type is already defined;              
+        // if not (sid_rc = 104), insert it into type list
+        //************************************************
+
+            SID_RC := SEARCHID ( TYPENEW , FALSE , TRUE , [ TYPES ] ,
+                      NEWIDP ) ;
+            with NEWIDP -> do
+              begin
+                if FALSE then
+                  begin
+                    WRITELN ( TRACEF , 'typenew           = ' , TYPENEW
+                              ) ;
+                    WRITELN ( TRACEF , 'sid_rc            = ' , SID_RC
+                              ) ;
+                    WRITELN ( TRACEF , 'name              = ' , NAME )
+                              ;
+                    WRITELN ( TRACEF , 'decl_lev          = ' ,
+                              DECL_LEV ) ;
+                    WRITELN ( TRACEF , 'idtype            = ' , IDTYPE
+                              ) ;
+                  end (* then *) ;
+                if SID_RC = 104 then
+                  begin
+                    DECL_LEV := 1 ;
+                    if FSP = PTYPE_CHAR then
+                      begin
+
+        //************************************************
+        // type similar to alfa, but different length     
+        //************************************************
+
+                        NEW ( IDTYPE ) ;
+                        IDTYPE -> := PTYPE_ALFA -> ;
+                        with IDTYPE -> do
+                          begin
+                            SIZE := PARAM1 ;
+                            NEW ( INXTYPE ) ;
+                            INXTYPE -> := PTYPE_ALFA -> . INXTYPE -> ;
+                            INXTYPE -> . MAX . IVAL := PARAM1
+                          end (* with *) ;
+                      end (* then *)
+                    else
+                      if FSP = PTYPE_VARCHAR then
+                        begin
+
+        //************************************************
+        // type similar to alfa, but different length     
+        //************************************************
+
+                          NEW ( IDTYPE ) ;
+                          IDTYPE -> := PTYPE_ALFA -> ;
+                          with IDTYPE -> do
+                            begin
+                              SIZE := PARAM1 ;
+                              NEW ( INXTYPE ) ;
+                              INXTYPE -> := PTYPE_ALFA -> . INXTYPE ->
+                                            ;
+                              INXTYPE -> . MAX . IVAL := PARAM1
+                            end (* with *) ;
+                        end (* then *)
+                      else
+                        if FSP = PTYPE_DECIMAL then
+                          begin
+                            NEW ( IDTYPE ) ;
+
+        //************************************************
+        // type similar to real at the moment             
+        // but: store parameters to control output width  
+        //************************************************
+
+                            IDTYPE -> := PTYPE_REAL -> ;
+                            IDTYPE -> . STDPARM1 := PARAM1 ;
+                            IDTYPE -> . STDPARM2 := PARAM2 ;
+                          end (* then *) ;
+                  end (* then *) ;
+                FSP := IDTYPE
+              end (* with *)
+          end (* with *) ;
+        with FSP -> do
+          if FALSE then
+            begin
+              WRITELN ( TRACEF , 'modify_type_parms' ) ;
+              WRITELN ( TRACEF , 'loc               = ' , LINECNT ) ;
+              WRITELN ( TRACEF , 'typenew           = ' , TYPENEW ) ;
+              WRITELN ( TRACEF , 'fsp.form          = ' , FORM ) ;
+            end (* then *) ;
+      end (* MODIFY_TYPE_PARMS *) ;
+
+
    procedure CONSTANT ( FSYS : SYMSET ; var FSP : TTP ; var FVALU :
                       XCONSTANT ) ;
 
@@ -4050,7 +4232,14 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                     begin
                       if SIGN = NEG then
                         VAL . RVAL [ 1 ] := '-' ;
-                      LSP := PTYPE_REAL ;
+                      if SYDIGITS > 0 then
+                        begin
+                          LSP := PTYPE_DECIMAL ;
+                          MODIFY_TYPE_PARMS ( LSP , 'DECIMAL' ,
+                                              SYDIGITS , SYPREC ) ;
+                        end (* then *)
+                      else
+                        LSP := PTYPE_REAL ;
                       FVALU := VAL ;
                       INSYMBOL ;
                       break ;
@@ -4688,162 +4877,6 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
           PARAM1 : ADDRRANGE ;
           PARAM2 : ADDRRANGE ;
           ERRORFOUND : BOOLEAN ;
-
-
-      procedure MODIFY_TYPE_PARMS ( var FSP : TTP ; ID : ALPHA ; PARAM1
-                                  : INTEGER ; PARAM2 : INTEGER ) ;
-
-      //******************************************************
-      // build new type from existing type and params         
-      //******************************************************
-
-
-         var TYPENEW : ALPHA ;
-             I : INTEGER ;
-             CP : -> CHAR ;
-             NEWIDP : IDP ;
-
-         begin (* MODIFY_TYPE_PARMS *)
-           with FSP -> do
-             begin
-
-           //************************************************
-           // no action needed, if default is ok             
-           // and minparamcount = 1 (e.g. CHAR (1)).         
-           //************************************************
-
-               if ( MINPARAMCOUNT = 0 ) and ( DEFAULTPARAM = PARAM1 )
-               then
-                 return ;
-               if FALSE then
-                 begin
-                   WRITELN ( TRACEF , 'modify_type_parms' ) ;
-                   WRITELN ( TRACEF , 'fsp.form          = ' , FORM ) ;
-                   WRITELN ( TRACEF , 'fsp.scalkind      = ' , SCALKIND
-                             ) ;
-                   WRITELN ( TRACEF , 'fsp.minparamcount = ' ,
-                             MINPARAMCOUNT ) ;
-                   WRITELN ( TRACEF , 'fsp.defaultparam  = ' ,
-                             DEFAULTPARAM ) ;
-                   WRITELN ( TRACEF , 'id                = ' , ID ) ;
-                   WRITELN ( TRACEF , 'param1            = ' , PARAM1 )
-                             ;
-                   WRITELN ( TRACEF , 'param2            = ' , PARAM2 )
-                             ;
-                 end (* then *) ;
-
-           //************************************************
-           // construct name of new type in variable typenew 
-           //************************************************
-
-               TYPENEW := '*' ;
-               CP := ADDR ( TYPENEW ) ;
-               CP := PTRADD ( CP , 1 ) ;
-               MEMCPY ( CP , ADDR ( ID ) , SIZEOF ( ALPHA ) - 1 ) ;
-               for I := 1 to SIZEOF ( ALPHA ) do
-                 if TYPENEW [ I ] = ' ' then
-                   break ;
-               CP := ADDR ( TYPENEW [ I ] ) ;
-               CP -> := '_' ;
-               CP := PTRADD ( CP , 1 ) ;
-               INTTOSTR ( CP , 5 , PARAM1 , TRUE ) ;
-               CP := PTRADD ( CP , 5 ) ;
-               CP -> := '_' ;
-               CP := PTRADD ( CP , 1 ) ;
-               INTTOSTR ( CP , 3 , PARAM2 , TRUE ) ;
-
-           //************************************************
-           // look, if type is already defined;              
-           // if not (sid_rc = 104), insert it into type list
-           //************************************************
-
-               SID_RC := SEARCHID ( TYPENEW , FALSE , TRUE , [ TYPES ]
-                         , NEWIDP ) ;
-               with NEWIDP -> do
-                 begin
-                   if FALSE then
-                     begin
-                       WRITELN ( TRACEF , 'typenew           = ' ,
-                                 TYPENEW ) ;
-                       WRITELN ( TRACEF , 'sid_rc            = ' ,
-                                 SID_RC ) ;
-                       WRITELN ( TRACEF , 'name              = ' , NAME
-                                 ) ;
-                       WRITELN ( TRACEF , 'decl_lev          = ' ,
-                                 DECL_LEV ) ;
-                       WRITELN ( TRACEF , 'idtype            = ' ,
-                                 IDTYPE ) ;
-                     end (* then *) ;
-                   if SID_RC = 104 then
-                     begin
-                       DECL_LEV := 1 ;
-                       if FSP = PTYPE_CHAR then
-                         begin
-
-           //************************************************
-           // type similar to alfa, but different length     
-           //************************************************
-
-                           NEW ( IDTYPE ) ;
-                           IDTYPE -> := PTYPE_ALFA -> ;
-                           with IDTYPE -> do
-                             begin
-                               SIZE := PARAM1 ;
-                               NEW ( INXTYPE ) ;
-                               INXTYPE -> := PTYPE_ALFA -> . INXTYPE ->
-                                             ;
-                               INXTYPE -> . MAX . IVAL := PARAM1
-                             end (* with *) ;
-                         end (* then *)
-                       else
-                         if FSP = PTYPE_VARCHAR then
-                           begin
-
-           //************************************************
-           // type similar to alfa, but different length     
-           //************************************************
-
-                             NEW ( IDTYPE ) ;
-                             IDTYPE -> := PTYPE_ALFA -> ;
-                             with IDTYPE -> do
-                               begin
-                                 SIZE := PARAM1 ;
-                                 NEW ( INXTYPE ) ;
-                                 INXTYPE -> := PTYPE_ALFA -> . INXTYPE
-                                               -> ;
-                                 INXTYPE -> . MAX . IVAL := PARAM1
-                               end (* with *) ;
-                           end (* then *)
-                         else
-                           if FSP = PTYPE_DECIMAL then
-                             begin
-                               NEW ( IDTYPE ) ;
-
-           //************************************************
-           // type similar to real at the moment             
-           // but: store parameters to control output width  
-           //************************************************
-
-                               IDTYPE -> := PTYPE_REAL -> ;
-                               IDTYPE -> . STDPARM1 := PARAM1 ;
-                               IDTYPE -> . STDPARM2 := PARAM2 ;
-                             end (* then *) ;
-                     end (* then *) ;
-                   FSP := IDTYPE
-                 end (* with *)
-             end (* with *) ;
-           with FSP -> do
-             if FALSE then
-               begin
-                 WRITELN ( TRACEF , 'modify_type_parms' ) ;
-                 WRITELN ( TRACEF , 'loc               = ' , LINECNT )
-                           ;
-                 WRITELN ( TRACEF , 'typenew           = ' , TYPENEW )
-                           ;
-                 WRITELN ( TRACEF , 'fsp.form          = ' , FORM ) ;
-               end (* then *) ;
-         end (* MODIFY_TYPE_PARMS *) ;
-
 
       begin (* TYPE_WITH_PARMS *)
 
@@ -7451,6 +7484,22 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                      SID_RC := SEARCHID ( ID , TRUE , TRUE , [ TYPES ]
                                , LCP1 ) ;
                      LSP := LCP1 -> . IDTYPE ;
+
+           //************************************************
+           // evtl.result type with parameters               
+           //************************************************
+
+                     INSYMBOL ;
+                     TYPE_WITH_PARMS ( FSYS + [ SYSEMICOLON ] , ID ,
+                                       LSP ) ;
+
+           //************************************************
+           // check if type is ok                            
+           // don't accept char with parameter               
+           // and varchar/string with length                 
+           // accept decimal type                            
+           //************************************************
+
                      FPAR -> . IDTYPE := LSP ;
                      if LSP <> NIL then
                        if LSP -> . FORM >= POWER then
@@ -7458,7 +7507,6 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                            ERROR ( 120 ) ;
                            FPAR -> . IDTYPE := NIL
                          end (* then *) ;
-                     INSYMBOL
                    end (* then *)
                  else
                    begin
@@ -9128,10 +9176,28 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
 
                     if IS_STDTYPE ( LSP , 'R' ) then
                       begin
-                        if DEFAULT then
-                          GEN2 ( PCODE_LDC , 1 , 14 ) ;
-                        if DEFAULT1 then
-                          GEN2 ( PCODE_LDC , 1 , - 1 ) ;
+                        if LSP -> . STDPARM1 > 0 then
+                          begin
+
+                    //**************************************************
+                    // if decimal (stdparm1 > 0) then                   
+                    // get width etc. from type parameters              
+                    //**************************************************
+
+                            if DEFAULT then
+                              GEN2 ( PCODE_LDC , 1 , LSP -> . STDPARM1
+                                     + 3 ) ;
+                            if DEFAULT1 then
+                              GEN2 ( PCODE_LDC , 1 , LSP -> . STDPARM2
+                                     ) ;
+                          end (* then *)
+                        else
+                          begin
+                            if DEFAULT then
+                              GEN2 ( PCODE_LDC , 1 , 14 ) ;
+                            if DEFAULT1 then
+                              GEN2 ( PCODE_LDC , 1 , - 1 ) ;
+                          end (* else *) ;
                         XCSP := PWRR ;
                         return
                       end (* then *) ;
@@ -9958,6 +10024,180 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                  GATTR . CVAL . STRTYPE := ' ' ;
                  GATTR . CVAL . IVAL := SIZE ;
                end (* SIZEOF1 *) ;
+
+
+            procedure DIGITSOF1 ;
+
+               var DIGITS : INTEGER ;
+                   LCP : IDP ;
+                   XTYPE : TTP ;
+
+               begin (* DIGITSOF1 *)
+                 DIGITS := 0 ;
+                 LCP := NIL ;
+                 XTYPE := NIL ;
+                 case SY of
+                   IDENT : begin
+
+                 (********************************)
+                 (* schauen, ob typ-bezeichner   *)
+                 (********************************)
+
+                             SID_RC := SEARCHID ( ID , FALSE , FALSE ,
+                                       [ TYPES ] , LCP ) ;
+                             if LCP <> NIL then
+                               begin
+                                 XTYPE := LCP -> . IDTYPE ;
+                                 INSYMBOL ;
+                               end (* then *)
+                             else
+                               begin
+
+                 (**********************************)
+                 (* schauen, ob const-bezeichner   *)
+                 (**********************************)
+
+                                 SID_RC := SEARCHID ( ID , FALSE ,
+                                           FALSE , [ KONST ] , LCP ) ;
+                                 if LCP <> NIL then
+                                   begin
+                                     XTYPE := LCP -> . IDTYPE ;
+                                     INSYMBOL ;
+                                   end (* then *)
+                               end (* else *) ;
+                             if LCP = NIL then
+                               begin
+
+                 (***********************************)
+                 (* wenn kein Typ gefunden:         *)
+                 (* variable suchen                 *)
+                 (* if type of variable known       *)
+                 (* then load size of that type     *)
+                 (***********************************)
+
+                                 VARIABLE ( FSYS + [ SYRPARENT ] ,
+                                            FALSE ) ;
+                                 if GATTR . TYPTR <> NIL then
+                                   begin
+                                     XTYPE := GATTR . TYPTR ;
+                                   end (* then *)
+                               end (* then *) ;
+                           end (* tag/ca *) ;
+                   INTCONST :
+                     begin
+                       DIGITS := SYDIGITS ;
+                       INSYMBOL ;
+                     end (* tag/ca *) ;
+                   REALCONST :
+                     begin
+                       DIGITS := SYDIGITS ;
+                       INSYMBOL ;
+                     end (* tag/ca *) ;
+                   otherwise
+                     ;
+                 end (* case *) ;
+                 if XTYPE <> NIL then
+                   if XTYPE -> . FORM = SCALAR then
+                     if XTYPE -> . SCALKIND = STANDARD then
+                       DIGITS := XTYPE -> . STDPARM1 ;
+                 GATTR . TYPTR := PTYPE_INT ;
+
+                 //*****************************************************
+                 // dont gen ldc, set constant instead ...              
+                 // GEN2 ( PCODE_LDC , 1 , digits ) ;                   
+                 //*****************************************************
+
+                 GATTR . KIND := CST ;
+                 GATTR . CVAL . STRTYPE := ' ' ;
+                 GATTR . CVAL . IVAL := DIGITS ;
+               end (* DIGITSOF1 *) ;
+
+
+            procedure PRECISIONOF1 ;
+
+               var PREC : INTEGER ;
+                   LCP : IDP ;
+                   XTYPE : TTP ;
+
+               begin (* PRECISIONOF1 *)
+                 PREC := 0 ;
+                 LCP := NIL ;
+                 XTYPE := NIL ;
+                 case SY of
+                   IDENT : begin
+
+                 (********************************)
+                 (* schauen, ob typ-bezeichner   *)
+                 (********************************)
+
+                             SID_RC := SEARCHID ( ID , FALSE , FALSE ,
+                                       [ TYPES ] , LCP ) ;
+                             if LCP <> NIL then
+                               begin
+                                 XTYPE := LCP -> . IDTYPE ;
+                                 INSYMBOL ;
+                               end (* then *)
+                             else
+                               begin
+
+                 (**********************************)
+                 (* schauen, ob const-bezeichner   *)
+                 (**********************************)
+
+                                 SID_RC := SEARCHID ( ID , FALSE ,
+                                           FALSE , [ KONST ] , LCP ) ;
+                                 if LCP <> NIL then
+                                   begin
+                                     XTYPE := LCP -> . IDTYPE ;
+                                     INSYMBOL ;
+                                   end (* then *)
+                               end (* else *) ;
+                             if LCP = NIL then
+                               begin
+
+                 (***********************************)
+                 (* wenn kein Typ gefunden:         *)
+                 (* variable suchen                 *)
+                 (* if type of variable known       *)
+                 (* then load size of that type     *)
+                 (***********************************)
+
+                                 VARIABLE ( FSYS + [ SYRPARENT ] ,
+                                            FALSE ) ;
+                                 if GATTR . TYPTR <> NIL then
+                                   begin
+                                     XTYPE := GATTR . TYPTR ;
+                                   end (* then *)
+                               end (* then *) ;
+                           end (* tag/ca *) ;
+                   INTCONST :
+                     begin
+                       PREC := SYPREC ;
+                       INSYMBOL ;
+                     end (* tag/ca *) ;
+                   REALCONST :
+                     begin
+                       PREC := SYPREC ;
+                       INSYMBOL ;
+                     end (* tag/ca *) ;
+                   otherwise
+                     ;
+                 end (* case *) ;
+                 if XTYPE <> NIL then
+                   if XTYPE -> . FORM = SCALAR then
+                     if XTYPE -> . SCALKIND = STANDARD then
+                       PREC := XTYPE -> . STDPARM2 ;
+                 GATTR . TYPTR := PTYPE_INT ;
+
+                 //*****************************************************
+                 // dont gen ldc, set constant instead ...              
+                 // GEN2 ( PCODE_LDC , 1 , prec ) ;                     
+                 //*****************************************************
+
+                 GATTR . KIND := CST ;
+                 GATTR . CVAL . STRTYPE := ' ' ;
+                 GATTR . CVAL . IVAL := PREC ;
+               end (* PRECISIONOF1 *) ;
 
 
             procedure ALLOC1 ;
@@ -11079,10 +11319,6 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                          end (* else *) ;
                        if not ( CT_RESULT in [ 1 , 2 , 3 ] ) then
                          begin
-                           WRITELN ( TRACEF , 'loc = ' , LINECNT ) ;
-                           WRITELN ( TRACEF , 'ct_result = ' ,
-                                     CT_RESULT ) ;
-                           WRITELN ( TRACEF , 'show error 142' ) ;
                            ERROR ( 142 ) ;
                          end (* then *)
                      end (* WORK_PARAM_BYVALUE *) ;
@@ -11631,9 +11867,11 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                     75 : MEMSET1 ;
                     76 : MEMCPY1 ;
                     77 : ROUNDX1 ;
+                    78 : DIGITSOF1 ;
+                    79 : PRECISIONOF1 ;
                   end (* case *) ;
                   if LKEY in [ 16 .. 26 , 28 , 29 , 33 , 38 , 39 , 40 ,
-                  41 , 42 , 43 , 44 , 47 , 63 , 64 ] then
+                  41 , 42 , 43 , 44 , 47 , 63 , 64 , 78 , 79 ] then
                     GATTR . BTYPE := GATTR . TYPTR ;
                   if MATCHPAR then
                     if SY = SYRPARENT then
@@ -11975,7 +12213,9 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                           if LCP -> . KLASS = FUNC then
                             begin
                               CALL ( FSYS , LCP ) ;
-                              if STARTID <> 'SIZEOF' then
+                              if ( STARTID <> 'SIZEOF' ) and ( STARTID
+                              <> 'DIGITSOF' ) and ( STARTID <>
+                              'PRECISIONOF' ) then
                                 GATTR . KIND := EXPR
                             end (* then *)
                           else
@@ -12024,7 +12264,15 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                                  begin
                                    with GATTR do
                                      begin
-                                       TYPTR := PTYPE_REAL ;
+                                       if SYDIGITS > 0 then
+                                         begin
+                                           TYPTR := PTYPE_DECIMAL ;
+                                           MODIFY_TYPE_PARMS ( TYPTR ,
+                                                   'DECIMAL' , SYDIGITS
+                                                   , SYPREC ) ;
+                                         end (* then *)
+                                       else
+                                         TYPTR := PTYPE_REAL ;
                                        KIND := CST ;
                                        CVAL := VAL
                                      end (* with *) ;
@@ -15134,7 +15382,7 @@ procedure ENTSTDNAMES ;
            ( 'PTR2INT  ' , 44 , FUNC ) , ( 'PTRCAST  ' , 45 , FUNC ) ,
            ( 'CLOSE    ' , 46 , PROC ) , ( 'FLOOR    ' , 47 , FUNC ) ,
            ( 'MEMSET   ' , 75 , PROC ) , ( 'MEMCPY   ' , 76 , PROC ) ,
-           ( '        ' , - 1 , PROC ) , ( '        ' , - 1 , PROC ) ,
+           ( 'DIGITSOF' , 78 , FUNC ) , ( 'PRECISIONOF' , 79 , FUNC ) ,
            ( '        ' , - 1 , PROC ) , ( '        ' , - 1 , PROC ) )
            ;
          ESTDP : array [ 1 .. 10 ] of ESTDPROC =

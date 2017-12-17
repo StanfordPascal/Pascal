@@ -13,22 +13,25 @@
 * Datentyp CHAR (n)
 * Datentyp STRING bzw. VARCHAR (n)
 * Datentyp DECIMAL (n, m)
+* precisionof
+* scaleof
+* DECIMAL-Attribute bei WRITE berÅcksichtigen ?
+* DECIMAL (n,m) als Funktionsergebnis - siehe TESTDEC
+* Konstanten mit digitsof und precisionof Attributen - siehe TESTDEC
 
+- Fehler bei Funktionsaufruf mit CHAR auf VM
 - weitere Doku auf Homepage
-- precisionof
-- scaleof
-- DECIMAL-Attribute bei WRITE berÅcksichtigen ?
 - const Parameter
 
-- Makroprozessor
 - Logik fÅr VARCHARs implementieren
-- Logik fÅr DECIMALs implementieren
+- Makroprozessor
 - native Code auf Windows etc.
 - externe Funktionen in C
 - DB2 Precompiler
 - Lîsung fÅr Templates, z.B. AVL BÑume
 - 31 Bit Adressierung
 
+- echte DECIMALs implementieren
 - DSIN usw. geht auf PC nicht :-)
 
 spÑter:

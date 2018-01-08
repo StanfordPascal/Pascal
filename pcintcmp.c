@@ -1191,7 +1191,7 @@ static void load (void *vgs,
 
          if (pft -> fucode == NULL)
          {
-            fprintf (stderr, "standard function %s not found in funtab\n",
+            fprintf (stderr, "standard function %-3.3s not found in funtab\n",
                      poper);
             break;
          }
@@ -1960,6 +1960,8 @@ void translate2 (global_store *gs)
    /*   Bits nicht der Anordnung wie sie sein soll - bei     */
    /*   anderem Zeichensatz.                                 */
    /*                                                        */
+   /*   *** gefixt 2016 ***                                  */
+   /*                                                        */
    /**********************************************************/
 
    pegel = gs -> start_const;
@@ -2045,6 +2047,16 @@ void translate2 (global_store *gs)
    gs -> firstfilepos = pegel;
    gs -> actfilepos = pegel;
    pegel += gs -> maxfiles * sizeof (filecb);
+
+
+   //********************************************************
+   // Platz fuer String-Workarea
+   //********************************************************
+
+   gs -> firststring = pegel;
+   gs -> actstring = pegel;
+   gs -> sizestringarea = gs -> maxstring;
+   pegel += gs -> sizestringarea;
 
 
    //********************************************************

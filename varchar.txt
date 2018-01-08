@@ -1,0 +1,302 @@
+
+**********************************************************************
+
+Implementation of Strings for the New Stanford Pascal Compiler
+
+created by Bernd Oppolzer - 12.2017
+
+**********************************************************************
+
+
+A String variable in STOR looks like this:
+
+2 Bytes Maxlength Field (<= 32767)
+2 Bytes actual length
+and Content Field (Maxlength Bytes)
+
+The MAXLENGTH function can look here, but in most cases it
+will not be necessary, because MAXLENGTH knows its value from
+the definition at compile time. The MAXLENGTH field will not be
+populated, before the variable is assigned the first time.
+
+The MAXLENGTH field must be used, when Strings are passed as
+var Parameters. In this case, the MAXLENGTH field is guaranteed
+to be populated before the CUP instruction by the special P-Code
+instruction VSM (set Maxlength).
+
+A String variable on the stack look like this:
+
+2 Bytes Maxlength Field (which is always -1 in this case)
+2 Bytes actual length
+and a Content Field, which is a Pointer (a Cell Number)
+
+This is called a "String descriptor" or a "String on stack".
+
+The Pointer in this case may point into STOR (in this case
+the String descriptor points to a normal String variable
+in STOR, which is loaded on the stack). Or it may point to
+the String workarea, which is a special area used to hold
+String expression, for example concatenations or Strings
+resulting from conversions.
+
+"Strings on stack" and especially "String expressions"
+cannot be updated in place, instead every time there is an
+update, a new version has to be built (new allocation
+from the String space).
+
+"Normal" String variables can be updated in place, but the
+Maxlength has to be respected (of course) - see P-Code VST.
+
+----------------------------------------------------------------------
+
+The address of a String can be passed to subroutines.
+Conformant Strings (var parameters with no length specified)
+are possible. Read access to such parameters works in the normal way,
+and write access is done using VST x,0. Using this, length check
+is done not by using the second parameter of VST (which is 0),
+but by looking at the Maxlength value of the target variable.
+This in turn means, that Maxlength MUST be set for var parameters.
+That's why Maxlength is forced to be set on every call,
+when String var parameters are involved.
+
+----------------------------------------------------------------------
+
+P-Code instructions
+===================
+
+VLD = Load String to Stack
+
+Format: VLD n
+
+n = max length of Source
+
+Stack contains addr of varchar variable
+pop addr of varchar variable
+
+if actual length of String read is not <= defined max length
+as given by parameter n, then RT error "Undefined String"
+(maybe: set max length of varchar variable ? for static ?)
+
+SP - 1 := -1 / length (no Maxlength, actual length is ok)
+SP     := addr of Strings (alloc from StringArea)
+
+push 2 stack items
+
+VLD does not copy the String to be loaded to the String workarea,
+it only builds a String descriptor on the stack, which points
+to the original position of the String in the String variable
+in STOR
+
+----------------------------------------------------------------------
+
+VST = Store String from Stack to Memory
+
+Format: VST x,n
+
+x = mode (0 or 1)
+n = maxLength of Target
+
+if mode = 0:
+
+   if n > 0:
+
+      SP - 2 = target addr of String variable
+      SP - 1 = -1 / length (String on stack)
+      SP     = source addr (String on stack)
+
+      move String from stack to target addr
+      actual length of String must be less or equal than n
+      Maxlength at target addr is set to n
+      pop 3 stack items
+      RT Error "Undefined String", if length in SP - 1 (links) is not minus 1
+      RT Error "Stringsize", if actual length of source String > n
+
+   if n = 0:
+
+      SP - 2 = target addr of String variable
+      SP - 1 = -1 / length (String on stack)
+      SP     = source addr (String on stack)
+
+      move String from stack to target addr
+      actual length of String must be less or equal than Maxlength of target (!)
+      pop 3 stack items
+      RT Error "Undefined String", if length in SP - 1 (links) is not minus 1
+      RT Error "Stringsize", if actual length of source String > Maxlength of target
+
+   if n < 0:
+
+      SP - 2 = target addr of String representation
+      SP - 1 = -1 / length (String on stack)
+      SP     = source addr (String on stack)
+
+      move "String on stack" representation to memory (8 bytes)
+      used for function results (conformant String type as function result type)
+      pop 3 stack items
+      stack is empty after that
+      the function result is pushed to the stack by the RET instruction
+      RT Error "Undefined String", if length in SP - 1 (links) is not minus 1
+
+if mode = 1:
+
+   if n > 0:
+
+      SP - 2 = -1 / length (String on stack)
+      SP - 1 = source addr (String on stack)
+      SP     = target addr of String variable
+
+      move String from stack to target addr
+      actual length of String must be less or equal than n
+      Maxlength at target addr is set to n
+      (same as above, but other sequence of
+      parameters on the stack)
+      pop 3 stack items
+      RT Error "Undefined String", if length in SP - 1 (links) is not minus 1
+      RT Error "Stringsize", if actual length of source String > n
+
+   if n = 0:
+
+      SP - 2 = -1 / length (String on stack)
+      SP - 1 = source addr (String on stack)
+      SP     = target addr of String variable
+
+      move String from stack to target addr
+      actual length of String must be less or equal than Maxlength of target (!)
+      pop 3 stack items
+      RT Error "Undefined String", if length in SP - 1 (links) is not minus 1
+      RT Error "Stringsize", if actual length of source String > Maxlength of target
+
+   if n < 0:
+
+      SP - 2 = -1 / length (String on stack)
+      SP - 1 = source addr (String on stack)
+      SP     = target addr of String representation
+
+      move "String on stack" representation to memory (8 bytes)
+      used to support call by reference (const parameter) for String expressions
+      pop 3 stack items
+      push target addr of String representation
+      RT Error "Undefined String", if length in SP - 1 (links) is not minus 1
+
+----------------------------------------------------------------------
+
+VSM = Set Maxlength on String
+
+Format: VSM n
+
+n = maxLength of Target
+
+Stack contains address of String variable
+
+VSM sets Maxlength of target to n
+
+(used before addr is passed as var parameter to procedure)
+
+the stack remains unchanged
+
+----------------------------------------------------------------------
+
+VC1 = Convert 1 Char to String
+
+implements function STR for a single char
+
+Stack contains single char
+
+VC1 pops char and builds String on stack
+
+SP - 1 := -1 / length = 1
+SP     := addr des Strings (alloc aus StringArea) / aus einzelnem char
+
+----------------------------------------------------------------------
+
+VC2 = Convert Char Array to String
+
+implements function STR for a char array
+
+Stack contains addr of char array
+length is parameter of VC2 instruction
+
+VC2 pops addr of char array
+and builds String on stack
+
+SP - 1 := -1 / length = L
+SP     := addr des Strings (alloc aus StringArea) / aus char array
+
+----------------------------------------------------------------------
+
+VCC = Concat Strings
+
+Stack contains two Strings
+
+SP - 3 = -1 / length 2
+SP - 2 = addr des Strings 2
+SP - 1 = -1 / length 1
+SP     = addr des Strings 1
+
+VCC concats the two Strings, yielding new String (new alloc)
+pops two items
+
+RT Error "Undefined String", if lengths in SP - 1 or SP - 3
+(left half) are not minus 1
+
+SP - 1 := -1 / length 1 + length 2
+SP     := addr of new (concat) String
+
+----------------------------------------------------------------------
+
+VMV = Move String to Char Array
+
+Stack contains String and address of char array
+parameter of VMV instruction is size of char array
+
+SP - 2 = addr of target String variable
+SP - 1 = -1 / length of "String in stack"
+SP     = addr of "String in stack"
+
+RT Error "Stringsize", if length of String > size of char array
+
+set target char array to blanks
+move length bytes from "String in stack" to char array
+pop three items from stack
+
+----------------------------------------------------------------------
+
+VPU = Push String Workarea location
+
+VPU saves the String workarea location used until now,
+so that VPO later can reset it to that point, freeing
+used workarea space this way.
+
+There are two types of VPU, VPU 1 and VPU 2.
+
+VPU 1 needs to be done before the first occurence of one of the
+P-Codes VC1, VC2 or VCC in one statement, because these three
+P-Codes allocate storage from the String workarea (subject to
+changes in the future !!). VPO 1 is done at the end of the statement
+and resets the workarea pointer to the value it had at the beginning
+of the statement.
+
+Exception: if the statement is an assignment to the function
+result in a string type function, no VPU 1 and VPO 2 must be generated
+(because the function result lives in the string workarea
+and must not be freed until return from the function).
+
+In this case, a VPU 2 is generated at the beginning of the function,
+which saves the current workarea pointer. This pointer is restored
+before every assignment to the function result, using an instruction
+VPO 2. So multiple assignments to the function result do no harm;
+they all will use the same workare pointer, which is not freed until
+the calling statement (containing the function call) terminates.
+
+----------------------------------------------------------------------
+
+VPO = Pop String Workarea location
+
+VPO restores the String workarea location to the value
+last saved by VPU, freeing used workarea space this way.
+
+VPO must be scheduled at the end of a statement, if VPU has
+been generated earlier in this statement due to the presence
+of VC1, VC2 or VCC or function calls, involving a STRING result.
+
+----------------------------------------------------------------------
+

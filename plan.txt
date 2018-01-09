@@ -19,11 +19,25 @@
 * DECIMAL (n,m) als Funktionsergebnis - siehe TESTDEC
 * Konstanten mit digitsof und precisionof Attributen - siehe TESTDEC
 
-- Fehler bei Funktionsaufruf mit CHAR auf VM
+- Logik fÅr VARCHARs implementieren
+* a) VSTs haben teilweise falsche Parameter
+* b) Syntaxfehler rausmachen
+* c) VST mit 0 fÅr conformant strings
+* d) Logik fÅr conformant string Parameter (var)
+* e) LOC nach Prozedur-Entry (vorher vielleicht wegmachen?)
+* f) VST 0 implementieren
+* g) MAXLENGTH vorher setzen fÅr var Parameter
+* h) MAXLENGTH sollte funktionieren
+* i) LENGTH sollte funktionieren
+* j) ansonsten siehe Testprogramm TESTVARC.PAS
+* k) Funktionsergebnis vom Typ STRING
+  l) String-Arbeitsbereiche freigeben
+  m) PASCAL2, d.h. Code-Generierung fÅr Mainframe
+
 - weitere Doku auf Homepage
+- Fehler bei Funktionsaufruf mit CHAR auf VM (??)
 - const Parameter
 
-- Logik fÅr VARCHARs implementieren
 - Makroprozessor
 - native Code auf Windows etc.
 - externe Funktionen in C

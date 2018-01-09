@@ -124,10 +124,13 @@
 #define BADBRANCH      7
 #define BADLBRANCH     8
 #define SETLERROR      9
-#define TOOMUCHFILES  10
-#define NOMOREHEAP    11
-#define BADBOOL       12
+#define TOOMUCHFILES   10
+#define NOMOREHEAP     11
+#define BADBOOL        12
 #define EXTLANGNSUP    13
+#define STRINGSPACE    14
+#define UNDEFSTRING    15
+#define STRINGSIZE     16
 
 static const char *runtime_errmsg [] =
 
@@ -145,8 +148,18 @@ static const char *runtime_errmsg [] =
    "NOMOREHEAP",
    "BADBOOL",
    "EXTLANGNSUP",
+   "STRINGSPACE",
+   "UNDEFSTRING",
+   "STRINGSIZE",
    NULL
 };
+
+/**********************************************************/
+/*  for compares with blanks of large strings             */
+/*  (initialized on startup of PCINT)                     */
+/**********************************************************/
+
+static char blankbuf [40000];
 
 
 
@@ -306,14 +319,22 @@ typedef struct
                                   /* e) STRING Const Area           */
                                   /* f) Const Area der Procs (CST)  */
                                   /* g) Platz fuer 100 FCBs         */
-                                  /* h) Anfang New Style Heap       */
+                                  /* h) Workarea fuer Strings       */
+                                  /* i) Anfang New Style Heap       */
                                   /*--------------------------------*/
    int maxstor;                   /* max used stor (current frame)  */
    int start_const;               /* Pos. in STORE, wo Konst. beg.  */
+                                  /*                                */
    int maxfiles;                  /* maximale Anzahl Files          */
    int actfiles;                  /* aktuelle Anzahl Files          */
    int firstfilepos;              /* erste FCB Position             */
    int actfilepos;                /* aktuelle FCB Position          */
+                                  /*                                */
+   int maxstring;                 /* Groesse String Workarea        */
+   int sizestringarea;            /* Groesse String Workarea        */
+   int firststring;               /* Addr. erster String            */
+   int actstring;                 /* Addr. aktueller String         */
+                                  /*                                */
    int sizenewheap;               /* Groesse des Heaps (new Style)  */
    int firstnewheap;              /* Beginn new Heap                */
    int actnewheap;                /* Aktueller new Heap             */
@@ -496,10 +517,18 @@ static const filecb nullfcb_bin =
 #define XXX_UJP    80
 #define XXX_UNI    81
 #define XXX_UXJ    82
-#define XXX_XJP    83
-#define XXX_XLB    84
-#define XXX_XOR    85
-#define XXX_XPO    86
+#define XXX_VC1    83
+#define XXX_VC2    84
+#define XXX_VCC    85
+#define XXX_VLD    86
+#define XXX_VLM    87
+#define XXX_VMV    88
+#define XXX_VSM    89
+#define XXX_VST    90
+#define XXX_XJP    91
+#define XXX_XLB    92
+#define XXX_XOR    93
+#define XXX_XPO    94
 
 
 
@@ -508,7 +537,7 @@ static const filecb nullfcb_bin =
 /*   Verzeichnis der OpTypen                              */
 /**********************************************************/
 /*   A = nur numerische Adresse (z.B. LOC, IXA)           */
-/*   B = Level und Adresse, z.B. LDA                      */
+/*   B = Level und Adresse / Kennung und Laenge           */
 /*   C = Konstante, wie bei LDC                           */
 /*   D = Typ, Adresse (wie bei DEC und INC z.B.)          */
 /*   E = fuer LCA (Adressen von Strings usw.)             */
@@ -616,6 +645,16 @@ static opctab ot [] =
    { "UJP", XXX_UJP, 0, 'J' },
    { "UNI", XXX_UNI, 0, '0' },
    { "UXJ", XXX_UXJ, 0, 'J' },    /* neu McGill: Long Jump */
+
+   { "VC1", XXX_VC1, 0, ' ' },    /* varchar convert 1 */
+   { "VC2", XXX_VC2, 0, 'A' },    /* varchar convert 2 */
+   { "VCC", XXX_VCC, 0, ' ' },    /* varchar concat */
+   { "VLD", XXX_VLD, 0, 'A' },    /* varchar load */
+   { "VLM", XXX_VLM, 0, ' ' },    /* varchar load maxlength */
+   { "VMV", XXX_VMV, 0, 'A' },    /* varchar move */
+   { "VSM", XXX_VSM, 0, 'A' },    /* varchar set maxlength */
+   { "VST", XXX_VST, 0, 'B' },    /* varchar store */
+
    { "XJP", XXX_XJP, 0, 'X' },
    { "XLB", XXX_XLB, 0, 'L' },    /* neu McGill: Long Jump Target */
    { "XOR", XXX_XOR, 0, 'W' },    /* neu Opp 2017 */

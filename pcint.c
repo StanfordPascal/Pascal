@@ -1719,7 +1719,7 @@ static void *cspf_wrs (void *vgs,
    //*******************************************************
 
    if (parm3 > parm4)
-      fprintf (fcb -> fhandle, "%*c", parm4 - parm3, ' ');
+      fprintf (fcb -> fhandle, "%*c", parm3 - parm4, ' ');
 
    //*******************************************************
    // 2. parameter = adresse des strings
@@ -1735,6 +1735,85 @@ static void *cspf_wrs (void *vgs,
       parm4 = parm3;
 
    fprintf (fcb -> fhandle, "%-*.*s", parm4, parm4, charp);
+
+   return NULL;
+}
+
+
+
+
+static void *cspf_wrv (void *vgs,
+                       int parm1,
+                       int parm2,
+                       int parm3,
+                       int parm4)
+
+{
+   global_store *gs = vgs;
+   char *charp;
+   filecb *fcb;
+   short *shortp;
+   int *intp;
+   int maxl;
+   int actl;
+   int straddr;
+
+#if 0
+
+   fprintf (stderr, "wrv: parm1 = %d\n", parm1);
+   fprintf (stderr, "wrv: parm2 = %d\n", parm2);
+   fprintf (stderr, "wrv: parm3 = %d\n", parm3);
+
+#endif
+
+   STOR_FCB (parm1, fcb);
+
+   check_write (gs, fcb);
+
+   if (parm3 < 0)
+      return NULL;
+
+   //*******************************************************
+   // Ausgeben VARCHAR:
+   // Adresse zeigt auf:
+   // - 2 Bytes max length (or minus 1)
+   // - 2 Bytes actual length
+   // - address of content (if maxlength == -1)
+   // - or content follows directly
+   //*******************************************************
+
+   //*******************************************************
+   // 2. parameter = adresse des strings
+   //*******************************************************
+
+   charp = ADDRSTOR (parm2);
+   shortp = (short *) charp;
+   charp += 4;
+   maxl = shortp [0];
+   actl = shortp [1];
+
+   if (maxl < 0)
+   {
+      intp = (int *) charp;
+      straddr = *intp;
+      charp = ADDRSTOR (straddr);
+   }
+
+   //*******************************************************
+   // wenn parm3 > actl, blanks in entsprechender anzahl ausg.
+   //*******************************************************
+
+   if (parm3 > actl)
+      fprintf (fcb -> fhandle, "%*c", parm3 - actl, ' ');
+
+   //*******************************************************
+   // wenn parm3 < actl, nur in laenge parm3 ausgeben
+   //*******************************************************
+
+   if (parm3 > 0 && parm3 < actl)
+      actl = parm3;
+
+   fprintf (fcb -> fhandle, "%-*.*s", actl, actl, charp);
 
    return NULL;
 }
@@ -2860,6 +2939,7 @@ static void *cspf_rdc (void *vgs,
 #define CSP_FLR    51
 #define CSP_TRC    52
 #define CSP_RND    53
+#define CSP_WRV    54
 
 
 static funtab ft [] =
@@ -2919,6 +2999,7 @@ static funtab ft [] =
    { "FLR", CSP_FLR, (cspfunc *) cspf_flr, -2, 0, 0, ' ' },
    { "TRC", CSP_TRC, (cspfunc *) cspf_trc, -2, 0, 0, ' ' },
    { "RND", CSP_RND, (cspfunc *) cspf_rnd, -2, 0, 0, ' ' },
+   { "WRV", CSP_WRV, cspf_wrv, 3, 2, 0, ' ' },
    {  NULL,      -1, NULL,     0, 0, 0, ' ' }
 };
 
@@ -2930,20 +3011,24 @@ static funtab ft [] =
 
 #define  BREMSE(x)                            \
                                               \
-         fprintf (stderr, (x));               \
-         if (gs -> stepanz > 1)               \
          {                                    \
-            gs -> stepanz = 0;                \
-            incr_ip = 0;                      \
+            fprintf (stderr, (x));            \
+            if (gs -> stepanz > 1)            \
+            {                                 \
+               gs -> stepanz = 0;             \
+               incr_ip = 0;                   \
+            }                                 \
          }
 
 #define  BREMSE2(x,y)                         \
                                               \
-         fprintf (stderr, (x), (y));          \
-         if (gs -> stepanz > 1)               \
          {                                    \
-            gs -> stepanz = 0;                \
-            incr_ip = 0;                      \
+            fprintf (stderr, (x), (y));       \
+            if (gs -> stepanz > 1)            \
+            {                                 \
+               gs -> stepanz = 0;             \
+               incr_ip = 0;                   \
+            }                                 \
          }
 
 
@@ -3048,6 +3133,26 @@ static char *cup_special (global_store *gs,
 
 
 
+static int alloc_string (global_store *gs, int newsize)
+
+{
+   int newstring;
+
+   if (gs -> actstring - gs -> firststring + newsize >
+       gs -> sizestringarea)
+   {
+      return -1;
+   }
+
+   newstring = gs -> actstring;
+   gs -> actstring += newsize;
+
+   return newstring;
+}
+
+
+
+
 static void int1 (global_store *gs)
 
 /**********************************************************/
@@ -3065,6 +3170,8 @@ static void int1 (global_store *gs)
 
    char *stackp;
    char *storep;
+   char *storep1;
+   char *storep2;
    short *shortp;
    void **voidp;
    int *intp;
@@ -3091,6 +3198,17 @@ static void int1 (global_store *gs)
    int len;
    int len1;
    int len2;
+   int newstr;
+   int straddr;
+   int straddr1;
+   int straddr2;
+   int slen;
+   int slen1;
+   int slen2;
+   int maxlen;
+   int slenmax;
+   int offs;
+   int kuerzer;
    char setbuffer [SETLENMAX];
 
    funtab *pft;
@@ -3731,6 +3849,7 @@ static void int1 (global_store *gs)
          break;
 
       case XXX_END:
+
          BREMSE ("+++ not implemented !!\n");
          break;
 
@@ -3819,7 +3938,105 @@ static void int1 (global_store *gs)
 
             res = memcmp (setp2, setp1, len1);
          }
-         else
+         else if (pcode -> t == 'V')
+         {
+            /************************************************/
+            /*   compare 2 strings                          */
+            /************************************************/
+
+            /************************************************/
+            /*   get string addr from top of stack          */
+            /************************************************/
+
+            straddr2 = STACK_I (gs -> sp);
+
+            /************************************************/
+            /*   get length values from SP - 1              */
+            /************************************************/
+
+            (gs -> sp) -= 4;
+
+            stackp = ADDRSTACK (gs -> sp);
+            shortp = (short *) stackp;
+
+            if (shortp [0] != -1)
+               runtime_error (gs, UNDEFSTRING, NULL);
+
+            /************************************************/
+            /*   check lengths and move to target           */
+            /************************************************/
+
+            slen2 = shortp [1];
+
+            (gs -> sp) -= 4;
+
+            /************************************************/
+            /*   get string addr from SP - 2                */
+            /************************************************/
+
+            straddr1 = STACK_I (gs -> sp);
+
+            /************************************************/
+            /*   get length values from SP - 3              */
+            /************************************************/
+
+            (gs -> sp) -= 4;
+
+            stackp = ADDRSTACK (gs -> sp);
+            shortp = (short *) stackp;
+
+            if (shortp [0] != -1)
+               runtime_error (gs, UNDEFSTRING, NULL);
+
+            /************************************************/
+            /*   check lengths and move to target           */
+            /************************************************/
+
+            slen1 = shortp [1];
+
+            storep1 = ADDRSTOR (straddr1);
+            storep2 = ADDRSTOR (straddr2);
+
+            slen = slen1;
+            slenmax = slen1;
+            if (slen2 < slen)
+            {
+               kuerzer = 2;
+               slen = slen2;
+            }
+            else
+            {
+               kuerzer = 1;
+               slenmax = slen2;
+            }
+
+            res = 0;
+            if (slen > 0)
+               res = memcmp (storep1, storep2, slen);
+
+            if (res == 0)
+            {
+               offs = slen;
+               slen = slenmax - slen;
+               if (kuerzer == 1)
+               {
+                  res = 0;
+                  if (slen > 0)
+                     res = memcmp (blankbuf, storep2 + offs,
+                                   slen);
+               }
+               else
+               {
+                  if (slen > 0)
+                     res = memcmp (storep1 + offs, blankbuf,
+                                   slen);
+               }
+            }
+         }
+         else if (pcode -> t == 'B' ||
+                  pcode -> t == 'C' ||
+                  pcode -> t == 'I' ||
+                  pcode -> t == 'A')
          {
             /************************************************/
             /*   get 2 values from top of stack             */
@@ -3831,6 +4048,8 @@ static void int1 (global_store *gs)
 
             res = wert2 - wert1;
          }
+         else
+            BREMSE ("+++ value of T not supported !!\n");
 
          /************************************************/
          /*   boolean value replaces stack position      */
@@ -3987,7 +4206,105 @@ static void int1 (global_store *gs)
             else
                res = -1;
          }
-         else
+         else if (pcode -> t == 'V')
+         {
+            /************************************************/
+            /*   compare 2 strings                          */
+            /************************************************/
+
+            /************************************************/
+            /*   get string addr from top of stack          */
+            /************************************************/
+
+            straddr2 = STACK_I (gs -> sp);
+
+            /************************************************/
+            /*   get length values from SP - 1              */
+            /************************************************/
+
+            (gs -> sp) -= 4;
+
+            stackp = ADDRSTACK (gs -> sp);
+            shortp = (short *) stackp;
+
+            if (shortp [0] != -1)
+               runtime_error (gs, UNDEFSTRING, NULL);
+
+            /************************************************/
+            /*   check lengths and move to target           */
+            /************************************************/
+
+            slen2 = shortp [1];
+
+            (gs -> sp) -= 4;
+
+            /************************************************/
+            /*   get string addr from SP - 2                */
+            /************************************************/
+
+            straddr1 = STACK_I (gs -> sp);
+
+            /************************************************/
+            /*   get length values from SP - 3              */
+            /************************************************/
+
+            (gs -> sp) -= 4;
+
+            stackp = ADDRSTACK (gs -> sp);
+            shortp = (short *) stackp;
+
+            if (shortp [0] != -1)
+               runtime_error (gs, UNDEFSTRING, NULL);
+
+            /************************************************/
+            /*   check lengths and move to target           */
+            /************************************************/
+
+            slen1 = shortp [1];
+
+            storep1 = ADDRSTOR (straddr1);
+            storep2 = ADDRSTOR (straddr2);
+
+            slen = slen1;
+            slenmax = slen1;
+            if (slen2 < slen)
+            {
+               kuerzer = 2;
+               slen = slen2;
+            }
+            else
+            {
+               kuerzer = 1;
+               slenmax = slen2;
+            }
+
+            res = 0;
+            if (slen > 0)
+               res = memcmp (storep1, storep2, slen);
+
+            if (res == 0)
+            {
+               offs = slen;
+               slen = slenmax - slen;
+               if (kuerzer == 1)
+               {
+                  res = 0;
+                  if (slen > 0)
+                     res = memcmp (blankbuf, storep2 + offs,
+                                   slen);
+               }
+               else
+               {
+                  if (slen > 0)
+                     res = memcmp (storep1 + offs, blankbuf,
+                                   slen);
+               }
+            }
+         }
+         else if (pcode -> t == 'B' ||
+                  pcode -> t == 'C' ||
+                  pcode -> t == 'I' ||
+                  pcode -> t == 'A')
          {
             /************************************************/
             /*   get 2 values from top of stack             */
@@ -3999,6 +4316,8 @@ static void int1 (global_store *gs)
 
             res = wert2 - wert1;
          }
+         else
+            BREMSE ("+++ value of T not supported !!\n");
 
          /************************************************/
          /*   boolean value replaces stack position      */
@@ -4053,7 +4372,105 @@ static void int1 (global_store *gs)
             else
                res = -1;
          }
-         else
+         else if (pcode -> t == 'V')
+         {
+            /************************************************/
+            /*   compare 2 strings                          */
+            /************************************************/
+
+            /************************************************/
+            /*   get string addr from top of stack          */
+            /************************************************/
+
+            straddr2 = STACK_I (gs -> sp);
+
+            /************************************************/
+            /*   get length values from SP - 1              */
+            /************************************************/
+
+            (gs -> sp) -= 4;
+
+            stackp = ADDRSTACK (gs -> sp);
+            shortp = (short *) stackp;
+
+            if (shortp [0] != -1)
+               runtime_error (gs, UNDEFSTRING, NULL);
+
+            /************************************************/
+            /*   check lengths and move to target           */
+            /************************************************/
+
+            slen2 = shortp [1];
+
+            (gs -> sp) -= 4;
+
+            /************************************************/
+            /*   get string addr from SP - 2                */
+            /************************************************/
+
+            straddr1 = STACK_I (gs -> sp);
+
+            /************************************************/
+            /*   get length values from SP - 3              */
+            /************************************************/
+
+            (gs -> sp) -= 4;
+
+            stackp = ADDRSTACK (gs -> sp);
+            shortp = (short *) stackp;
+
+            if (shortp [0] != -1)
+               runtime_error (gs, UNDEFSTRING, NULL);
+
+            /************************************************/
+            /*   check lengths and move to target           */
+            /************************************************/
+
+            slen1 = shortp [1];
+
+            storep1 = ADDRSTOR (straddr1);
+            storep2 = ADDRSTOR (straddr2);
+
+            slen = slen1;
+            slenmax = slen1;
+            if (slen2 < slen)
+            {
+               kuerzer = 2;
+               slen = slen2;
+            }
+            else
+            {
+               kuerzer = 1;
+               slenmax = slen2;
+            }
+
+            res = 0;
+            if (slen > 0)
+               res = memcmp (storep1, storep2, slen);
+
+            if (res == 0)
+            {
+               offs = slen;
+               slen = slenmax - slen;
+               if (kuerzer == 1)
+               {
+                  res = 0;
+                  if (slen > 0)
+                     res = memcmp (blankbuf, storep2 + offs,
+                                   slen);
+               }
+               else
+               {
+                  if (slen > 0)
+                     res = memcmp (storep1 + offs, blankbuf,
+                                   slen);
+               }
+            }
+         }
+         else if (pcode -> t == 'B' ||
+                  pcode -> t == 'C' ||
+                  pcode -> t == 'I' ||
+                  pcode -> t == 'A')
          {
             /************************************************/
             /*   get 2 values from top of stack             */
@@ -4065,6 +4482,8 @@ static void int1 (global_store *gs)
 
             res = wert2 - wert1;
          }
+         else
+            BREMSE ("+++ value of T not supported !!\n");
 
          /************************************************/
          /*   boolean value replaces stack position      */
@@ -4472,7 +4891,105 @@ static void int1 (global_store *gs)
             else
                res = 1;
          }
-         else
+         else if (pcode -> t == 'V')
+         {
+            /************************************************/
+            /*   compare 2 strings                          */
+            /************************************************/
+
+            /************************************************/
+            /*   get string addr from top of stack          */
+            /************************************************/
+
+            straddr2 = STACK_I (gs -> sp);
+
+            /************************************************/
+            /*   get length values from SP - 1              */
+            /************************************************/
+
+            (gs -> sp) -= 4;
+
+            stackp = ADDRSTACK (gs -> sp);
+            shortp = (short *) stackp;
+
+            if (shortp [0] != -1)
+               runtime_error (gs, UNDEFSTRING, NULL);
+
+            /************************************************/
+            /*   check lengths and move to target           */
+            /************************************************/
+
+            slen2 = shortp [1];
+
+            (gs -> sp) -= 4;
+
+            /************************************************/
+            /*   get string addr from SP - 2                */
+            /************************************************/
+
+            straddr1 = STACK_I (gs -> sp);
+
+            /************************************************/
+            /*   get length values from SP - 3              */
+            /************************************************/
+
+            (gs -> sp) -= 4;
+
+            stackp = ADDRSTACK (gs -> sp);
+            shortp = (short *) stackp;
+
+            if (shortp [0] != -1)
+               runtime_error (gs, UNDEFSTRING, NULL);
+
+            /************************************************/
+            /*   check lengths and move to target           */
+            /************************************************/
+
+            slen1 = shortp [1];
+
+            storep1 = ADDRSTOR (straddr1);
+            storep2 = ADDRSTOR (straddr2);
+
+            slen = slen1;
+            slenmax = slen1;
+            if (slen2 < slen)
+            {
+               kuerzer = 2;
+               slen = slen2;
+            }
+            else
+            {
+               kuerzer = 1;
+               slenmax = slen2;
+            }
+
+            res = 0;
+            if (slen > 0)
+               res = memcmp (storep1, storep2, slen);
+
+            if (res == 0)
+            {
+               offs = slen;
+               slen = slenmax - slen;
+               if (kuerzer == 1)
+               {
+                  res = 0;
+                  if (slen > 0)
+                     res = memcmp (blankbuf, storep2 + offs,
+                                   slen);
+               }
+               else
+               {
+                  if (slen > 0)
+                     res = memcmp (storep1 + offs, blankbuf,
+                                   slen);
+               }
+            }
+         }
+         else if (pcode -> t == 'B' ||
+                  pcode -> t == 'C' ||
+                  pcode -> t == 'I' ||
+                  pcode -> t == 'A')
          {
             /************************************************/
             /*   get 2 values from top of stack             */
@@ -4484,6 +5001,8 @@ static void int1 (global_store *gs)
 
             res = wert2 - wert1;
          }
+         else
+            BREMSE ("+++ value of T not supported !!\n");
 
          /************************************************/
          /*   boolean value replaces stack position      */
@@ -4538,7 +5057,105 @@ static void int1 (global_store *gs)
             else
                res = 1;
          }
-         else
+         else if (pcode -> t == 'V')
+         {
+            /************************************************/
+            /*   compare 2 strings                          */
+            /************************************************/
+
+            /************************************************/
+            /*   get string addr from top of stack          */
+            /************************************************/
+
+            straddr2 = STACK_I (gs -> sp);
+
+            /************************************************/
+            /*   get length values from SP - 1              */
+            /************************************************/
+
+            (gs -> sp) -= 4;
+
+            stackp = ADDRSTACK (gs -> sp);
+            shortp = (short *) stackp;
+
+            if (shortp [0] != -1)
+               runtime_error (gs, UNDEFSTRING, NULL);
+
+            /************************************************/
+            /*   check lengths and move to target           */
+            /************************************************/
+
+            slen2 = shortp [1];
+
+            (gs -> sp) -= 4;
+
+            /************************************************/
+            /*   get string addr from SP - 2                */
+            /************************************************/
+
+            straddr1 = STACK_I (gs -> sp);
+
+            /************************************************/
+            /*   get length values from SP - 3              */
+            /************************************************/
+
+            (gs -> sp) -= 4;
+
+            stackp = ADDRSTACK (gs -> sp);
+            shortp = (short *) stackp;
+
+            if (shortp [0] != -1)
+               runtime_error (gs, UNDEFSTRING, NULL);
+
+            /************************************************/
+            /*   check lengths and move to target           */
+            /************************************************/
+
+            slen1 = shortp [1];
+
+            storep1 = ADDRSTOR (straddr1);
+            storep2 = ADDRSTOR (straddr2);
+
+            slen = slen1;
+            slenmax = slen1;
+            if (slen2 < slen)
+            {
+               kuerzer = 2;
+               slen = slen2;
+            }
+            else
+            {
+               kuerzer = 1;
+               slenmax = slen2;
+            }
+
+            res = 0;
+            if (slen > 0)
+               res = memcmp (storep1, storep2, slen);
+
+            if (res == 0)
+            {
+               offs = slen;
+               slen = slenmax - slen;
+               if (kuerzer == 1)
+               {
+                  res = 0;
+                  if (slen > 0)
+                     res = memcmp (blankbuf, storep2 + offs,
+                                   slen);
+               }
+               else
+               {
+                  if (slen > 0)
+                     res = memcmp (storep1 + offs, blankbuf,
+                                   slen);
+               }
+            }
+         }
+         else if (pcode -> t == 'B' ||
+                  pcode -> t == 'C' ||
+                  pcode -> t == 'I' ||
+                  pcode -> t == 'A')
          {
             /************************************************/
             /*   get 2 values from top of stack             */
@@ -4550,6 +5167,8 @@ static void int1 (global_store *gs)
 
             res = wert2 - wert1;
          }
+         else
+            BREMSE ("+++ value of T not supported !!\n");
 
          /************************************************/
          /*   boolean value replaces stack position      */
@@ -4946,7 +5565,105 @@ static void int1 (global_store *gs)
             else
                res = 0;
          }
-         else
+         else if (pcode -> t == 'V')
+         {
+            /************************************************/
+            /*   compare 2 strings                          */
+            /************************************************/
+
+            /************************************************/
+            /*   get string addr from top of stack          */
+            /************************************************/
+
+            straddr2 = STACK_I (gs -> sp);
+
+            /************************************************/
+            /*   get length values from SP - 1              */
+            /************************************************/
+
+            (gs -> sp) -= 4;
+
+            stackp = ADDRSTACK (gs -> sp);
+            shortp = (short *) stackp;
+
+            if (shortp [0] != -1)
+               runtime_error (gs, UNDEFSTRING, NULL);
+
+            /************************************************/
+            /*   check lengths and move to target           */
+            /************************************************/
+
+            slen2 = shortp [1];
+
+            (gs -> sp) -= 4;
+
+            /************************************************/
+            /*   get string addr from SP - 2                */
+            /************************************************/
+
+            straddr1 = STACK_I (gs -> sp);
+
+            /************************************************/
+            /*   get length values from SP - 3              */
+            /************************************************/
+
+            (gs -> sp) -= 4;
+
+            stackp = ADDRSTACK (gs -> sp);
+            shortp = (short *) stackp;
+
+            if (shortp [0] != -1)
+               runtime_error (gs, UNDEFSTRING, NULL);
+
+            /************************************************/
+            /*   check lengths and move to target           */
+            /************************************************/
+
+            slen1 = shortp [1];
+
+            storep1 = ADDRSTOR (straddr1);
+            storep2 = ADDRSTOR (straddr2);
+
+            slen = slen1;
+            slenmax = slen1;
+            if (slen2 < slen)
+            {
+               kuerzer = 2;
+               slen = slen2;
+            }
+            else
+            {
+               kuerzer = 1;
+               slenmax = slen2;
+            }
+
+            res = 0;
+            if (slen > 0)
+               res = memcmp (storep1, storep2, slen);
+
+            if (res == 0)
+            {
+               offs = slen;
+               slen = slenmax - slen;
+               if (kuerzer == 1)
+               {
+                  res = 0;
+                  if (slen > 0)
+                     res = memcmp (blankbuf, storep2 + offs,
+                                   slen);
+               }
+               else
+               {
+                  if (slen > 0)
+                     res = memcmp (storep1 + offs, blankbuf,
+                                   slen);
+               }
+            }
+         }
+         else if (pcode -> t == 'B' ||
+                  pcode -> t == 'C' ||
+                  pcode -> t == 'I' ||
+                  pcode -> t == 'A')
          {
             /************************************************/
             /*   get 2 values from top of stack             */
@@ -4958,6 +5675,8 @@ static void int1 (global_store *gs)
 
             res = wert2 - wert1;
          }
+         else
+            BREMSE ("+++ value of T not supported !!\n");
 
          /************************************************/
          /*   boolean value replaces stack position      */
@@ -5119,6 +5838,19 @@ static void int1 (global_store *gs)
 
                return_addr = gs -> display [gs -> level] + 72;
                *doublep = STOR_R (return_addr);
+
+               break;
+
+            case 'V':
+               (gs -> sp) += 4;
+               stackp = ADDRSTACK (gs -> sp);
+
+               (gs -> sp) += 4;
+               STACKTYPE (gs -> sp) = 'V';
+
+               return_addr = gs -> display [gs -> level] + 72;
+               storep = ADDRSTOR (return_addr);
+               memcpy (stackp, storep, 8);
 
                break;
 
@@ -5806,6 +6538,604 @@ static void int1 (global_store *gs)
 
          break;
 
+
+      case XXX_VC1:
+
+         /************************************************/
+         /*   get value from top of stack                */
+         /************************************************/
+
+         wert = STACK_I (gs -> sp);
+
+         /************************************************/
+         /*   build string                               */
+         /*   length = -1 / 1                            */
+         /************************************************/
+
+         stackp = ADDRSTACK (gs -> sp);
+         shortp = (short *) stackp;
+         shortp [0] = -1;
+         shortp [1] = 1;
+
+         /************************************************/
+         /*   alloc string of length 1                   */
+         /*   in string workarea                         */
+         /************************************************/
+
+         newstr = alloc_string (gs, 1);
+         if (newstr < 0)
+            runtime_error (gs, STRINGSPACE, NULL);
+
+         (gs -> sp) += 4;
+         stackp = ADDRSTACK (gs -> sp);
+         intp = (int *) stackp;
+         *intp = newstr;
+
+         /************************************************/
+         /*   move single char to string content         */
+         /************************************************/
+
+         storep = ADDRSTOR (newstr);
+         *storep = (char) wert;
+
+         break;
+
+
+      case XXX_VC2:
+
+         /************************************************/
+         /*   get value from top of stack                */
+         /*   = char array address                       */
+         /************************************************/
+
+         straddr = STACK_I (gs -> sp);
+         slen = pcode -> q;
+
+         /************************************************/
+         /*   build string                               */
+         /*   length = -1 / slen                         */
+         /************************************************/
+
+         stackp = ADDRSTACK (gs -> sp);
+         shortp = (short *) stackp;
+         shortp [0] = -1;
+         shortp [1] = slen;
+
+         /************************************************/
+         /*   alloc string of length slen                */
+         /*   in string workarea                         */
+         /************************************************/
+
+         newstr = alloc_string (gs, slen);
+         if (newstr < 0)
+            runtime_error (gs, STRINGSPACE, NULL);
+
+         (gs -> sp) += 4;
+         stackp = ADDRSTACK (gs -> sp);
+         intp = (int *) stackp;
+         *intp = newstr;
+
+         /************************************************/
+         /*   move char array to string content          */
+         /************************************************/
+
+         storep2 = ADDRSTOR (straddr);
+         storep = ADDRSTOR (newstr);
+         memcpy (storep, storep2, slen);
+
+         break;
+
+
+      case XXX_VCC:
+
+         /************************************************/
+         /*   get string addr from top of stack          */
+         /************************************************/
+
+         straddr1 = STACK_I (gs -> sp);
+
+         /************************************************/
+         /*   get length values from SP - 1              */
+         /************************************************/
+
+         (gs -> sp) -= 4;
+
+         stackp = ADDRSTACK (gs -> sp);
+         shortp = (short *) stackp;
+
+         if (shortp [0] != -1)
+            runtime_error (gs, UNDEFSTRING, NULL);
+
+         /************************************************/
+         /*   check lengths and move to target           */
+         /************************************************/
+
+         slen1 = shortp [1];
+
+         (gs -> sp) -= 4;
+
+         /************************************************/
+         /*   get string addr from SP - 2                */
+         /************************************************/
+
+         straddr2 = STACK_I (gs -> sp);
+
+         /************************************************/
+         /*   get length values from SP - 3              */
+         /************************************************/
+
+         (gs -> sp) -= 4;
+
+         stackp = ADDRSTACK (gs -> sp);
+         shortp = (short *) stackp;
+
+         if (shortp [0] != -1)
+            runtime_error (gs, UNDEFSTRING, NULL);
+
+         /************************************************/
+         /*   check lengths and move to target           */
+         /************************************************/
+
+         slen2 = shortp [1];
+
+         /************************************************/
+         /*   build string                               */
+         /*   length = -1 / slen                         */
+         /************************************************/
+
+         slen = slen1 + slen2;
+         shortp [1] = slen;
+
+         /************************************************/
+         /*   alloc string of length slen                */
+         /*   in string workarea                         */
+         /************************************************/
+
+         newstr = alloc_string (gs, slen);
+         if (newstr < 0)
+            runtime_error (gs, STRINGSPACE, NULL);
+
+         (gs -> sp) += 4;
+         stackp = ADDRSTACK (gs -> sp);
+         intp = (int *) stackp;
+         *intp = newstr;
+
+         /************************************************/
+         /*   concatenate string contents                */
+         /************************************************/
+
+         storep1 = ADDRSTOR (straddr1);
+         storep2 = ADDRSTOR (straddr2);
+         storep = ADDRSTOR (newstr);
+         memcpy (storep, storep2, slen2);
+         memcpy (storep + slen2, storep1, slen1);
+
+         break;
+
+
+      case XXX_VLD:
+
+         /************************************************/
+         /*   get addr of varchar from top of stack      */
+         /************************************************/
+
+         straddr = STACK_I (gs -> sp);
+         maxlen = pcode -> q;
+
+         storep2 = ADDRSTOR (straddr);
+         shortp = (short *) storep2;
+
+         slen = shortp [1];
+
+         if (slen > maxlen)
+            runtime_error (gs, UNDEFSTRING, NULL);
+
+         shortp [0] = maxlen;
+
+         /************************************************/
+         /*   build string on stack                      */
+         /************************************************/
+
+         stackp = ADDRSTACK (gs -> sp);
+         shortp = (short *) stackp;
+         shortp [0] = -1;
+         shortp [1] = slen;
+
+         (gs -> sp) += 4;
+
+         stackp = ADDRSTACK (gs -> sp);
+         intp = (int *) stackp;
+         *intp = straddr + 4;
+
+         break;
+
+
+      case XXX_VLM:
+
+         /************************************************/
+         /*   get length values from SP - 1              */
+         /************************************************/
+
+         (gs -> sp) -= 4;
+
+         stackp = ADDRSTACK (gs -> sp);
+         shortp = (short *) stackp;
+
+         if (shortp [0] != -1)
+            runtime_error (gs, UNDEFSTRING, NULL);
+
+         /************************************************/
+         /*   replace string representation with         */
+         /*   maxlength (which is equal to actual        */
+         /*   length in this case; strings on stacks     */
+         /*   cannot be expanded)                        */
+         /************************************************/
+
+         slen = shortp [1];
+         intp = (int *) stackp;
+         *intp = slen;
+
+         break;
+
+
+      case XXX_VMV:
+
+         /************************************************/
+         /*   get string addr from top of stack          */
+         /************************************************/
+
+         straddr = STACK_I (gs -> sp);
+
+         /************************************************/
+         /*   get length values from SP - 1              */
+         /************************************************/
+
+         (gs -> sp) -= 4;
+
+         stackp = ADDRSTACK (gs -> sp);
+         shortp = (short *) stackp;
+
+         if (shortp [0] != -1)
+            runtime_error (gs, UNDEFSTRING, NULL);
+
+         /************************************************/
+         /*   check lengths and move to target           */
+         /************************************************/
+
+         slen = shortp [1];
+         maxlen = pcode -> q;
+
+         (gs -> sp) -= 4;
+
+         addr = STACK_I (gs -> sp);
+         storep = ADDRSTOR (addr);
+
+         (gs -> sp) -= 4;
+
+         memset (storep, ' ', maxlen);
+
+         if (slen > maxlen)
+         {
+            runtime_error (gs, STRINGSIZE, NULL);
+         }
+
+         /************************************************/
+         /*   move string content to target              */
+         /************************************************/
+
+         storep2 = ADDRSTOR (straddr);
+         memcpy (storep, storep2, slen);
+
+         break;
+
+
+      case XXX_VSM:
+
+         /************************************************/
+         /*   get target addr from top of stack          */
+         /************************************************/
+
+         addr = STACK_I (gs -> sp);
+         storep = ADDRSTOR (addr);
+
+         maxlen = pcode -> q;
+
+         shortp = (short *) storep;
+         shortp [0] = maxlen;
+
+         break;
+
+
+      case XXX_VST:
+
+         if (pcode -> p == 0)
+         {
+            if (pcode -> q > 0)
+            {
+               /************************************************/
+               /*   get string addr from top of stack          */
+               /************************************************/
+
+               straddr = STACK_I (gs -> sp);
+
+               /************************************************/
+               /*   get length values from SP - 1              */
+               /************************************************/
+
+               (gs -> sp) -= 4;
+
+               stackp = ADDRSTACK (gs -> sp);
+               shortp = (short *) stackp;
+
+               if (shortp [0] != -1)
+                  runtime_error (gs, UNDEFSTRING, NULL);
+
+               /************************************************/
+               /*   check lengths and move to target           */
+               /************************************************/
+
+               slen = shortp [1];
+               maxlen = pcode -> q;
+
+               /************************************************/
+               /*   target addr is at SP - 2                   */
+               /************************************************/
+
+               (gs -> sp) -= 4;
+
+               addr = STACK_I (gs -> sp);
+               storep = ADDRSTOR (addr);
+
+               /************************************************/
+               /*   pop one more stack item                    */
+               /************************************************/
+
+               (gs -> sp) -= 4;
+
+               shortp = (short *) storep;
+               shortp [0] = maxlen;
+
+               if (slen > maxlen)
+               {
+                  shortp [1] = 0;
+                  runtime_error (gs, STRINGSIZE, NULL);
+               }
+
+               shortp [1] = slen;
+
+               /************************************************/
+               /*   move string content to target              */
+               /************************************************/
+
+               storep = ADDRSTOR (straddr);
+               memcpy (shortp + 2, storep, slen);
+            }
+            else if (pcode -> q == 0)
+            {
+               /************************************************/
+               /*   get string addr from top of stack          */
+               /************************************************/
+
+               straddr = STACK_I (gs -> sp);
+
+               /************************************************/
+               /*   get length values from SP - 1              */
+               /************************************************/
+
+               (gs -> sp) -= 4;
+
+               stackp = ADDRSTACK (gs -> sp);
+               shortp = (short *) stackp;
+
+               if (shortp [0] != -1)
+                  runtime_error (gs, UNDEFSTRING, NULL);
+
+               /************************************************/
+               /*   check lengths and move to target           */
+               /************************************************/
+
+               slen = shortp [1];
+
+               /************************************************/
+               /*   target addr is at SP - 2                   */
+               /************************************************/
+
+               (gs -> sp) -= 4;
+
+               addr = STACK_I (gs -> sp);
+               storep = ADDRSTOR (addr);
+
+               /************************************************/
+               /*   pop one more stack item                    */
+               /************************************************/
+
+               (gs -> sp) -= 4;
+
+               shortp = (short *) storep;
+               maxlen = shortp [0];
+
+               if (slen > maxlen)
+               {
+                  shortp [1] = 0;
+                  runtime_error (gs, STRINGSIZE, NULL);
+               }
+
+               shortp [1] = slen;
+
+               /************************************************/
+               /*   move string content to target              */
+               /************************************************/
+
+               storep = ADDRSTOR (straddr);
+               memcpy (shortp + 2, storep, slen);
+            }
+            else
+            {
+               /************************************************/
+               /*   string (stack representation) is at        */
+               /*   SP and SP - 1                              */
+               /************************************************/
+
+               (gs -> sp) -= 4;
+
+               stackp = ADDRSTACK (gs -> sp);
+               shortp = (short *) stackp;
+
+               if (shortp [0] != -1)
+                  runtime_error (gs, UNDEFSTRING, NULL);
+
+               /************************************************/
+               /*   target addr is at SP - 2                   */
+               /************************************************/
+
+               (gs -> sp) -= 4;
+
+               addr = STACK_I (gs -> sp);
+               storep = ADDRSTOR (addr);
+
+               /************************************************/
+               /*   pop one more stack item                    */
+               /************************************************/
+
+               (gs -> sp) -= 4;
+
+               memcpy (storep, stackp, 8);
+            }
+         }
+         else
+         {
+            /************************************************/
+            /*   get target addr from top of stack          */
+            /************************************************/
+
+            addr = STACK_I (gs -> sp);
+            storep = ADDRSTOR (addr);
+
+            if (pcode -> q > 0)
+            {
+               (gs -> sp) -= 4;
+
+               /************************************************/
+               /*   get string addr from SP - 1                */
+               /************************************************/
+
+               straddr = STACK_I (gs -> sp);
+
+               /************************************************/
+               /*   get length values from SP - 2              */
+               /************************************************/
+
+               (gs -> sp) -= 4;
+
+               stackp = ADDRSTACK (gs -> sp);
+               shortp = (short *) stackp;
+
+               if (shortp [0] != -1)
+                  runtime_error (gs, UNDEFSTRING, NULL);
+
+               /************************************************/
+               /*   check lengths and move to target           */
+               /************************************************/
+
+               slen = shortp [1];
+               maxlen = pcode -> q;
+
+               (gs -> sp) -= 4;
+
+               shortp = (short *) storep;
+               shortp [0] = maxlen;
+
+               if (slen > maxlen)
+               {
+                  shortp [1] = 0;
+                  runtime_error (gs, STRINGSIZE, NULL);
+               }
+
+               shortp [1] = slen;
+
+               /************************************************/
+               /*   move string content to target              */
+               /************************************************/
+
+               storep = ADDRSTOR (straddr);
+               memcpy (shortp + 2, storep, slen);
+            }
+            else if (pcode -> q == 0)
+            {
+               (gs -> sp) -= 4;
+
+               /************************************************/
+               /*   get string addr from SP - 1                */
+               /************************************************/
+
+               straddr = STACK_I (gs -> sp);
+
+               /************************************************/
+               /*   get length values from SP - 2              */
+               /************************************************/
+
+               (gs -> sp) -= 4;
+
+               stackp = ADDRSTACK (gs -> sp);
+               shortp = (short *) stackp;
+
+               if (shortp [0] != -1)
+                  runtime_error (gs, UNDEFSTRING, NULL);
+
+               /************************************************/
+               /*   check lengths and move to target           */
+               /************************************************/
+
+               slen = shortp [1];
+
+               (gs -> sp) -= 4;
+
+               shortp = (short *) storep;
+               maxlen = shortp [0];
+
+               if (slen > maxlen)
+               {
+                  shortp [1] = 0;
+                  runtime_error (gs, STRINGSIZE, NULL);
+               }
+
+               shortp [1] = slen;
+
+               /************************************************/
+               /*   move string content to target              */
+               /************************************************/
+
+               storep = ADDRSTOR (straddr);
+               memcpy (shortp + 2, storep, slen);
+            }
+            else
+            {
+               /************************************************/
+               /*   string (stack representation) is at        */
+               /*   SP - 1 and SP - 2                          */
+               /************************************************/
+
+               (gs -> sp) -= 8;
+
+               stackp = ADDRSTACK (gs -> sp);
+               shortp = (short *) stackp;
+
+               if (shortp [0] != -1)
+                  runtime_error (gs, UNDEFSTRING, NULL);
+
+               memcpy (storep, stackp, 8);
+
+               /************************************************/
+               /*   push new string address                    */
+               /************************************************/
+
+               intp = (int *) stackp;
+               *intp = addr;
+            }
+         }
+
+         break;
+
       case XXX_XLB:
          break;
 
@@ -6202,6 +7532,7 @@ static void interpreter (global_store *gs)
 
    char mode = 'P';   // Assembler (P-Code) oder Pascal
 
+   gs -> stepanz = 1;
    gs -> ip = gs -> startpos;
    gs -> sp = 16;
    gs -> hp = gs -> start_const - 16;
@@ -6243,6 +7574,9 @@ static void interpreter (global_store *gs)
 
       if (gs -> sch_debug != 'N')
       {
+         // fprintf (stderr,
+         //          "*** stepanz = %d\n", gs -> stepanz);
+
          show (gs, 0);
 
          fgets (zeile, 80, stdin);
@@ -6318,6 +7652,7 @@ static void interpreter (global_store *gs)
       {
          sc_code *pcoden;
          ent_section *pent;
+         int show_nur_pascal;
 
          gs -> stepanz = 999999999;
 
@@ -6349,6 +7684,10 @@ static void interpreter (global_store *gs)
 
          callno = 0;
 
+         show_nur_pascal = 1;
+         if (mode == 'A')
+            show_nur_pascal = 0;
+
 #if 0
 
          fprintf (stderr,
@@ -6361,7 +7700,11 @@ static void interpreter (global_store *gs)
             int1 (gs);
 
             if (gs -> stepanz <= 0)
+            {
+               fprintf (stderr,
+                        "*** stepanz zero after int1\n");
                break;
+            }
 
             pcoden = gs -> code0 + gs -> ip;
             is_ret = 0;
@@ -6378,6 +7721,8 @@ static void interpreter (global_store *gs)
                      if (callno < 0)
                      {
                         gs -> stepanz = 1;
+                        fprintf (stderr,
+                           "*** stepanz set by R\n");
                      }
                   }
 
@@ -6397,6 +7742,8 @@ static void interpreter (global_store *gs)
                                         pent -> name_long) == 0)
                      {
                         gs -> stepanz = 1;
+                        fprintf (stderr,
+                           "*** stepanz set by F\n");
                      }
                   }
                   break;
@@ -6405,6 +7752,8 @@ static void interpreter (global_store *gs)
                   if (atoi (break_arg) == pcoden -> loc)
                   {
                      gs -> stepanz = 1;
+                     fprintf (stderr,
+                               "*** stepanz set by L\n");
                   }
                   break;
 
@@ -6412,8 +7761,14 @@ static void interpreter (global_store *gs)
                   break;
             }
 
+
             if (sch_trace)
-               show (gs, 1);
+            {
+               // fprintf (stderr,
+               //          "*** stepanz = %d\n", gs -> stepanz);
+
+               show (gs, show_nur_pascal);
+            }
 
             if (sch_traceproc)
             {
@@ -6422,7 +7777,7 @@ static void interpreter (global_store *gs)
                    memcmp (gs -> ot [pcoden -> op] . opcode,
                            "ENT", 3) == 0)
                {
-                  show (gs, 1);
+                  show (gs, show_nur_pascal);
                }
             }
 
@@ -6747,6 +8102,7 @@ int main (int argc, char **argv)
    int parm_newheap;
    char incfilename [65];
    char incfilepasname [65];
+   int parm_string;
 
    FILE *inpfile;
    FILE *outfile;
@@ -6773,7 +8129,8 @@ int main (int argc, char **argv)
                                     "newheap=",
                                     "sizecmd=",
                                     "debug=",
-                                    "list=" };
+                                    "list=",
+                                    "string=" };
 
 #define PARM_ANZAHL   (sizeof(parmkeywords) / sizeof(char *))
 
@@ -6786,16 +8143,29 @@ int main (int argc, char **argv)
                                       "6000000",
                                       "512",
                                       "N",
-                                      "N" };
+                                      "N",
+                                      "1000000" };
 
    static int parmmaxlaenge [PARM_ANZAHL] = { 64, 256, 64, 64,
-                                               8, 8, 8, 8, 1, 1 };
+                                               8, 8, 8, 8,
+                                               1, 1, 8 };
 
    static int parmpruefungen [PARM_ANZAHL] = { 0, 0, 0, 0,
-                                               2, 2, 2, 2, 1, 1 };
+                                               2, 2, 2, 2,
+                                               1, 1, 2 };
 
    /**********************************************************/
    /*   Ende Definitionen, Start ausfuehrbare Anweisungen    */
+   /**********************************************************/
+
+   /**********************************************************/
+   /*   some global initializations                          */
+   /**********************************************************/
+
+   memset (blankbuf, ' ', sizeof (blankbuf));
+
+   /**********************************************************/
+   /*   startup, parm decoding                               */
    /**********************************************************/
 
    sprintf (version_string, "%s %s %s",
@@ -6820,6 +8190,7 @@ int main (int argc, char **argv)
       fprintf (stdout, "sizecmd=  maximale Groesse CMDLINE\n");
       fprintf (stdout, "debug=    Debug-Schalter (J/N)\n");
       fprintf (stdout, "list=     Listing gewuenscht (J/N)\n");
+      fprintf (stdout, "string=   Platz fuer String-Workarea\n");
       fprintf (stdout, "\n");
       fprintf (stdout, "Defaults:\n");
       fprintf (stdout, "\n");
@@ -6923,6 +8294,7 @@ int main (int argc, char **argv)
    gs.maxsize_cmdline = atoi (parmvalues [7]);
    gs.sch_debug = *(parmvalues [8]);
    gs.sch_listing = *(parmvalues [9]);
+   parm_string = atoi (parmvalues [10]);
 
    //**************************************************
    //   Debug geht nur mit Listing an (wg. Source)
@@ -6969,6 +8341,7 @@ int main (int argc, char **argv)
    gs.start_const = parm_sconst;
    gs.maxfiles = parm_files;
    gs.sizenewheap = parm_newheap;
+   gs.maxstring = parm_string;
 
    gs.sourcecache = NULL;
 

@@ -3144,6 +3144,12 @@ static int alloc_string (global_store *gs, int newsize)
       return -1;
    }
 
+   fprintf (stderr,
+            "alloc_string: loc = %d - "
+            "newstring allocated from %d\n",
+            gs -> lineofcode,
+            gs -> actstring);
+
    newstring = gs -> actstring;
    gs -> actstring += newsize;
 
@@ -6825,6 +6831,49 @@ static void int1 (global_store *gs)
 
          storep2 = ADDRSTOR (straddr);
          memcpy (storep, storep2, slen);
+
+         break;
+
+
+      case XXX_VPO:
+
+         /************************************************/
+         /*   reset the string workarea pointer          */
+         /*   to the value found at the STOR address     */
+         /*   given by p and q (this is: release a       */
+         /*   part of the string workarea, which is      */
+         /*   not needed any more - hopefully)           */
+         /************************************************/
+
+         disp = gs -> display [pcode -> p];
+         addr = disp + pcode -> q;
+         gs -> effadr = addr;
+
+         storep = ADDRSTOR (addr);
+         intp = (int *) storep;
+
+         gs -> actstring = *intp;
+
+         break;
+
+
+      case XXX_VPU:
+
+         /************************************************/
+         /*   store actual string workarea pointer       */
+         /*   at STOR address given by p and q           */
+         /*   for later reference (freeing of the        */
+         /*   used workarea)                             */
+         /************************************************/
+
+         disp = gs -> display [pcode -> p];
+         addr = disp + pcode -> q;
+         gs -> effadr = addr;
+
+         storep = ADDRSTOR (addr);
+         intp = (int *) storep;
+
+         *intp = gs -> actstring;
 
          break;
 

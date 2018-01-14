@@ -747,6 +747,27 @@ program PASCALCOMPILER ( INPUT , OUTPUT , PRR , LISTING , DBGINFO ,
 (*                                                                  *)
 (*  - Implementation of STRING (n)                                  *)
 (*                                                                  *)
+(*  - Many new P-Code instructions to support the STRING (n)        *)
+(*    datatype:                                                     *)
+(*                                                                  *)
+(*    VC1 - varchar convert 1                                       *)
+(*    VC2 - varchar convert 2                                       *)
+(*    VCC - varchar concat                                          *)
+(*    VLD - varchar load                                            *)
+(*    VLM - varchar load maxlength                                  *)
+(*    VMV - varchar move                                            *)
+(*    VPO - varchar pop workarea addr                               *)
+(*    VPU - varchar push workarea addr                              *)
+(*    VSM - varchar set maxlength                                   *)
+(*    VST - varchar store                                           *)
+(*                                                                  *)
+(*  - These P-Codes are not yet supported by the P-Code to          *)
+(*    370 translator PASCAL2, so the STRING (n) datatype            *)
+(*    only works on Windows etc. (at the moment)                    *)
+(*                                                                  *)
+(*  - Find more details in a separate document on the               *)
+(*    New Stanford Pascal compiler website                          *)
+(*                                                                  *)
 (********************************************************************)
 
 
@@ -1490,9 +1511,9 @@ type ALPHA = array [ 1 .. IDLNGTH ] of CHAR ;
      CTL_STRINGAREA = record
                         WATCH1 : BOOLEAN ;
                         WATCH2 : BOOLEAN ;
-                        VPU1_DONE : BOOLEAN ;
                         VPU1_LEVEL : LEVRANGE ;
                         VPU1_OFFSET : ADDRRANGE ;
+                        VPO1_NEEDED : BOOLEAN ;
                         VPU2_DONE : BOOLEAN ;
                         VPU2_LEVEL : LEVRANGE ;
                         VPU2_OFFSET : ADDRRANGE ;
@@ -8317,21 +8338,13 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
          begin (* CHECK_CTLS *)
            case MODE of
              1 : begin
-                   if CTLS . WATCH1 then
-                     if not CTLS . VPU1_DONE then
-                       begin
-                         GEN2 ( PCODE_VPU , CTLS . VPU1_LEVEL , CTLS .
-                                VPU1_OFFSET ) ;
-                         CTLS . VPU1_DONE := TRUE ;
-                       end (* then *)
+                   GEN2 ( PCODE_VPU , CTLS . VPU1_LEVEL , CTLS .
+                          VPU1_OFFSET ) ;
                  end (* tag/ca *) ;
              2 : begin
-                   if CTLS . WATCH2 then
-                     begin
-                       GEN2 ( PCODE_VPU , CTLS . VPU2_LEVEL , CTLS .
-                              VPU2_OFFSET ) ;
-                       CTLS . VPU2_DONE := TRUE ;
-                     end (* then *)
+                   GEN2 ( PCODE_VPU , CTLS . VPU2_LEVEL , CTLS .
+                          VPU2_OFFSET ) ;
+                   CTLS . VPU2_DONE := TRUE ;
                  end (* tag/ca *) ;
              otherwise
                begin
@@ -8346,13 +8359,13 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
          begin (* RESOLVE_CTLS *)
            case MODE of
              1 : begin
-                   if CTLS . VPU1_DONE then
+                   if CTLS . VPO1_NEEDED then
                      begin
                        GEN2 ( PCODE_VPO , CTLS . VPU1_LEVEL , CTLS .
                               VPU1_OFFSET ) ;
+                       CTLS . VPO1_NEEDED := FALSE ;
                      end (* then *) ;
                    CTLS . WATCH1 := FALSE ;
-                   CTLS . VPU1_DONE := FALSE ;
                  end (* tag/ca *) ;
              2 : begin
                    if CTLS . VPU2_DONE then
@@ -10458,14 +10471,14 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                    if GATTR . TYPTR = PTYPE_CHAR then
                      begin
                        LOAD ;
-                       CHECK_CTLS ( 1 ) ;
+                       CTLS . VPO1_NEEDED := TRUE ;
                        GEN0 ( PCODE_VC1 ) ;
                      end (* then *)
                    else
                      if IS_CARRAY ( GATTR . TYPTR ) then
                        begin
                          LOADADDRESS ;
-                         CHECK_CTLS ( 1 ) ;
+                         CTLS . VPO1_NEEDED := TRUE ;
                          GEN1 ( PCODE_VC2 , GATTR . TYPTR -> . SIZE ) ;
                        end (* then *)
                      else
@@ -11618,12 +11631,10 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
 
                          LOCPAR := LOCPAR + 1 ;
 
-                       //***********************************************
-                       //**                                             
-                       // for fortran                                   
-                       // all complex types are passed by reference !   
-                       //***********************************************
-                       //**                                             
+                       //*********************************************
+                       // for fortran                                 
+                       // all complex types are passed by reference ! 
+                       //*********************************************
 
                          if FCP -> . EXTLANG = 'F' then
                            begin
@@ -11670,12 +11681,12 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                            begin
                              case CT_RESULT of
                                4 : begin
-                                     CHECK_CTLS ( 1 ) ;
+                                     CTLS . VPO1_NEEDED := TRUE ;
                                      GEN0 ( PCODE_VC1 ) ;
                                    end (* tag/ca *) ;
                                5 : begin
                                      LOADADDRESS ;
-                                     CHECK_CTLS ( 1 ) ;
+                                     CTLS . VPO1_NEEDED := TRUE ;
                                      GEN1 ( PCODE_VC2 , GATTR . TYPTR
                                             -> . SIZE ) ;
                                    end (* tag/ca *) ;
@@ -11758,11 +11769,10 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                        if PARMTYPE -> . FORM = CSTRING then
                          begin
 
-                       //************************
-                       // for strings:           
-                       // make sure that maxlengt
-                       //h is set                
-                       //************************
+                       //*****************************************
+                       // for strings:                            
+                       // make sure that maxlength is set         
+                       //*****************************************
 
                            if not GATTR . BTYPE -> . CONFORMANT then
                              GEN1 ( PCODE_VSM , GATTR . BTYPE -> . SIZE
@@ -12663,6 +12673,19 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                             SPECIAL_WORK ( LCP ) ;
                           if LCP -> . KLASS = FUNC then
                             begin
+
+                          //********************************************
+                          // string workarea used, if function          
+                          // called with string result type             
+                          // vpo type 1 needed at end of stmt           
+                          //********************************************
+
+                              if LCP -> . IDTYPE <> NIL then
+                                begin
+                                  if LCP -> . IDTYPE -> . FORM =
+                                  CSTRING then
+                                    CTLS . VPO1_NEEDED := TRUE ;
+                                end (* then *) ;
                               CALL ( FSYS , LCP ) ;
                               if ( STARTID <> 'SIZEOF' ) and ( STARTID
                               <> 'DIGITSOF' ) and ( STARTID <>
@@ -13158,12 +13181,12 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                                               , GATTR . TYPTR ) ;
                                  case CT_RESULT of
                                    4 : begin
-                                         CHECK_CTLS ( 1 ) ;
+                                         CTLS . VPO1_NEEDED := TRUE ;
                                          GEN0 ( PCODE_VC1 ) ;
                                        end (* tag/ca *) ;
                                    5 : begin
                                          LOADADDRESS ;
-                                         CHECK_CTLS ( 1 ) ;
+                                         CTLS . VPO1_NEEDED := TRUE ;
                                          GEN1 ( PCODE_VC2 , GATTR .
                                                 TYPTR -> . SIZE ) ;
                                        end (* tag/ca *) ;
@@ -13328,7 +13351,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                                    GEN1 ( PCODE_VLD , GATTR . TYPTR ->
                                           . SIZE - 4 ) ;
                                  end (* then *) ;
-                               CHECK_CTLS ( 1 ) ;
+                               CTLS . VPO1_NEEDED := TRUE ;
                                GEN0 ( PCODE_VCC ) ;
                                GATTR . KIND := EXPR ;
                              end (* then *)
@@ -13338,13 +13361,13 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                                             GATTR . TYPTR ) ;
                                case CT_RESULT of
                                  4 : begin
-                                       CHECK_CTLS ( 1 ) ;
+                                       CTLS . VPO1_NEEDED := TRUE ;
                                        GEN0 ( PCODE_VC1 ) ;
                                        GEN0 ( PCODE_VCC ) ;
                                      end (* tag/ca *) ;
                                  5 : begin
                                        LOADADDRESS ;
-                                       CHECK_CTLS ( 1 ) ;
+                                       CTLS . VPO1_NEEDED := TRUE ;
                                        GEN1 ( PCODE_VC2 , GATTR . TYPTR
                                               -> . SIZE ) ;
                                        GEN0 ( PCODE_VCC ) ;
@@ -13574,11 +13597,11 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                                                TYPTR ) ;
                                   case CT_RESULT of
                                     4 : begin
-                                          CHECK_CTLS ( 1 ) ;
+                                          CTLS . VPO1_NEEDED := TRUE ;
                                           GEN0 ( PCODE_VC1 ) ;
                                         end (* tag/ca *) ;
                                     5 : begin
-                                          CHECK_CTLS ( 1 ) ;
+                                          CTLS . VPO1_NEEDED := TRUE ;
                                           GEN1 ( PCODE_VC2 , GATTR .
                                                  TYPTR -> . SIZE ) ;
                                         end (* tag/ca *) ;
@@ -13704,17 +13727,30 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
               if CTLS . WATCH1 then
                 ERROR ( 403 ) ;
               CTLS . WATCH1 := TRUE ;
-              CTLS . VPU1_DONE := FALSE ;
               LLC := LCOUNTER ;
               SELECTOR ( FSYS + [ SYASSIGN ] , FCP , TRUE , IS_FUNCRES
                          ) ;
               VAR_MOD := VAR_MOD + 1 ;
-              if IS_FUNCRES then
-                if CTLS . WATCH2 then
-                  begin
-                    CTLS . WATCH1 := FALSE ;
-                    RESOLVE_CTLS ( 2 ) ;
-                  end (* then *) ;
+
+              //******************************************
+              // if IS_FUNCRES and CTLS . WATCH2 then ... 
+              // that means:                              
+              // if this statement is an assignment to the
+              // functions result AND if the function resu
+              //lt                                        
+              // is of type conformant string             
+              // THEN the string in the workarea should   
+              // remain there and should not be freed at t
+              //he                                        
+              // end of the statement                     
+              //******************************************
+
+              if IS_FUNCRES and CTLS . WATCH2 then
+                begin
+                  CTLS . WATCH1 := FALSE ;
+                  CTLS . VPO1_NEEDED := FALSE ;
+                  RESOLVE_CTLS ( 2 ) ;
+                end (* then *) ;
               if SY = SYASSIGN then
                 begin
                   TYPE_ERROR := 129 ;
@@ -13995,11 +14031,11 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                               begin
                                 case CT_RESULT of
                                   4 : begin
-                                        CHECK_CTLS ( 1 ) ;
+                                        CTLS . VPO1_NEEDED := TRUE ;
                                         GEN0 ( PCODE_VC1 ) ;
                                       end (* tag/ca *) ;
                                   5 : begin
-                                        CHECK_CTLS ( 1 ) ;
+                                        CTLS . VPO1_NEEDED := TRUE ;
                                         GEN1 ( PCODE_VC2 , GATTR .
                                                TYPTR -> . SIZE ) ;
                                       end (* tag/ca *) ;
@@ -14030,7 +14066,23 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
               else
                 ERROR ( 51 ) ;
               LCOUNTER := LLC ;
-              RESOLVE_CTLS ( 1 ) ;
+
+              //******************************************
+              // don't free space in string workarea for  
+              // string results of functions              
+              // instead of this: set VPU1 address to new 
+              // value, so that this computed string will 
+              // not be overwritten ...                   
+              //******************************************
+
+              if IS_FUNCRES and CTLS . WATCH2 then
+                begin
+                  CHECK_CTLS ( 1 ) ;
+                  CTLS . WATCH1 := FALSE ;
+                  CTLS . VPO1_NEEDED := FALSE ;
+                end (* then *)
+              else
+                RESOLVE_CTLS ( 1 ) ;
             end (* ASSIGNMENT *) ;
 
 
@@ -14128,7 +14180,6 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
               if CTLS . WATCH1 then
                 ERROR ( 404 ) ;
               CTLS . WATCH1 := TRUE ;
-              CTLS . VPU1_DONE := FALSE ;
               EXPRESSION ( FSYS + [ SYTHEN ] ) ;
               RESOLVE_CTLS ( 1 ) ;
               GENLABEL ( LCIX1 ) ;
@@ -14190,7 +14241,6 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
               if CTLS . WATCH1 then
                 ERROR ( 405 ) ;
               CTLS . WATCH1 := TRUE ;
-              CTLS . VPU1_DONE := FALSE ;
               EXPRESSION ( FSYS + [ SYOF , SYCOMMA , SYCOLON ] ) ;
               RESOLVE_CTLS ( 1 ) ;
               LOAD ;
@@ -14578,7 +14628,6 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                   if CTLS . WATCH1 then
                     ERROR ( 406 ) ;
                   CTLS . WATCH1 := TRUE ;
-                  CTLS . VPU1_DONE := FALSE ;
                   EXPRESSION ( FSYS ) ;
                   RESOLVE_CTLS ( 1 ) ;
                   GENFJP ( LADDR ) ;
@@ -14610,7 +14659,6 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
               if CTLS . WATCH1 then
                 ERROR ( 407 ) ;
               CTLS . WATCH1 := TRUE ;
-              CTLS . VPU1_DONE := FALSE ;
               EXPRESSION ( FSYS + [ SYDO ] ) ;
               RESOLVE_CTLS ( 1 ) ;
               GENFJP ( LCIX ) ;
@@ -14711,7 +14759,6 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                   if CTLS . WATCH1 then
                     ERROR ( 408 ) ;
                   CTLS . WATCH1 := TRUE ;
-                  CTLS . VPU1_DONE := FALSE ;
                   EXPRESSION ( FSYS + [ SYTO , SYDOWNTO , SYDO ] ) ;
                   RESOLVE_CTLS ( 1 ) ;
                   if GATTR . TYPTR <> NIL then
@@ -14746,7 +14793,6 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                   if CTLS . WATCH1 then
                     ERROR ( 409 ) ;
                   CTLS . WATCH1 := TRUE ;
-                  CTLS . VPU1_DONE := FALSE ;
                   EXPRESSION ( FSYS + [ SYDO ] ) ;
                   RESOLVE_CTLS ( 1 ) ;
                   if GATTR . TYPTR <> NIL then
@@ -14945,7 +14991,6 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
               if CTLS . WATCH1 then
                 ERROR ( 430 ) ;
               CTLS . WATCH1 := TRUE ;
-              CTLS . VPU1_DONE := FALSE ;
               SELECTOR ( FSYS + [ SYCOMMA , SYDO ] , LCP , TRUE ,
                          DUMMYB ) ;
               RESOLVE_CTLS ( 1 ) ;
@@ -15117,7 +15162,11 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
 
                            if LCP -> . KLASS = PROC then
                              begin
-                               CALL ( FSYS , LCP )
+                               if CTLS . WATCH1 then
+                                 ERROR ( 403 ) ;
+                               CTLS . WATCH1 := TRUE ;
+                               CALL ( FSYS , LCP ) ;
+                               RESOLVE_CTLS ( 1 ) ;
                              end (* then *)
                            else
                              begin
@@ -15336,19 +15385,25 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
         STRCOUNTER := 0 ;
 
         (******************************************************)
-        (* allocate room for VPU STRINGarea control field     *)
+        (* allocate room for VPU Stringarea control field     *)
         (******************************************************)
 
+        if FALSE then
+          WRITELN ( TRACEF , 'alloc VPU1 field for ' , FPROCP -> . NAME
+                    ) ;
         ALIGN ( LCOUNTER , PTRSIZE ) ;
         CTLS . VPU1_OFFSET := LCOUNTER ;
         CTLS . VPU1_LEVEL := LEVEL ;
+        CTLS . VPO1_NEEDED := FALSE ;
         LCOUNTER := LCOUNTER + PTRSIZE ;
         if LCOUNTER > LCMAX then
           LCMAX := LCOUNTER ;
+        CHECK_CTLS ( 1 ) ;
         if WATCH_STRINGAREA then
           begin
-            WRITELN ( TRACEF , 'alloc VPU2 field for ' , FPROCP -> .
-                      NAME ) ;
+            if FALSE then
+              WRITELN ( TRACEF , 'alloc VPU2 field for ' , FPROCP -> .
+                        NAME ) ;
             CTLS . WATCH2 := TRUE ;
             CTLS . VPU2_OFFSET := LCOUNTER ;
             CTLS . VPU2_LEVEL := LEVEL ;
@@ -16955,9 +17010,9 @@ procedure INITSCALARS ;
      (***************************************************)
 
      CTLS . WATCH1 := FALSE ;
-     CTLS . VPU1_DONE := FALSE ;
      CTLS . VPU1_OFFSET := 0 ;
      CTLS . VPU1_LEVEL := 0 ;
+     CTLS . VPO1_NEEDED := FALSE ;
      CTLS . VPU2_DONE := FALSE ;
      CTLS . VPU2_OFFSET := 0 ;
      CTLS . VPU2_LEVEL := 0 ;

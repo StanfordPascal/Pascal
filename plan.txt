@@ -31,8 +31,11 @@
 * i) LENGTH sollte funktionieren
 * j) ansonsten siehe Testprogramm TESTVARC.PAS
 * k) Funktionsergebnis vom Typ STRING
-  l) String-Arbeitsbereiche freigeben
-  m) PASCAL2, d.h. Code-Generierung fÅr Mainframe
+* l) String-Arbeitsbereiche freigeben
+* m) Compiler zunÑchst mal in dieser Form nach Mainframe
+  n) PASCAL2, d.h. Code-Generierung fÅr Mainframe
+  o) String-Funktionen lt. Pascal/VS
+  p) einige Freigaben fÅr Strings fehlen noch ...
 
 - weitere Doku auf Homepage
 - Fehler bei Funktionsaufruf mit CHAR auf VM (??)

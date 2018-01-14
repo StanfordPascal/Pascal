@@ -523,12 +523,14 @@ static const filecb nullfcb_bin =
 #define XXX_VLD    86
 #define XXX_VLM    87
 #define XXX_VMV    88
-#define XXX_VSM    89
-#define XXX_VST    90
-#define XXX_XJP    91
-#define XXX_XLB    92
-#define XXX_XOR    93
-#define XXX_XPO    94
+#define XXX_VPO    89
+#define XXX_VPU    90
+#define XXX_VSM    91
+#define XXX_VST    92
+#define XXX_XJP    93
+#define XXX_XLB    94
+#define XXX_XOR    95
+#define XXX_XPO    96
 
 
 
@@ -652,6 +654,8 @@ static opctab ot [] =
    { "VLD", XXX_VLD, 0, 'A' },    /* varchar load */
    { "VLM", XXX_VLM, 0, ' ' },    /* varchar load maxlength */
    { "VMV", XXX_VMV, 0, 'A' },    /* varchar move */
+   { "VPO", XXX_VPO, 0, 'B' },    /* varchar pop workarea addr */
+   { "VPU", XXX_VPU, 0, 'B' },    /* varchar push workarea addr */
    { "VSM", XXX_VSM, 0, 'A' },    /* varchar set maxlength */
    { "VST", XXX_VST, 0, 'B' },    /* varchar store */
 

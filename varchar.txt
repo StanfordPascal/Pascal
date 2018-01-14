@@ -287,6 +287,34 @@ VPO 2. So multiple assignments to the function result do no harm;
 they all will use the same workare pointer, which is not freed until
 the calling statement (containing the function call) terminates.
 
+As it turns out, the value for VPU 1 (reset by every VPO 1) only
+changes, when there are assignments to the function result variable,
+handled by VPU 2 and VPO 2. So, to speed up things, I did the
+following:
+
+When entering the body of a function or procedure, one or two
+fullwords are reserved for this string workarea handling. One,
+if the function does not have a string result, and two otherwise.
+Let's call these two fullwords VPS1 and VPS2.
+
+VPS1 is set initially with the current string workarea pointer,
+and VPS2, too (if VPS2 exists, that is, if the function has a
+string result).
+
+Every statement that uses the string workarea (for example,
+by generating P-Codes VC1, VC2 or VCC, or by calling a string
+function), resets the string workarea pointer at the end, by
+reloading it from VPS1.
+
+Exception: if the statement is inside a function with a string
+result and does an assignment to the string result variable,
+then the string workarea may not be freed. In this case, the
+base address of the string workarea has been reset on entry of
+this statement (to the value in VPS2), but at the end of this
+statement, the string workarea content must be preserved, so
+VPS1 is now set to the new string workarea content. This is
+different from what happens after "normal" statements.
+
 ----------------------------------------------------------------------
 
 VPO = Pop String Workarea location

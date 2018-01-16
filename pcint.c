@@ -3144,11 +3144,15 @@ static int alloc_string (global_store *gs, int newsize)
       return -1;
    }
 
+#if 0
+
    fprintf (stderr,
             "alloc_string: loc = %d - "
             "newstring allocated from %d\n",
             gs -> lineofcode,
             gs -> actstring);
+
+#endif
 
    newstring = gs -> actstring;
    gs -> actstring += newsize;

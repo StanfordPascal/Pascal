@@ -33,9 +33,10 @@
 * k) Funktionsergebnis vom Typ STRING
 * l) String-Arbeitsbereiche freigeben
 * m) Compiler zun„chst mal in dieser Form nach Mainframe
-  n) PASCAL2, d.h. Code-Generierung fr Mainframe
-  o) String-Funktionen lt. Pascal/VS
-  p) einige Freigaben fr Strings fehlen noch ...
+* n) einige Freigaben fr Strings fehlen noch ...
+  o) CONST-Parameter (zumindest fr Strings)
+  p) String-Funktionen lt. Pascal/VS
+  q) PASCAL2, d.h. Code-Generierung fr Mainframe
 
 - weitere Doku auf Homepage
 - Fehler bei Funktionsaufruf mit CHAR auf VM (??)

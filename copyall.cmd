@@ -1,4 +1,6 @@
 
+rem +++ Version 2017.12 +++
+
 rem call copymvs pascal1.pas   compiler.pas
 rem call copymvs pascal2.pas   compiler.pas
 rem call copymvs passcan.pas   compiler.pas
@@ -27,10 +29,31 @@ rem call copymvs download.pas  testpgm.pas
 rem call copymvs splitpas.pas  testpgm.pas
 rem call copymvs splitmvs.pas  testpgm.pas
 
-    call copymvs pasalloc.job  compiler.cntl
-    call copymvs pasdel.job    compiler.cntl
-    call copymvs pasdownl.job  compiler.cntl
-    call copymvs pasload.job   compiler.cntl
-    call copymvs pasinst1.job  compiler.cntl
-    call copymvs pasinst2.job  compiler.cntl
+rem call copymvs pasalloc.job  compiler.cntl
+rem call copymvs pasdel.job    compiler.cntl
+rem call copymvs pasdownl.job  compiler.cntl
+rem call copymvs pasload.job   compiler.cntl
+rem call copymvs pasinst1.job  compiler.cntl
+rem call copymvs pasinst2.job  compiler.cntl
+
+rem +++ Version 2018.01 +++
+
+    call copymvs pascal1.pas   compiler.pas
+    call copymvs pascal1a.pas  compiler.pas
+    call copymvs pascal2.pas   compiler.pas
+    call copymvs pascal2a.pas  compiler.pas
+    call copymvs pasform.pas   compiler.pas
+    call copymvs passcan.pas   compiler.pas
+    call copymvs passcana.pas  compiler.pas
+
+    call copymvs download.pas  testpgm.pas
+    call copymvs pas2pas.pas   testpgm.pas
+    call copymvs splitmvs.pas  testpgm.pas
+    call copymvs splitpas.pas  testpgm.pas
+    call copymvs testchar.pas  testpgm.pas
+    call copymvs testdec.pas   testpgm.pas
+    call copymvs testset4.pas  testpgm.pas
+    call copymvs testvarc.pas  testpgm.pas
+
+    call copymvs pascal.messages    compiler.messages
 

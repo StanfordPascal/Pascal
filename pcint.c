@@ -3213,6 +3213,7 @@ static void int1 (global_store *gs)
    int straddr1;
    int straddr2;
    int slen;
+   int newslen;
    int slen1;
    int slen2;
    int maxlen;
@@ -6577,7 +6578,7 @@ static void int1 (global_store *gs)
             runtime_error (gs, STRINGSPACE, NULL);
 
          (gs -> sp) += 4;
-         stackp = ADDRSTACK (gs -> sp);
+         stackp += 4;
          intp = (int *) stackp;
          *intp = newstr;
 
@@ -6593,45 +6594,80 @@ static void int1 (global_store *gs)
 
       case XXX_VC2:
 
-         /************************************************/
-         /*   get value from top of stack                */
-         /*   = char array address                       */
-         /************************************************/
-
-         straddr = STACK_I (gs -> sp);
          slen = pcode -> q;
 
-         /************************************************/
-         /*   build string                               */
-         /*   length = -1 / slen                         */
-         /************************************************/
+         if (slen > 0)
+         {
+            /************************************************/
+            /*   get value from top of stack                */
+            /*   = char array address                       */
+            /************************************************/
 
-         stackp = ADDRSTACK (gs -> sp);
-         shortp = (short *) stackp;
-         shortp [0] = -1;
-         shortp [1] = slen;
+            straddr = STACK_I (gs -> sp);
 
-         /************************************************/
-         /*   alloc string of length slen                */
-         /*   in string workarea                         */
-         /************************************************/
+            /************************************************/
+            /*   build string                               */
+            /*   length = -1 / slen                         */
+            /************************************************/
 
-         newstr = alloc_string (gs, slen);
-         if (newstr < 0)
-            runtime_error (gs, STRINGSPACE, NULL);
+            stackp = ADDRSTACK (gs -> sp);
+            shortp = (short *) stackp;
+            shortp [0] = -1;
+            shortp [1] = slen;
 
-         (gs -> sp) += 4;
-         stackp = ADDRSTACK (gs -> sp);
-         intp = (int *) stackp;
-         *intp = newstr;
+            /************************************************/
+            /*   alloc string of length slen                */
+            /*   in string workarea                         */
+            /************************************************/
 
-         /************************************************/
-         /*   move char array to string content          */
-         /************************************************/
+            newstr = alloc_string (gs, slen);
+            if (newstr < 0)
+               runtime_error (gs, STRINGSPACE, NULL);
 
-         storep2 = ADDRSTOR (straddr);
-         storep = ADDRSTOR (newstr);
-         memcpy (storep, storep2, slen);
+            (gs -> sp) += 4;
+            stackp += 4;
+            intp = (int *) stackp;
+
+            *intp = newstr;
+
+            /************************************************/
+            /*   move char array to string content          */
+            /************************************************/
+
+            storep2 = ADDRSTOR (straddr);
+            storep = ADDRSTOR (newstr);
+            memcpy (storep, storep2, slen);
+         }
+         else
+         {
+            /************************************************/
+            /*   don't fetch char array address from        */
+            /*   stack - that is: leave TOP of stack        */
+            /*   untouched ...                              */
+            /************************************************/
+
+            (gs -> sp) += 4;
+
+            /************************************************/
+            /*   build empty string                         */
+            /*   length = -1 / 0                            */
+            /************************************************/
+
+            stackp = ADDRSTACK (gs -> sp);
+            shortp = (short *) stackp;
+            shortp [0] = -1;
+            shortp [1] = 0;
+
+            /************************************************/
+            /*   string of length zero                      */
+            /************************************************/
+
+            (gs -> sp) += 4;
+            stackp += 4;
+            intp = (int *) stackp;
+
+            *intp = -1;   // nil
+         }
 
          break;
 
@@ -6723,6 +6759,64 @@ static void int1 (global_store *gs)
          break;
 
 
+      case XXX_VIX:
+
+         /************************************************/
+         /*   get value from top of stack                */
+         /************************************************/
+
+         stackp = ADDRSTACK (gs -> sp);
+         intp = (int *) stackp;
+         wert = *intp;
+
+         /************************************************/
+         /*   decrement stack pointer                    */
+         /************************************************/
+
+         (gs -> sp) -= 4;
+
+         /************************************************/
+         /*   get addr of varchar from top of stack      */
+         /************************************************/
+
+         straddr = STACK_I (gs -> sp);
+
+         storep2 = ADDRSTOR (straddr);
+         shortp = (short *) storep2;
+
+         maxlen = shortp [0];
+         slen = shortp [1];
+
+         if (maxlen > 0)
+         {
+            if (slen > maxlen)
+               runtime_error (gs, UNDEFSTRING, NULL);
+
+            straddr1 = straddr + 4;
+         }
+         else
+         {
+            intp = (int *) (storep2 + 4);
+            straddr1 = *intp;
+         }
+
+         if (wert < 1 ||
+             wert > slen)
+         {
+            runtime_error (gs, STRINGRANGE, NULL);
+         }
+
+         straddr1 += (wert - 1);
+
+         stackp = ADDRSTACK (gs -> sp);
+
+         intp = (int *) stackp;
+         *intp = straddr1;
+         STACKTYPE (gs -> sp) = ' ';
+
+         break;
+
+
       case XXX_VLD:
 
          /************************************************/
@@ -6737,10 +6831,16 @@ static void int1 (global_store *gs)
 
          slen = shortp [1];
 
-         if (slen > maxlen)
-            runtime_error (gs, UNDEFSTRING, NULL);
-
-         shortp [0] = maxlen;
+         if (maxlen > 0)
+         {
+            if (slen > maxlen)
+               runtime_error (gs, UNDEFSTRING, NULL);
+            shortp [0] = maxlen;
+         }
+         else
+         {
+            maxlen = shortp [0];
+         }
 
          /************************************************/
          /*   build string on stack                      */
@@ -6753,9 +6853,19 @@ static void int1 (global_store *gs)
 
          (gs -> sp) += 4;
 
-         stackp = ADDRSTACK (gs -> sp);
-         intp = (int *) stackp;
-         *intp = straddr + 4;
+         if (maxlen >= 0)
+         {
+            stackp += 4;
+            intp = (int *) stackp;
+            *intp = straddr + 4;
+         }
+         else
+         {
+            stackp += 4;
+            intp = (int *) stackp;
+            intp2 = (int *) (storep2);
+            *intp = intp2 [1];
+         }
 
          break;
 
@@ -6878,6 +6988,108 @@ static void int1 (global_store *gs)
          intp = (int *) storep;
 
          *intp = gs -> actstring;
+
+         break;
+
+
+      case XXX_VRP:
+
+         //*************************************************
+         // get count of iterations from top of stack
+         //*************************************************
+
+         wert = STACK_I (gs -> sp);
+
+         if (wert < 0)
+            runtime_error (gs, STRINGRANGE, NULL);
+
+         (gs -> sp) -= 4;
+
+         //*************************************************
+         // get string from SP - 1 and SP - 2
+         //*************************************************
+
+         straddr = STACK_I (gs -> sp);
+
+         //*************************************************
+         // get length values from SP - 1
+         //*************************************************
+
+         (gs -> sp) -= 4;
+
+         stackp = ADDRSTACK (gs -> sp);
+         shortp = (short *) stackp;
+
+         //*************************************************
+         // must be string on stack
+         //*************************************************
+
+         if (shortp [0] != -1)
+            runtime_error (gs, UNDEFSTRING, NULL);
+
+         //*************************************************
+         // length of source
+         //*************************************************
+
+         slen = shortp [1];
+
+         //*************************************************
+         // new length
+         //*************************************************
+
+         newslen = slen * wert;
+         if (newslen > STRINGSZMAX)
+            runtime_error (gs, STRINGSIZE, NULL);
+
+         //*************************************************
+         // alloc string for new length, if not zero
+         //*************************************************
+
+         if (newslen > 0)
+         {
+            newstr = alloc_string (gs, newslen);
+            if (newstr < 0)
+               runtime_error (gs, STRINGSPACE, NULL);
+         }
+         else
+         {
+            newstr = -1;
+         }
+
+         //*************************************************
+         // set length and new pointer
+         //*************************************************
+
+         shortp [1] = newslen;
+
+         (gs -> sp) += 4;
+         stackp += 4;
+         intp = (int *) stackp;
+         *intp = newstr;
+
+         //*************************************************
+         // build new string, if necessary
+         //*************************************************
+
+         if (newslen > 0)
+         {
+            storep1 = ADDRSTOR (straddr);
+            storep2 = ADDRSTOR (newstr);
+
+            if (slen == 1)
+            {
+               memset (storep2, *storep1, newslen);
+            }
+            else
+            {
+               while (wert > 0)
+               {
+                  memcpy (storep2, storep1, slen);
+                  storep2 += slen;
+                  wert --;
+               }
+            }
+         }
 
          break;
 

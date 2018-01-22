@@ -318,9 +318,9 @@ program PCODE_TRANSLATOR ( INPUT , OUTPUT , PRR , ASMOUT , DBGINFO ,
 
 
 
-const VERSION = '2018.01' ;        // Version for display message
-      VERSION2 = 0x1801 ;          // Version for load module
-      VERSION3 = 'XL2''1801''' ;   // Version for ASMOUT listing
+const VERSION = '12.2017' ;        // Version for display message
+      VERSION2 = 0x1712 ;          // Version for load module
+      VERSION3 = 'XL2''1712''' ;   // Version for ASMOUT listing
       MXADR = 65535 ;
       SHRTINT = 4095 ;
       HALFINT = 32700 ;
@@ -719,8 +719,7 @@ type OPTYPE = ( PCTS , PCTI , PLOD , PSTR , PLDA , PLOC , PSTO , PLDC ,
               PDEC , PSTP , PSAV , PRST , PCHR , PORD , PDEF , PCRD ,
               PXPO , PBGN , PEND , PASE , PSLD , PSMV , PMST , PUXJ ,
               PXLB , PCST , PDFC , PPAK , PADA , PSBA , PXOR , PMFI ,
-              PMCP , PMSE , PDBG , PMZE , PVC1 , PVC2 , PVCC , PVLD ,
-              PVST , PVMV , PVSM , PVLM , PVPU , PVPO , UNDEF_OP ) ;
+              PMCP , PMSE , PDBG , PMZE , UNDEF_OP ) ;
      CSPTYPE = ( PCTR , PN01 , PN02 , PN03 , PN04 , PN05 , PN06 , PN07
                , PN08 , PN09 , PPAG , PGET , PPUT , PRES , PREW , PRDC
                , PWRI , PWRE , PWRR , PWRC , PWRS , PWRX , PRDB , PWRB
@@ -1409,8 +1408,7 @@ const HEXTAB : array [ 0 .. 15 ] of CHAR = '0123456789abcdef' ;
         'DEC' , 'STP' , 'SAV' , 'RST' , 'CHR' , 'ORD' , 'DEF' , 'CRD' ,
         'XPO' , 'BGN' , 'END' , 'ASE' , 'SLD' , 'SMV' , 'MST' , 'UXJ' ,
         'XLB' , 'CST' , 'DFC' , 'PAK' , 'ADA' , 'SBA' , 'XOR' , 'MFI' ,
-        'MCP' , 'MSE' , 'DBG' , 'MZE' , 'VC1' , 'VC2' , 'VCC' , 'VLD' ,
-        'VST' , 'VMV' , 'VSM' , 'VLM' , 'VPU' , 'VPO' , '-?-' ) ;
+        'MCP' , 'MSE' , 'DBG' , 'MZE' , '-?-' ) ;
       CSPTBL : array [ CSPTYPE ] of BETA =
       ( 'N00' , 'N01' , 'N02' , 'N03' , 'N04' , 'N05' , 'N06' , 'N07' ,
         'N08' , 'N09' , 'PAG' , 'GET' , 'PUT' , 'RES' , 'REW' , 'RDC' ,
@@ -2308,7 +2306,7 @@ procedure READNXTINST ;
            if ASM then
              WRITELN ( ASMOUT , CH1 : 3 , ',' , Q : 1 ) ;
          end (* tag/ca *) ;
-       PNEW , PLDA , PSMV , PSLD , PSCL , PMST , PVPU , PVPO :
+       PNEW , PLDA , PSMV , PSLD , PSCL , PMST :
          begin
 
      (************************)
@@ -7396,13 +7394,6 @@ procedure ASMNXTINST ;
         (***********************************)
 
       end (* BSETOPS *) ;
-
-
-   procedure STRINGOPS ;
-
-      begin (* STRINGOPS *)
-        
-      end (* STRINGOPS *) ;
 
 
    procedure CSETOPS ;
@@ -12690,8 +12681,6 @@ procedure ASMNXTINST ;
          end (* tag/ca *) ;
        PSCL , PCRD , PSMV , PSLD :
          CSETOPS ;
-       PVPU , PVPO :
-         STRINGOPS ;
      end (* case *) ;
      if FALSE then
        begin

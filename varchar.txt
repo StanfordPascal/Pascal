@@ -87,6 +87,11 @@ it only builds a String descriptor on the stack, which points
 to the original position of the String in the String variable
 in STOR
 
+If n specifield on VLD instruction is zero, then VLD is used to
+load a conformant string parameter from the parameter list.
+In this case, the maxlength of the parameter is used, not the
+maxlength specified in the instruction.
+
 ----------------------------------------------------------------------
 
 VST = Store String from Stack to Memory

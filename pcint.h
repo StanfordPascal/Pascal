@@ -114,6 +114,7 @@
 #define CIXMAX         400
 #define SETLENMAX      256
 #define CMDLINEMAX     1024
+#define STRINGSZMAX    32767
 
 #define BADFILE        1
 #define BADIO          2
@@ -131,6 +132,7 @@
 #define STRINGSPACE    14
 #define UNDEFSTRING    15
 #define STRINGSIZE     16
+#define STRINGRANGE    17
 
 static const char *runtime_errmsg [] =
 
@@ -151,6 +153,7 @@ static const char *runtime_errmsg [] =
    "STRINGSPACE",
    "UNDEFSTRING",
    "STRINGSIZE",
+   "STRINGRANGE",
    NULL
 };
 
@@ -520,17 +523,19 @@ static const filecb nullfcb_bin =
 #define XXX_VC1    83
 #define XXX_VC2    84
 #define XXX_VCC    85
-#define XXX_VLD    86
-#define XXX_VLM    87
-#define XXX_VMV    88
-#define XXX_VPO    89
-#define XXX_VPU    90
-#define XXX_VSM    91
-#define XXX_VST    92
-#define XXX_XJP    93
-#define XXX_XLB    94
-#define XXX_XOR    95
-#define XXX_XPO    96
+#define XXX_VIX    86
+#define XXX_VLD    87
+#define XXX_VLM    88
+#define XXX_VMV    89
+#define XXX_VPO    90
+#define XXX_VPU    91
+#define XXX_VRP    92
+#define XXX_VSM    93
+#define XXX_VST    94
+#define XXX_XJP    95
+#define XXX_XLB    96
+#define XXX_XOR    97
+#define XXX_XPO    98
 
 
 
@@ -651,11 +656,13 @@ static opctab ot [] =
    { "VC1", XXX_VC1, 0, ' ' },    /* varchar convert 1 */
    { "VC2", XXX_VC2, 0, 'A' },    /* varchar convert 2 */
    { "VCC", XXX_VCC, 0, ' ' },    /* varchar concat */
+   { "VIX", XXX_VIX, 0, ' ' },    /* varchar index */
    { "VLD", XXX_VLD, 0, 'A' },    /* varchar load */
    { "VLM", XXX_VLM, 0, ' ' },    /* varchar load maxlength */
    { "VMV", XXX_VMV, 0, 'A' },    /* varchar move */
    { "VPO", XXX_VPO, 0, 'B' },    /* varchar pop workarea addr */
    { "VPU", XXX_VPU, 0, 'B' },    /* varchar push workarea addr */
+   { "VRP", XXX_VRP, 0, ' ' },    /* varchar repeatstr */
    { "VSM", XXX_VSM, 0, 'A' },    /* varchar set maxlength */
    { "VST", XXX_VST, 0, 'B' },    /* varchar store */
 

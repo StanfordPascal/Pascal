@@ -2208,9 +2208,14 @@ function $PASSTR1 ( FUNCCODE : INTEGER ; const S1 : STRING ; I1 :
 
    var LEN : INTEGER ;
        START : INTEGER ;
+       RESTL : INTEGER ;
+       LS1 : INTEGER ;
        X : INTEGER ;
        P : ANYPTR ;
        Q : ANYPTR ;
+       LF : -> LENGTHF ;
+       CP : -> CHAR ;
+       CPS1 : -> CHAR ;
 
    begin (* $PASSTR1 *)
      case FUNCCODE of
@@ -2222,6 +2227,8 @@ function $PASSTR1 ( FUNCCODE : INTEGER ; const S1 : STRING ; I1 :
        1 : begin
              START := I1 ;
              LEN := I2 ;
+             if START < 1 then
+               EXIT ( 1201 ) ;
              if LEN < 0 then
                begin
                  if START > LENGTH ( S1 ) then
@@ -2238,6 +2245,95 @@ function $PASSTR1 ( FUNCCODE : INTEGER ; const S1 : STRING ; I1 :
              P := STRRESULTP ;
              Q := ADDR ( S1 [ START ] ) ;
              MEMCPY ( P , Q , LEN ) ;
+           end (* tag/ca *) ;
+
+     /*********************************/
+     /* DELETE                        */
+     /*********************************/
+
+       2 : begin
+             START := I1 ;
+             LEN := I2 ;
+             if START < 1 then
+               EXIT ( 1201 ) ;
+             if LEN < 0 then
+               begin
+                 if START > LENGTH ( S1 ) then
+                   EXIT ( 1201 ) ;
+                 RESTL := START - 1 ;
+                 $PASSTR1 := REPEATSTR ( ' ' , RESTL ) ;
+                 Q := ADDR ( S1 [ 1 ] ) ;
+                 MEMCPY ( STRRESULTP , Q , RESTL ) ;
+               end (* then *)
+             else
+               begin
+                 LS1 := LENGTH ( S1 ) ;
+                 X := START + LEN - 1 ;
+                 if X > LS1 then
+                   EXIT ( 1201 ) ;
+                 RESTL := LS1 - X ;
+                 $PASSTR1 := REPEATSTR ( ' ' , LS1 - LEN ) ;
+                 if START > 1 then
+                   begin
+                     Q := ADDR ( S1 [ 1 ] ) ;
+                     MEMCPY ( STRRESULTP , Q , START - 1 ) ;
+                   end (* then *) ;
+                 if RESTL > 0 then
+                   begin
+                     P := PTRADD ( STRRESULTP , START - 1 ) ;
+                     Q := ADDR ( S1 [ START + LEN ] ) ;
+                     MEMCPY ( P , Q , RESTL ) ;
+                   end (* then *)
+               end (* else *) ;
+           end (* tag/ca *) ;
+
+     /*********************************/
+     /* TRIM                          */
+     /*********************************/
+
+       3 : begin
+             LS1 := LENGTH ( S1 ) ;
+             if LS1 = 0 then
+               begin
+                 $PASSTR1 := S1 ;
+                 return ;
+               end (* then *) ;
+             CP := ADDR ( S1 [ LS1 ] ) ;
+             LEN := LS1 ;
+             while LEN > 0 do
+               begin
+                 if CP -> <> ' ' then
+                   break ;
+                 CP := PTRADD ( CP , - 1 ) ;
+                 LEN := LEN - 1 ;
+               end (* while *) ;
+             $PASSTR1 := REPEATSTR ( ' ' , LEN ) ;
+             Q := ADDR ( S1 [ 1 ] ) ;
+             MEMCPY ( STRRESULTP , Q , LEN ) ;
+           end (* tag/ca *) ;
+
+     /*********************************/
+     /* LTRIM                         */
+     /*********************************/
+
+       4 : begin
+             LS1 := LENGTH ( S1 ) ;
+             if LS1 = 0 then
+               begin
+                 $PASSTR1 := S1 ;
+                 return ;
+               end (* then *) ;
+             LEN := LS1 ;
+             CP := ADDR ( S1 [ 1 ] ) ;
+             while LEN > 0 do
+               begin
+                 if CP -> <> ' ' then
+                   break ;
+                 CP := PTRADD ( CP , 1 ) ;
+                 LEN := LEN - 1 ;
+               end (* while *) ;
+             $PASSTR1 := REPEATSTR ( ' ' , LEN ) ;
+             MEMCPY ( STRRESULTP , CP , LEN ) ;
            end (* tag/ca *) ;
        otherwise
          EXIT ( 1120 ) ;

@@ -553,6 +553,42 @@ begin (* HAUPTPROGRAMM *)
   WRITELN ( '<' , P2 , '>' ) ;
 
   //******************************************************************
+  // test DELETE                                                      
+  //******************************************************************
+
+  P1 := 'Oppolzer' ;
+  P2 := DELETE ( P1 , 3 , 4 ) ;
+  WRITE ( 'p2 = Ergebnis von DELETE .............: ' ) ;
+  WRITELN ( '<' , P2 , '>' ) ;
+  P2 := DELETE ( 'Bernd ' || 'Oppolzer' , 5 , 7 ) ;
+  WRITE ( 'p2 = Ergebnis von DELETE .............: ' ) ;
+  WRITELN ( '<' , P2 , '>' ) ;
+  P2 := DELETE ( 'Bernd ' || 'Oppolzer' , 5 ) ;
+  WRITE ( 'p2 = Ergebnis von DELETE .............: ' ) ;
+  WRITELN ( '<' , P2 , '>' ) ;
+
+  //******************************************************************
+  // test TRIM und LTRIM                                              
+  //******************************************************************
+
+  P1 := '  Bernd Oppolzer    ' ;
+  P2 := TRIM ( P1 ) ;
+  WRITE ( 'p2 = Ergebnis von TRIM ...............: ' ) ;
+  WRITELN ( '<' , P2 , '>' ) ;
+  WRITE ( 'p2 = Ergebnis von TRIM ...............: ' ) ;
+  WRITELN ( '<' , TRIM ( '  a  b  ' ) , '>' ) ;
+  WRITE ( 'p2 = Ergebnis von TRIM ...............: ' ) ;
+  WRITELN ( '<' , TRIM ( '    ' ) , '>' ) ;
+  P1 := '  Bernd Oppolzer    ' ;
+  P2 := LTRIM ( P1 ) ;
+  WRITE ( 'p2 = Ergebnis von LTRIM ..............: ' ) ;
+  WRITELN ( '<' , P2 , '>' ) ;
+  WRITE ( 'p2 = Ergebnis von LTRIM ..............: ' ) ;
+  WRITELN ( '<' , LTRIM ( '  a  b  ' ) , '>' ) ;
+  WRITE ( 'p2 = Ergebnis von LTRIM ..............: ' ) ;
+  WRITELN ( '<' , LTRIM ( '    ' ) , '>' ) ;
+
+  //******************************************************************
   // Ende aller Tests                                                 
   //******************************************************************
 

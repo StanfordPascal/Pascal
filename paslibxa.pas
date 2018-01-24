@@ -1077,7 +1077,7 @@ local procedure MODIFY_TREE ( MODUS : CHAR ; HANC_ACT : PHANC ; SIZE :
 
        otherwise
          begin
-           
+
          end (* otherw *) ;
      end (* case *) ;
    end (* MODIFY_TREE *) ;
@@ -2154,17 +2154,17 @@ procedure WINX ( CMD : CHARPTR ; var RETCODE : INTEGER ) ;
 
 
 
-procedure $PASMMM ( FUNCCODE : INTEGER ; X1 : CHARPTR ; X2 : CHARPTR ;
+procedure $PASSTR ( FUNCCODE : INTEGER ; X1 : CHARPTR ; X2 : CHARPTR ;
                   L : INTEGER ) ;
 
 (**************************************)
-(*  Verteiler fuer Memory-Funktionen  *)
+(*  Verteiler fuer String-Funktionen  *)
 (**************************************)
 
 
    var CH : CHAR ;
 
-   begin (* $PASMMM *)
+   begin (* $PASSTR *)
      case FUNCCODE of
 
      /*********************************/
@@ -2197,55 +2197,10 @@ procedure $PASMMM ( FUNCCODE : INTEGER ; X1 : CHARPTR ; X2 : CHARPTR ;
        otherwise
          EXIT ( 1120 ) ;
      end (* case *) ;
-   end (* $PASMMM *) ;
-
-
-
-function $PASSTR1 ( FUNCCODE : INTEGER ; const S1 : STRING ; I1 :
-                  INTEGER ; I2 : INTEGER ) : STRING ;
-
-   type LENGTHF = 0 .. 32767 ;
-
-   var LEN : INTEGER ;
-       START : INTEGER ;
-       X : INTEGER ;
-       P : ANYPTR ;
-       Q : ANYPTR ;
-
-   begin (* $PASSTR1 *)
-     case FUNCCODE of
-
-     /*********************************/
-     /* SUBSTR                        */
-     /*********************************/
-
-       1 : begin
-             START := I1 ;
-             LEN := I2 ;
-             if LEN < 0 then
-               begin
-                 if START > LENGTH ( S1 ) then
-                   EXIT ( 1201 ) ;
-                 LEN := LENGTH ( S1 ) - START + 1 ;
-               end (* then *)
-             else
-               begin
-                 X := START + LEN - 1 ;
-                 if X > LENGTH ( S1 ) then
-                   EXIT ( 1201 ) ;
-               end (* else *) ;
-             $PASSTR1 := REPEATSTR ( ' ' , LEN ) ;
-             P := STRRESULTP ;
-             Q := ADDR ( S1 [ START ] ) ;
-             MEMCPY ( P , Q , LEN ) ;
-           end (* tag/ca *) ;
-       otherwise
-         EXIT ( 1120 ) ;
-     end (* case *) ;
-   end (* $PASSTR1 *) ;
+   end (* $PASSTR *) ;
 
 
 
 begin (* HAUPTPROGRAMM *)
-  
+
 end (* HAUPTPROGRAMM *) .

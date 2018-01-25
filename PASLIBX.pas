@@ -2210,12 +2210,16 @@ function $PASSTR1 ( FUNCCODE : INTEGER ; const S1 : STRING ; I1 :
        START : INTEGER ;
        RESTL : INTEGER ;
        LS1 : INTEGER ;
+       I : INTEGER ;
        X : INTEGER ;
        P : ANYPTR ;
        Q : ANYPTR ;
        LF : -> LENGTHF ;
        CP : -> CHAR ;
+       CP2 : -> CHAR ;
        CPS1 : -> CHAR ;
+       C : CHAR ;
+       BLANK : INTEGER ;
 
    begin (* $PASSTR1 *)
      case FUNCCODE of
@@ -2288,7 +2292,7 @@ function $PASSTR1 ( FUNCCODE : INTEGER ; const S1 : STRING ; I1 :
            end (* tag/ca *) ;
 
      /*********************************/
-     /* TRIM                          */
+     /* RTRIM                         */
      /*********************************/
 
        3 : begin
@@ -2335,10 +2339,153 @@ function $PASSTR1 ( FUNCCODE : INTEGER ; const S1 : STRING ; I1 :
              $PASSTR1 := REPEATSTR ( ' ' , LEN ) ;
              MEMCPY ( STRRESULTP , CP , LEN ) ;
            end (* tag/ca *) ;
+
+     /*********************************/
+     /* TRIM                          */
+     /*********************************/
+
+       5 : begin
+             LS1 := LENGTH ( S1 ) ;
+             if LS1 = 0 then
+               begin
+                 $PASSTR1 := S1 ;
+                 return ;
+               end (* then *) ;
+             CP := ADDR ( S1 [ LS1 ] ) ;
+             LEN := LS1 ;
+             while LEN > 0 do
+               begin
+                 if CP -> <> ' ' then
+                   break ;
+                 CP := PTRADD ( CP , - 1 ) ;
+                 LEN := LEN - 1 ;
+               end (* while *) ;
+             CP := ADDR ( S1 [ 1 ] ) ;
+             while LEN > 0 do
+               begin
+                 if CP -> <> ' ' then
+                   break ;
+                 CP := PTRADD ( CP , 1 ) ;
+                 LEN := LEN - 1 ;
+               end (* while *) ;
+             $PASSTR1 := REPEATSTR ( ' ' , LEN ) ;
+             MEMCPY ( STRRESULTP , CP , LEN ) ;
+           end (* tag/ca *) ;
+
+     /*********************************/
+     /* COMPRESS                      */
+     /*********************************/
+
+       6 : begin
+             LS1 := LENGTH ( S1 ) ;
+             if LS1 = 0 then
+               begin
+                 $PASSTR1 := S1 ;
+                 return ;
+               end (* then *) ;
+             $PASSTR1 := REPEATSTR ( ' ' , LS1 ) ;
+             CP := ADDR ( S1 [ 1 ] ) ;
+             CP2 := STRRESULTP ;
+             BLANK := 0 ;
+             LEN := 0 ;
+             for I := 1 to LS1 do
+               begin
+                 C := CP -> ;
+                 if C = ' ' then
+                   BLANK := BLANK + 1
+                 else
+                   BLANK := 0 ;
+                 if BLANK <= 1 then
+                   begin
+                     LEN := LEN + 1 ;
+                     CP2 -> := C ;
+                     CP2 := PTRADD ( CP2 , 1 ) ;
+                   end (* then *) ;
+                 CP := PTRADD ( CP , 1 ) ;
+               end (* for *) ;
+             LF := RESULTP ;
+             LF := PTRADD ( LF , SIZEOF ( LENGTHF ) ) ;
+             LF -> := LEN ;
+           end (* tag/ca *) ;
        otherwise
          EXIT ( 1120 ) ;
      end (* case *) ;
    end (* $PASSTR1 *) ;
+
+
+
+function $PASSTR2 ( FUNCCODE : INTEGER ; const S1 : STRING ; const S2 :
+                  STRING ) : INTEGER ;
+
+   type LENGTHF = 0 .. 32767 ;
+
+   var LS1 : INTEGER ;
+       LS2 : INTEGER ;
+       CP1 : -> CHAR ;
+       CP1START : -> CHAR ;
+       CP2 : -> CHAR ;
+       LFOUND : INTEGER ;
+       I : INTEGER ;
+       RESTL : INTEGER ;
+
+   begin (* $PASSTR2 *)
+     case FUNCCODE of
+
+     /*********************************/
+     /* INDEX                         */
+     /*********************************/
+
+       1 : begin
+             $PASSTR2 := 0 ;
+             LS1 := LENGTH ( S1 ) ;
+             LS2 := LENGTH ( S2 ) ;
+             if LS2 > LS1 then
+               return ;
+             CP1 := ADDR ( S1 [ 1 ] ) ;
+             CP1START := CP1 ;
+             CP2 := ADDR ( S2 [ 1 ] ) ;
+             LFOUND := 0 ;
+             RESTL := LS1 ;
+             for I := 1 to LS1 do
+               begin
+                 if CP1 -> <> CP2 -> then
+                   begin
+                     if LFOUND > 0 then
+                       begin
+                         CP2 := ADDR ( S2 [ 1 ] ) ;
+                         LFOUND := 0 ;
+                       end (* then *)
+                     else
+                       begin
+                         CP1 := PTRADD ( CP1 , 1 ) ;
+                         RESTL := RESTL - 1 ;
+                       end (* else *) ;
+                     if RESTL < LS2 then
+                       break ;
+                     continue
+                   end (* then *) ;
+                 LFOUND := LFOUND + 1 ;
+                 if LFOUND >= LS2 then
+                   break ;
+                 CP2 := PTRADD ( CP2 , 1 ) ;
+                 CP1 := PTRADD ( CP1 , 1 ) ;
+                 RESTL := RESTL - 1 ;
+               end (* for *) ;
+             if LFOUND >= LS2 then
+               $PASSTR2 := PTRDIFF ( CP1 , CP1START ) - LS2 + 2 ;
+           end (* tag/ca *) ;
+
+     /*********************************/
+     /* VERIFY                        */
+     /*********************************/
+
+       2 : begin
+             
+           end (* tag/ca *) ;
+       otherwise
+         EXIT ( 1120 ) ;
+     end (* case *) ;
+   end (* $PASSTR2 *) ;
 
 
 

@@ -25,6 +25,7 @@ var C1 : CHAR ;
     P1 : STRING ( 20 ) ;
     P2 : STRING ( 200 ) ;
     I : INTEGER ;
+    XP : -> CHAR ;
 
 
 
@@ -568,17 +569,17 @@ begin (* HAUPTPROGRAMM *)
   WRITELN ( '<' , P2 , '>' ) ;
 
   //******************************************************************
-  // test TRIM und LTRIM                                              
+  // test RTRIM und LTRIM, TRIM und COMPRESS                          
   //******************************************************************
 
   P1 := '  Bernd Oppolzer    ' ;
-  P2 := TRIM ( P1 ) ;
-  WRITE ( 'p2 = Ergebnis von TRIM ...............: ' ) ;
+  P2 := RTRIM ( P1 ) ;
+  WRITE ( 'p2 = Ergebnis von RTRIM ..............: ' ) ;
   WRITELN ( '<' , P2 , '>' ) ;
-  WRITE ( 'p2 = Ergebnis von TRIM ...............: ' ) ;
-  WRITELN ( '<' , TRIM ( '  a  b  ' ) , '>' ) ;
-  WRITE ( 'p2 = Ergebnis von TRIM ...............: ' ) ;
-  WRITELN ( '<' , TRIM ( '    ' ) , '>' ) ;
+  WRITE ( 'p2 = Ergebnis von RTRIM ..............: ' ) ;
+  WRITELN ( '<' , RTRIM ( '  a  b  ' ) , '>' ) ;
+  WRITE ( 'p2 = Ergebnis von RTRIM ..............: ' ) ;
+  WRITELN ( '<' , RTRIM ( '    ' ) , '>' ) ;
   P1 := '  Bernd Oppolzer    ' ;
   P2 := LTRIM ( P1 ) ;
   WRITE ( 'p2 = Ergebnis von LTRIM ..............: ' ) ;
@@ -587,6 +588,52 @@ begin (* HAUPTPROGRAMM *)
   WRITELN ( '<' , LTRIM ( '  a  b  ' ) , '>' ) ;
   WRITE ( 'p2 = Ergebnis von LTRIM ..............: ' ) ;
   WRITELN ( '<' , LTRIM ( '    ' ) , '>' ) ;
+  P1 := '  Bernd Oppolzer    ' ;
+  P2 := TRIM ( P1 ) ;
+  WRITE ( 'p2 = Ergebnis von TRIM ...............: ' ) ;
+  WRITELN ( '<' , P2 , '>' ) ;
+  WRITE ( 'p2 = Ergebnis von TRIM ...............: ' ) ;
+  WRITELN ( '<' , TRIM ( '  a  b  ' ) , '>' ) ;
+  WRITE ( 'p2 = Ergebnis von TRIM ...............: ' ) ;
+  WRITELN ( '<' , TRIM ( '    ' ) , '>' ) ;
+
+  //******************************************************************
+  // XP := RESULTP ;  ... not allowed here                            
+  //******************************************************************
+
+  P1 := '  Bernd Oppolzer    ' ;
+  P2 := COMPRESS ( P1 ) ;
+  WRITE ( 'p2 = Ergebnis von COMPRESS ...........: ' ) ;
+  WRITELN ( '<' , P2 , '>' ) ;
+  WRITE ( 'p2 = Ergebnis von COMPRESS ...........: ' ) ;
+  WRITELN ( '<' , COMPRESS ( '  a  b  ' ) , '>' ) ;
+  WRITE ( 'p2 = Ergebnis von COMPRESS ...........: ' ) ;
+  WRITELN ( '<' , COMPRESS ( '    ' ) , '>' ) ;
+
+  //******************************************************************
+  // test INDEX                                                       
+  //******************************************************************
+
+  P1 := '  Bernd Oppolzer    ' ;
+  I := INDEX ( P1 , 'pol' ) ;
+  WRITE ( 'Ergebnis von INDEX ...................: ' ) ;
+  WRITELN ( I : 5 ) ;
+  P1 := '  Bernd Oppolzer    ' ;
+  I := INDEX ( TRIM ( P1 ) , 'pol' ) ;
+  WRITE ( 'Ergebnis von INDEX ...................: ' ) ;
+  WRITELN ( I : 5 ) ;
+  WRITE ( 'Ergebnis von INDEX (3) ...............: ' ) ;
+  WRITELN ( INDEX ( 'Oppolzer' , 'pol' ) : 5 ) ;
+  WRITE ( 'Ergebnis von INDEX (0) ...............: ' ) ;
+  WRITELN ( INDEX ( 'Oppolzer' , 'polizei' ) : 5 ) ;
+  WRITE ( 'Ergebnis von INDEX (1) ...............: ' ) ;
+  WRITELN ( INDEX ( 'Oppolzer' , 'Oppolzer' ) : 5 ) ;
+  WRITE ( 'Ergebnis von INDEX (0) ...............: ' ) ;
+  WRITELN ( INDEX ( 'Oppolzer' , 'Oppolzer1' ) : 5 ) ;
+  WRITE ( 'Ergebnis von INDEX (1) ...............: ' ) ;
+  WRITELN ( INDEX ( 'Oppolzer' , 'Oppo' ) : 5 ) ;
+  WRITE ( 'Ergebnis von INDEX (6) ...............: ' ) ;
+  WRITELN ( INDEX ( 'Oppolzer' , 'zer' ) : 5 ) ;
 
   //******************************************************************
   // Ende aller Tests                                                 

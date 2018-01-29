@@ -3220,6 +3220,8 @@ static void int1 (global_store *gs)
    int slenmax;
    int offs;
    int kuerzer;
+   int copy_string;
+
    char setbuffer [SETLENMAX];
 
    funtab *pft;
@@ -6819,6 +6821,8 @@ static void int1 (global_store *gs)
 
       case XXX_VLD:
 
+         copy_string  = (pcode -> p != 0);
+
          /************************************************/
          /*   get addr of varchar from top of stack      */
          /************************************************/
@@ -6865,6 +6869,22 @@ static void int1 (global_store *gs)
             intp = (int *) stackp;
             intp2 = (int *) (storep2);
             *intp = intp2 [1];
+         }
+
+         /************************************************/
+         /*   copy string, if required                   */
+         /************************************************/
+
+         if (copy_string)
+         {
+            newstr = alloc_string (gs, slen);
+            if (newstr < 0)
+               runtime_error (gs, STRINGSPACE, NULL);
+
+            storep2 = ADDRSTOR (*intp);
+            *intp = newstr;
+            storep = ADDRSTOR (newstr);
+            memcpy (storep, storep2, slen);
          }
 
          break;

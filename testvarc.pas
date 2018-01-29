@@ -4,12 +4,11 @@ program TESTVARC ( OUTPUT ) ;
 // Testprogramm fuer Strings bzw. VARCHARs                              
 //                                                                      
 // Oppolzer - 02.2018                                                   
-//                                                                      
-// was fehlt noch ?                                                     
-//                                                                      
-// - const-Parameter                                                    
 //**********************************************************************
 
+
+
+type TRANSLATE_TAB = array [ 1 .. 128 ] of CHAR ;
 
 
 var C1 : CHAR ;
@@ -26,6 +25,45 @@ var C1 : CHAR ;
     P2 : STRING ( 200 ) ;
     I : INTEGER ;
     XP : -> CHAR ;
+    TTAB : STRING ( 256 ) ;
+
+
+const IDENT_T1 : TRANSLATE_TAB =
+      ( X'00' , X'01' , X'02' , X'03' , X'04' , X'05' , X'06' , X'07' ,
+        X'08' , X'09' , X'0a' , X'0b' , X'0c' , X'0d' , X'0e' , X'0f' ,
+        X'10' , X'11' , X'12' , X'13' , X'14' , X'15' , X'16' , X'17' ,
+        X'18' , X'19' , X'1a' , X'1b' , X'1c' , X'1d' , X'1e' , X'1f' ,
+        X'20' , X'21' , X'22' , X'23' , X'24' , X'25' , X'26' , X'27' ,
+        X'28' , X'29' , X'2a' , X'2b' , X'2c' , X'2d' , X'2e' , X'2f' ,
+        X'30' , X'31' , X'32' , X'33' , X'34' , X'35' , X'36' , X'37' ,
+        X'38' , X'39' , X'3a' , X'3b' , X'3c' , X'3d' , X'3e' , X'3f' ,
+        X'40' , X'41' , X'42' , X'43' , X'44' , X'45' , X'46' , X'47' ,
+        X'48' , X'49' , X'4a' , X'4b' , X'4c' , X'4d' , X'4e' , X'4f' ,
+        X'50' , X'51' , X'52' , X'53' , X'54' , X'55' , X'56' , X'57' ,
+        X'58' , X'59' , X'5a' , X'5b' , X'5c' , X'5d' , X'5e' , X'5f' ,
+        X'60' , X'61' , X'62' , X'63' , X'64' , X'65' , X'66' , X'67' ,
+        X'68' , X'69' , X'6a' , X'6b' , X'6c' , X'6d' , X'6e' , X'6f' ,
+        X'70' , X'71' , X'72' , X'73' , X'74' , X'75' , X'76' , X'77' ,
+        X'78' , X'79' , X'7a' , X'7b' , X'7c' , X'7d' , X'7e' , X'7f' )
+        ;
+      IDENT_T2 : TRANSLATE_TAB =
+      ( X'80' , X'81' , X'82' , X'83' , X'84' , X'85' , X'86' , X'87' ,
+        X'88' , X'89' , X'8a' , X'8b' , X'8c' , X'8d' , X'8e' , X'8f' ,
+        X'90' , X'91' , X'92' , X'93' , X'94' , X'95' , X'96' , X'97' ,
+        X'98' , X'99' , X'9a' , X'9b' , X'9c' , X'9d' , X'9e' , X'9f' ,
+        X'a0' , X'a1' , X'a2' , X'a3' , X'a4' , X'a5' , X'a6' , X'a7' ,
+        X'a8' , X'a9' , X'aa' , X'ab' , X'ac' , X'ad' , X'ae' , X'af' ,
+        X'b0' , X'b1' , X'b2' , X'b3' , X'b4' , X'b5' , X'b6' , X'b7' ,
+        X'b8' , X'b9' , X'ba' , X'bb' , X'bc' , X'bd' , X'be' , X'bf' ,
+        X'c0' , X'c1' , X'c2' , X'c3' , X'c4' , X'c5' , X'c6' , X'c7' ,
+        X'c8' , X'c9' , X'ca' , X'cb' , X'cc' , X'cd' , X'ce' , X'cf' ,
+        X'd0' , X'd1' , X'd2' , X'd3' , X'd4' , X'd5' , X'd6' , X'd7' ,
+        X'd8' , X'd9' , X'da' , X'db' , X'dc' , X'dd' , X'de' , X'df' ,
+        X'e0' , X'e1' , X'e2' , X'e3' , X'e4' , X'e5' , X'e6' , X'e7' ,
+        X'e8' , X'e9' , X'ea' , X'eb' , X'ec' , X'ed' , X'ee' , X'ef' ,
+        X'f0' , X'f1' , X'f2' , X'f3' , X'f4' , X'f5' , X'f6' , X'f7' ,
+        X'f8' , X'f9' , X'fa' , X'fb' , X'fc' , X'fd' , X'fe' , X'ff' )
+        ;
 
 
 
@@ -232,6 +270,23 @@ function CHECKF : STRING ;
      WRITELN ( 'strresultp      = ' , STRRESULTP ) ;
      WRITELN ( 'length (result) = ' , LENGTH ( STRRESULT ) ) ;
    end (* CHECKF *) ;
+
+
+
+function TESTCONST ( const S : STRING ) : STRING ;
+
+//**********************************************************************
+// checkout problem with const strings                                  
+//**********************************************************************
+
+
+   var CP : -> CHAR ;
+
+   begin (* TESTCONST *)
+     TESTCONST := S ;
+     CP := STRRESULTP ;
+     CP -> := 'A' ;
+   end (* TESTCONST *) ;
 
 
 
@@ -546,6 +601,8 @@ begin (* HAUPTPROGRAMM *)
   P2 := SUBSTR ( P1 , 3 , 4 ) ;
   WRITE ( 'p2 = Ergebnis von SUBSTR .............: ' ) ;
   WRITELN ( '<' , P2 , '>' ) ;
+  WRITE ( 'P1 nach SUBSTR (should not change) ...: ' ) ;
+  WRITELN ( '<' , P1 , '>' ) ;
   P2 := SUBSTR ( 'Bernd ' || 'Oppolzer' , 5 , 7 ) ;
   WRITE ( 'p2 = Ergebnis von SUBSTR .............: ' ) ;
   WRITELN ( '<' , P2 , '>' ) ;
@@ -561,6 +618,8 @@ begin (* HAUPTPROGRAMM *)
   P2 := DELETE ( P1 , 3 , 4 ) ;
   WRITE ( 'p2 = Ergebnis von DELETE .............: ' ) ;
   WRITELN ( '<' , P2 , '>' ) ;
+  WRITE ( 'P1 nach DELETE (should not change) ...: ' ) ;
+  WRITELN ( '<' , P1 , '>' ) ;
   P2 := DELETE ( 'Bernd ' || 'Oppolzer' , 5 , 7 ) ;
   WRITE ( 'p2 = Ergebnis von DELETE .............: ' ) ;
   WRITELN ( '<' , P2 , '>' ) ;
@@ -576,6 +635,8 @@ begin (* HAUPTPROGRAMM *)
   P2 := RTRIM ( P1 ) ;
   WRITE ( 'p2 = Ergebnis von RTRIM ..............: ' ) ;
   WRITELN ( '<' , P2 , '>' ) ;
+  WRITE ( 'P1 nach RTRIM (should not change) ....: ' ) ;
+  WRITELN ( '<' , P1 , '>' ) ;
   WRITE ( 'p2 = Ergebnis von RTRIM ..............: ' ) ;
   WRITELN ( '<' , RTRIM ( '  a  b  ' ) , '>' ) ;
   WRITE ( 'p2 = Ergebnis von RTRIM ..............: ' ) ;
@@ -584,6 +645,8 @@ begin (* HAUPTPROGRAMM *)
   P2 := LTRIM ( P1 ) ;
   WRITE ( 'p2 = Ergebnis von LTRIM ..............: ' ) ;
   WRITELN ( '<' , P2 , '>' ) ;
+  WRITE ( 'P1 nach LTRIM (should not change) ....: ' ) ;
+  WRITELN ( '<' , P1 , '>' ) ;
   WRITE ( 'p2 = Ergebnis von LTRIM ..............: ' ) ;
   WRITELN ( '<' , LTRIM ( '  a  b  ' ) , '>' ) ;
   WRITE ( 'p2 = Ergebnis von LTRIM ..............: ' ) ;
@@ -592,6 +655,8 @@ begin (* HAUPTPROGRAMM *)
   P2 := TRIM ( P1 ) ;
   WRITE ( 'p2 = Ergebnis von TRIM ...............: ' ) ;
   WRITELN ( '<' , P2 , '>' ) ;
+  WRITE ( 'P1 nach TRIM (should not change) .....: ' ) ;
+  WRITELN ( '<' , P1 , '>' ) ;
   WRITE ( 'p2 = Ergebnis von TRIM ...............: ' ) ;
   WRITELN ( '<' , TRIM ( '  a  b  ' ) , '>' ) ;
   WRITE ( 'p2 = Ergebnis von TRIM ...............: ' ) ;
@@ -605,6 +670,8 @@ begin (* HAUPTPROGRAMM *)
   P2 := COMPRESS ( P1 ) ;
   WRITE ( 'p2 = Ergebnis von COMPRESS ...........: ' ) ;
   WRITELN ( '<' , P2 , '>' ) ;
+  WRITE ( 'P1 nach COMPRESS (should not change) .: ' ) ;
+  WRITELN ( '<' , P1 , '>' ) ;
   WRITE ( 'p2 = Ergebnis von COMPRESS ...........: ' ) ;
   WRITELN ( '<' , COMPRESS ( '  a  b  ' ) , '>' ) ;
   WRITE ( 'p2 = Ergebnis von COMPRESS ...........: ' ) ;
@@ -622,6 +689,8 @@ begin (* HAUPTPROGRAMM *)
   I := INDEX ( TRIM ( P1 ) , 'pol' ) ;
   WRITE ( 'Ergebnis von INDEX ...................: ' ) ;
   WRITELN ( I : 5 ) ;
+  WRITE ( 'P1 nach TRIM (should not change) .....: ' ) ;
+  WRITELN ( '<' , P1 , '>' ) ;
   WRITE ( 'Ergebnis von INDEX (3) ...............: ' ) ;
   WRITELN ( INDEX ( 'Oppolzer' , 'pol' ) : 5 ) ;
   WRITE ( 'Ergebnis von INDEX (0) ...............: ' ) ;
@@ -634,6 +703,77 @@ begin (* HAUPTPROGRAMM *)
   WRITELN ( INDEX ( 'Oppolzer' , 'Oppo' ) : 5 ) ;
   WRITE ( 'Ergebnis von INDEX (6) ...............: ' ) ;
   WRITELN ( INDEX ( 'Oppolzer' , 'zer' ) : 5 ) ;
+
+  //******************************************************************
+  // test VERIFY                                                      
+  //******************************************************************
+
+  P1 := '  Bernd Oppolzer    ' ;
+  I := VERIFY ( P1 , 'Berndpol ' ) ;
+  WRITE ( 'Ergebnis von VERIFY (9) ..............: ' ) ;
+  WRITELN ( I : 5 ) ;
+  P1 := '1256735473645' ;
+  I := VERIFY ( P1 , '0123456789' ) ;
+  WRITE ( 'Ergebnis von VERIFY (0) ..............: ' ) ;
+  WRITELN ( I : 5 ) ;
+  P1 := '125673547E645' ;
+  I := VERIFY ( P1 , '0123456789' ) ;
+  WRITE ( 'Ergebnis von VERIFY (10) .............: ' ) ;
+  WRITELN ( I : 5 ) ;
+  P1 := '125 73547E645' ;
+  I := VERIFY ( P1 , '0123456789' ) ;
+  WRITE ( 'Ergebnis von VERIFY (4) ..............: ' ) ;
+  WRITELN ( I : 5 ) ;
+  P1 := '1234567890123456789 ' ;
+  I := VERIFY ( P1 , '0123456789' ) ;
+  WRITE ( 'Ergebnis von VERIFY (20) .............: ' ) ;
+  WRITELN ( I : 5 ) ;
+
+  //******************************************************************
+  // test TRANSLATE                                                   
+  //******************************************************************
+
+  if TRUE then
+    begin
+      P1 := '  Bernd Oppolzer    ' ;
+      WRITE ( 'P1 before testconst ..................: ' ) ;
+      WRITELN ( '<' , P1 , '>' ) ;
+      P2 := TESTCONST ( P1 ) ;
+      WRITE ( 'P2 after testconst ...................: ' ) ;
+      WRITELN ( '<' , P2 , '>' ) ;
+      WRITE ( 'P1 after testconst (should not change): ' ) ;
+      WRITELN ( '<' , P1 , '>' ) ;
+    end (* then *) ;
+  P1 := '  Bernd Oppolzer    ' ;
+  P2 := TRANSLATE ( P1 , 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' ,
+        'abcdefghijklmnopqrstuvwxyz' ) ;
+  WRITE ( 'Ergebnis von TRANSLATE ...............: ' ) ;
+  WRITELN ( '<' , P2 , '>' ) ;
+  WRITE ( 'P1 nach TRANSLATE (should not change) : ' ) ;
+  WRITELN ( '<' , P1 , '>' ) ;
+  P1 := '  Bernd Oppolzer    ' ;
+  P2 := TRANSLATE ( P1 , 'y' , 'z' ) ;
+  WRITE ( 'Ergebnis von TRANSLATE ...............: ' ) ;
+  WRITELN ( '<' , P2 , '>' ) ;
+  WRITE ( 'P1 nach TRANSLATE (should not change) : ' ) ;
+  WRITELN ( '<' , P1 , '>' ) ;
+  P1 := '  Bernd Oppolzer    ' ;
+  WRITE ( 'Ergebnis von TRANSLATE ...............: ' ) ;
+  WRITELN ( '<' , TRANSLATE ( P1 , 'CAyx' , 'BOze' ) , '>' ) ;
+  WRITE ( 'P1 nach TRANSLATE (should not change) : ' ) ;
+  WRITELN ( '<' , P1 , '>' ) ;
+  P1 := '  Bernd Oppolzer    ' ;
+  WRITE ( 'Ergebnis von TRANSLATE ...............: ' ) ;
+  WRITELN ( '<' , TRANSLATE ( P1 , 'x' , ' ' ) , '>' ) ;
+  WRITE ( 'P1 nach TRANSLATE ....................: ' ) ;
+  WRITELN ( '<' , P1 , '>' ) ;
+  TTAB := IDENT_T1 || IDENT_T2 ;
+  TTAB [ ORD ( ' ' ) + 1 ] := 'y' ;
+  P1 := '  Bernd Oppolzer    ' ;
+  WRITE ( 'Ergebnis von TRANSLATE ...............: ' ) ;
+  WRITELN ( '<' , TRANSLATE ( P1 , TTAB ) , '>' ) ;
+  WRITE ( 'P1 nach TRANSLATE (should not change) : ' ) ;
+  WRITELN ( '<' , P1 , '>' ) ;
 
   //******************************************************************
   // Ende aller Tests                                                 

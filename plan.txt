@@ -34,7 +34,7 @@
 * l) String-Arbeitsbereiche freigeben
 * m) Compiler zun„chst mal in dieser Form nach Mainframe
 * n) einige Freigaben fr Strings fehlen noch ...
-  o) CONST-Parameter (zumindest fr Strings)
+* o) CONST-Parameter (zumindest fr Strings)
   p) String-Funktionen lt. Pascal/VS
   q) PASCAL2, d.h. Code-Generierung fr Mainframe
 

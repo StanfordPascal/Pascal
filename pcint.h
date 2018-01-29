@@ -657,7 +657,7 @@ static opctab ot [] =
    { "VC2", XXX_VC2, 0, 'A' },    /* varchar convert 2 */
    { "VCC", XXX_VCC, 0, ' ' },    /* varchar concat */
    { "VIX", XXX_VIX, 0, ' ' },    /* varchar index */
-   { "VLD", XXX_VLD, 0, 'A' },    /* varchar load */
+   { "VLD", XXX_VLD, 0, 'B' },    /* varchar load */
    { "VLM", XXX_VLM, 0, ' ' },    /* varchar load maxlength */
    { "VMV", XXX_VMV, 0, 'A' },    /* varchar move */
    { "VPO", XXX_VPO, 0, 'B' },    /* varchar pop workarea addr */

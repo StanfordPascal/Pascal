@@ -774,10 +774,32 @@ program PASCALCOMPILER ( INPUT , OUTPUT , PRR , LISTING , DBGINFO ,
 (*             (berndoppolzer@yahoo.com)                            *)
 (*                                                                  *)
 (*  - const Parameters (like in Pascal/VS) to allow the             *)
-(*    implementation of some string functions using Pascal          *)
+(*    implementation of most string functions using Pascal          *)
 (*                                                                  *)
 (*  - array like indexes for strings (new P-Code VIX similar        *)
 (*    to IXA to index characters in strings)                        *)
+(*                                                                  *)
+(*  - many string functions from Pascal/VS (and more) are           *)
+(*    supported; some implemented directly inline using             *)
+(*    new P-Code instructions, but most (for the moment)            *)
+(*    in Pascal (see PASLIBX.PAS)                                   *)
+(*                                                                  *)
+(*    STR          - convert to string                              *)
+(*    MAXLENGTH    - maxlength of string                            *)
+(*    LENGTH       - length of string                               *)
+(*    STRRESULT    - result of str func                             *)
+(*    STRRESULTP   - ptr to str result                              *)
+(*    REPEATSTR    - repeat str n times                             *)
+(*    RESULTP      - ptr to result                                  *)
+(*    SUBSTR       - substring (like in PL/1)                       *)
+(*    DELETE       - delete part of string (args like substr)       *)
+(*    RTRIM        - trim blanks on the right                       *)
+(*    LTRIM        - trim blanks on the left                        *)
+(*    TRIM         - trim blanks on both sides                      *)
+(*    COMPRESS     - reduce multiple blanks to one blank            *)
+(*    INDEX        - search string position (like in PL/1)          *)
+(*    VERIFY       - verify string (like in PL/1)                   *)
+(*    TRANSLATE    - translate using tranlation table (PL/1)        *)
 (*                                                                  *)
 (********************************************************************)
 
@@ -7451,9 +7473,10 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
    procedure MKPROCNAME ( var NAM : ALPHA ; NAMPAT : ALPHA ; NUM :
                         INTEGER ; INTERN : BOOLEAN ) ;
 
-   /********************************************************/
-   /* generische Namen fuer interne und externe Prozeduren */
-   /********************************************************/
+   //******************************************************
+   // this procedure builds                                
+   // generic names for internal and external procedures   
+   //******************************************************
 
 
       var I , J : INTEGER ;
@@ -7491,6 +7514,12 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
 
    procedure PROCDECLARATION ( FSY : SYMB ; PLOCAL : BOOLEAN ) ;
 
+   //****************************************************************
+   // a procedure or function declaration                            
+   // is recognized                                                  
+   //****************************************************************
+
+
       var LSY : SYMB ;
           LCP , LCP1 , LCP2 : IDP ;
           LSP : TTP ;
@@ -7509,11 +7538,219 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
       procedure PARAMETERLIST ( FSY : SYMSET ; FPAR : IDP ; FW :
                               BOOLEAN ) ;
 
+      //**********************************************************
+      // a parameter list of a procedure                          
+      // or function is handled                                   
+      //**********************************************************
+
+
          var LCP , LCP1 , LCP2 , LCP3 , LCP4 : IDP ;
              LSP : TTP ;
              LKIND : IDKIND ;
              LLC , LEN , LALN : ADDRRANGE ;
              LSY : SYMB ;
+
+
+         procedure PROC_PARAMETER ;
+
+         //****************************************************
+         // a proc or function parameter is handled            
+         //****************************************************
+
+
+            begin (* PROC_PARAMETER *)
+              LSY := SY ;
+
+              (***************************)
+              (*REMEMBER IF PROC OR FUNC *)
+              (***************************)
+
+              INSYMBOL ;
+              if SY = IDENT then
+                begin
+                  if LSY = SYPROC then
+                    NEW ( LCP , PROC , DECLARED )
+                  else
+                    NEW ( LCP , FUNC , DECLARED ) ;
+                  if LCP3 <> NIL then
+                    LCP4 -> . NEXT := LCP
+                  else
+                    LCP3 := LCP ;
+                  LCP4 := LCP ;
+                  ALIGN ( LCOUNTER , PTRSIZE ) ;
+                  with LCP -> do
+                    begin
+                      NAME := ID ;
+                      IDTYPE := NIL ;
+                      NEXT := NIL ;
+                      PFDECKIND := DECLARED ;
+                      PFKIND := VARPARM ;
+                      DECLMISSING := FALSE ;
+                      EXTRN := FALSE ;
+                      EXTLANG := ' ' ;
+                      EXTNAME := '*PFPARM*' ;
+                      PFLEV := LCOUNTER * 10 + LEVEL ;
+
+              (***************************************)
+              (*I.E. PFLEV > LCAFTMST => PROC PARM   *)
+              (***************************************)
+
+                      PROCLAB := PROCLAB + 1 ;
+                      PFNAME := PROCLAB ;
+                      if LSY = SYPROC then
+                        KLASS := PROC
+                      else
+                        KLASS := FUNC ;
+                    end (* with *) ;
+                  ENTERID ( LCP ) ;
+                  LCOUNTER := LCOUNTER + DISPAREA ;
+                  INSYMBOL ;
+                  LLC := LCOUNTER ;
+                  if LSY = SYPROC then
+                    PARAMETERLIST ( [ SYSEMICOLON , SYRPARENT ] , LCP ,
+                                    FALSE )
+                  else
+                    PARAMETERLIST ( [ SYSEMICOLON , SYCOLON ] , LCP ,
+                                    FALSE ) ;
+                  LCOUNTER := LLC ;
+                end (* then *)
+              else
+                ERROR ( 2 ) ;
+              if not ( SY in FSYS + [ SYSEMICOLON , SYRPARENT ] ) then
+                begin
+                  ERROR ( 352 ) ;
+                  SKIP ( FSYS + [ SYSEMICOLON , SYRPARENT ] )
+                end (* then *)
+            end (* PROC_PARAMETER *) ;
+
+
+         procedure OTHER_PARAMETER ;
+
+         //****************************************************
+         // a var, const or normal (value) parameter is handled
+         //****************************************************
+
+
+            begin (* OTHER_PARAMETER *)
+              if SY = SYVAR then
+                begin
+                  LKIND := VARPARM ;
+                  INSYMBOL
+                end (* then *)
+              else
+                if SY = SYCONST then
+                  begin
+                    LKIND := CONSTPARM ;
+                    INSYMBOL
+                  end (* then *)
+                else
+                  LKIND := NORMALVAR ;
+              repeat
+                if SY = IDENT then
+                  begin
+                    NEW ( LCP , VARS ) ;
+                    LCP -> . STKLASS := XAUTO ;
+                    LCP -> . VOWNERPROC := ' ' ;
+                    LCP -> . SPECIAL := 0 ;
+                    if LCP3 <> NIL then
+                      LCP4 -> . NEXT := LCP
+                    else
+                      LCP3 := LCP ;
+                    LCP4 := LCP ;
+                    with LCP -> do
+                      begin
+                        NAME := ID ;
+                        IDTYPE := NIL ;
+                        KLASS := VARS ;
+                        VKIND := LKIND ;
+                        NEXT := NIL ;
+                        VLEV := LEVEL ;
+                      end (* with *) ;
+                    ENTERID ( LCP ) ;
+                    INSYMBOL ;
+                  end (* then *) ;
+                if not ( SY in [ SYCOMMA , SYCOLON ] + FSYS ) then
+                  begin
+                    ERROR ( 353 ) ;
+                    SKIP ( FSYS + [ SYCOMMA , SYSEMICOLON , SYRPARENT ]
+                           )
+                  end (* then *) ;
+                TEST := SY <> SYCOMMA ;
+                if not TEST then
+                  INSYMBOL
+              until TEST ;
+              if SY = SYCOLON then
+                begin
+                  INSYMBOL ;
+                  if SY = IDENT then
+                    begin
+                      SID_RC := SEARCHID ( ID , TRUE , TRUE , [ TYPES ]
+                                , LCP4 ) ;
+                      LEN := PTRSIZE ;
+                      LSP := LCP4 -> . IDTYPE ;
+                      LALN := PTRSIZE ;
+                      if LSP <> NIL then
+                        if ( LKIND = NORMALVAR ) then
+                          if LSP -> . FORM = FILES then
+                            begin
+                              ERROR ( 121 ) ;
+                              LKIND := VARPARM
+                            end (* then *) ;
+
+              //************************************************
+              // read next symbol                               
+              // maybe type with parameters                     
+              // if so, lsp will be modified                    
+              // so loop to modify lcp4 chain                   
+              // has to be moved after this                     
+              // function call - 13.12.2017                     
+              //************************************************
+              // len and laln assignment                        
+              // has to be moved after parm checking            
+              // 17.12.2017                                     
+              //************************************************
+              // allow conformant strings for var parameters    
+              // (see parameter on type_with_parms)             
+              // 06.01.2018                                     
+              //************************************************
+
+                      INSYMBOL ;
+                      TYPE_WITH_PARMS ( FSYS + [ SYSEMICOLON ,
+                                        SYRPARENT ] , ID , LSP , (
+                                        LKIND in [ VARPARM , CONSTPARM
+                                        ] ) ) ;
+                      if LSP <> NIL then
+                        if ( LKIND = NORMALVAR ) then
+                          begin
+                            LEN := LSP -> . SIZE ;
+                            LALN := LSP -> . ALN
+                          end (* then *) ;
+                      LCP4 := LCP3 ;
+                      while LCP4 <> NIL do
+                        begin
+                          with LCP4 -> do
+                            begin
+                              IDTYPE := LSP ;
+                              ALIGN ( LCOUNTER , LALN ) ;
+                              VADDR := LCOUNTER ;
+                              LCOUNTER := LCOUNTER + LEN ;
+                            end (* with *) ;
+                          LCP4 := LCP4 -> . NEXT
+                        end (* while *) ;
+                    end (* then *)
+                  else
+                    ERROR ( 2 ) ;
+                  if not ( SY in FSYS + [ SYSEMICOLON , SYRPARENT ] )
+                  then
+                    begin
+                      ERROR ( 352 ) ;
+                      SKIP ( FSYS + [ SYSEMICOLON , SYRPARENT ] )
+                    end (* then *)
+                end (* then *)
+              else
+                ERROR ( 5 ) ;
+            end (* OTHER_PARAMETER *) ;
+
 
          begin (* PARAMETERLIST *)
            LCP1 := NIL ;
@@ -7536,198 +7773,22 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                    ERROR ( 350 ) ;
                    SKIP ( FSYS + [ IDENT , SYRPARENT ] )
                  end (* then *) ;
+
+           //************************************************
+           // a parameter may start with                     
+           // - an identifier                                
+           // - var or const                                 
+           // - procedure or function                        
+           //************************************************
+
                while SY in [ IDENT , SYVAR , SYCONST , SYPROC , SYFUNC
                ] do
                  begin
                    LCP3 := NIL ;
                    if SY in [ SYPROC , SYFUNC ] then
-                     begin
-                       LSY := SY ;
-
-           (***************************)
-           (*REMEMBER IF PROC OR FUNC *)
-           (***************************)
-
-                       INSYMBOL ;
-                       if SY = IDENT then
-                         begin
-                           if LSY = SYPROC then
-                             NEW ( LCP , PROC , DECLARED )
-                           else
-                             NEW ( LCP , FUNC , DECLARED ) ;
-                           if LCP3 <> NIL then
-                             LCP4 -> . NEXT := LCP
-                           else
-                             LCP3 := LCP ;
-                           LCP4 := LCP ;
-                           ALIGN ( LCOUNTER , PTRSIZE ) ;
-                           with LCP -> do
-                             begin
-                               NAME := ID ;
-                               IDTYPE := NIL ;
-                               NEXT := NIL ;
-                               PFDECKIND := DECLARED ;
-                               PFKIND := VARPARM ;
-                               DECLMISSING := FALSE ;
-                               EXTRN := FALSE ;
-                               EXTLANG := ' ' ;
-                               EXTNAME := '*PFPARM*' ;
-                               PFLEV := LCOUNTER * 10 + LEVEL ;
-
-           (***************************************)
-           (*I.E. PFLEV > LCAFTMST => PROC PARM   *)
-           (***************************************)
-
-                               PROCLAB := PROCLAB + 1 ;
-                               PFNAME := PROCLAB ;
-                               if LSY = SYPROC then
-                                 KLASS := PROC
-                               else
-                                 KLASS := FUNC ;
-                             end (* with *) ;
-                           ENTERID ( LCP ) ;
-                           LCOUNTER := LCOUNTER + DISPAREA ;
-                           INSYMBOL ;
-                           LLC := LCOUNTER ;
-                           if LSY = SYPROC then
-                             PARAMETERLIST ( [ SYSEMICOLON , SYRPARENT
-                                             ] , LCP , FALSE )
-                           else
-                             PARAMETERLIST ( [ SYSEMICOLON , SYCOLON ]
-                                             , LCP , FALSE ) ;
-                           LCOUNTER := LLC ;
-                         end (* then *)
-                       else
-                         ERROR ( 2 ) ;
-                       if not ( SY in FSYS + [ SYSEMICOLON , SYRPARENT
-                       ] ) then
-                         begin
-                           ERROR ( 352 ) ;
-                           SKIP ( FSYS + [ SYSEMICOLON , SYRPARENT ] )
-                         end (* then *)
-                     end (* then *)
+                     PROC_PARAMETER
                    else
-                     begin
-                       if SY = SYVAR then
-                         begin
-                           LKIND := VARPARM ;
-                           INSYMBOL
-                         end (* then *)
-                       else
-                         if SY = SYCONST then
-                           begin
-                             LKIND := CONSTPARM ;
-                             INSYMBOL
-                           end (* then *)
-                         else
-                           LKIND := NORMALVAR ;
-                       repeat
-                         if SY = IDENT then
-                           begin
-                             NEW ( LCP , VARS ) ;
-                             LCP -> . STKLASS := XAUTO ;
-                             LCP -> . VOWNERPROC := ' ' ;
-                             LCP -> . SPECIAL := 0 ;
-                             if LCP3 <> NIL then
-                               LCP4 -> . NEXT := LCP
-                             else
-                               LCP3 := LCP ;
-                             LCP4 := LCP ;
-                             with LCP -> do
-                               begin
-                                 NAME := ID ;
-                                 IDTYPE := NIL ;
-                                 KLASS := VARS ;
-                                 VKIND := LKIND ;
-                                 NEXT := NIL ;
-                                 VLEV := LEVEL ;
-                               end (* with *) ;
-                             ENTERID ( LCP ) ;
-                             INSYMBOL ;
-                           end (* then *) ;
-                         if not ( SY in [ SYCOMMA , SYCOLON ] + FSYS )
-                         then
-                           begin
-                             ERROR ( 353 ) ;
-                             SKIP ( FSYS + [ SYCOMMA , SYSEMICOLON ,
-                                    SYRPARENT ] )
-                           end (* then *) ;
-                         TEST := SY <> SYCOMMA ;
-                         if not TEST then
-                           INSYMBOL
-                       until TEST ;
-                       if SY = SYCOLON then
-                         begin
-                           INSYMBOL ;
-                           if SY = IDENT then
-                             begin
-                               SID_RC := SEARCHID ( ID , TRUE , TRUE ,
-                                         [ TYPES ] , LCP4 ) ;
-                               LEN := PTRSIZE ;
-                               LSP := LCP4 -> . IDTYPE ;
-                               LALN := PTRSIZE ;
-                               if LSP <> NIL then
-                                 if ( LKIND = NORMALVAR ) then
-                                   if LSP -> . FORM = FILES then
-                                     begin
-                                       ERROR ( 121 ) ;
-                                       LKIND := VARPARM
-                                     end (* then *) ;
-
-           //************************************************
-           // read next symbol                               
-           // maybe type with parameters                     
-           // if so, lsp will be modified                    
-           // so loop to modify lcp4 chain                   
-           // has to be moved after this                     
-           // function call - 13.12.2017                     
-           //************************************************
-           // len and laln assignment                        
-           // has to be moved after parm checking            
-           // 17.12.2017                                     
-           //************************************************
-           // allow conformant strings for var parameters    
-           // (see parameter on type_with_parms)             
-           // 06.01.2018                                     
-           //************************************************
-
-                               INSYMBOL ;
-                               TYPE_WITH_PARMS ( FSYS + [ SYSEMICOLON ,
-                                                 SYRPARENT ] , ID , LSP
-                                                 , ( LKIND in [ VARPARM
-                                                 , CONSTPARM ] ) ) ;
-                               if LSP <> NIL then
-                                 if ( LKIND = NORMALVAR ) then
-                                   begin
-                                     LEN := LSP -> . SIZE ;
-                                     LALN := LSP -> . ALN
-                                   end (* then *) ;
-                               LCP4 := LCP3 ;
-                               while LCP4 <> NIL do
-                                 begin
-                                   with LCP4 -> do
-                                     begin
-                                       IDTYPE := LSP ;
-                                       ALIGN ( LCOUNTER , LALN ) ;
-                                       VADDR := LCOUNTER ;
-                                       LCOUNTER := LCOUNTER + LEN ;
-                                     end (* with *) ;
-                                   LCP4 := LCP4 -> . NEXT
-                                 end (* while *) ;
-                             end (* then *)
-                           else
-                             ERROR ( 2 ) ;
-                           if not ( SY in FSYS + [ SYSEMICOLON ,
-                           SYRPARENT ] ) then
-                             begin
-                               ERROR ( 352 ) ;
-                               SKIP ( FSYS + [ SYSEMICOLON , SYRPARENT
-                                      ] )
-                             end (* then *)
-                         end (* then *)
-                       else
-                         ERROR ( 5 ) ;
-                     end (* else *) ;
+                     OTHER_PARAMETER ;
                    if SY = SYSEMICOLON then
                      begin
                        INSYMBOL ;
@@ -12969,16 +13030,13 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                                    if GATTR . KIND = VARBL then
                                      begin
                                        LOADADDRESS ;
-
-                       //*****************************************
-                       // for strings:                            
-                       // make sure that maxlength is set         
-                       //*****************************************
-
-                                       if not GATTR . BTYPE -> .
-                                       CONFORMANT then
-                                         GEN1 ( PCODE_VSM , GATTR .
-                                                BTYPE -> . SIZE - 4 ) ;
+                                       GEN2 ( PCODE_VLD , 1 , GATTR .
+                                              TYPTR -> . SIZE - 4 ) ;
+                                       CTLS . VPO1_NEEDED := TRUE ;
+                                       LLC2 := PARMID -> . DUMMYADDR ;
+                                       GEN2 ( PCODE_LDA , PARMID -> .
+                                              DUMMYLEV , LLC2 ) ;
+                                       GEN2 ( PCODE_VST , 1 , - 1 ) ;
                                      end (* then *)
                                    else
                                      begin
@@ -13307,8 +13365,6 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
 
                procedure WORK_PROCEDURE_PARM ;
 
-                  label 10 ;
-
                   begin (* WORK_PROCEDURE_PARM *)
                     if SY <> IDENT then
                       begin
@@ -13325,17 +13381,17 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                           begin
                             LOCAL_CALL := TRUE ;
 
-                    (************************)
-                    (* => UPDATES DISP REGS *)
-                    (************************)
+                    //******************************
+                    // => UPDATES DISP REGS         
+                    //******************************
 
                             LLC_PARM := LLC1 + PARMID -> . PFLEV DIV 10
                                         ;
                             LCOUNTER := LLC_PARM ;
 
-                    (**********************************************)
-                    (* PFLEV = ADDR OF PROC IN NEW ACTIV RECORD   *)
-                    (**********************************************)
+                    //*******************************************
+                    // PFLEV = ADDR OF PROC IN NEW ACTIV RECORD  
+                    //*******************************************
 
                             LSIZE := DISPAREA ;
                             if LCP -> . PFKIND = NORMALVAR then
@@ -13344,43 +13400,50 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                                   if EXTLANG = 'F' then
                                     begin
 
-                    (********************************)
-                    (* REMEMBER THIS PROC FOR LATER *)
-                    (********************************)
+                    //******************************
+                    // REMEMBER THIS PROC FOR LATER 
+                    //******************************
 
                                       LCP2 := FRTPARHD ;
-                                      while LCP2 <> NIL do
-                                        if LCP2 -> . EXTNAME = EXTNAME
-                                        then
-                                          goto 10
-
-                    (********************)
-                    (* ALREADY ON LIST  *)
-                    (********************)
-
-                                        else
-                                          LCP2 := LCP2 -> . NXTFWRD ;
-                                      NEW ( LCP2 , PROC , DECLARED ) ;
-                                      LCP2 -> := LCP -> ;
-                                      with LCP2 -> do
+                                      while TRUE do
                                         begin
-                                          NAME := '            ' ;
-                                          EXTRN := FALSE ;
-                                          EXTLANG := ' ' ;
-                                          UNPACK ( EXTNAME , NAME , 1 )
-                                                   ;
-                                          PROCLAB := PROCLAB + 1 ;
-                                          PFNAME := PROCLAB ;
-                                          NXTFWRD := FRTPARHD ;
-                                          FRTPARHD := LCP2 ;
-                                        end (* with *) ;
-                                      10 :
+                                          if LCP2 = NIL then
+                                            begin
+                                              NEW ( LCP2 , PROC ,
+                                                   DECLARED ) ;
+                                              LCP2 -> := LCP -> ;
+                                              with LCP2 -> do
+                                                begin
+                                                  NAME :=
+                                                   '            ' ;
+                                                  EXTRN := FALSE ;
+                                                  EXTLANG := ' ' ;
+                                                  UNPACK ( EXTNAME ,
+                                                   NAME , 1 ) ;
+                                                  PROCLAB := PROCLAB +
+                                                   1 ;
+                                                  PFNAME := PROCLAB ;
+                                                  NXTFWRD := FRTPARHD ;
+                                                  FRTPARHD := LCP2 ;
+                                                end (* with *) ;
+                                              break
+                                            end (* then *) ;
+
+                    //******************************
+                    // already in list              
+                    //******************************
+
+                                          if LCP2 -> . EXTNAME =
+                                          EXTNAME then
+                                            break ;
+                                          LCP2 := LCP2 -> . NXTFWRD ;
+                                        end (* while *) ;
                                       LCP := LCP2 ;
                                     end (* then *) ;
 
-                    (*****************)
-                    (* PASSING PROC  *)
-                    (*****************)
+                    //******************************
+                    // PASSING PROC                 
+                    //******************************
 
                                   UNPACK ( EXTNAME , ID , 1 ) ;
                                   GEN1 ( PCODE_LCA , ORD ( 'P' ) ) ;
@@ -13395,16 +13458,16 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                                 end (* with *)
                             else
 
-                    (***************************************)
-                    (* PROC PARM IS ITSELF A PASSED PROC   *)
-                    (***************************************)
+                    //*****************************************
+                    // PROC PARM IS ITSELF A PASSED PROC       
+                    //*****************************************
 
                               begin
                                 GEN2 ( PCODE_LDA , LEVEL , LLC_PARM ) ;
 
-                    (*******************************************)
-                    (* COPY ENTIRE PROC RECORD INTO PARM LIST  *)
-                    (*******************************************)
+                    //*****************************************
+                    // COPY ENTIRE PROC RECORD INTO PARM LIST  
+                    //*****************************************
 
                                 GEN2 ( PCODE_LDA , LEVEL , LCP -> .
                                        PFLEV DIV 10 ) ;
@@ -13458,13 +13521,13 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                      LSIZE := 0 ;
                      LLC := LLC1 ;
 
-                 //*****************************************************
-                 // now storage is reserved for const parameters        
-                 // (dummy arguments). if extlang = 'F' (fortran),      
-                 // all byvalue parameter are treated like              
-                 // const parameters (dummy arguments created,          
-                 // if necessary, passed by reference)                  
-                 //*****************************************************
+                 //*************************************************
+                 // now storage is reserved for const parameters    
+                 // (dummy arguments). if extlang = 'F' (fortran),  
+                 // all byvalue parameter are treated like          
+                 // const parameters (dummy arguments created,      
+                 // if necessary, passed by reference)              
+                 //*************************************************
 
                      LCP := PARMID ;
                      while LCP <> NIL do
@@ -13523,9 +13586,9 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                      repeat
                        LB := FALSE ;
 
-                 //*****************************************************
-                 // DECIDE WHETHER PROC/FUNC MUST BE PASSED             
-                 //*****************************************************
+                 //********************************************
+                 // DECIDE WHETHER PROC/FUNC MUST BE PASSED    
+                 //********************************************
 
                        if PARMID = NIL then
                          begin
@@ -13535,16 +13598,16 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                        else
                          LB := PARMID -> . KLASS in [ PROC , FUNC ] ;
 
-                 //*****************************************************
-                 // FOR varparm PROC/FUNC LB IS FALSE AND               
-                 // EXPRESSION WILL BE CALLED, WHICH WILL               
-                 // ALWAYS INTERPRET A PROC/FUNC ID AT                  
-                 // ITS BEGINNING AS A CALL RATHER THAN                 
-                 // A PARAMETER PASSING. IN THIS                        
-                 // IMPLEMENTATION, PARAMETER PROCEDURES                
-                 // /FUNCTIONS ARE THEREFORE NOT ALLOWED                
-                 // TO HAVE PROCEDURE/FUNCTION PARAMETERS               
-                 //*****************************************************
+                 //********************************************
+                 // FOR varparm PROC/FUNC LB IS FALSE AND      
+                 // EXPRESSION WILL BE CALLED, WHICH WILL      
+                 // ALWAYS INTERPRET A PROC/FUNC ID AT         
+                 // ITS BEGINNING AS A CALL RATHER THAN        
+                 // A PARAMETER PASSING. IN THIS               
+                 // IMPLEMENTATION, PARAMETER PROCEDURES       
+                 // /FUNCTIONS ARE THEREFORE NOT ALLOWED       
+                 // TO HAVE PROCEDURE/FUNCTION PARAMETERS      
+                 //********************************************
 
                        INSYMBOL ;
                        if LB then

@@ -13115,11 +13115,12 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                                             -> . SIZE ) ;
                                    end (* tag/ca *) ;
                                otherwise
-                                 begin
-                                   LOADADDRESS ;
-                                   GEN2 ( PCODE_VLD , 0 , GATTR . TYPTR
-                                          -> . SIZE - 4 ) ;
-                                 end (* otherw *)
+                                 if GATTR . KIND = VARBL then
+                                   begin
+                                     LOADADDRESS ;
+                                     GEN2 ( PCODE_VLD , 0 , GATTR .
+                                            TYPTR -> . SIZE - 4 ) ;
+                                   end (* then *)
                              end (* case *) ;
                              GEN2 ( PCODE_LDA , LEVEL , LLC_PARM ) ;
                              GEN2 ( PCODE_VST , 1 , PARMTYPE -> . SIZE

@@ -3455,6 +3455,11 @@ static void int1 (global_store *gs)
                   runtime_error (gs, RANGEERR, NULL);
                break;
 
+            case 'A':
+               // if (wert1 == -1)
+               //    runtime_error (gs, NILPOINTER, NULL);
+               break;
+
             default:
                BREMSE ("+++ default case !!\n");
                break;

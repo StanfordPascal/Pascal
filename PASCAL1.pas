@@ -1651,7 +1651,7 @@ var MXINT2 : INTEGER ;
     (* HEADER PART                            *)
     (******************************************)
 
-    ASSIGN , PACKDATA : BOOLEAN ;
+    PACKDATA : BOOLEAN ;
 
     (******************************************)
     (* ASSIGNMENT GOING ON,PACKING IN EFFECT  *)
@@ -8741,7 +8741,17 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
          end (* GENDEF *) ;
 
 
-      procedure CHKBNDS ( FSP : TTP ) ;
+      procedure CHKBNDS ( ASSIGN : BOOLEAN ; FSP : TTP ) ;
+
+      //*****************************************************
+      // grenzen abpruefen bei subranges und pointern        
+      // pointer rausgenommen, weil durch alloc/new          
+      // auch adressen ausserhalb der alten heap-bereiche    
+      // moeglich sind                                       
+      // checks von pointern auf nil vor dereferenzierung    
+      // sollten wieder reingenommen werden ...              
+      //*****************************************************
+
 
          var LMIN , LMAX : INTEGER ;
 
@@ -8751,34 +8761,26 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                if FSP <> PTYPE_INT then
                  if not IS_STDTYPE ( FSP , 'R' ) then
 
-           (*********************************************)
-           (* typ = voidptr rausnehmen                  *)
-           (* opp 09.2016                               *)
-           (*********************************************)
+           //************************************************
+           // typ = voidptr rausnehmen                       
+           // opp 09.2016                                    
+           //************************************************
 
                    if FSP <> PTYPE_ANY then
                      if FSP -> . FORM <= POINTER then
 
-           (*********************************************)
-           (* LMAX <= LMIN (?)                          *)
-           (* diese checks nicht mehr, weil pointer     *)
-           (* nicht nur heap-pointer sein koennen       *)
-           (* siehe pasmonn / $ptrchk                   *)
-           (* opp 09.2016                               *)
-           (*********************************************)
+           //************************************************
+           // LMAX <= LMIN (?)                               
+           // diese checks nicht mehr, weil pointer          
+           // nicht nur heap-pointer sein koennen            
+           // siehe pasmonn / $ptrchk                        
+           // opp 09.2016                                    
+           //************************************************
 
                        if FSP -> . FORM = POINTER then
                          begin
                            if FALSE then
-                             begin
-                               FLIPDEBUG := TRUE ;
-                               if ASSIGN then
-                                 GEN3 ( PCODE_CHK , ORD ( 'A' ) , - 1 ,
-                                        0 )
-                               else
-                                 GEN3 ( PCODE_CHK , ORD ( 'A' ) , 0 , 0
-                                        )
-                             end (* then *)
+                             GEN3 ( PCODE_CHK , ORD ( 'A' ) , - 1 , 0 )
                          end (* then *)
                        else
                          begin
@@ -9283,7 +9285,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                                   ERROR ( 187 ) ;
                                 LOAD ;
                                 if OPT . DEBUG then
-                                  CHKBNDS ( GATTR . TYPTR ) ;
+                                  CHKBNDS ( FALSE , GATTR . TYPTR ) ;
                                 TYPTR := ELTYPE ;
                                 with GATTR do
                                   begin
@@ -13057,11 +13059,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                            begin
                              LOAD ;
                              if OPT . DEBUG then
-                               begin
-                                 ASSIGN := TRUE ;
-                                 CHKBNDS ( PARMTYPE ) ;
-                                 ASSIGN := FALSE ;
-                               end (* then *) ;
+                               CHKBNDS ( TRUE , PARMTYPE ) ;
                              if COMPTYPES ( PTYPE_REAL , PARMTYPE ) = 1
                              then
                                if ( GATTR . TYPTR = PTYPE_INT ) then
@@ -13078,42 +13076,41 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                        // or fortran ...)                             
                        //*********************************************
 
-                             if PARMID -> . DUMMYVAR then
-                               begin
-                                 with GATTR do
-                                   begin
-                                     VLEVEL := PARMID -> . DUMMYLEV ;
-                                     DPLMT := PARMID -> . DUMMYADDR ;
-                                     BTYPE := PARMTYPE ;
-                                     KIND := VARBL ;
-                                     ACCESS := DRCT
-                                   end (* with *) ;
-                                 STORE ( GATTR ) ;
-                                 LOADADDRESS ;
-                                 LSIZE := 0 ;
-                                 if FCP -> . EXTLANG <> 'F' then
-                                   begin
-                                     GEN3 ( PCODE_STR , ORD ( 'A' ) ,
-                                            LEVEL , LLC_PARM ) ;
-                                   end (* then *)
-                                 else
-                                   begin
-                                     GEN3 ( PCODE_STR , ORD ( 'A' ) ,
-                                            LEVEL , LLC_FTN ) ;
-                                     LLC_FTN := LLC_FTN + PTRSIZE ;
-                                   end (* else *) ;
-                               end (* then *)
+                             if PARMID <> NIL then
+                               if PARMID -> . DUMMYVAR then
+                                 begin
+                                   with GATTR do
+                                     begin
+                                       VLEVEL := PARMID -> . DUMMYLEV ;
+                                       DPLMT := PARMID -> . DUMMYADDR ;
+                                       BTYPE := PARMTYPE ;
+                                       KIND := VARBL ;
+                                       ACCESS := DRCT
+                                     end (* with *) ;
+                                   STORE ( GATTR ) ;
+                                   LOADADDRESS ;
+                                   LSIZE := 0 ;
+                                   if FCP -> . EXTLANG <> 'F' then
+                                     begin
+                                       GEN3 ( PCODE_STR , ORD ( 'A' ) ,
+                                              LEVEL , LLC_PARM ) ;
+                                     end (* then *)
+                                   else
+                                     begin
+                                       GEN3 ( PCODE_STR , ORD ( 'A' ) ,
+                                              LEVEL , LLC_FTN ) ;
+                                       LLC_FTN := LLC_FTN + PTRSIZE ;
+                                     end (* else *) ;
+                                   break ;
+                                 end (* then *) ;
 
                        //***************************************
                        // normal case - no dummy argument       
                        //***************************************
 
-                             else
-                               begin
-                                 GEN3 ( PCODE_STR , GETTYPE ( PARMTYPE
-                                        ) , LEVEL , LLC_PARM ) ;
-                                 LSIZE := PARMTYPE -> . SIZE ;
-                               end (* else *) ;
+                             GEN3 ( PCODE_STR , GETTYPE ( PARMTYPE ) ,
+                                    LEVEL , LLC_PARM ) ;
+                             LSIZE := PARMTYPE -> . SIZE ;
                              break ;
                            end (* then *) ;
 
@@ -13128,69 +13125,78 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                        // all complex types are passed by reference ! 
                        //*********************************************
 
-                         if FALSE then
+                         if PARMID <> NIL then
                            begin
-                             WRITELN ( TRACEF , 'parmid.dummyvar    = '
-                                       , PARMID -> . DUMMYVAR ) ;
-                             WRITELN ( TRACEF , 'gattr.access       = '
-                                       , GATTR . ACCESS ) ;
-                             WRITELN ( TRACEF , 'gattr.kind         = '
-                                       , GATTR . KIND ) ;
-                           end (* then *) ;
-                         if PARMID -> . DUMMYVAR then
-                           begin
-                             if FCP -> . EXTLANG = 'F' then
-                               LOADADDRESS
-                             else
-                               case PARMTYPE -> . FORM of
-                                 POWER : begin
-                                           LLC2 := PARMID -> .
+                             if FALSE then
+                               begin
+                                 WRITELN ( TRACEF ,
+                                           'parmid.dummyvar    = ' ,
+                                           PARMID -> . DUMMYVAR ) ;
+                                 WRITELN ( TRACEF ,
+                                           'gattr.access       = ' ,
+                                           GATTR . ACCESS ) ;
+                                 WRITELN ( TRACEF ,
+                                           'gattr.kind         = ' ,
+                                           GATTR . KIND ) ;
+                               end (* then *) ;
+                             if PARMID -> . DUMMYVAR then
+                               begin
+                                 if FCP -> . EXTLANG = 'F' then
+                                   LOADADDRESS
+                                 else
+                                   case PARMTYPE -> . FORM of
+                                     POWER : begin
+                                               LLC2 := PARMID -> .
                                                    DUMMYADDR ;
-                                           FORCETEMPSET ;
-                                           LSIZE := OPNDSETSIZE ( GATTR
-                                                   ) ;
-                                           GEN2 ( PCODE_LDA , LEVEL ,
-                                                  LLC2 ) ;
-                                           GEN2 ( PCODE_SMV , -
-                                                  PARMTYPE -> . SIZE ,
-                                                  LSIZE ) ;
-                                           GEN2 ( PCODE_LDA , LEVEL ,
-                                                  LLC2 ) ;
-                                         end (* tag/ca *) ;
-                                 CSTRING :
-                                   begin
-                                     if GATTR . KIND = VARBL then
+                                               FORCETEMPSET ;
+                                               LSIZE := OPNDSETSIZE (
+                                                   GATTR ) ;
+                                               GEN2 ( PCODE_LDA , LEVEL
+                                                   , LLC2 ) ;
+                                               GEN2 ( PCODE_SMV , -
+                                                   PARMTYPE -> . SIZE ,
+                                                   LSIZE ) ;
+                                               GEN2 ( PCODE_LDA , LEVEL
+                                                   , LLC2 ) ;
+                                             end (* tag/ca *) ;
+                                     CSTRING :
                                        begin
-                                         LOADADDRESS ;
-                                         GEN2 ( PCODE_VLD , 1 , GATTR .
-                                                TYPTR -> . SIZE - 4 ) ;
-                                         CTLS . VPO1_NEEDED := TRUE ;
-                                         LLC2 := PARMID -> . DUMMYADDR
-                                                 ;
-                                         GEN2 ( PCODE_LDA , PARMID -> .
-                                                DUMMYLEV , LLC2 ) ;
-                                         GEN2 ( PCODE_VST , 1 , - 1 ) ;
-                                       end (* then *)
-                                     else
-                                       begin
-                                         LLC2 := PARMID -> . DUMMYADDR
-                                                 ;
-                                         if FALSE then
+                                         if GATTR . KIND = VARBL then
                                            begin
-                                             WRITELN ( TRACEF ,
+                                             LOADADDRESS ;
+                                             GEN2 ( PCODE_VLD , 1 ,
+                                                   GATTR . TYPTR -> .
+                                                   SIZE - 4 ) ;
+                                             CTLS . VPO1_NEEDED := TRUE
+                                                   ;
+                                             LLC2 := PARMID -> .
+                                                   DUMMYADDR ;
+                                             GEN2 ( PCODE_LDA , PARMID
+                                                   -> . DUMMYLEV , LLC2
+                                                   ) ;
+                                             GEN2 ( PCODE_VST , 1 , - 1
+                                                   ) ;
+                                           end (* then *)
+                                         else
+                                           begin
+                                             LLC2 := PARMID -> .
+                                                   DUMMYADDR ;
+                                             if FALSE then
+                                               begin
+                                                 WRITELN ( TRACEF ,
                                                'ct_result          = '
                                                    , CT_RESULT ) ;
-                                             WRITELN ( TRACEF ,
+                                                 WRITELN ( TRACEF ,
                                                'llc2               = '
                                                    , LLC2 ) ;
-                                           end (* then *) ;
-                                         case CT_RESULT of
-                                           4 : begin
-                                                 CTLS . VPO1_NEEDED :=
-                                                   TRUE ;
-                                                 GEN0 ( PCODE_VC1 ) ;
-                                               end (* tag/ca *) ;
-                                           5 , 7 : begin
+                                               end (* then *) ;
+                                             case CT_RESULT of
+                                               4 : begin
+                                                   CTLS . VPO1_NEEDED
+                                                   := TRUE ;
+                                                   GEN0 ( PCODE_VC1 ) ;
+                                                   end (* tag/ca *) ;
+                                               5 , 7 : begin
                                                    LOADADDRESS ;
                                                    CTLS . VPO1_NEEDED
                                                    := TRUE ;
@@ -13198,32 +13204,35 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                                                    GATTR . TYPTR -> .
                                                    SIZE ) ;
                                                    end (* tag/ca *) ;
-                                           otherwise
-                                             
-                                         end (* case *) ;
-                                         GEN2 ( PCODE_LDA , PARMID -> .
-                                                DUMMYLEV , LLC2 ) ;
-                                         GEN2 ( PCODE_VST , 1 , - 1 ) ;
-                                       end (* else *)
-                                   end (* tag/ca *) ;
-                                 otherwise
+                                               otherwise
+                                                 
+                                             end (* case *) ;
+                                             GEN2 ( PCODE_LDA , PARMID
+                                                   -> . DUMMYLEV , LLC2
+                                                   ) ;
+                                             GEN2 ( PCODE_VST , 1 , - 1
+                                                   ) ;
+                                           end (* else *)
+                                       end (* tag/ca *) ;
+                                     otherwise
+                                       begin
+                                         LOADADDRESS
+                                       end (* otherw *)
+                                   end (* case *) ;
+                                 LSIZE := 0 ;
+                                 if FCP -> . EXTLANG <> 'F' then
                                    begin
-                                     LOADADDRESS
-                                   end (* otherw *)
-                               end (* case *) ;
-                             LSIZE := 0 ;
-                             if FCP -> . EXTLANG <> 'F' then
-                               begin
-                                 GEN3 ( PCODE_STR , ORD ( 'A' ) , LEVEL
-                                        , LLC_PARM ) ;
+                                     GEN3 ( PCODE_STR , ORD ( 'A' ) ,
+                                            LEVEL , LLC_PARM ) ;
+                                   end (* then *)
+                                 else
+                                   begin
+                                     GEN3 ( PCODE_STR , ORD ( 'A' ) ,
+                                            LEVEL , LLC_FTN ) ;
+                                     LLC_FTN := LLC_FTN + PTRSIZE ;
+                                   end (* else *) ;
+                                 break ;
                                end (* then *)
-                             else
-                               begin
-                                 GEN3 ( PCODE_STR , ORD ( 'A' ) , LEVEL
-                                        , LLC_FTN ) ;
-                                 LLC_FTN := LLC_FTN + PTRSIZE ;
-                               end (* else *) ;
-                             break ;
                            end (* then *) ;
 
                        //***************************************
@@ -13674,7 +13683,6 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                    begin
                      WRITELN ( TRACEF , 'Start CallNONSTANDARD' ) ;
                      WRITELN ( TRACEF , 'linecnt  = ' , LINECNT ) ;
-                     WRITELN ( TRACEF , 'parmid   = ' , PARMID ) ;
                      WRITELN ( TRACEF , 'llc1     = ' , LLC1 ) ;
                      WRITELN ( TRACEF , 'llc_parm = ' , LLC_PARM ) ;
                    end (* then *) ;
@@ -13685,7 +13693,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                        begin
 
                  //************************************
-                 // procedure parameter                
+                 // this procedure call is a procedure 
+                 // passed as a procedure parameter    
                  //************************************
 
                          LLC_PROC := LLC1 ;
@@ -15675,11 +15684,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                                         , GATTR . TYPTR -> . SIZE ) ;
                             end (* then *) ;
                           if OPT . DEBUG then
-                            begin
-                              ASSIGN := TRUE ;
-                              CHKBNDS ( LATTR . BTYPE ) ;
-                              ASSIGN := FALSE
-                            end (* then *) ;
+                            CHKBNDS ( TRUE , LATTR . BTYPE ) ;
 
               //******************************************
               // assignment depending on target type class
@@ -16017,7 +16022,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                   if COMPTYPES ( LSP , PTYPE_INT ) <> 1 then
                     GEN0 ( PCODE_ORD ) ;
               if OPT . DEBUG then
-                CHKBNDS ( GATTR . TYPTR ) ;
+                CHKBNDS ( FALSE , GATTR . TYPTR ) ;
               if SY = SYOF then
                 INSYMBOL
               else
@@ -16716,7 +16721,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
 
               GEN2 ( LOP , GETTYPE ( GATTR . TYPTR ) , 1 ) ;
               if OPT . DEBUG then
-                CHKBNDS ( LATTR . TYPTR ) ;
+                CHKBNDS ( FALSE , LATTR . TYPTR ) ;
               STORE ( LATTR ) ;
               GENUJPFJP ( PCODE_UJP , LADDR ) ;
               PUTLABEL ( LCIX ) ;
@@ -18777,7 +18782,6 @@ procedure INITSCALARS ;
      ERRORCNT := 0 ;
      WARNCNT := 0 ;
      ERRKIND := 'E' ;
-     ASSIGN := FALSE ;
      FLIPDEBUG := FALSE ;
      EXTUSED := FALSE ;
      PACKDATA := FALSE ;

@@ -101,14 +101,12 @@ f) Fehler bei MANORBOY.PAS ... / klar, woran es liegt
 Noch folgende Punkte offen:
 
 a) VPU-Befehl raus, wenn man ihn nicht braucht (geht das?) / derzeit nicht
-
 b) Korrektur COMPTLIST - lÑuft falsch / gefixt
-
 c) Korrektur doppelte Variablennamen, wenn Proz-Parm Parameter hat / gefixt
-
 d) Korrektur falscher Level von Åbergebener Prozedur (MANORBOY-Problem) / gefixt
-
 e) Wann und wo speichern wir die Display-Struktur, wie tief kann man gehen?
-
 f) Procedur-Parameter usw. in PCINT (erfordert andere Stack-Verwaltung)
+g) CHK A Befehle rein, wenn Pointer dereferenziert werden - PrÅfen auf NIL
+h) CHAR (n) fuer grî·ere Werte von (n)
+i) CHAR (n) usw. auch fÅr symbolische Konstanten
 

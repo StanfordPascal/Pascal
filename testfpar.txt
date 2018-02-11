@@ -1,0 +1,662 @@
+   **** STANFORD PASCAL COMPILER, OPPOLZER VERSION OF 2018.02 ****
+
+   **** Compiler Summary ****
+   ****      No Errors, no Warnings.
+   ****      69 LINE(S) READ,    5 PROCEDURE(S) COMPILED,
+   ****      92 P_INSTRUCTIONS GENERATED,   0.08 SECONDS IN COMPILATION.
+
+
+
+1LINE #   D/NEST  LVL    < STANFORD PASCAL, OPPOLZER VERSION OF 2018.02 >    17:04:13  02-11-2018    PAGE 1
+
+                       ....5...10....5...20....5...30....5...40....5...50....5...60....5...70..
+      1             )  program TESTFPAR ( OUTPUT ) ;
+      2             )
+      3             )  (**********************************************************************)
+      4             )  (*                                                                    *)
+      5             )  (*   Testprogram fuer die Uebergabe von Funktionsparametern           *)
+      6             )  (*                                                                    *)
+      7             )  (*   Opp - 2018.02                                                    *)
+      8             )  (*                                                                    *)
+      9             )  (**********************************************************************)
+     10             )  (* Assembler-Output:                                                  *)
+     11             )  (*$A+                                                                 *)
+     12             )  (**********************************************************************)
+     13             )
+     14             )
+     15             )
+     16             )
+     17             )  function F1 ( X : REAL ) : REAL ;
+     18             )
+     19             )     begin (* F1 *)
+     20       1N   2)       F1 := X * X
+     21             )     end (* F1 *) ;
+     22             )
+     23             )
+     24             )
+     25             )  function F2 ( X : REAL ) : REAL ;
+     26             )
+     27             )     begin (* F2 *)
+     28       1N   2)       F2 := SIN ( X )
+     29             )     end (* F2 *) ;
+     30             )
+     31             )
+     32             )
+     33             )  function F2FALSCH ( X : REAL ) : INTEGER ;
+     34             )
+     35             )  (*************************************************)
+     36             )  (* kann nicht uebergeben werden                  *)
+     37             )  (* da falscher ergebnis-typ                      *)
+     38             )  (* wurde vom compiler anfangs noch toleriert     *)
+     39             )  (*************************************************)
+     40             )
+     41             )
+     42             )     begin (* F2FALSCH *)
+     43       1N   2)       F2FALSCH := 0 ;
+     44             )     end (* F2FALSCH *) ;
+     45             )
+     46             )
+     47             )
+     48             )  procedure F3 ( X1 : REAL ; X2 : REAL ; function F ( X : REAL ) : REAL )
+     49             )               ;
+     50             )
+     51     168D   2)     var X : REAL ;
+     52     168D   2)
+     53             )     begin (* F3 *)
+     54       1N   2)       X := X1 ;
+     55       1N   2)       while X <= X2 do
+     56       2N   2)         begin
+     57       2N   2)           WRITELN ( 'funktion f: ' , X : 10 : 2 , F ( X ) : 15 : 7 ) ;
+     58       2N   2)           X := X + 0.1 ;
+     59       2N   2)         end (* while *)
+     60             )     end (* F3 *) ;
+     61             )
+     62             )
+     63             )
+     64             )  begin (* HAUPTPROGRAMM *)
+                       ....5...10....5...20....5...30....5...40....5...50....5...60....5...70..
+1LINE #   D/NEST  LVL    < STANFORD PASCAL, OPPOLZER VERSION OF 2018.02 >    17:04:13  02-11-2018    PAGE 2
+
+                       ....5...10....5...20....5...30....5...40....5...50....5...60....5...70..
+     65       1N   1)    WRITELN ( 'calling F3 with F1 = square x' ) ;
+     66       1N   1)    F3 ( 1.0 , 3.0 , F1 ) ;
+     67       1N   1)    WRITELN ( 'calling F3 with F2 = sin x' ) ;
+     68       1N   1)    F3 ( 1.0 , 3.0 , F2 ) ;
+     69       1N   1)  end (* HAUPTPROGRAMM *) .
+                       ....5...10....5...20....5...30....5...40....5...50....5...60....5...70..
+
+   ****      No Errors, no Warnings.
+   ****      69 LINE(S) READ,    5 PROCEDURE(S) COMPILED,
+   ****      92 P_INSTRUCTIONS GENERATED,   0.08 SECONDS IN COMPILATION.
+
+
+
+   **** STANFORD PASCAL POST-PROCESSOR, OPPOLZER VERSION OF 2018.01
+
+   ****      NO ASSEMBLY ERROR(S) DETECTED.
+   ****    1216 BYTES OF CODE GENERATED,  0.05 SECONDS IN POST_PROCESSING.
+
+
+
+                                                      VS LOADER
+
+OPTIONS USED - PRINT,NOMAP,NOLET,CALL,RES,NOTERM,SIZE=307200,NAME=**GO
+
+  TOTAL LENGTH    15130
+  ENTRY ADDRESS   AC010
+
+
+
+calling F3 with F1 = square x
+funktion f:       1.00      1.0000000
+funktion f:       1.10      1.2100000
+funktion f:       1.20      1.4400000
+funktion f:       1.30      1.6900000
+funktion f:       1.40      1.9600000
+funktion f:       1.50      2.2500000
+funktion f:       1.60      2.5600000
+funktion f:       1.70      2.8900000
+funktion f:       1.80      3.2400000
+funktion f:       1.90      3.6100000
+funktion f:       2.00      4.0000000
+funktion f:       2.10      4.4100000
+funktion f:       2.20      4.8400000
+funktion f:       2.30      5.2900000
+funktion f:       2.40      5.7600000
+funktion f:       2.50      6.2500000
+funktion f:       2.60      6.7600000
+funktion f:       2.70      7.2900000
+funktion f:       2.80      7.8400000
+funktion f:       2.90      8.4100000
+funktion f:       3.00      9.0000000
+calling F3 with F2 = sin x
+funktion f:       1.00      0.8414710
+funktion f:       1.10      0.8912074
+funktion f:       1.20      0.9320391
+funktion f:       1.30      0.9635582
+funktion f:       1.40      0.9854497
+funktion f:       1.50      0.9974950
+funktion f:       1.60      0.9995736
+funktion f:       1.70      0.9916648
+funktion f:       1.80      0.9738476
+funktion f:       1.90      0.9463001
+funktion f:       2.00      0.9092974
+funktion f:       2.10      0.8632094
+funktion f:       2.20      0.8084964
+funktion f:       2.30      0.7457052
+funktion f:       2.40      0.6754632
+funktion f:       2.50      0.5984721
+funktion f:       2.60      0.5155014
+funktion f:       2.70      0.4273799
+funktion f:       2.80      0.3349882
+funktion f:       2.90      0.2392493
+funktion f:       3.00      0.1411200
+
+
+
+     0000:  $PRV0001 ENT  R,2,L1    F1                  ,
+     0000:                T,T,F,F,2,1,,TESTFPAR
+                     BGN  $PRV0001,F1
+@@ 0000: $PRV0001 CSECT
+@@ 0000:       BC    15,52(0,15)
+@@ 0004:       DC    AL1(29)
+@@ 0005:       DC    C'$PRV0001 F1                  '
+@@ 0022:       DC    CL6'STPASC'    -- Compiler signature
+@@ 0028:       DC    XL2'1801'      -- Compiler version
+@@ 002A:       DC    AL2(0)         -- Stacksize
+@@ 002C:       DC    AL2(2)         -- Debug-Level
+@@ 002E:       DC    AL2(0)         -- Length of Proc
+@@ 0030:       DC    A(0)           -- Static CSECT
+@@ 0034:       STM   14,12,12(1)
+@@ 0038:       ST    1,8(13)
+@@ 003C:       ST    13,4(1)
+@@ 0040:       LR    13,1
+@@ 0042:       LR    10,15
+@@ 0044:       LA    11,4092(10)
+@@ 0048:       LA    1,128(1)
+@@ 004C:       C     1,72(12)
+@@ 0050:       BC    11,224(12)
+-------------------- LOC  20 --------------------------------
+     0054:           VPU  2,120
+     0054:           LOD  R,2,112
+-------------------- LOC  21 --------------------------------
+     0054:           LOD  R,2,112
+     0054:           MPR
+@@ 0054:       LD    2,112(13)
+@@ 0058:       MD    2,112(13)
+     005C:           STR  R,2,72
+@@ 005C:       STD   2,72(13)
+     0060:           RET  R
+@@ 0060:       MVI   80(13),129
+@@ 0064:       MVC   81(47,13),80(13)
+@@ 006A:       LM    14,12,12(13)
+@@ 006E:       L     13,4(13)
+@@ 0072:       MVC   0(72,1),80(1)
+@@ 0078:       BCR   15,14
+     007A:  L1       DEF  I,128
+ PEND
+@@ 007A:       BCR   0,0
+
+ OBJECT CODE FOR CSECT $PRV0001  (PROCEDURE F1                  )
+
+ 0000: 47F0F034 1D5BD7D9 E5F0F0F0 F140C6F1  40404040 40404040 40404040 40404040
+ 0020: 4040E2E3 D7C1E2C3 18010080 0002007C  00000000 90EC100C 501D0008 50D10004
+ 0040: 18D118AF 41BA0FFC 41110080 591C0048  47BC00E0 682D0070 6C2D0070 602D0048
+ 0060: 9281D050 D22ED051 D05098EC D00C58DD  0004D247 10001050 07FE0700 00010014
+ 0080: E3C5E2E3 C6D7C1D9 2AFFFFFF
+
+ DEBUG INFORMATION:
+
+ DEBUG LEVEL  = 2
+ SOURCENAME   = TESTFPAR
+ PROCNAME     = F1
+ CODESIZE     = 124
+ STATIC CSECT =
+ STACKSIZE    = 128
+
+-------------------- LOC  28 --------------------------------
+     0000:  $PRV0002   ENT
+     0000:  $PRV0002 ENT  R,2,L1    F2                  ,
+     0000:                T,T,F,F,2,2,,TESTFPAR
+                     BGN  $PRV0002,F2
+@@ 0000: $PRV0002 CSECT
+@@ 0000:       BC    15,52(0,15)
+@@ 0004:       DC    AL1(29)
+@@ 0005:       DC    C'$PRV0002 F2                  '
+@@ 0022:       DC    CL6'STPASC'    -- Compiler signature
+@@ 0028:       DC    XL2'1801'      -- Compiler version
+@@ 002A:       DC    AL2(0)         -- Stacksize
+@@ 002C:       DC    AL2(2)         -- Debug-Level
+@@ 002E:       DC    AL2(0)         -- Length of Proc
+@@ 0030:       DC    A(0)           -- Static CSECT
+@@ 0034:       STM   14,12,12(1)
+@@ 0038:       ST    1,8(13)
+@@ 003C:       ST    13,4(1)
+@@ 0040:       LR    13,1
+@@ 0042:       LR    10,15
+@@ 0044:       LA    11,4092(10)
+@@ 0048:       LA    1,248(1)
+@@ 004C:       C     1,72(12)
+@@ 0050:       BC    11,224(12)
+-------------------- LOC  28 --------------------------------
+     0054:           VPU  2,120
+     0054:           MST  0,0
+     0054:           LOD  R,2,112
+     0054:           STR  R,2,128
+@@ 0054:       LD    2,112(13)
+@@ 0058:       STD   2,128(13)
+     005C:           LDA  2,128
+     005C:           STR  A,2,136
+@@ 005C:       LA    2,128(13)
+@@ 0060:       ST    2,136(13)
+-------------------- LOC  29 --------------------------------
+     0064:           CUP  RF,3,DSIN,136
+@@ 0064:       LA    1,136(13)
+@@ 0068:       MVI   0(1),128
+@@ 006C:       ST    13,12(1)
+@@ 0070:       LR    14,13
+@@ 0072:       LA    13,8(1)
+@@ 0076:       ST    13,8(14)
+@@ 007A:       L     15,=V(DSIN)
+@@ 007E:       BALR  14,15
+@@ 0080:       L     13,4(13)
+@@ 0084:       LDR   2,0
+     0086:           STR  R,2,72
+@@ 0086:       STD   2,72(13)
+     008A:           RET  R
+@@ 008A:       MVI   80(13),129
+@@ 008E:       MVC   81(167,13),80(13)
+@@ 0094:       LM    14,12,12(13)
+@@ 0098:       L     13,4(13)
+@@ 009C:       MVC   0(72,1),80(1)
+@@ 00A2:       BCR   15,14
+     00A4:  L1       DEF  I,248
+ PEND
+
+ OBJECT CODE FOR CSECT $PRV0002  (PROCEDURE F2                  )
+
+ 0000: 47F0F034 1D5BD7D9 E5F0F0F0 F240C6F2  40404040 40404040 40404040 40404040
+ 0020: 4040E2E3 D7C1E2C3 180100F8 000200A8  00000000 90EC100C 501D0008 50D10004
+ 0040: 18D118AF 41BA0FFC 411100F8 591C0048  47BC00E0 682D0070 602D0080 412D0080
+ 0060: 502D0088 411D0088 92801000 50D1000C  18ED41D1 000850DE 000858F0 A0A405EF
+ 0080: 58DD0004 2820602D 00489281 D050D2A6  D051D050 98ECD00C 58DD0004 D2471000
+ 00A0: 105007FE 00000000 0002001C E3C5E2E3  C6D7C1D9 32FFFFFF
+
+ EXTERNAL REFERENCES AND LABEL DEFINITIONS:
+
+ 00A4: DSIN     (ER);
+
+ DEBUG INFORMATION:
+
+ DEBUG LEVEL  = 2
+ SOURCENAME   = TESTFPAR
+ PROCNAME     = F2
+ CODESIZE     = 168
+ STATIC CSECT =
+ STACKSIZE    = 248
+
+-------------------- LOC  43 --------------------------------
+     0000:  $PRV0003   ENT
+     0000:  $PRV0003 ENT  I,2,L1    F2FALSCH            ,
+     0000:                T,T,F,F,2,3,,TESTFPAR
+                     BGN  $PRV0003,F2FALSCH
+@@ 0000: $PRV0003 CSECT
+@@ 0000:       BC    15,52(0,15)
+@@ 0004:       DC    AL1(29)
+@@ 0005:       DC    C'$PRV0003 F2FALSCH            '
+@@ 0022:       DC    CL6'STPASC'    -- Compiler signature
+@@ 0028:       DC    XL2'1801'      -- Compiler version
+@@ 002A:       DC    AL2(0)         -- Stacksize
+@@ 002C:       DC    AL2(2)         -- Debug-Level
+@@ 002E:       DC    AL2(0)         -- Length of Proc
+@@ 0030:       DC    A(0)           -- Static CSECT
+@@ 0034:       STM   14,12,12(1)
+@@ 0038:       ST    1,8(13)
+@@ 003C:       ST    13,4(1)
+@@ 0040:       LR    13,1
+@@ 0042:       LR    10,15
+@@ 0044:       LA    11,4092(10)
+@@ 0048:       LA    1,128(1)
+@@ 004C:       C     1,72(12)
+@@ 0050:       BC    11,224(12)
+-------------------- LOC  43 --------------------------------
+     0054:           VPU  2,120
+     0054:           LDC  I,0
+     0054:           STR  I,2,72
+@@ 0054:       SR    2,2
+@@ 0056:       ST    2,72(13)
+-------------------- LOC  44 --------------------------------
+     005A:           RET  I
+@@ 005A:       MVI   80(13),129
+@@ 005E:       MVC   81(47,13),80(13)
+@@ 0064:       LM    14,12,12(13)
+@@ 0068:       L     13,4(13)
+@@ 006C:       MVC   0(72,1),80(1)
+@@ 0072:       BCR   15,14
+     0074:  L1       DEF  I,128
+ PEND
+
+ OBJECT CODE FOR CSECT $PRV0003  (PROCEDURE F2FALSCH            )
+
+ 0000: 47F0F034 1D5BD7D9 E5F0F0F0 F340C6F2  C6C1D3E2 C3C84040 40404040 40404040
+ 0020: 4040E2E3 D7C1E2C3 18010080 00020074  00000000 90EC100C 501D0008 50D10004
+ 0040: 18D118AF 41BA0FFC 41110080 591C0048  47BC00E0 1B22502D 00489281 D050D22E
+ 0060: D051D050 98ECD00C 58DD0004 D2471000  105007FE 0003002B E3C5E2E3 C6D7C1D9
+ 0080: 2DFFFFFF
+
+ DEBUG INFORMATION:
+
+ DEBUG LEVEL  = 2
+ SOURCENAME   = TESTFPAR
+ PROCNAME     = F2FALSCH
+ CODESIZE     = 116
+ STATIC CSECT =
+ STACKSIZE    = 128
+
+-------------------- LOC  54 --------------------------------
+     0000:  $PRV0004   ENT
+     0000:  $PRV0004 ENT  P,2,L1    F3                  ,
+     0000:                T,T,F,F,2,4,,TESTFPAR
+                     BGN  $PRV0004,F3
+@@ 0000: $PRV0004 CSECT
+@@ 0000:       BC    15,52(0,15)
+@@ 0004:       DC    AL1(29)
+@@ 0005:       DC    C'$PRV0004 F3                  '
+@@ 0022:       DC    CL6'STPASC'    -- Compiler signature
+@@ 0028:       DC    XL2'1801'      -- Compiler version
+@@ 002A:       DC    AL2(0)         -- Stacksize
+@@ 002C:       DC    AL2(2)         -- Debug-Level
+@@ 002E:       DC    AL2(0)         -- Length of Proc
+@@ 0030:       DC    A(0)           -- Static CSECT
+@@ 0034:       STM   14,12,12(1)
+@@ 0038:       ST    1,8(13)
+@@ 003C:       ST    13,4(1)
+@@ 0040:       LR    13,1
+@@ 0042:       LR    10,15
+@@ 0044:       LA    11,4092(10)
+@@ 0048:       LA    1,344(1)
+@@ 004C:       C     1,72(12)
+@@ 0050:       BC    11,224(12)
+-------------------- LOC  54 --------------------------------
+     0054:           VPU  2,176
+     0054:           LOD  R,2,112
+     0054:           STR  R,2,168
+@@ 0054:       LD    2,112(13)
+@@ 0058:       STD   2,168(13)
+     005C:  L3       LAB
+@@ 005C: L3    DS    0H
+-------------------- LOC  55 --------------------------------
+     005C:           LOD  R,2,168
+     005C:           LOD  R,2,120
+     005C:           LEQ  R
+@@ 005C:       LD    2,168(13)
+@@ 0060:       CD    2,120(13)
+     0064:           FJP  L4
+@@ 0064:       BC    2,L4
+-------------------- LOC  57 --------------------------------
+     0068:           LDA  1,260
+     0068:           CSP  SIO,184
+     0068:           LCA  M,12,'funktion f: '
+     0068:           LDC  I,12
+     0068:           LDC  I,12
+     0068:           CSP  WRS,184
+@@ 0068:       LA    2,<constant>
+@@ 006C:       LA    3,12
+@@ 0070:       LR    4,3
+@@ 0072:       L     15,=V($PASCSP)
+@@ 0076:       LA    8,184(13)
+@@ 007A:       LA    1,80
+@@ 007E:       LA    9,260(12)
+@@ 0082:       BALR  14,15
+     0084:           LOD  R,2,168
+     0084:           LDC  I,10
+     0084:           LDC  I,2
+     0084:           CSP  WRR,184
+@@ 0084:       LD    2,168(13)
+@@ 0088:       LA    3,10
+@@ 008C:       LA    4,2
+@@ 0090:       LA    1,72
+@@ 0094:       BALR  14,15
+     0096:           MST  1282,184
+     0096:           LOD  R,2,168
+     0096:           STR  R,2,336
+@@ 0096:       LD    2,168(13)
+@@ 009A:       STD   2,336(13)
+     009E:           CUP  R,3,*PFPARM*,224
+@@ 009E:       LR    2,13
+@@ 00A0:       MVC   184(40,2),80(12)
+@@ 00A6:       MVC   84(36,12),132(13)
+@@ 00AC:       L     15,128(13)
+@@ 00B0:       LA    1,224(13)
+@@ 00B4:       BALR  14,15
+@@ 00B6:       MVC   80(40,12),184(2)
+@@ 00BC:       LD    2,72(1)
+     00C0:           LDC  I,15
+     00C0:           LDC  I,7
+     00C0:           CSP  WRR,224
+@@ 00C0:       LA    3,15
+@@ 00C4:       LA    4,7
+@@ 00C8:       L     15,=V($PASCSP)
+@@ 00CC:       LA    8,224(13)
+@@ 00D0:       LA    1,72
+@@ 00D4:       BALR  14,15
+     00D6:           CSP  WLN,224
+@@ 00D6:       LA    1,128
+@@ 00DA:       BALR  14,15
+     00DC:           CSP  EIO,224
+-------------------- LOC  58 --------------------------------
+     00DC:           LOD  R,2,168
+     00DC:           LDC  R,  1.000000000000E-01
+     00DC:           ADR
+@@ 00DC:       LD    2,168(13)
+@@ 00E0:       AD    2,=D'  1.000000000000E-01'
+     00E4:           STR  R,2,168
+@@ 00E4:       STD   2,168(13)
+-------------------- LOC  60 --------------------------------
+     00E8:           UJP  L3
+@@ 00E8:       BC    15,L3
+     00EC:  L4       LAB
+@@ 00EC: L4    DS    0H
+     00EC:           RET  P
+@@ 00EC:       MVI   80(13),129
+@@ 00F0:       MVC   81(256,13),80(13)
+@@ 00F6:       MVC   337(7,13),336(13)
+@@ 00FC:       LM    14,12,12(13)
+@@ 0100:       L     13,4(13)
+@@ 0104:       MVC   0(80,1),80(1)
+@@ 010A:       BCR   15,14
+     010C:  L1       DEF  I,344
+ PEND
+@@ 010C:       BC    0,0
+
+ OBJECT CODE FOR CSECT $PRV0004  (PROCEDURE F3                  )
+
+ 0000: 47F0F034 1D5BD7D9 E5F0F0F0 F440C6F3  40404040 40404040 40404040 40404040
+ 0020: 4040E2E3 D7C1E2C3 18010158 0002012C  00000000 90EC100C 501D0008 50D10004
+ 0040: 18D118AF 41BA0FFC 41110158 591C0048  47BC00E0 682D0070 602D00A8 682D00A8
+ 0060: 692D0078 4720A0EC 4120A110 4130000C  184358F0 A128418D 00B84110 0050419C
+ 0080: 010405EF 682D00A8 4130000A 41400002  41100048 05EF682D 00A8602D 0150182D
+ 00A0: D22720B8 C050D223 C054D084 58FD0080  411D00E0 05EFD227 C05020B8 68210048
+ 00C0: 4130000F 41400007 58F0A128 418D00E0  41100048 05EF4110 008005EF 682D00A8
+ 00E0: 6A20A120 602D00A8 47F0A05C 9281D050  D2FFD051 D050D206 D151D150 98ECD00C
+ 0100: 58DD0004 D24F1000 105007FE 47000000  86A49592 A3899695 40867A40 00000000
+ 0120: 40199999 99999999 00000000 00040036  E3C5E2E3 C6D7C1D9 2E06003A 0600FFFF
+
+ EXTERNAL REFERENCES AND LABEL DEFINITIONS:
+
+ 0128: $PASCSP  (ER);
+
+ DEBUG INFORMATION:
+
+ DEBUG LEVEL  = 2
+ SOURCENAME   = TESTFPAR
+ PROCNAME     = F3
+ CODESIZE     = 300
+ STATIC CSECT =
+ STACKSIZE    = 344
+
+-------------------- LOC  65 --------------------------------
+     0000:           BGN TESTFPAR             17:04:13 02-11-2018
+     0000:  $PASMAIN   ENT
+     0000:  $PASMAIN ENT  P,1,L3    $PASMAIN            ,
+     0000:                T,T,F,F,2,0,,TESTFPAR
+                     BGN  $PASMAIN,$PASMAIN            ,T
+@@ 0000: $PASMAIN CSECT
+@@ 0000:       BC    15,96(0,15)
+@@ 0004:       DC    AL1(70)
+@@ 0005:       DC    C'$PASMAIN $PASMAIN             TESTFPAR             17:04:13 02-11-2018'
+@@ 004E:       DC    CL6'STPASC'    -- Compiler signature
+@@ 0054:       DC    XL2'1801'      -- Compiler version
+@@ 0056:       DC    AL2(0)         -- Stacksize
+@@ 0058:       DC    AL2(2)         -- Debug-Level
+@@ 005A:       DC    AL2(0)         -- Length of Proc
+@@ 005C:       DC    A(0)           -- Static CSECT
+@@ 0060:       L     0,84(12)
+@@ 0064:       STM   14,12,12(1)
+@@ 0068:       ST    1,8(13)
+@@ 006C:       ST    13,4(1)
+@@ 0070:       LR    13,1
+@@ 0072:       ST    13,84(12)
+@@ 0076:       LR    10,15
+@@ 0078:       LA    11,4092(10)
+@@ 007C:       LA    1,528(1)
+@@ 0080:       C     1,72(12)
+@@ 0084:       BC    11,224(12)
+@@ 0088:       LD    0,320(12)
+@@ 008C:       L     15,72(12)
+@@ 0090:       LA    1,352(12)
+@@ 0094:       SR    15,1
+@@ 0096:       SRA   15,3
+@@ 009A:       BALR  14,0
+@@ 009C:       STD   0,0(1)
+@@ 00A0:       LA    1,8(1)
+@@ 00A4:       BCTR  15,14
+-------------------- LOC  65 --------------------------------
+     00A6:           VPU  1,352
+     00A6:           LDA  1,260
+     00A6:           CSP  SIO,360
+     00A6:           LCA  M,29,'calling F3 with F1 = square x'
+     00A6:           LDC  I,29
+     00A6:           LDC  I,29
+     00A6:           CSP  WRS,360
+@@ 00A6:       LA    2,<constant>
+@@ 00AA:       LA    3,29
+@@ 00AE:       LR    4,3
+@@ 00B0:       L     15,=V($PASCSP)
+@@ 00B4:       LA    8,360(13)
+@@ 00B8:       LA    1,80
+@@ 00BC:       LA    9,260(13)
+@@ 00C0:       BALR  14,15
+     00C2:           CSP  WLN,360
+@@ 00C2:       LA    1,128
+@@ 00C6:       BALR  14,15
+     00C8:           CSP  EIO,360
+-------------------- LOC  66 --------------------------------
+     00C8:           MST  1,0
+     00C8:           LDC  R,  1.000000000000E+00
+     00C8:           STR  R,1,472
+@@ 00C8:       LD    2,=D'  1.000000000000E+00'
+@@ 00CC:       STD   2,472(13)
+     00D0:           LDC  R,  3.000000000000E+00
+     00D0:           STR  R,1,480
+@@ 00D0:       LD    2,=D'  3.000000000000E+00'
+@@ 00D4:       STD   2,480(13)
+     00D8:           LCA  P,$PRV0001
+@@ 00D8:       L     2,=V($PRV0001)
+     00DC:           STR  A,1,488
+@@ 00DC:       ST    2,488(13)
+     00E0:           LDA  1,492
+     00E0:           LDA  1,84
+     00E0:           MOV  36
+@@ 00E0:       MVC   492(36,13),84(13)
+     00E6:           CUP  P,5,$PRV0004,360
+@@ 00E6:       LA    1,360(13)
+@@ 00EA:       L     15,=V($PRV0004)
+@@ 00EE:       BALR  14,15
+-------------------- LOC  67 --------------------------------
+     00F0:           LDA  1,260
+     00F0:           CSP  SIO,360
+     00F0:           LCA  M,26,'calling F3 with F2 = sin x'
+     00F0:           LDC  I,26
+     00F0:           LDC  I,26
+     00F0:           CSP  WRS,360
+@@ 00F0:       LA    2,<constant>
+@@ 00F4:       LA    3,26
+@@ 00F8:       LR    4,3
+@@ 00FA:       L     15,=V($PASCSP)
+@@ 00FE:       LA    1,80
+@@ 0102:       LA    9,260(13)
+@@ 0106:       BALR  14,15
+     0108:           CSP  WLN,360
+@@ 0108:       LA    1,128
+@@ 010C:       BALR  14,15
+     010E:           CSP  EIO,360
+-------------------- LOC  68 --------------------------------
+     010E:           MST  1,0
+     010E:           LDC  R,  1.000000000000E+00
+     010E:           STR  R,1,472
+@@ 010E:       LD    2,=D'  1.000000000000E+00'
+@@ 0112:       STD   2,472(13)
+     0116:           LDC  R,  3.000000000000E+00
+     0116:           STR  R,1,480
+@@ 0116:       LD    2,=D'  3.000000000000E+00'
+@@ 011A:       STD   2,480(13)
+     011E:           LCA  P,$PRV0002
+@@ 011E:       L     2,=V($PRV0002)
+     0122:           STR  A,1,488
+@@ 0122:       ST    2,488(13)
+     0126:           LDA  1,492
+     0126:           LDA  1,84
+     0126:           MOV  36
+@@ 0126:       MVC   492(36,13),84(13)
+     012C:           CUP  P,5,$PRV0004,360
+@@ 012C:       LA    1,360(13)
+@@ 0130:       L     15,=V($PRV0004)
+@@ 0134:       BALR  14,15
+-------------------- LOC  69 --------------------------------
+     0136:           RET  P
+@@ 0136:       LM    14,12,12(13)
+@@ 013A:       L     13,4(13)
+@@ 013E:       ST    0,84(12)
+@@ 0142:       BCR   15,14
+     0144:  L3       DEF  I,528
+ PEND
+@@ 0144:       BC    0,0
+
+ OBJECT CODE FOR CSECT $PASMAIN  (PROCEDURE $PASMAIN            )
+
+ 0000: 47F0F060 465BD7C1 E2D4C1C9 D5405BD7  C1E2D4C1 C9D54040 40404040 40404040
+ 0020: 404040E3 C5E2E3C6 D7C1D940 40404040  40404040 40404040 F1F77AF0 F47AF1F3
+ 0040: 40F0F260 F1F160F2 F0F1F800 0000E2E3  D7C1E2C3 18010210 000201A4 00000000
+ 0060: 580C0054 90EC100C 501D0008 50D10004  18D150DC 005418AF 41BA0FFC 41110210
+ 0080: 591C0048 47BC00E0 680C0140 58FC0048  411C0160 1BF18AF0 000305E0 60010000
+ 00A0: 41110008 06FE4120 A1484130 001D1843  58F0A194 418D0168 41100050 419D0104
+ 00C0: 05EF4110 008005EF 6820A168 602D01D8  6820A170 602D01E0 5820A198 502D01E8
+ 00E0: D223D1EC D054411D 016858F0 A19C05EF  4120A178 4130001A 184358F0 A1944110
+ 0100: 0050419D 010405EF 41100080 05EF6820  A168602D 01D86820 A170602D 01E05820
+ 0120: A1A0502D 01E8D223 D1ECD054 411D0168  58F0A19C 05EF98EC D00C58DD 0004500C
+ 0140: 005407FE 47000000 83819393 89958740  C6F340A6 89A38840 C6F1407E 40A298A4
+ 0160: 81998540 A7000000 41100000 00000000  41300000 00000000 83819393 89958740
+ 0180: C6F340A6 89A38840 C6F2407E 40A28995  40A70000 00000000 00000000 00000000
+ 01A0: 00000000 00000041 E3C5E2E3 C6D7C1D9  64140F14 FFFFFFFF
+
+ EXTERNAL REFERENCES AND LABEL DEFINITIONS:
+
+ 0194: $PASCSP  (ER);     0198: $PRV0001 (ER);     019C: $PRV0004 (ER);
+ 01A0: $PRV0002 (ER);
+
+ DEBUG INFORMATION:
+
+ DEBUG LEVEL  = 2
+ SOURCENAME   = TESTFPAR
+ PROCNAME     = $PASMAIN
+ CODESIZE     = 420
+ STATIC CSECT =
+ STACKSIZE    = 528
+
+     0000:           STP
+##             EXTRN $PASENT
+##             END   $PASENT
+
+
+

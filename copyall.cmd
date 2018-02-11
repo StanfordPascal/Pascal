@@ -88,6 +88,7 @@ rem call copymvs teststr2.pas  testpgm.pas
 rem call copymvs testvarc.pas  testpgm.pas
 
 rem call copymvs pasmonn.ass   runtime.asm
+    call copymvs mon1982.ass   runtime.asm
 
 rem call copymvs pascal.messages    compiler.messages
 

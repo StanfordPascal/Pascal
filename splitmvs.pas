@@ -28,9 +28,8 @@ const SIZEDSN = 44 ;
 
 
 type CHARPTR = -> CHAR ;
-     CHAR6 = array [ 1 .. 6 ] of CHAR ;
-     CHAR80 = array [ 1 .. 80 ] of CHAR ;
-     ZEILE = array [ 1 .. 128 ] of CHAR ;
+     ZEILE = CHAR ( 128 ) ;
+     DSNAME = CHAR ( 44 ) ;
 
 
 var OUTF001 : TEXT ;
@@ -55,10 +54,10 @@ var OUTF001 : TEXT ;
     OUTPOS : INTEGER ;
     CPIN : CHARPTR ;
     CPOUT : CHARPTR ;
-    TAG : CHAR6 ;
-    DSN : array [ 1 .. SIZEDSN ] of CHAR ;
-    MEM : array [ 1 .. SIZEMEM ] of CHAR ;
-    EXT : array [ 1 .. SIZEEXT ] of CHAR ;
+    TAG : CHAR ( 6 ) ;
+    DSN : CHAR ( 44 ) ;
+    MEM : CHAR ( 8 ) ;
+    EXT : CHAR ( 3 ) ;
     HEXFLAG : CHAR ;
 
 
@@ -77,17 +76,35 @@ procedure ASSIGN_FILE ( PDSN : CHARPTR ; PMEM : CHARPTR ; PEXT :
 (***********************************************************)
 
 
-   var DSN : array [ 1 .. SIZEDSN ] of CHAR ;
-       MEM : array [ 1 .. SIZEMEM ] of CHAR ;
-       EXT : array [ 1 .. SIZEEXT ] of CHAR ;
-       PFADNAME : array [ 1 .. SIZEDSN ] of CHAR ;
+   var DSN : CHAR ( 44 ) ;
+       MEM : CHAR ( 8 ) ;
+       EXT : CHAR ( 3 ) ;
+       PFADNAME : CHAR ( 44 ) ;
        PFADLEN : INTEGER ;
-       FILENAME : array [ 1 .. 100 ] of CHAR ;
+       FILENAME : CHAR ( 100 ) ;
        FILELEN : INTEGER ;
        I : INTEGER ;
-       MD_CMD : array [ 1 .. 100 ] of CHAR ;
+       MD_CMD : CHAR ( 100 ) ;
        RC : INTEGER ;
-       CMDPART : CHAR80 ;
+       CMDPART : CHAR ( 80 ) ;
+
+   const DSN_TAB : array [ 1 .. 15 ] of CHAR ( 44 ) =
+         ( 'PASCALN.COMPILER.PAS                    ' ,
+           'PASCALN.COMPILER.CNTL                   ' ,
+           'PASCALN.COMPILER.MESSAGES               ' ,
+           'PASCALN.COMPILER.PROCLIB                ' ,
+           'PASCALN.RUNTIME.ASM                     ' ,
+           'PASCALN.TESTPGM.ASM                     ' ,
+           'PASCALN.TESTPGM.PAS                     ' ,
+           'PASCALN.TESTPGM.CNTL                    ' ,
+           'PASCALN.COMPILER.TEXT                   ' ,
+           'PASCALN.RUNTIME.TEXT                    ' ,
+           'PASCALN.RUNTIME.MATHTEXT                ' ,
+           'PASCALN.OLDCOMP.CNTL                    ' ,
+           'PASCALN.OLDCOMP.SAMPLE                  ' ,
+           'PASCALN.OLDCOMP.SOURCE                  ' ,
+           '                                        ' ) ;
+         FN_TAB : array [ 1 .. 15 ] of CHAR = '123456789ABCDEF' ;
 
    begin (* ASSIGN_FILE *)
      MEMCPY ( ADDR ( DSN ) , PDSN , SIZEDSN ) ;
@@ -105,35 +122,13 @@ procedure ASSIGN_FILE ( PDSN : CHARPTR ; PMEM : CHARPTR ; PEXT :
      /*  read from input file pascaln.txt                    */
      /********************************************************/
 
-     if DSN = 'PASCALN.COMPILER.CNTL     ' then
-       FN := '1'
-     else
-       if DSN = 'PASCALN.COMPILER.MESSAGES ' then
-         FN := '2'
-       else
-         if DSN = 'PASCALN.COMPILER.PAS      ' then
-           FN := '3'
-         else
-           if DSN = 'PASCALN.COMPILER.PROCLIB  ' then
-             FN := '4'
-           else
-             if DSN = 'PASCALN.COMPILER.TEXT     ' then
-               FN := '5'
-             else
-               if DSN = 'PASCALN.RUNTIME.ASM       ' then
-                 FN := '6'
-               else
-                 if DSN = 'PASCALN.RUNTIME.TEXT      ' then
-                   FN := '7'
-                 else
-                   if DSN = 'PASCALN.TESTPGM.ASM       ' then
-                     FN := '8'
-                   else
-                     if DSN = 'PASCALN.TESTPGM.CNTL      ' then
-                       FN := '9'
-                     else
-                       if DSN = 'PASCALN.TESTPGM.PAS       ' then
-                         FN := 'A' ;
+     FN := ' ' ;
+     for I := 1 to 15 do
+       if DSN = DSN_TAB [ I ] then
+         begin
+           FN := FN_TAB [ I ] ;
+           break
+         end (* then *) ;
 
      /********************************************************/
      /*  ASSign member and open file for writing             */
@@ -237,7 +232,7 @@ procedure WRITEBUF ( var OUTF : TEXT ; HEXFLAG : CHAR ; CPOUT : CHARPTR
        HEX : INTEGER ;
        CH : CHAR ;
        CPLAST : CHARPTR ;
-       OUTREC : CHAR80 ;
+       OUTREC : CHAR ( 80 ) ;
 
        (***********************************************************)
        (*                                                         *)

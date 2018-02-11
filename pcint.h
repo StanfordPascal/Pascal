@@ -133,6 +133,7 @@
 #define UNDEFSTRING    15
 #define STRINGSIZE     16
 #define STRINGRANGE    17
+#define NILPOINTER     18
 
 static const char *runtime_errmsg [] =
 
@@ -154,6 +155,7 @@ static const char *runtime_errmsg [] =
    "UNDEFSTRING",
    "STRINGSIZE",
    "STRINGRANGE",
+   "NILPOINTER",
    NULL
 };
 

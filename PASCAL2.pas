@@ -318,9 +318,9 @@ program PCODE_TRANSLATOR ( INPUT , OUTPUT , PRR , ASMOUT , DBGINFO ,
 
 
 
-const VERSION = '2018.01' ;        // Version for display message
-      VERSION2 = 0x1801 ;          // Version for load module
-      VERSION3 = 'XL2''1801''' ;   // Version for ASMOUT listing
+const VERSION = '2018.02' ;        // Version for display message
+      VERSION2 = 0x1802 ;          // Version for load module
+      VERSION3 = 'XL2''1802''' ;   // Version for ASMOUT listing
       MXADR = 65535 ;
       SHRTINT = 4095 ;
       HALFINT = 32700 ;

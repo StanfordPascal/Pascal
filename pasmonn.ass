@@ -498,35 +498,35 @@ LENDCB   EQU   ENDDCBD-IHADCB
 DYNSTORE DSECT
 *
          DS    20F                 PASCAL ENVIRONMENT SAVE AREA
-STACK    DS    18F                 BOTTOM OF RUNTIME STACK
+STACK    DS    18F          0000   BOTTOM OF RUNTIME STACK
 CLOCK    EQU   STACK               CLOCK LOCATION
-NEWPTR   DS    A                   PASCAL 'NEW' POINTER
-HEAPLIM  DS    A                   UPPER LIMIT OF HEAP ( +1 )
+NEWPTR   DS    A            0072   PASCAL 'NEW' POINTER
+HEAPLIM  DS    A            0076   UPPER LIMIT OF HEAP ( +1 )
 *                                  ALSO POINTS TO DYN2STOR
-DISPREGS DS    10F                 RUN TIME DISPLAY REGISTERS
+DISPREGS DS    10F          0080   RUN TIME DISPLAY REGISTERS
 DISPLAY  EQU   DISPREGS,*-DISPREGS
 *
-FL1      DS    D                   R/W  FIX/FLOAT CONVERSION HELPS
-FL2      DS    D                   R ONLY
-FL3      DS    D                   R/W
-FL4      DS    D                   R ONLY
+FL1      DS    D            0120   R/W  FIX/FLOAT CONVERSION HELPS
+FL2      DS    D            0128   R ONLY
+FL3      DS    D            0136   R/W
+FL4      DS    D            0144   R ONLY
 *
 CHKSUBS  DS    0F                  ENTRY TO RUN TIME CHECK ROUTINES
-INXCHK   DS    3F                  INDEX CHECK
-RNGCHK   DS    3F                  SUBRANGE CHECK
-PRMCHK   DS    3F                  PARAMETER VALUE CHECK
-PTRCHK   DS    3F                  POINTER CHECK
-PTACHK   DS    3F                  SET MEMBER CHECK
-SETCHK   DS    3F
-STKCHK   DS    3F
-TRACER   DS    3F
-INPUT    DS    3F
-OUTPUT   DS    3F
-PRD      DS    3F
-PRR      DS    3F
-QRD      DS    3F
-QRR      DS    3F
-CLEARBUF DS    XL8                 BUFFER TO CLEAR ACTIVATION RECORDS
+INXCHK   DS    3F           0152   INDEX CHECK
+RNGCHK   DS    3F           0164   SUBRANGE CHECK
+PRMCHK   DS    3F           0176   PARAMETER VALUE CHECK
+PTRCHK   DS    3F           0188   POINTER CHECK
+PTACHK   DS    3F           0200   SET MEMBER CHECK
+SETCHK   DS    3F           0212
+STKCHK   DS    3F           0224
+TRACER   DS    3F           0236
+INPUT    DS    3F           0248
+OUTPUT   DS    3F           0260
+PRD      DS    3F           0272
+PRR      DS    3F           0284
+QRD      DS    3F           0296
+QRR      DS    3F           0308
+CLEARBUF DS    XL8          0320   BUFFER TO CLEAR ACTIVATION RECORDS
 PASDATE  DS    CL10                PREDEFINED VARIABLE DATE
 PASTIME  DS    CL10                PREDEFINED VARIABLE TIME
 OSPRMPTR DS    A                   POINTER TO O.S. PARM STRING
@@ -657,7 +657,7 @@ P0100    DS    0H
 *
 **********************************************************************
 *        init area with pattern x'81' using mvcl
-*        (ibm370 dependendy: MVCL)
+*        (ibm370 dependency: MVCL)
 **********************************************************************
 *
          LR    R2,R12              ADDRESS OF STACK

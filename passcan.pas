@@ -1407,6 +1407,7 @@ procedure PASSCAN ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB :
                   X'0D' : ZUST := 2 ;
                   ' ' : ZUST := 3 ;
                   '"' : ZUST := 9 ;
+                  '#' : ZUST := 3 ;
                   '$' : ZUST := 67 ;
                   '&' : ZUST := 101 ;
                   '''' : ZUST := 12 ;
@@ -1500,6 +1501,7 @@ procedure PASSCAN ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB :
                 case CH of
                   X'0A' : ZUST := 3 ;
                   ' ' : ZUST := 3 ;
+                  '#' : ZUST := 3 ;
                   otherwise
                     ZUST := - 1 ;
                 end (* case *) ;

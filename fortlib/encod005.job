@@ -1,0 +1,15 @@
+//PASCALNG JOB (PASCAL),'ENCOD OBJECT',CLASS=A,MSGCLASS=X,
+//             TIME=1440,REGION=0M,MSGLEVEL=(1,1)
+//*
+//********************************************************************
+//* ENCOD Objects of RUNTIME.MATHTEXT (= SYS1.FORTLIB)
+//********************************************************************
+//*
+//COMPILE  EXEC PASNCL,MEM=ENCOD,
+//         SRC='PASCALN.TESTPGM.PAS',
+//         MOD='PASCALN.TESTPGM.LOAD'
+//GO001    EXEC PGM=ENCOD
+//STEPLIB  DD   DISP=SHR,DSN=PASCALN.TESTPGM.LOAD
+//INPUT    DD   DISP=SHR,DSN=PASCALN.RUNTIME.MATHXXXX(STIMER)
+//OUTPUT   DD   DISP=SHR,DSN=PASCALN.RUNTIME.MATHTEXT(STIMER)
+//PASTRACE DD   SYSOUT=*

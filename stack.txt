@@ -1,0 +1,114 @@
+
+Bedeutung der Register beim Prolog/Epilog bei Stanford Pascal
+-------------------------------------------------------------
+
+Reg 12 - zeigt auf globalen Kontrollblock (siehe PASMONN)
+Reg 14 und 15 - RÅckkehradresse und Entry Point
+Reg 10 und 11 - zwei Basisregister fÅr neue Funktion
+
+Register 13:
+
+altes Stack Segment, hier nur insoweit von Interesse, als
+an der Position 8 ein Pointer auf das neue Stack Segment steht
+
+Register 1:
+
+neues Stack Segment, wird interessanterweise schon vom Rufer,
+d.h. von der alten Funktion, angelegt.
+
+Der Prolog macht folgendes:
+
+a) Register 14 bis 12 in das NEUE Stack Segment (!!!) speichern,
+   ab Position 12(1), wie gehabt.
+
+b) Verkettung, d.h. Zeiger auf altes Segment bei 4(1),
+   Zeiger auf neues Segment bei 8(13).
+
+c) Umladen 1 nach 13, Register 13 zeigt jetzt auf das neue
+   Segment.
+
+d) Basisregister laden
+
+e) PrÅfen, ob der bei DEF angegebene Platz reicht (durch
+   Vergleich mit gewissen Pointern im globalen Kontrollblock
+
+
+Weitere Eigenschaften:
+
+- ab 112(13) befinden sich die Parameter
+
+- direkt hinter den Parametern beginnen die lokalen Variablen;
+  die Offsets werden in der Compileliste angezeigt
+
+- mîglicherweise am Anfang die Sicherungsfelder fÅr den
+  String-Datenpool (siehe Befehle VPx)
+
+- an der Position 72(13) in der LÑnge maximal 8 steht das
+  Funktionsergebnis (wenn es sich beim neuen Block um eine
+  Funktion handelt)
+
+- am Schluss wird der Bereich ab 80(13) formatiert mit einer
+  interessanten Schleife ...
+
+- der Bereich zwischen 80(13) und 112(13) --- 32 Bytes ---
+  war vielleicht ursprÅnglich gedacht fÅr die Sicherung des
+  Displays, wird aber so nicht benutzt.
+
+
+Display:
+
+Unter Display versteht man einen Vektor von Adressen, der pro
+statischem Level die Basisadresse hÑlt. Offenbar gilt folgende
+Festlegung:
+
+  LVL 1 = 84(12)
+  LVL 2 = 88(12)
+  LVL 3 = 92(12)
+  LVL 4 = 96(12)
+  LVL 5 = 100(12)
+  LVL 6 = 104(12)
+  LVL 7 = 108(12)
+  LVL 8 = 112(12)
+  LVL 9 = 116(12)
+
+mehr Displays sollten vernÅnftigerweise nicht verwendet werden,
+da der Compiler bei Prozedurparametern nur 36 Bytes vorsieht !!
+Auch in der Runtime (= PASMONN) ist nicht mehr Platz.
+
+  DISPLIMIT lt. Compiler = 20 (!!!)
+
+da mÅsste man wohl was machen.
+
+
+Wie man sieht, folgende Baustellen:
+
+a) LR 14,15 im Prolog evtl. sinnlos / gefixt
+
+b) Schleife zum ZurÅcksetzen am Ende auf X'81' eher mit MVCL / gefixt
+
+c) bei LÑngen kÅrzer als 256 oder 512 evtl. mit MVCs / gefixt
+
+d) Display wird in R12-Kontrollstruktur gespeichert, also ist
+   der Bereich in R13 (80 bis 112) sinnlos
+
+e) DISPLIMIT vom Compiler passt nicht zu Runtime bzw.
+   Prozedur-Parametern (kann aber nicht auf z.B. 9 zurÅckgesetzt
+   werden, fÅhrt zu Fehlern)
+
+f) Fehler bei MANORBOY.PAS ... / klar, woran es liegt
+
+
+Noch folgende Punkte offen:
+
+a) VPU-Befehl raus, wenn man ihn nicht braucht (geht das?) / derzeit nicht
+
+b) Korrektur COMPTLIST - lÑuft falsch / gefixt
+
+c) Korrektur doppelte Variablennamen, wenn Proz-Parm Parameter hat / gefixt
+
+d) Korrektur falscher Level von Åbergebener Prozedur (MANORBOY-Problem) / gefixt
+
+e) Wann und wo speichern wir die Display-Struktur, wie tief kann man gehen?
+
+f) Procedur-Parameter usw. in PCINT (erfordert andere Stack-Verwaltung)
+

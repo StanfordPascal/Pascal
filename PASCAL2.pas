@@ -42,7 +42,7 @@ program PCODE_TRANSLATOR ( INPUT , OUTPUT , PRR , ASMOUT , DBGINFO ,
 (*  255- PROCEDURE TOO LONG (LARGER THAN 8K BYTES) - other place    *)
 (*       --> SUBDIVIDE THE PROCEDURE.                               *)
 (*  256- TOO MANY PROCEDURES/FUNCTIONS REFERENCED IN THIS PROC.     *)
-(*       --> RECOMPILE THE POST_PROCESSOR WITH  A  LARGER  VALUE    *)
+(*       --> RECOMPILE THE POST_PROCESSOR WITH A LARGER VALUE       *)
 (*       FOR PRCCNT.                                                *)
 (*  259- EXPRESSION TOO COMPLICATED.                                *)
 (*       -->  SIMPLIFY  THE  EXPRESSION  BY  REARRANGING  AND/OR    *)
@@ -548,18 +548,15 @@ const VERSION = '2018.01' ;        // Version for display message
       CHCNT = 1600 ;      // = DBLCNT*8
       LITCNT = 400 ;      // # OF NUMERIC LITERALS IN A PROC.
       LITDANGER = 395 ;   // SAFE LIMIT FOR NXTLIT
-      PRCCNT = 50 ;
 
       (****************************************************)
-      (* # OF PROC'S OR ENTRY PT.S IN ONE CSECT           *)
+      (* PRCCNT = # OF PROC'S OR ENTRY PT.S IN ONE CSECT  *)
+      (* opp 02.2018: was 50, set to 200                  *)
+      (* LBLCNT = # OF LABELS IN A CSECT                  *)
       (****************************************************)
 
+      PRCCNT = 200 ;
       LBLCNT = 500 ;
-
-      (****************************************************)
-      (* # OF LABELS IN A CSECT                           *)
-      (****************************************************)
-
       MAXCALDPTH = 4 ;
 
       (****************************************************)
@@ -9043,6 +9040,8 @@ procedure ASMNXTINST ;
       procedure ENT_RET ;
 
          var STATIC_ADDR : ADRRNG ;
+             OFFS_WORK : ADRRNG ;
+             SIZE_REST : ADRRNG ;
 
          begin (* ENT_RET *)
            PROCOFFSET_OLD := 0 ;
@@ -9143,11 +9142,12 @@ procedure ASMNXTINST ;
                  GENRX ( XLA , PBR2 , 4092 , PBR1 , 0 ) ;
                if DEBUG or MUSIC then
                  begin
-                   GENRR ( XLR , RTREG , JREG ) ;
 
-           (*************************************)
-           (* SAVE CURR. LOC. FOR ERROR ROUTINE *)
-           (*************************************)
+           //************************************************
+           // GENRR ( XLR , RTREG , JREG ) ;                 
+           // old comment:                                   
+           // SAVE CURR. LOC. FOR ERROR ROUTINE              
+           //************************************************
 
                    if DATA_SIZE < 4096 then
                      GENRX ( XLA , TRG1 , DATA_SIZE , TRG1 , 0 )
@@ -9215,64 +9215,57 @@ procedure ASMNXTINST ;
            (***********************************************)
 
                if DEBUG and ( CURLVL > 1 ) and ( DATA_SIZE > 80 ) then
+                 if DATA_SIZE < 1500 then
+                   begin
 
-           (**************************)
-           (* CLEAR THE STACK FRAME  *)
-           (**************************)
+           //************************************************
+           // optimizing: generate MVC instead of MVCL       
+           // MVI 80(13),X'81'                               
+           // MVC 81(256,13),80(13) ...                      
+           //************************************************
 
-                 begin
-                   GENRX ( XLD , TRG0 , CLEARBUF , GBR , 0 ) ;
+                     GENSI ( XMVI , LCAFTMST , LBR , 0x81 ) ;
+                     OFFS_WORK := LCAFTMST + 1 ;
+                     SIZE_REST := DATA_SIZE - LCAFTMST - 1 ;
+                     while SIZE_REST > 256 do
+                       begin
+                         GENSS ( XMVC , 256 , OFFS_WORK , LBR ,
+                                 OFFS_WORK - 1 , LBR ) ;
+                         OFFS_WORK := OFFS_WORK + 256 ;
+                         SIZE_REST := SIZE_REST - 256
+                       end (* while *) ;
+                     GENSS ( XMVC , SIZE_REST , OFFS_WORK , LBR ,
+                             OFFS_WORK - 1 , LBR ) ;
+                   end (* then *)
+                 else
+                   begin
 
-           (****************************)
-           (* THE PATTERN TO CLEAR MEM *)
-           (****************************)
+           //******************************
+           // clear the stack frame        
+           // that is:                     
+           // LA    0,80(13)               
+           // length into R1               
+           // XR    R14,R14                
+           // LA    R15,X'81'              
+           // SLL   R15,24                 
+           // MVCL  R0,R14                 
+           //******************************
 
-                   if DATA_SIZE < ( 4096 * 8 ) then
-                     GENRX ( XLA , TRG1 , ( DATA_SIZE - LCAFTMST ) DIV
-                             8 , 0 , 0 )
-                   else
-                     begin
-                       GENRXLAB ( XL , TRG1 , SEGSZE , - 1 ) ;
-                       GENRXLIT ( XS , TRG1 , LCAFTMST - REALSIZE , 0 )
-                                  ;
-                       GENRS ( XSRA , TRG1 , 0 , 3 , 0 )
-
-           (***************)
-           (* DIVIDE BY 8 *)
-           (***************)
-
-                     end (* else *) ;
-
-           (**************************************************)
-           (* TRG1 HOLDS THE # OF DOUBLE WORDS TO BE CLEARED *)
-           (**************************************************)
-
-                   GENRR ( XSR , TRG15 , TRG15 ) ;
-
-           (*****************************)
-           (* ADDRESS/INCREMENT POINTER *)
-           (*****************************)
-
-                   GENRR ( XBALR , TRG14 , 0 ) ;
-
-           (**************************)
-           (* BEGINING OF CLEAR LOOP *)
-           (**************************)
-
-                   GENRX ( XSTD , FPR0 , LCAFTMST , LBR , TRG15 ) ;
-                   GENRX ( XLA , TRG15 , REALSIZE , TRG15 , 0 ) ;
-
-           (************************)
-           (* POINT TO NEXT D_WORD *)
-           (************************)
-
-                   GENRR ( XBCTR , TRG1 , TRG14 ) ;
-
-           (*********************)
-           (* REPEAT UNTIL DONE *)
-           (*********************)
-
-                 end (* then *) ;
+                     GENRX ( XLA , TRG0 , LCAFTMST , LBR , 0 ) ;
+                     if DATA_SIZE < 4096 then
+                       GENRX ( XLA , TRG1 , DATA_SIZE - LCAFTMST , 0 ,
+                               0 )
+                     else
+                       begin
+                         GENRXLAB ( XL , TRG1 , SEGSZE , - 1 ) ;
+                         GENRXLIT ( XS , TRG1 , LCAFTMST - REALSIZE , 0
+                                    ) ;
+                       end (* else *) ;
+                     GENRR ( XXR , TRG14 , TRG14 ) ;
+                     GENRX ( XLA , TRG15 , 0x81 , 0 , 0 ) ;
+                     GENRX ( XSLL , TRG15 , 24 , 0 , 0 ) ;
+                     GENRR ( XMVCL , TRG0 , TRG14 ) ;
+                   end (* else *) ;
                if SAVERGS or ( OPNDTYPE <> PROC ) then
                  begin
                    if OS_STYLE then

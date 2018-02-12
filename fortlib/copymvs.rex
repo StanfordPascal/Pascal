@@ -14,12 +14,24 @@ if pcfile = "" | mvsfile = "" then do
    exit
 end
 
-x = pos(".",pcfile)
+/************************************************/
+/*   Membername aus PC-File extrahieren         */
+/*   zuerst alle Pfad-Informationen weg         */
+/*   dann die Extension wegmachen               */
+/************************************************/
+
+membname = pcfile
+x = pos("\",membname)
+do while x <> 0
+   membname = substr(membname, x + 1)
+   x = pos("\",membname)
+end
+x = pos(".",membname)
 if x = 0 then do
-   membname = pcfile
+   membname = membname
 end
 else do
-   membname = left(pcfile, x - 1)
+   membname = left(membname, x - 1)
 end
 
 zeile1 = "//PASCALN1 JOB (ACCNT),'IEBGENER',CLASS=A,MSGCLASS=X,"
@@ -31,9 +43,9 @@ zeile6 = "//INPUT    EXEC PGM=IEBGENER"
 zeile7 = "//SYSPRINT DD  DUMMY"
 zeile8 = "//SYSIN    DD  *"
 zeile9 = "//SYSUT2   DD  DISP=SHR,DSN=PASCALN."mvsfile"("membname")"
-zeilea = "//SYSUT1   DD  DATA,DLM='$$'"
+zeilea = "//SYSUT1   DD  DATA,DLM='$*'"
 
-zeileb = "$$"
+zeileb = "$*"
 
 fname = "copymvs.tmp"
 x = lineout(fname, zeile1)

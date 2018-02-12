@@ -1,0 +1,34 @@
+//PASCALNL JOB (PASCAL),'PASCAL LOAD',CLASS=A,MSGCLASS=X,
+//             TIME=1440,REGION=0M,MSGLEVEL=(1,1)
+//*
+//********************************************************************
+//*
+//* LOAD Pascal System from large flat files
+//* Part 1 - Compiler and Runtime
+//*
+//********************************************************************
+//*
+//GO       EXEC PGM=SPLITMVS
+//STEPLIB  DD  DISP=SHR,DSN=PASCALN.TESTPGM.LOAD
+//SYSPRINT DD  SYSOUT=A
+//********************************************************************
+//* assign input file here, should be sequential and have lrecl 80
+//* needs to be uploaded from Windows or Unix
+//* take care of 0x0d linends on Unix/linux - run dos2unix first
+//********************************************************************
+//INPUT    DD  DISP=SHR,DSN=PASCALN.LOADFILE(PASCAL1)
+//OUTPUT   DD  SYSOUT=A,DCB=(RECFM=VB,LRECL=133)
+//PASTRACE DD  SYSOUT=A
+//********************************************************************
+//* assign output files here, choose high level qualifier as you like
+//********************************************************************
+//OUTF001  DD  DISP=SHR,DSN=PASCALN.COMPILER.PAS
+//OUTF002  DD  DISP=SHR,DSN=PASCALN.COMPILER.CNTL
+//OUTF003  DD  DISP=SHR,DSN=PASCALN.COMPILER.MESSAGES
+//OUTF004  DD  DISP=SHR,DSN=PASCALN.COMPILER.PROCLIB
+//OUTF005  DD  DISP=SHR,DSN=PASCALN.RUNTIME.ASM
+//OUTF009  DD  DISP=SHR,DSN=PASCALN.COMPILER.TEXT
+//OUTF00A  DD  DISP=SHR,DSN=PASCALN.RUNTIME.TEXT
+//SYSUDUMP DD  SYSOUT=A
+//QRD      DD  DISP=SHR,DSN=PASCALN.DBGINFO
+//*

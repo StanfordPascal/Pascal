@@ -13362,6 +13362,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                          begin
                            GEN3 ( PCODE_STR , ORD ( 'A' ) , LEVEL ,
                                   LLC_PARM ) ;
+                           LSIZE := PTRSIZE ;
                          end (* then *)
                        else
                          begin

@@ -8,7 +8,7 @@
 //*
 //********************************************************************
 //*
-//GO       EXEC PGM=SPLITMVS
+//LOAD2    EXEC PGM=SPLITMVS
 //STEPLIB  DD  DISP=SHR,DSN=PASCALN.TESTPGM.LOAD
 //SYSPRINT DD  SYSOUT=A
 //********************************************************************

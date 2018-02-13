@@ -4,11 +4,11 @@
 //********************************************************************
 //*
 //* LOAD Pascal System from large flat files
-//* Part 2 - Sample programs and jobs
+//* Part 3 - Old compilers and old sample programs
 //*
 //********************************************************************
 //*
-//LOAD2    EXEC PGM=SPLITMVS
+//LOAD3    EXEC PGM=SPLITMVS
 //STEPLIB  DD  DISP=SHR,DSN=PASCALN.TESTPGM.LOAD
 //SYSPRINT DD  SYSOUT=A
 //********************************************************************

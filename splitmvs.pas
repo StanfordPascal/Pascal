@@ -28,13 +28,8 @@ const SIZEDSN = 44 ;
 
 
 type CHARPTR = -> CHAR ;
-     ZEILE = array [ 1 .. 128 ] of CHAR ;
-     DSNAME = array [ 1 .. 44 ] of CHAR ;
-     CHAR6 = array [ 1 .. 6 ] of CHAR ;
-     CHAR8 = array [ 1 .. 8 ] of CHAR ;
-     CHAR3 = array [ 1 .. 3 ] of CHAR ;
-     CHAR80 = array [ 1 .. 80 ] of CHAR ;
-     CHAR100 = array [ 1 .. 100 ] of CHAR ;
+     ZEILE = CHAR ( 128 ) ;
+     DSNAME = CHAR ( SIZEDSN ) ;
 
 
 var OUTF001 : TEXT ;
@@ -54,15 +49,15 @@ var OUTF001 : TEXT ;
     OUTF00F : TEXT ;
     FN : CHAR ;
     ZINP : ZEILE ;
-    ZOUT : array [ 1 .. 1000 ] of CHAR ;
+    ZOUT : CHAR ( 1000 ) ;
     LOUT : INTEGER ;
     OUTPOS : INTEGER ;
     CPIN : CHARPTR ;
     CPOUT : CHARPTR ;
-    TAG : CHAR6 ;
-    DSN : DSNAME ;
-    MEM : CHAR8 ;
-    EXT : CHAR3 ;
+    TAG : CHAR ( 6 ) ;
+    DSN : CHAR ( SIZEDSN ) ;
+    MEM : CHAR ( 8 ) ;
+    EXT : CHAR ( 3 ) ;
     HEXFLAG : CHAR ;
 
 
@@ -81,19 +76,19 @@ procedure ASSIGN_FILE ( PDSN : CHARPTR ; PMEM : CHARPTR ; PEXT :
 (***********************************************************)
 
 
-   var DSN : DSNAME ;
-       MEM : CHAR8 ;
-       EXT : CHAR3 ;
-       PFADNAME : DSNAME ;
+   var DSN : CHAR ( SIZEDSN ) ;
+       MEM : CHAR ( 8 ) ;
+       EXT : CHAR ( 3 ) ;
+       PFADNAME : CHAR ( SIZEDSN ) ;
        PFADLEN : INTEGER ;
-       FILENAME : CHAR100 ;
+       FILENAME : CHAR ( 100 ) ;
        FILELEN : INTEGER ;
        I : INTEGER ;
-       MD_CMD : CHAR100 ;
+       MD_CMD : CHAR ( 100 ) ;
        RC : INTEGER ;
-       CMDPART : CHAR80 ;
+       CMDPART : CHAR ( 80 ) ;
 
-   const DSN_TAB : array [ 1 .. 15 ] of DSNAME =
+   const DSN_TAB : array [ 1 .. 15 ] of CHAR ( SIZEDSN ) =
          ( 'PASCALN.COMPILER.PAS                    ' ,
            'PASCALN.COMPILER.CNTL                   ' ,
            'PASCALN.COMPILER.MESSAGES               ' ,
@@ -237,7 +232,7 @@ procedure WRITEBUF ( var OUTF : TEXT ; HEXFLAG : CHAR ; CPOUT : CHARPTR
        HEX : INTEGER ;
        CH : CHAR ;
        CPLAST : CHARPTR ;
-       OUTREC : CHAR80 ;
+       OUTREC : CHAR ( 80 ) ;
 
        (***********************************************************)
        (*                                                         *)

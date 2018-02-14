@@ -823,7 +823,7 @@ program PASCALCOMPILER ( INPUT , OUTPUT , PRR , LISTING , DBGINFO ,
 
 
 
-const VERSION = '2018.02' ;
+const VERSION = '2018.03' ;
       MAXLSIZE = 120 ;
       MAXERRNO = 999 ;
 
@@ -6329,7 +6329,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                                     begin
                                       SIZE := 1 ;
                                       ALN := 1
-                                    end (* else *)
+                                    end (* else *) ;
+                                  LSP := LSP1
                                 end (* then *)
                               else
                                 begin
@@ -6339,10 +6340,15 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
         //******************************************************
 
                                   SIZE := 1 ;
-                                  ALN := 1
+                                  ALN := 1 ;
+                                  LSP := NIL
                                 end (* else *)
                             end (* with *) ;
-                          LSP := LSP1 ;
+
+        //******************************************************
+        // LSP := LSP1 ;                                        
+        //******************************************************
+
                           LSP1 := LSP2
                         until LSP1 = NIL
                       end (* tag/ca *) ;
@@ -6797,7 +6803,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
            CT_RESULT := COMPTYPES ( ELSP , ELSP1 ) ;
            if not ( CT_RESULT in [ 1 , 2 , 3 ] ) then
              begin
-               ERROR ( 145 ) ;
+               ERROR ( 945 ) ;
                ELSP1 := NIL
              end (* then *) ;
            if ELSP1 <> NIL then
@@ -6840,6 +6846,14 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
 
           begin
             CONSTANT ( FSYS , FSP , FVALU ) ;
+            WRITELN ( TRACEF , 'in structconst ' , LSP , ' ' , FSP ) ;
+            if FSP <> NIL then
+              begin
+                WRITELN ( TRACEF , 'in structconst ' , FSP -> . FORM )
+                          ;
+                WRITELN ( TRACEF , 'in structconst ' , FSP -> . INXTYPE
+                          ) ;
+              end (* then *) ;
             CT_RESULT := COMPTYPES ( LSP , FSP ) ;
             if CT_RESULT in [ 1 , 2 , 3 ] then
               begin
@@ -6853,7 +6867,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
               end (* then *)
             else
               begin
-                ERROR ( 145 ) ;
+                ERROR ( 946 ) ;
                 FSP := NIL
               end (* else *)
           end (* then *)
@@ -6875,7 +6889,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                 if LSP -> . FORM = POWER then
                   ELT := LSP -> . ELSET
                 else
-                  ERROR ( 145 ) ;
+                  ERROR ( 947 ) ;
               PSI := PSIGLOB ;
               PSI -> . ELEMCOUNT := 0 ;
               PSI -> . SETMIN := 0 ;
@@ -6890,7 +6904,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                   CONSTANT ( FSYS + [ SYRBRACK , SYCOMMA , SYDOTDOT ] ,
                              LSP1 , LVALU ) ;
                   if COMPTYPES ( LSP1 , ELT ) <> 1 then
-                    ERROR ( 145 ) ;
+                    ERROR ( 948 ) ;
                   ELT := LSP1 ;
                   NOCHMAL := SET_CONST_PART ( ELT , LVALU , PSI ) ;
                 until not NOCHMAL ;
@@ -7051,7 +7065,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                                                    LVALU ) ;
                                           if COMPTYPES ( IDTYPE , LSP1
                                           ) <> 1 then
-                                            ERROR ( 145 ) ;
+                                            ERROR ( 949 ) ;
                                         end (* else *) ;
                                       if SY = SYCOMMA then
                                         INSYMBOL
@@ -9943,7 +9957,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
 
                            begin
                              if COMPTYPES ( LSP , RWFILE ) <> 1 then
-                               ERROR ( 145 ) ;
+                               ERROR ( 950 ) ;
                              GEN2 ( PCODE_LDC , 1 , RWFILE -> . SIZE )
                                     ;
                              EXTUSED := TRUE ;
@@ -16546,7 +16560,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                           STORE ( LATTR ) ;
                         end (* then *)
                       else
-                        ERROR ( 145 )
+                        ERROR ( 951 )
                 end (* then *)
               else
                 begin
@@ -16635,7 +16649,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                             end (* else *) ;
                         end (* then *)
                       else
-                        ERROR ( 145 )
+                        ERROR ( 952 )
                 end (* then *)
               else
                 begin
@@ -17794,7 +17808,7 @@ procedure ENTERSTDTYPES ;
            0 , 0 , 0 , 0 , 0 , 0 ) ;
          CHARTYPE : TYPEREC =
          ( CHARSIZE , CHARSIZE , FALSE , SCALAR , STANDARD , 'C' , 1 ,
-           0 , 0 , 1 , 1 , 254 , 1 ) ;
+           0 , 0 , 1 , 1 , MAXVARCHARSIZE , 1 ) ;
          DECIMALTYPE : TYPEREC =
          ( 0 , CHARSIZE , FALSE , SCALAR , STANDARD , 'D' , 15 , 0 , 1
            , 2 , 1 , 31 , 15 ) ;

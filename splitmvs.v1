@@ -28,8 +28,13 @@ const SIZEDSN = 44 ;
 
 
 type CHARPTR = -> CHAR ;
-     ZEILE = CHAR ( 128 ) ;
-     DSNAME = CHAR ( 44 ) ;
+     ZEILE = array [ 1 .. 128 ] of CHAR ;
+     DSNAME = array [ 1 .. 44 ] of CHAR ;
+     CHAR6 = array [ 1 .. 6 ] of CHAR ;
+     CHAR8 = array [ 1 .. 8 ] of CHAR ;
+     CHAR3 = array [ 1 .. 3 ] of CHAR ;
+     CHAR80 = array [ 1 .. 80 ] of CHAR ;
+     CHAR100 = array [ 1 .. 100 ] of CHAR ;
 
 
 var OUTF001 : TEXT ;
@@ -54,10 +59,10 @@ var OUTF001 : TEXT ;
     OUTPOS : INTEGER ;
     CPIN : CHARPTR ;
     CPOUT : CHARPTR ;
-    TAG : CHAR ( 6 ) ;
-    DSN : CHAR ( 44 ) ;
-    MEM : CHAR ( 8 ) ;
-    EXT : CHAR ( 3 ) ;
+    TAG : CHAR6 ;
+    DSN : DSNAME ;
+    MEM : CHAR8 ;
+    EXT : CHAR3 ;
     HEXFLAG : CHAR ;
 
 
@@ -76,19 +81,19 @@ procedure ASSIGN_FILE ( PDSN : CHARPTR ; PMEM : CHARPTR ; PEXT :
 (***********************************************************)
 
 
-   var DSN : CHAR ( 44 ) ;
-       MEM : CHAR ( 8 ) ;
-       EXT : CHAR ( 3 ) ;
-       PFADNAME : CHAR ( 44 ) ;
+   var DSN : DSNAME ;
+       MEM : CHAR8 ;
+       EXT : CHAR3 ;
+       PFADNAME : DSNAME ;
        PFADLEN : INTEGER ;
-       FILENAME : CHAR ( 100 ) ;
+       FILENAME : CHAR100 ;
        FILELEN : INTEGER ;
        I : INTEGER ;
-       MD_CMD : CHAR ( 100 ) ;
+       MD_CMD : CHAR100 ;
        RC : INTEGER ;
-       CMDPART : CHAR ( 80 ) ;
+       CMDPART : CHAR80 ;
 
-   const DSN_TAB : array [ 1 .. 15 ] of CHAR ( 44 ) =
+   const DSN_TAB : array [ 1 .. 15 ] of DSNAME =
          ( 'PASCALN.COMPILER.PAS                    ' ,
            'PASCALN.COMPILER.CNTL                   ' ,
            'PASCALN.COMPILER.MESSAGES               ' ,
@@ -232,7 +237,7 @@ procedure WRITEBUF ( var OUTF : TEXT ; HEXFLAG : CHAR ; CPOUT : CHARPTR
        HEX : INTEGER ;
        CH : CHAR ;
        CPLAST : CHARPTR ;
-       OUTREC : CHAR ( 80 ) ;
+       OUTREC : CHAR80 ;
 
        (***********************************************************)
        (*                                                         *)

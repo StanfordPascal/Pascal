@@ -98,15 +98,20 @@ e) DISPLIMIT vom Compiler passt nicht zu Runtime bzw.
 f) Fehler bei MANORBOY.PAS ... / klar, woran es liegt
 
 
-Noch folgende Punkte offen:
+Erledigt in Release 2018.02:
 
 a) VPU-Befehl raus, wenn man ihn nicht braucht (geht das?) / derzeit nicht
 b) Korrektur COMPTLIST - lÑuft falsch / gefixt
 c) Korrektur doppelte Variablennamen, wenn Proz-Parm Parameter hat / gefixt
 d) Korrektur falscher Level von Åbergebener Prozedur (MANORBOY-Problem) / gefixt
-e) Wann und wo speichern wir die Display-Struktur, wie tief kann man gehen?
-f) Procedur-Parameter usw. in PCINT (erfordert andere Stack-Verwaltung)
-g) CHK A Befehle rein, wenn Pointer dereferenziert werden - PrÅfen auf NIL
-h) CHAR (n) fuer grî·ere Werte von (n)
-i) CHAR (n) usw. auch fÅr symbolische Konstanten
+
+
+Noch folgende Punkte offen (2018.03):
+
+a) CHAR (n) fuer grî·ere Werte von (n) / gefixt
+b) CHAR (n) usw. auch fÅr symbolische Konstanten
+c) Procedur-Parameter usw. in PCINT (erfordert andere Stack-Verwaltung)
+d) Wann und wo speichern wir die Display-Struktur, wie tief kann man gehen?
+e) CHK A Befehle rein, wenn Pointer dereferenziert werden - PrÅfen auf NIL
+f) V-Befehle in PASCAL2
 

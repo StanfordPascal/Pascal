@@ -42,7 +42,7 @@ program PCODE_TRANSLATOR ( INPUT , OUTPUT , PRR , ASMOUT , DBGINFO ,
 (*  255- PROCEDURE TOO LONG (LARGER THAN 8K BYTES) - other place    *)
 (*       --> SUBDIVIDE THE PROCEDURE.                               *)
 (*  256- TOO MANY PROCEDURES/FUNCTIONS REFERENCED IN THIS PROC.     *)
-(*       --> RECOMPILE THE POST_PROCESSOR WITH A LARGER VALUE       *)
+(*       --> RECOMPILE THE POST_PROCESSOR WITH  A  LARGER  VALUE    *)
 (*       FOR PRCCNT.                                                *)
 (*  259- EXPRESSION TOO COMPLICATED.                                *)
 (*       -->  SIMPLIFY  THE  EXPRESSION  BY  REARRANGING  AND/OR    *)
@@ -318,9 +318,9 @@ program PCODE_TRANSLATOR ( INPUT , OUTPUT , PRR , ASMOUT , DBGINFO ,
 
 
 
-const VERSION = '2018.03' ;        // Version for display message
-      VERSION2 = 0x1803 ;          // Version for load module
-      VERSION3 = 'XL2''1803''' ;   // Version for ASMOUT listing
+const VERSION = '12.2017' ;        // Version for display message
+      VERSION2 = 0x1712 ;          // Version for load module
+      VERSION3 = 'XL2''1712''' ;   // Version for ASMOUT listing
       MXADR = 65535 ;
       SHRTINT = 4095 ;
       HALFINT = 32700 ;
@@ -548,15 +548,18 @@ const VERSION = '2018.03' ;        // Version for display message
       CHCNT = 1600 ;      // = DBLCNT*8
       LITCNT = 400 ;      // # OF NUMERIC LITERALS IN A PROC.
       LITDANGER = 395 ;   // SAFE LIMIT FOR NXTLIT
+      PRCCNT = 50 ;
 
       (****************************************************)
-      (* PRCCNT = # OF PROC'S OR ENTRY PT.S IN ONE CSECT  *)
-      (* opp 02.2018: was 50, set to 200                  *)
-      (* LBLCNT = # OF LABELS IN A CSECT                  *)
+      (* # OF PROC'S OR ENTRY PT.S IN ONE CSECT           *)
       (****************************************************)
 
-      PRCCNT = 200 ;
       LBLCNT = 500 ;
+
+      (****************************************************)
+      (* # OF LABELS IN A CSECT                           *)
+      (****************************************************)
+
       MAXCALDPTH = 4 ;
 
       (****************************************************)
@@ -716,8 +719,7 @@ type OPTYPE = ( PCTS , PCTI , PLOD , PSTR , PLDA , PLOC , PSTO , PLDC ,
               PDEC , PSTP , PSAV , PRST , PCHR , PORD , PDEF , PCRD ,
               PXPO , PBGN , PEND , PASE , PSLD , PSMV , PMST , PUXJ ,
               PXLB , PCST , PDFC , PPAK , PADA , PSBA , PXOR , PMFI ,
-              PMCP , PMSE , PDBG , PMZE , PVC1 , PVC2 , PVCC , PVLD ,
-              PVST , PVMV , PVSM , PVLM , PVPU , PVPO , UNDEF_OP ) ;
+              PMCP , PMSE , PDBG , PMZE , UNDEF_OP ) ;
      CSPTYPE = ( PCTR , PN01 , PN02 , PN03 , PN04 , PN05 , PN06 , PN07
                , PN08 , PN09 , PPAG , PGET , PPUT , PRES , PREW , PRDC
                , PWRI , PWRE , PWRR , PWRC , PWRS , PWRX , PRDB , PWRB
@@ -1406,8 +1408,7 @@ const HEXTAB : array [ 0 .. 15 ] of CHAR = '0123456789abcdef' ;
         'DEC' , 'STP' , 'SAV' , 'RST' , 'CHR' , 'ORD' , 'DEF' , 'CRD' ,
         'XPO' , 'BGN' , 'END' , 'ASE' , 'SLD' , 'SMV' , 'MST' , 'UXJ' ,
         'XLB' , 'CST' , 'DFC' , 'PAK' , 'ADA' , 'SBA' , 'XOR' , 'MFI' ,
-        'MCP' , 'MSE' , 'DBG' , 'MZE' , 'VC1' , 'VC2' , 'VCC' , 'VLD' ,
-        'VST' , 'VMV' , 'VSM' , 'VLM' , 'VPU' , 'VPO' , '-?-' ) ;
+        'MCP' , 'MSE' , 'DBG' , 'MZE' , '-?-' ) ;
       CSPTBL : array [ CSPTYPE ] of BETA =
       ( 'N00' , 'N01' , 'N02' , 'N03' , 'N04' , 'N05' , 'N06' , 'N07' ,
         'N08' , 'N09' , 'PAG' , 'GET' , 'PUT' , 'RES' , 'REW' , 'RDC' ,
@@ -2305,7 +2306,7 @@ procedure READNXTINST ;
            if ASM then
              WRITELN ( ASMOUT , CH1 : 3 , ',' , Q : 1 ) ;
          end (* tag/ca *) ;
-       PNEW , PLDA , PSMV , PSLD , PSCL , PMST , PVPU , PVPO :
+       PNEW , PLDA , PSMV , PSLD , PSCL , PMST :
          begin
 
      (************************)
@@ -7395,13 +7396,6 @@ procedure ASMNXTINST ;
       end (* BSETOPS *) ;
 
 
-   procedure STRINGOPS ;
-
-      begin (* STRINGOPS *)
-        
-      end (* STRINGOPS *) ;
-
-
    procedure CSETOPS ;
 
    (************************************************)
@@ -9040,8 +9034,6 @@ procedure ASMNXTINST ;
       procedure ENT_RET ;
 
          var STATIC_ADDR : ADRRNG ;
-             OFFS_WORK : ADRRNG ;
-             SIZE_REST : ADRRNG ;
 
          begin (* ENT_RET *)
            PROCOFFSET_OLD := 0 ;
@@ -9142,12 +9134,11 @@ procedure ASMNXTINST ;
                  GENRX ( XLA , PBR2 , 4092 , PBR1 , 0 ) ;
                if DEBUG or MUSIC then
                  begin
+                   GENRR ( XLR , RTREG , JREG ) ;
 
-           //************************************************
-           // GENRR ( XLR , RTREG , JREG ) ;                 
-           // old comment:                                   
-           // SAVE CURR. LOC. FOR ERROR ROUTINE              
-           //************************************************
+           (*************************************)
+           (* SAVE CURR. LOC. FOR ERROR ROUTINE *)
+           (*************************************)
 
                    if DATA_SIZE < 4096 then
                      GENRX ( XLA , TRG1 , DATA_SIZE , TRG1 , 0 )
@@ -9215,57 +9206,64 @@ procedure ASMNXTINST ;
            (***********************************************)
 
                if DEBUG and ( CURLVL > 1 ) and ( DATA_SIZE > 80 ) then
-                 if DATA_SIZE < 1500 then
-                   begin
 
-           //************************************************
-           // optimizing: generate MVC instead of MVCL       
-           // MVI 80(13),X'81'                               
-           // MVC 81(256,13),80(13) ...                      
-           //************************************************
+           (**************************)
+           (* CLEAR THE STACK FRAME  *)
+           (**************************)
 
-                     GENSI ( XMVI , LCAFTMST , LBR , 0x81 ) ;
-                     OFFS_WORK := LCAFTMST + 1 ;
-                     SIZE_REST := DATA_SIZE - LCAFTMST - 1 ;
-                     while SIZE_REST > 256 do
-                       begin
-                         GENSS ( XMVC , 256 , OFFS_WORK , LBR ,
-                                 OFFS_WORK - 1 , LBR ) ;
-                         OFFS_WORK := OFFS_WORK + 256 ;
-                         SIZE_REST := SIZE_REST - 256
-                       end (* while *) ;
-                     GENSS ( XMVC , SIZE_REST , OFFS_WORK , LBR ,
-                             OFFS_WORK - 1 , LBR ) ;
-                   end (* then *)
-                 else
-                   begin
+                 begin
+                   GENRX ( XLD , TRG0 , CLEARBUF , GBR , 0 ) ;
 
-           //******************************
-           // clear the stack frame        
-           // that is:                     
-           // LA    0,80(13)               
-           // length into R1               
-           // XR    R14,R14                
-           // LA    R15,X'81'              
-           // SLL   R15,24                 
-           // MVCL  R0,R14                 
-           //******************************
+           (****************************)
+           (* THE PATTERN TO CLEAR MEM *)
+           (****************************)
 
-                     GENRX ( XLA , TRG0 , LCAFTMST , LBR , 0 ) ;
-                     if DATA_SIZE < 4096 then
-                       GENRX ( XLA , TRG1 , DATA_SIZE - LCAFTMST , 0 ,
-                               0 )
-                     else
-                       begin
-                         GENRXLAB ( XL , TRG1 , SEGSZE , - 1 ) ;
-                         GENRXLIT ( XS , TRG1 , LCAFTMST - REALSIZE , 0
-                                    ) ;
-                       end (* else *) ;
-                     GENRR ( XXR , TRG14 , TRG14 ) ;
-                     GENRX ( XLA , TRG15 , 0x81 , 0 , 0 ) ;
-                     GENRX ( XSLL , TRG15 , 24 , 0 , 0 ) ;
-                     GENRR ( XMVCL , TRG0 , TRG14 ) ;
-                   end (* else *) ;
+                   if DATA_SIZE < ( 4096 * 8 ) then
+                     GENRX ( XLA , TRG1 , ( DATA_SIZE - LCAFTMST ) DIV
+                             8 , 0 , 0 )
+                   else
+                     begin
+                       GENRXLAB ( XL , TRG1 , SEGSZE , - 1 ) ;
+                       GENRXLIT ( XS , TRG1 , LCAFTMST - REALSIZE , 0 )
+                                  ;
+                       GENRS ( XSRA , TRG1 , 0 , 3 , 0 )
+
+           (***************)
+           (* DIVIDE BY 8 *)
+           (***************)
+
+                     end (* else *) ;
+
+           (**************************************************)
+           (* TRG1 HOLDS THE # OF DOUBLE WORDS TO BE CLEARED *)
+           (**************************************************)
+
+                   GENRR ( XSR , TRG15 , TRG15 ) ;
+
+           (*****************************)
+           (* ADDRESS/INCREMENT POINTER *)
+           (*****************************)
+
+                   GENRR ( XBALR , TRG14 , 0 ) ;
+
+           (**************************)
+           (* BEGINING OF CLEAR LOOP *)
+           (**************************)
+
+                   GENRX ( XSTD , FPR0 , LCAFTMST , LBR , TRG15 ) ;
+                   GENRX ( XLA , TRG15 , REALSIZE , TRG15 , 0 ) ;
+
+           (************************)
+           (* POINT TO NEXT D_WORD *)
+           (************************)
+
+                   GENRR ( XBCTR , TRG1 , TRG14 ) ;
+
+           (*********************)
+           (* REPEAT UNTIL DONE *)
+           (*********************)
+
+                 end (* then *) ;
                if SAVERGS or ( OPNDTYPE <> PROC ) then
                  begin
                    if OS_STYLE then
@@ -12683,8 +12681,6 @@ procedure ASMNXTINST ;
          end (* tag/ca *) ;
        PSCL , PCRD , PSMV , PSLD :
          CSETOPS ;
-       PVPU , PVPO :
-         STRINGOPS ;
      end (* case *) ;
      if FALSE then
        begin

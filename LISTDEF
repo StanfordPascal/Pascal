@@ -1,0 +1,1024 @@
+HEAPCB               static   1     16  struct aln = 4
+  EYECATCH                field      0  array 1 4
+                             inxtype =  integer (2)
+                             aeltype =  char
+  FIRST                   field      4  pointer ->001
+  LAST                    field      8  pointer ->001
+  ACTIVE                  field     12  integer
+                                        endstruct
+PHEAP                static   1     32  pointer ->002
+ANZ_ALLOCS           static   1     36  integer
+ANZ_FREES            static   1     40  integer
+->001                                   struct aln = 4
+  EYECATCH                field      0  array 1 4
+                             inxtype =  integer (2)
+                             aeltype =  char
+  FWD                     field      4  pointer ->001
+  BWD                     field      8  pointer ->001
+  DUMMY                   field     12  integer
+  AREA1                   field     16  pointer
+  FREE1                   field     20  pointer ->003
+  LEN_AREA1               field     24  integer
+  LEN_FREE1               field     28  integer
+                                        endstruct
+->002                                   struct aln = 4
+  EYECATCH                field      0  array 1 4
+                             inxtype =  integer (2)
+                             aeltype =  char
+  FIRST                   field      4  pointer ->001
+  LAST                    field      8  pointer ->001
+  ACTIVE                  field     12  integer
+                                        endstruct
+->003                                   struct aln = 4
+  FREELOW                 field      0  pointer ->003
+  FREEEQ                  field      4  pointer ->003
+  LEN_FREELOW             field      8  integer
+  LEN_FREEEQ              field     12  integer
+                                        endstruct
+
+
+
+Function ALLOC_AREAX         
+------------------------------------------------------------------------
+external = FALSE
+extlang  =  
+extname  =  
+forward  = FALSE
+level    =            1
+pfname   =            2
+cstname  = $LI#X002
+
+Parameters for ALLOC_AREAX         
+------------------------------------------------------------------------
+SIZE                 auto     2    112  integer
+
+Variables of ALLOC_AREAX         
+------------------------------------------------------------------------
+IP                   auto     2    116  struct aln = 4
+                        variant
+  P                       field      0  pointer
+                        variant
+  I                       field      0  integer
+                                        endstruct
+
+
+
+Procedure DUMP                
+------------------------------------------------------------------------
+external = FALSE
+extlang  =  
+extname  =  
+forward  = FALSE
+level    =            1
+pfname   =            3
+cstname  = $LI#X003
+
+Parameters for DUMP                
+------------------------------------------------------------------------
+PVON                 auto     2    112  pointer
+PBIS                 auto     2    116  pointer
+
+Variables of DUMP                
+------------------------------------------------------------------------
+P1                   auto     2    120  pointer
+P2                   auto     2    124  pointer
+MOD1                 auto     2    128  integer
+MOD2                 auto     2    132  integer
+
+
+
+Procedure DUMPCHAR            
+------------------------------------------------------------------------
+external = FALSE
+extlang  =  
+extname  =  
+forward  = FALSE
+level    =            2
+pfname   =            4
+cstname  = $LI#X004
+
+Parameters for DUMPCHAR            
+------------------------------------------------------------------------
+CH                   auto     3    112  char
+
+
+
+Procedure DUMPZEILE           
+------------------------------------------------------------------------
+external = FALSE
+extlang  =  
+extname  =  
+forward  = FALSE
+level    =            2
+pfname   =            5
+cstname  = $LI#X005
+
+Parameters for DUMPZEILE           
+------------------------------------------------------------------------
+ADR                  auto     3    112  pointer
+P1                   auto     3    116  pointer
+P2                   auto     3    120  pointer
+
+Variables of DUMPZEILE           
+------------------------------------------------------------------------
+CH                   auto     3    124  pointer ->001
+I                    auto     3    128  integer
+->001                                   char
+
+
+
+Procedure LISTE_DER_LUECKEN   
+------------------------------------------------------------------------
+external = FALSE
+extlang  =  
+extname  =  
+forward  = FALSE
+level    =            1
+pfname   =            6
+cstname  = $LI#X006
+
+Parameters for LISTE_DER_LUECKEN   
+------------------------------------------------------------------------
+HANC                 auto     2    112  pointer ->001
+
+Variables of LISTE_DER_LUECKEN   
+------------------------------------------------------------------------
+PLAUF                auto     2    116  pointer ->002
+PEQUAL               auto     2    120  pointer ->002
+SIZE                 auto     2    124  integer
+CHKENN               auto     2    128  char
+SIZEALT              auto     2    132  integer
+PEQUALALT            auto     2    136  pointer ->002
+->001                                   struct aln = 4
+  EYECATCH                field      0  array 1 4
+                             inxtype =  integer (2)
+                             aeltype =  char
+  FWD                     field      4  pointer ->001
+  BWD                     field      8  pointer ->001
+  DUMMY                   field     12  integer
+  AREA1                   field     16  pointer
+  FREE1                   field     20  pointer ->002
+  LEN_AREA1               field     24  integer
+  LEN_FREE1               field     28  integer
+                                        endstruct
+->002                                   struct aln = 4
+  FREELOW                 field      0  pointer ->002
+  FREEEQ                  field      4  pointer ->002
+  LEN_FREELOW             field      8  integer
+  LEN_FREEEQ              field     12  integer
+                                        endstruct
+
+
+
+Procedure LISTE_ALLER_HANCS   
+------------------------------------------------------------------------
+external = FALSE
+extlang  =  
+extname  =  
+forward  = FALSE
+level    =            1
+pfname   =            7
+cstname  = $LI#X007
+
+Parameters for LISTE_ALLER_HANCS   
+------------------------------------------------------------------------
+PHEAPC               auto     2    112  pointer ->001
+LUECKEN              auto     2    116  boolean
+
+Variables of LISTE_ALLER_HANCS   
+------------------------------------------------------------------------
+HANC_CHK             auto     2    120  pointer ->002
+FEHLER               auto     2    124  boolean
+->001                                   struct aln = 4
+  EYECATCH                field      0  array 1 4
+                             inxtype =  integer (2)
+                             aeltype =  char
+  FIRST                   field      4  pointer ->002
+  LAST                    field      8  pointer ->002
+  ACTIVE                  field     12  integer
+                                        endstruct
+->002                                   struct aln = 4
+  EYECATCH                field      0  array 1 4
+                             inxtype =  integer (2)
+                             aeltype =  char
+  FWD                     field      4  pointer ->002
+  BWD                     field      8  pointer ->002
+  DUMMY                   field     12  integer
+  AREA1                   field     16  pointer
+  FREE1                   field     20  pointer ->003
+  LEN_AREA1               field     24  integer
+  LEN_FREE1               field     28  integer
+                                        endstruct
+->003                                   struct aln = 4
+  FREELOW                 field      0  pointer ->003
+  FREEEQ                  field      4  pointer ->003
+  LEN_FREELOW             field      8  integer
+  LEN_FREEEQ              field     12  integer
+                                        endstruct
+
+
+
+Procedure REMOVE_HFRE         
+------------------------------------------------------------------------
+external = FALSE
+extlang  =  
+extname  =  
+forward  = FALSE
+level    =            1
+pfname   =            8
+cstname  = $LI#X008
+
+Parameters for REMOVE_HFRE         
+------------------------------------------------------------------------
+V                    auto     2    112  char
+P                    auto     2    116  pointer ->001
+P_VOR                auto     2    120  pointer ->001
+HANC_ACT             auto     2    124  pointer ->002
+SIZE                 auto     2    128  integer
+->001                                   struct aln = 4
+  FREELOW                 field      0  pointer ->001
+  FREEEQ                  field      4  pointer ->001
+  LEN_FREELOW             field      8  integer
+  LEN_FREEEQ              field     12  integer
+                                        endstruct
+->002                                   struct aln = 4
+  EYECATCH                field      0  array 1 4
+                             inxtype =  integer (2)
+                             aeltype =  char
+  FWD                     field      4  pointer ->002
+  BWD                     field      8  pointer ->002
+  DUMMY                   field     12  integer
+  AREA1                   field     16  pointer
+  FREE1                   field     20  pointer ->001
+  LEN_AREA1               field     24  integer
+  LEN_FREE1               field     28  integer
+                                        endstruct
+
+
+
+Procedure MODIFY_TREE         
+------------------------------------------------------------------------
+external = FALSE
+extlang  =  
+extname  =  
+forward  = FALSE
+level    =            1
+pfname   =            9
+cstname  = $LI#X009
+
+Parameters for MODIFY_TREE         
+------------------------------------------------------------------------
+MODUS                auto     2    112  char
+HANC_ACT             auto     2    116  pointer ->001
+SIZE                 auto     2    120  integer
+PLAUF                varparm  2    124  pointer ->002
+PLAUFACT             auto     2    128  pointer ->003
+
+Variables of MODIFY_TREE         
+------------------------------------------------------------------------
+PNACHB               auto     2    132  pointer ->002
+PFREEN               auto     2    136  pointer ->002
+PLAUFF               auto     2    140  pointer ->002
+PFIRST               auto     2    144  pointer ->002
+SIZE_ALT             auto     2    148  integer
+VORG_MODUS           auto     2    152  char
+PLAUFALT             auto     2    156  pointer ->002
+SIZE_FREE            auto     2    160  integer
+SIZE_NEU             auto     2    164  integer
+ADRDIFF              auto     2    168  integer
+PLAUF_SUCH           auto     2    172  pointer ->002
+->001                                   struct aln = 4
+  EYECATCH                field      0  array 1 4
+                             inxtype =  integer (2)
+                             aeltype =  char
+  FWD                     field      4  pointer ->001
+  BWD                     field      8  pointer ->001
+  DUMMY                   field     12  integer
+  AREA1                   field     16  pointer
+  FREE1                   field     20  pointer ->002
+  LEN_AREA1               field     24  integer
+  LEN_FREE1               field     28  integer
+                                        endstruct
+->002                                   struct aln = 4
+  FREELOW                 field      0  pointer ->002
+  FREEEQ                  field      4  pointer ->002
+  LEN_FREELOW             field      8  integer
+  LEN_FREEEQ              field     12  integer
+                                        endstruct
+->003                                   struct aln = 4
+  XHANC                   field      0  pointer ->001
+  XSIZE                   field      4  integer
+                                        endstruct
+
+
+
+Procedure MODIFY_PRIOR        
+------------------------------------------------------------------------
+external = FALSE
+extlang  =  
+extname  =  
+forward  = FALSE
+level    =            2
+pfname   =           10
+cstname  = $LI#X010
+
+Parameters for MODIFY_PRIOR        
+------------------------------------------------------------------------
+PNEU                 auto     3    112  pointer ->001
+VORG_MODUS           auto     3    116  char
+HANC_ACT             auto     3    120  pointer ->002
+PLAUFALT             auto     3    124  pointer ->001
+SIZE_FREE            auto     3    128  integer
+->001                                   struct aln = 4
+  FREELOW                 field      0  pointer ->001
+  FREEEQ                  field      4  pointer ->001
+  LEN_FREELOW             field      8  integer
+  LEN_FREEEQ              field     12  integer
+                                        endstruct
+->002                                   struct aln = 4
+  EYECATCH                field      0  array 1 4
+                             inxtype =  integer (2)
+                             aeltype =  char
+  FWD                     field      4  pointer ->002
+  BWD                     field      8  pointer ->002
+  DUMMY                   field     12  integer
+  AREA1                   field     16  pointer
+  FREE1                   field     20  pointer ->001
+  LEN_AREA1               field     24  integer
+  LEN_FREE1               field     28  integer
+                                        endstruct
+
+
+
+Procedure CHAIN_PRIOR         
+------------------------------------------------------------------------
+external = FALSE
+extlang  =  
+extname  =  
+forward  = FALSE
+level    =            2
+pfname   =           11
+cstname  = $LI#X011
+
+Parameters for CHAIN_PRIOR         
+------------------------------------------------------------------------
+PNEU                 auto     3    112  pointer ->001
+VORG_MODUS           auto     3    116  char
+HANC_ACT             auto     3    120  pointer ->002
+PLAUFALT             auto     3    124  pointer ->001
+SIZE_FREE            auto     3    128  integer
+->001                                   struct aln = 4
+  FREELOW                 field      0  pointer ->001
+  FREEEQ                  field      4  pointer ->001
+  LEN_FREELOW             field      8  integer
+  LEN_FREEEQ              field     12  integer
+                                        endstruct
+->002                                   struct aln = 4
+  EYECATCH                field      0  array 1 4
+                             inxtype =  integer (2)
+                             aeltype =  char
+  FWD                     field      4  pointer ->002
+  BWD                     field      8  pointer ->002
+  DUMMY                   field     12  integer
+  AREA1                   field     16  pointer
+  FREE1                   field     20  pointer ->001
+  LEN_AREA1               field     24  integer
+  LEN_FREE1               field     28  integer
+                                        endstruct
+
+
+
+Procedure COPY_HFRE           
+------------------------------------------------------------------------
+external = FALSE
+extlang  =  
+extname  =  
+forward  = FALSE
+level    =            2
+pfname   =           12
+cstname  = $LI#X012
+
+Parameters for COPY_HFRE           
+------------------------------------------------------------------------
+SOURCE               auto     3    112  pointer ->001
+TARGET               auto     3    116  pointer ->001
+SIZE                 auto     3    120  integer
+->001                                   struct aln = 4
+  FREELOW                 field      0  pointer ->001
+  FREEEQ                  field      4  pointer ->001
+  LEN_FREELOW             field      8  integer
+  LEN_FREEEQ              field     12  integer
+                                        endstruct
+
+
+
+Procedure INS_HFRE_EQUAL      
+------------------------------------------------------------------------
+external = FALSE
+extlang  =  
+extname  =  
+forward  = FALSE
+level    =            2
+pfname   =           13
+cstname  = $LI#X013
+
+Parameters for INS_HFRE_EQUAL      
+------------------------------------------------------------------------
+PFREEN               auto     3    112  pointer ->001
+SIZE_FREE            auto     3    116  integer
+PFIRST               auto     3    120  pointer ->001
+PLAUFALT             auto     3    124  pointer ->001
+VORG_MODUS           auto     3    128  char
+
+Variables of INS_HFRE_EQUAL      
+------------------------------------------------------------------------
+PLAUFF               auto     3    132  pointer ->001
+->001                                   struct aln = 4
+  FREELOW                 field      0  pointer ->001
+  FREEEQ                  field      4  pointer ->001
+  LEN_FREELOW             field      8  integer
+  LEN_FREEEQ              field     12  integer
+                                        endstruct
+
+
+
+Procedure INS_HFRE_ABOVE      
+------------------------------------------------------------------------
+external = FALSE
+extlang  =  
+extname  =  
+forward  = FALSE
+level    =            2
+pfname   =           14
+cstname  = $LI#X014
+
+Parameters for INS_HFRE_ABOVE      
+------------------------------------------------------------------------
+PFREEN               auto     3    112  pointer ->001
+SIZE_FREE            auto     3    116  integer
+HANC_ACT             auto     3    120  pointer ->002
+PLAUF                auto     3    124  pointer ->001
+VORG_MODUS           auto     3    128  char
+->001                                   struct aln = 4
+  FREELOW                 field      0  pointer ->001
+  FREEEQ                  field      4  pointer ->001
+  LEN_FREELOW             field      8  integer
+  LEN_FREEEQ              field     12  integer
+                                        endstruct
+->002                                   struct aln = 4
+  EYECATCH                field      0  array 1 4
+                             inxtype =  integer (2)
+                             aeltype =  char
+  FWD                     field      4  pointer ->002
+  BWD                     field      8  pointer ->002
+  DUMMY                   field     12  integer
+  AREA1                   field     16  pointer
+  FREE1                   field     20  pointer ->001
+  LEN_AREA1               field     24  integer
+  LEN_FREE1               field     28  integer
+                                        endstruct
+
+
+
+Procedure SUCHE_HFRE_NACH_GROE
+------------------------------------------------------------------------
+external = FALSE
+extlang  =  
+extname  =  
+forward  = FALSE
+level    =            2
+pfname   =           15
+cstname  = $LI#X015
+
+No Parameters for SUCHE_HFRE_NACH_GROE
+
+
+
+Procedure SUCHE_HFRE          
+------------------------------------------------------------------------
+external = FALSE
+extlang  =  
+extname  =  
+forward  = FALSE
+level    =            2
+pfname   =           16
+cstname  = $LI#X016
+
+No Parameters for SUCHE_HFRE          
+
+Variables of SUCHE_HFRE          
+------------------------------------------------------------------------
+PLAUFX               auto     3    112  pointer ->001
+->001                                   struct aln = 4
+  FREELOW                 field      0  pointer ->001
+  FREEEQ                  field      4  pointer ->001
+  LEN_FREELOW             field      8  integer
+  LEN_FREEEQ              field     12  integer
+                                        endstruct
+
+
+
+Procedure SUCHE_HFRE_NACH_ADRE
+------------------------------------------------------------------------
+external = FALSE
+extlang  =  
+extname  =  
+forward  = FALSE
+level    =            2
+pfname   =           17
+cstname  = $LI#X017
+
+No Parameters for SUCHE_HFRE_NACH_ADRE
+
+Variables of SUCHE_HFRE_NACH_ADRE
+------------------------------------------------------------------------
+GEFUNDEN             auto     3    112  boolean
+
+
+
+Procedure INSERT_HFRE         
+------------------------------------------------------------------------
+external = FALSE
+extlang  =  
+extname  =  
+forward  = FALSE
+level    =            2
+pfname   =           18
+cstname  = $LI#X018
+
+No Parameters for INSERT_HFRE         
+
+
+
+Function ALLOC_AREA          
+------------------------------------------------------------------------
+external = FALSE
+extlang  =  
+extname  =  
+forward  = FALSE
+level    =            1
+pfname   =           19
+cstname  = $LI#X019
+
+Parameters for ALLOC_AREA          
+------------------------------------------------------------------------
+SIZE                 auto     2    112  integer
+
+Variables of ALLOC_AREA          
+------------------------------------------------------------------------
+SIZEX                auto     2    116  integer
+XP                   auto     2    120  pointer ->001
+HANC_ACT             auto     2    124  pointer ->002
+PLAUF                auto     2    128  pointer ->003
+HANC_NEW             auto     2    132  pointer ->002
+HANC_CHK             auto     2    136  pointer ->002
+HANC_CHK2            auto     2    140  pointer ->002
+HANC_LAST            auto     2    144  pointer ->002
+HANC_FWD             auto     2    148  pointer ->002
+HANC_BWD             auto     2    152  pointer ->002
+PHEAPC               auto     2    156  pointer ->004
+->001                                   struct aln = 4
+  XHANC                   field      0  pointer ->002
+  XSIZE                   field      4  integer
+                                        endstruct
+->002                                   struct aln = 4
+  EYECATCH                field      0  array 1 4
+                             inxtype =  integer (2)
+                             aeltype =  char
+  FWD                     field      4  pointer ->002
+  BWD                     field      8  pointer ->002
+  DUMMY                   field     12  integer
+  AREA1                   field     16  pointer
+  FREE1                   field     20  pointer ->003
+  LEN_AREA1               field     24  integer
+  LEN_FREE1               field     28  integer
+                                        endstruct
+->003                                   struct aln = 4
+  FREELOW                 field      0  pointer ->003
+  FREEEQ                  field      4  pointer ->003
+  LEN_FREELOW             field      8  integer
+  LEN_FREEEQ              field     12  integer
+                                        endstruct
+->004                                   struct aln = 4
+  EYECATCH                field      0  array 1 4
+                             inxtype =  integer (2)
+                             aeltype =  char
+  FIRST                   field      4  pointer ->002
+  LAST                    field      8  pointer ->002
+  ACTIVE                  field     12  integer
+                                        endstruct
+
+
+
+Procedure FREE_AREAX          
+------------------------------------------------------------------------
+external = FALSE
+extlang  =  
+extname  =  
+forward  = FALSE
+level    =            1
+pfname   =           20
+cstname  = $LI#X020
+
+Parameters for FREE_AREAX          
+------------------------------------------------------------------------
+PTR                  auto     2    112  pointer
+
+Variables of FREE_AREAX          
+------------------------------------------------------------------------
+X                    auto     2    116  pointer
+
+
+
+Function CHECK_AREA_ALLOC    
+------------------------------------------------------------------------
+external = FALSE
+extlang  =  
+extname  =  
+forward  = FALSE
+level    =            1
+pfname   =           21
+cstname  = $LI#X021
+
+Parameters for CHECK_AREA_ALLOC    
+------------------------------------------------------------------------
+PTR                  auto     2    112  pointer
+
+Variables of CHECK_AREA_ALLOC    
+------------------------------------------------------------------------
+SIZEX                auto     2    116  integer
+XP                   auto     2    120  pointer ->001
+HANC_ACT             auto     2    124  pointer ->002
+PTR_ENDE             auto     2    128  pointer
+PHEAPC               auto     2    132  pointer ->003
+ERG                  auto     2    136  pointer
+HANC_CHK             auto     2    140  pointer ->002
+GEFUNDEN             auto     2    144  boolean
+->001                                   struct aln = 4
+  XHANC                   field      0  pointer ->002
+  XSIZE                   field      4  integer
+                                        endstruct
+->002                                   struct aln = 4
+  EYECATCH                field      0  array 1 4
+                             inxtype =  integer (2)
+                             aeltype =  char
+  FWD                     field      4  pointer ->002
+  BWD                     field      8  pointer ->002
+  DUMMY                   field     12  integer
+  AREA1                   field     16  pointer
+  FREE1                   field     20  pointer ->004
+  LEN_AREA1               field     24  integer
+  LEN_FREE1               field     28  integer
+                                        endstruct
+->003                                   struct aln = 4
+  EYECATCH                field      0  array 1 4
+                             inxtype =  integer (2)
+                             aeltype =  char
+  FIRST                   field      4  pointer ->002
+  LAST                    field      8  pointer ->002
+  ACTIVE                  field     12  integer
+                                        endstruct
+->004                                   struct aln = 4
+  FREELOW                 field      0  pointer ->004
+  FREEEQ                  field      4  pointer ->004
+  LEN_FREELOW             field      8  integer
+  LEN_FREEEQ              field     12  integer
+                                        endstruct
+
+
+
+Procedure FREE_AREA           
+------------------------------------------------------------------------
+external = FALSE
+extlang  =  
+extname  =  
+forward  = FALSE
+level    =            1
+pfname   =           22
+cstname  = $LI#X022
+
+Parameters for FREE_AREA           
+------------------------------------------------------------------------
+PTR                  auto     2    112  pointer
+
+Variables of FREE_AREA           
+------------------------------------------------------------------------
+SIZEX                auto     2    116  integer
+XP                   auto     2    120  pointer ->001
+HANC_ACT             auto     2    124  pointer ->002
+PTR_ENDE             auto     2    128  pointer
+PLINKS               auto     2    132  pointer ->003
+PRECHTS              auto     2    136  pointer ->003
+PLINKS_VOR           auto     2    140  pointer ->003
+PRECHTS_VOR          auto     2    144  pointer ->003
+VRECHTS              auto     2    148  char
+VLINKS               auto     2    149  char
+SIZE_LINKS           auto     2    152  integer
+SIZE_RECHTS          auto     2    156  integer
+PFREE                auto     2    160  pointer ->003
+SIZE_FREE            auto     2    164  integer
+PFREE2               auto     2    168  pointer ->003
+PFREE2_ENDE          auto     2    172  pointer
+PDUMMY               auto     2    176  pointer ->003
+PHEAPC               auto     2    180  pointer ->004
+->001                                   struct aln = 4
+  XHANC                   field      0  pointer ->002
+  XSIZE                   field      4  integer
+                                        endstruct
+->002                                   struct aln = 4
+  EYECATCH                field      0  array 1 4
+                             inxtype =  integer (2)
+                             aeltype =  char
+  FWD                     field      4  pointer ->002
+  BWD                     field      8  pointer ->002
+  DUMMY                   field     12  integer
+  AREA1                   field     16  pointer
+  FREE1                   field     20  pointer ->003
+  LEN_AREA1               field     24  integer
+  LEN_FREE1               field     28  integer
+                                        endstruct
+->003                                   struct aln = 4
+  FREELOW                 field      0  pointer ->003
+  FREEEQ                  field      4  pointer ->003
+  LEN_FREELOW             field      8  integer
+  LEN_FREEEQ              field     12  integer
+                                        endstruct
+->004                                   struct aln = 4
+  EYECATCH                field      0  array 1 4
+                             inxtype =  integer (2)
+                             aeltype =  char
+  FIRST                   field      4  pointer ->002
+  LAST                    field      8  pointer ->002
+  ACTIVE                  field     12  integer
+                                        endstruct
+
+
+
+Function $PASMEM             
+------------------------------------------------------------------------
+external = TRUE 
+extlang  =  
+extname  =  
+forward  = FALSE
+level    =            1
+pfname   =           23
+cstname  = $PASMEM#
+
+Parameters for $PASMEM             
+------------------------------------------------------------------------
+FUNCCODE             auto     2    112  integer
+X                    auto     2    116  pointer
+Y                    auto     2    120  pointer
+
+
+
+Function $PASLIB             
+------------------------------------------------------------------------
+external = TRUE 
+extlang  =  
+extname  =  
+forward  = FALSE
+level    =            1
+pfname   =           24
+cstname  = $PASLIB#
+
+Parameters for $PASLIB             
+------------------------------------------------------------------------
+FUNCCODE             auto     2    112  integer
+X                    auto     2    116  pointer
+Y                    auto     2    120  pointer
+
+
+
+Function ROUNDX1             
+------------------------------------------------------------------------
+external = FALSE
+extlang  =  
+extname  =  
+forward  = FALSE
+level    =            1
+pfname   =           25
+cstname  = $LI#X025
+
+Parameters for ROUNDX1             
+------------------------------------------------------------------------
+WERT                 auto     2    112  real
+BEREICH              auto     2    120  integer
+
+Variables of ROUNDX1             
+------------------------------------------------------------------------
+FAKTOR               auto     2    128  real
+TEST                 auto     2    136  real
+RUNDKONST            auto     2    144  real
+
+
+
+Function $PASMAT             
+------------------------------------------------------------------------
+external = TRUE 
+extlang  =  
+extname  =  
+forward  = FALSE
+level    =            1
+pfname   =           26
+cstname  = $PASMAT#
+
+Parameters for $PASMAT             
+------------------------------------------------------------------------
+FUNCCODE             auto     2    112  integer
+I                    auto     2    116  integer
+X                    auto     2    120  real
+
+Variables of $PASMAT             
+------------------------------------------------------------------------
+CH                   auto     2    128  char
+
+
+
+Procedure CMSX                
+------------------------------------------------------------------------
+external = TRUE 
+extlang  =  
+extname  =  
+forward  = FALSE
+level    =            1
+pfname   =           27
+cstname  = CMSX####
+
+Parameters for CMSX                
+------------------------------------------------------------------------
+CMD                  auto     2    112  pointer ->001
+RETCODE              varparm  2    116  integer
+
+Variables of CMSX                
+------------------------------------------------------------------------
+CMSCMD               auto     2    120  array 1 128
+                             inxtype =  integer (2)
+                             aeltype =  char
+CP                   auto     2    248  pointer ->001
+CPT                  auto     2    252  pointer ->001
+TOK                  auto     2    256  array 1 8
+                             inxtype =  integer (2)
+                             aeltype =  char
+I                    auto     2    264  integer
+->001                                   char
+
+
+
+Procedure WINX                
+------------------------------------------------------------------------
+external = TRUE 
+extlang  =  
+extname  =  
+forward  = FALSE
+level    =            1
+pfname   =           28
+cstname  = WINX####
+
+Parameters for WINX                
+------------------------------------------------------------------------
+CMD                  auto     2    112  pointer ->001
+RETCODE              varparm  2    116  integer
+
+Variables of WINX                
+------------------------------------------------------------------------
+CMSCMD               auto     2    120  array 1 128
+                             inxtype =  integer (2)
+                             aeltype =  char
+CP                   auto     2    248  pointer ->001
+CPSTART              auto     2    252  pointer ->001
+ILEN                 auto     2    256  integer
+->001                                   char
+
+
+
+Procedure $PASMMM             
+------------------------------------------------------------------------
+external = TRUE 
+extlang  =  
+extname  =  
+forward  = FALSE
+level    =            1
+pfname   =           29
+cstname  = $PASMMM#
+
+Parameters for $PASMMM             
+------------------------------------------------------------------------
+FUNCCODE             auto     2    112  integer
+X1                   auto     2    116  pointer ->001
+X2                   auto     2    120  pointer ->001
+L                    auto     2    124  integer
+
+Variables of $PASMMM             
+------------------------------------------------------------------------
+CH                   auto     2    128  char
+->001                                   char
+
+
+
+Function $PASSTR1            
+------------------------------------------------------------------------
+external = TRUE 
+extlang  =  
+extname  =  
+forward  = FALSE
+level    =            1
+pfname   =           30
+cstname  = $PASSTR#
+
+Parameters for $PASSTR1            
+------------------------------------------------------------------------
+FUNCCODE             auto     2    112  integer
+S1                   auto     2    116 
+I1                   auto     2    120  integer
+I2                   auto     2    124  integer
+
+Variables of $PASSTR1            
+------------------------------------------------------------------------
+LEN                  auto     2    128  integer
+START                auto     2    132  integer
+RESTL                auto     2    136  integer
+LS1                  auto     2    140  integer
+I                    auto     2    144  integer
+X                    auto     2    148  integer
+P                    auto     2    152  pointer
+Q                    auto     2    156  pointer
+LF                   auto     2    160  pointer ->001
+CP                   auto     2    164  pointer ->002
+CP2                  auto     2    168  pointer ->002
+CPS1                 auto     2    172  pointer ->002
+C                    auto     2    176  char
+BLANK                auto     2    180  integer
+->001                                   integer (2)
+->002                                   char
+
+
+
+Function $PASSTR2            
+------------------------------------------------------------------------
+external = TRUE 
+extlang  =  
+extname  =  
+forward  = FALSE
+level    =            1
+pfname   =           31
+cstname  = $PASSTR#
+
+Parameters for $PASSTR2            
+------------------------------------------------------------------------
+FUNCCODE             auto     2    112  integer
+S1                   auto     2    116 
+S2                   auto     2    120 
+
+Variables of $PASSTR2            
+------------------------------------------------------------------------
+LS1                  auto     2    124  integer
+LS2                  auto     2    128  integer
+CP1                  auto     2    132  pointer ->001
+CP1START             auto     2    136  pointer ->001
+CP2                  auto     2    140  pointer ->001
+LFOUND               auto     2    144  integer
+I                    auto     2    148  integer
+RESTL                auto     2    152  integer
+OKSET                auto     2    156  set  0 255
+                             element =  char
+->001                                   char
+
+
+
+Function $PASSTR3            
+------------------------------------------------------------------------
+external = TRUE 
+extlang  =  
+extname  =  
+forward  = FALSE
+level    =            1
+pfname   =           32
+cstname  = $PASSTR#
+
+Parameters for $PASSTR3            
+------------------------------------------------------------------------
+FUNCCODE             auto     2    112  integer
+S1                   auto     2    116 
+S2                   auto     2    120 
+S3                   auto     2    124 
+
+Variables of $PASSTR3            
+------------------------------------------------------------------------
+TTAB                 auto     2    128  array 0 255
+                             inxtype =  integer (2)
+                             aeltype =  char
+TTAB2                auto     2    384  array 1 128
+                             inxtype =  integer (2)
+                             aeltype =  char
+L1                   auto     2    512  integer
+L2                   auto     2    516  integer
+L3                   auto     2    520  integer
+I                    auto     2    524  integer
+CP                   auto     2    528  pointer ->001
+->001                                   char
+
+**********************************
+*** End of List of Definitions ***
+**********************************
+

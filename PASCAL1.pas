@@ -1,5 +1,5 @@
-program PASCALCOMPILER ( INPUT , OUTPUT , PRR , LISTING , DBGINFO ,
-                         TRACEF ) ;
+program PASCALCOMPILER ( INPUT , OUTPUT , PRR , LISTING , LISTDEF ,
+                         DBGINFO , TRACEF ) ;
 
 (********************************************************************)
 (*$D+,N+,A-                                                         *)
@@ -1433,12 +1433,6 @@ type ALPHA = array [ 1 .. IDLNGTH ] of CHAR ;
                  FILIDPTR : IDP ;
                  NEXTFILE : FRECPTR ;
                end ;
-     PRNTTYLISTP = -> PRNTTYLIST ;
-     PRNTTYLIST = record
-                    ELT : TTP ;
-                    TNO : 0 .. 999 ;
-                    NXT : PRNTTYLISTP
-                  end ;
      ERRCODE = 0 .. MAXERRNR ;
      CTRRANGE = 0 .. CTRMAX ;
      CTRTYPE = ( CTRPROC , CTRLBL , CTRGOTO , CTRIF , CTRWHILE ,
@@ -1583,6 +1577,7 @@ var MXINT2 : INTEGER ;
     MXINT16 : INTEGER ;
     TRACEF : TEXT ;
     LISTING : TEXT ;
+    LISTDEF : TEXT ;
     DBGINFO : TEXT ;
     SOURCENAME : EXTNAMTP ;
     SX : INTEGER ;
@@ -1726,13 +1721,6 @@ var MXINT2 : INTEGER ;
 
     GLOBTESTP : TESTP ;
 
-    (******************************************)
-    (* LIST OF HEAP STORAGE ITEMS FOR DEBUG   *)
-    (******************************************)
-
-    PRNTTYPHD : PRNTTYLISTP ;
-    PRNTTYNO : 0 .. 999 ;
-
     (*************************************************)
     (* listtag = LISTING TAG, D / C / N / blank      *)
     (* level = bookkeeping OF DECLARATION LEVELS     *)
@@ -1798,14 +1786,13 @@ var MXINT2 : INTEGER ;
     (* EXPRESSION COMPILATION:                *)
     (* ***********************                *)
     (******************************************)
-    // gattr - very important - DESCRIBES THE EX
-    //PR CURRENTLY COMPILED                     
 
     GATTR : ATTR ;
 
-    //**************************************************************
-    // ctls - watches the allocation of strings in the working area 
-    //**************************************************************
+    //****************************************************************
+    // gattr - very important - DESCRIBES THE EXPR CURRENTLY COMPILED 
+    // ctls - watches the allocation of strings in the working area   
+    //****************************************************************
 
     CTLS : CTL_STRINGAREA ;
 
@@ -3586,23 +3573,36 @@ procedure GENLABEL ( var NXTLAB : LABELRNG ) ;
 
 
 
-(***********************************************************)
-(*  THE FOLLOWING OUTPUTS A SYMBOL TABLE FILE              *)
-(*  FOR USE BY 'SNAPSHOT' PROGRAM                          *)
-(***********************************************************)
+//**********************************************************************
+//  THE DBG_x procedures output a symbol table file                     
+//  to be used by the snapshot program (PASSNAP)                        
+//  output file = DBGINFO                                               
+//  only if DEBUG option is active                                      
+//**********************************************************************
 
 
 
 
-procedure PRNTSYMBL ( LCP : IDP ) ;
+procedure DBG_PRINTSYMBOL ( LCP : IDP ) ;
+
+//******************************************************
+// local types for prntsymbl                            
+// global variables moved to local static / 2018.03     
+//******************************************************
+
+
+   type DBG_PRINTTYLISTP = -> DBG_PRINTTYLIST ;
+        DBG_PRINTTYLIST = record
+                            ELT : TTP ;
+                            TNO : 0 .. 9999 ;
+                            NXT : DBG_PRINTTYLISTP
+                          end ;
 
    var LINELN : INTEGER ;
+       TPT1 : DBG_PRINTTYLISTP ;
 
-       (*****************************************)
-       (* CURRENT SYMBOL TABLE FILE LINE LENGTH *)
-       (*****************************************)
-
-       TPT1 : PRNTTYLISTP ;
+   static DBG_PRINTTYNO : 0 .. 9999 ;
+          DBG_PRINTTYPHD : DBG_PRINTTYLISTP ;
 
 
    procedure CHECKLN ( LEN : INTEGER ) ;
@@ -3619,21 +3619,21 @@ procedure PRNTSYMBL ( LCP : IDP ) ;
       end (* CHECKLN *) ;
 
 
-   procedure PRNTVAR ( VRP : IDP ) ;
+   procedure DBG_PRINTVAR ( VRP : IDP ) ;
 
       FORWARD ;
 
 
-   procedure PRNTTYPE ( TYPP : TTP ) ;
+   procedure DBG_PRINTTYPE ( TYPP : TTP ) ;
 
       label 1 ;
 
       var VP , LVP : IDP ;
           RMIN , RMAX : INTEGER ;
-          TPT , LPT : PRNTTYLISTP ;
+          TPT , LPT : DBG_PRINTTYLISTP ;
           TNO : 0 .. 999 ;
 
-      begin (* PRNTTYPE *)
+      begin (* DBG_PRINTTYPE *)
         CHECKLN ( 4 ) ;
         if TYPP = PTYPE_INT then
           WRITE ( DBGINFO , 'I4; ' )
@@ -3664,7 +3664,7 @@ procedure PRNTSYMBL ( LCP : IDP ) ;
                         begin
                           if ELTYPE <> NIL then
                             begin
-                              TPT := PRNTTYPHD ;
+                              TPT := DBG_PRINTTYPHD ;
                               LPT := TPT ;
                               while TPT <> NIL do
                                 if TPT -> . ELT = ELTYPE then
@@ -3678,18 +3678,18 @@ procedure PRNTSYMBL ( LCP : IDP ) ;
                                     TPT := TPT -> . NXT ;
                                   end (* else *) ;
                               NEW ( TPT ) ;
-                              if PRNTTYPHD = NIL then
-                                PRNTTYPHD := TPT
+                              if DBG_PRINTTYPHD = NIL then
+                                DBG_PRINTTYPHD := TPT
                               else
                                 LPT -> . NXT := TPT ;
                               with TPT -> do
                                 begin
                                   NXT := NIL ;
                                   ELT := ELTYPE ;
-                                  PRNTTYNO := PRNTTYNO + 1 ;
-                                  TNO := PRNTTYNO
+                                  DBG_PRINTTYNO := DBG_PRINTTYNO + 1 ;
+                                  TNO := DBG_PRINTTYNO
                                 end (* with *) ;
-                              TNO := PRNTTYNO ;
+                              TNO := DBG_PRINTTYNO ;
                             end (* then *)
                           else
                             TNO := 0 ;
@@ -3707,7 +3707,7 @@ procedure PRNTSYMBL ( LCP : IDP ) ;
                                 end (* then *) ;
                       FILES : begin
                                 WRITE ( DBGINFO , 'F ' ) ;
-                                PRNTTYPE ( FILTYPE ) ;
+                                DBG_PRINTTYPE ( FILTYPE ) ;
                               end (* tag/ca *) ;
                       RECORDS :
                         begin
@@ -3716,7 +3716,7 @@ procedure PRNTSYMBL ( LCP : IDP ) ;
                           LVP := VP ;
                           while VP <> NIL do
                             begin
-                              PRNTVAR ( VP ) ;
+                              DBG_PRINTVAR ( VP ) ;
                               LVP := VP ;
                               VP := VP -> . NEXT ;
                             end (* while *) ;
@@ -3727,7 +3727,7 @@ procedure PRNTSYMBL ( LCP : IDP ) ;
                                 BLANKID then
                                   begin
                                     LVP := RECVAR -> . TAGFIELDP ;
-                                    PRNTVAR ( LVP ) ;
+                                    DBG_PRINTVAR ( LVP ) ;
                                   end (* then *) ;
                               if LVP <> NIL then
                                 begin
@@ -3752,30 +3752,30 @@ procedure PRNTSYMBL ( LCP : IDP ) ;
                             GETBOUNDS ( INXTYPE , RMIN , RMAX ) ;
                             WRITE ( DBGINFO , RMIN : 1 , ' ' , RMAX : 1
                                     , ' ' ) ;
-                            PRNTTYPE ( AELTYPE ) ;
+                            DBG_PRINTTYPE ( AELTYPE ) ;
                           end (* then *) ;
                     end (* case *)
                 else
                   WRITE ( DBGINFO , ';' ) ;
-      end (* PRNTTYPE *) ;
+      end (* DBG_PRINTTYPE *) ;
 
 
-   procedure PRNTVAR ;
+   procedure DBG_PRINTVAR ;
 
       var I : 0 .. IDLNGTH ;
 
-      begin (* PRNTVAR *)
+      begin (* DBG_PRINTVAR *)
         with VRP -> do
           begin
             I := GETIDLEN ( NAME ) ;
             CHECKLN ( I + 1 ) ;
             WRITE ( DBGINFO , NAME : I , '=' ) ;
-            PRNTTYPE ( IDTYPE ) ;
+            DBG_PRINTTYPE ( IDTYPE ) ;
           end (* with *)
-      end (* PRNTVAR *) ;
+      end (* DBG_PRINTVAR *) ;
 
 
-   begin (* PRNTSYMBL *)
+   begin (* DBG_PRINTSYMBOL *)
      if OPT . PRCODE then
        if LCP <> NIL then
          with LCP -> do
@@ -3794,7 +3794,7 @@ procedure PRNTSYMBL ( LCP : IDP ) ;
                  else
                    WRITE ( DBGINFO , 'S' ) ;
                  WRITE ( DBGINFO , ' ' ) ;
-                 PRNTVAR ( LCP ) ;
+                 DBG_PRINTVAR ( LCP ) ;
                end (* then *)
              else
                if KLASS in [ PROC , FUNC ] then
@@ -3809,7 +3809,7 @@ procedure PRNTSYMBL ( LCP : IDP ) ;
 
                      begin
                        if LCP -> . KLASS = VARS then
-                         PRNTSYMBL ( LCP ) ;
+                         DBG_PRINTSYMBOL ( LCP ) ;
                        LCP := LCP -> . NEXT
                      end (* while *) ;
                  end (* then *) ;
@@ -3822,19 +3822,418 @@ procedure PRNTSYMBL ( LCP : IDP ) ;
      (**************************************)
 
          begin
-           TPT1 := PRNTTYPHD ;
+           TPT1 := DBG_PRINTTYPHD ;
            while TPT1 <> NIL do
              begin
                WRITE ( DBGINFO , '>' , TPT1 -> . TNO : 1 , ' ' ) ;
                LINELN := 5 ;
-               PRNTTYPE ( TPT1 -> . ELT ) ;
+               DBG_PRINTTYPE ( TPT1 -> . ELT ) ;
                WRITELN ( DBGINFO ) ;
                TPT1 := TPT1 -> . NXT ;
              end (* while *) ;
-           PRNTTYPHD := NIL ;
-           PRNTTYNO := 0 ;
+           DBG_PRINTTYPHD := NIL ;
+           DBG_PRINTTYNO := 0 ;
          end (* else *) ;
-   end (* PRNTSYMBL *) ;
+   end (* DBG_PRINTSYMBOL *) ;
+
+
+
+
+
+//**********************************************************************
+//  THE DEF_x procedures output symbol tables                           
+//  for every procedure or function                                     
+//  output file = LISTDEF                                               
+//**********************************************************************
+
+
+
+
+procedure DEF_PRINTHEAD ( MODUS : INTEGER ; ID : ALPHA ) ;
+
+   begin (* DEF_PRINTHEAD *)
+     case MODUS of
+       1 : begin
+             WRITELN ( LISTDEF ) ;
+             WRITELN ( LISTDEF ) ;
+             WRITELN ( LISTDEF ) ;
+             WRITELN ( LISTDEF , 'Procedure ' , ID ) ;
+             DEF_PRINTHEAD ( 7 , ' ' ) ;
+           end (* tag/ca *) ;
+       2 : begin
+             WRITELN ( LISTDEF ) ;
+             WRITELN ( LISTDEF ) ;
+             WRITELN ( LISTDEF ) ;
+             WRITELN ( LISTDEF , 'Function ' , ID ) ;
+             DEF_PRINTHEAD ( 7 , ' ' ) ;
+           end (* tag/ca *) ;
+       3 : begin
+             WRITELN ( LISTDEF ) ;
+             WRITELN ( LISTDEF , 'No Parameters for ' , ID ) ;
+           end (* tag/ca *) ;
+       4 : begin
+             WRITELN ( LISTDEF ) ;
+             WRITELN ( LISTDEF , 'Parameters for ' , ID ) ;
+             DEF_PRINTHEAD ( 7 , ' ' ) ;
+           end (* tag/ca *) ;
+       5 : begin
+             WRITELN ( LISTDEF ) ;
+             WRITELN ( LISTDEF , 'Variables of ' , ID ) ;
+             DEF_PRINTHEAD ( 7 , ' ' ) ;
+           end (* tag/ca *) ;
+       6 : begin
+             WRITELN ( LISTDEF ) ;
+             WRITELN ( LISTDEF , '****************************'
+                       '***************' ) ;
+             WRITELN ( LISTDEF , '*** Stanford Pascal List of '
+                       'Definitions ***' ) ;
+             WRITELN ( LISTDEF , '****************************'
+                       '***************' ) ;
+             WRITELN ( LISTDEF ) ;
+             WRITELN ( LISTDEF ) ;
+             WRITELN ( LISTDEF , 'Variables of Main Program' ) ;
+             DEF_PRINTHEAD ( 7 , ' ' ) ;
+           end (* tag/ca *) ;
+       7 : begin
+             WRITELN ( LISTDEF , '------------------------'
+                       '------------------------'
+                       '------------------------' ) ;
+           end (* tag/ca *) ;
+       8 : begin
+             WRITELN ( LISTDEF ) ;
+             WRITELN ( LISTDEF , '**********************************' )
+                       ;
+             WRITELN ( LISTDEF , '*** End of List of Definitions ***' )
+                       ;
+             WRITELN ( LISTDEF , '**********************************' )
+                       ;
+             WRITELN ( LISTDEF ) ;
+           end (* tag/ca *) ;
+     end (* case *)
+   end (* DEF_PRINTHEAD *) ;
+
+
+
+procedure DEF_PRINTSYMBOL ( LCP : IDP ) ;
+
+//******************************************************
+// local types for prntsymbl                            
+// global variables moved to local static / 2018.03     
+//******************************************************
+
+
+   const LPREFIX = 39 ;
+
+   type DEF_PRINTTYLISTP = -> DEF_PRINTTYLIST ;
+        DEF_PRINTTYLIST = record
+                            ELT : TTP ;
+                            TNO : 0 .. 9999 ;
+                            NXT : DEF_PRINTTYLISTP
+                          end ;
+
+   var TPT1 : DEF_PRINTTYLISTP ;
+
+   static DEF_PRINTTYNO : 0 .. 9999 ;
+          DEF_PRINTTYPHD : DEF_PRINTTYLISTP ;
+          DEF_STRUCTLEVEL : INTEGER ;
+          DEF_VARIANTLEVEL : INTEGER ;
+
+
+   procedure DEF_PRINTVAR ( VRP : IDP ) ;
+
+      FORWARD ;
+
+
+   procedure DEF_PRINTVARIANTE ( VARP : TTP ) ;
+
+      var VFIELD : IDP ;
+          LVP : IDP ;
+
+      begin (* DEF_PRINTVARIANTE *)
+        if VARP <> NIL then
+          begin
+            case VARP -> . FORM of
+              TAGFLD :
+                begin
+                  if VARP -> . TAGFIELDP <> NIL then
+                    if VARP -> . TAGFIELDP -> . NAME <> BLANKID then
+                      begin
+                        WRITE ( LISTDEF , ' ' : SIZEOF ( ALPHA ) ,
+                                'tagfield' : 11 ) ;
+                        WRITELN ( LISTDEF ) ;
+                        DEF_PRINTVAR ( VARP -> . TAGFIELDP ) ;
+                        WRITELN ( LISTDEF ) ;
+                      end (* then *) ;
+                  DEF_PRINTVARIANTE ( VARP -> . FSTVAR ) ;
+                end (* tag/ca *) ;
+              VARIANT :
+                begin
+                  DEF_PRINTVARIANTE ( VARP -> . NXTVAR ) ;
+                  if DEF_VARIANTLEVEL > 1 then
+                    WRITE ( LISTDEF , ' ' : SIZEOF ( ALPHA ) ,
+                            'variant (' , DEF_VARIANTLEVEL : 1 , ')' )
+                  else
+                    WRITE ( LISTDEF , ' ' : SIZEOF ( ALPHA ) ,
+                            'variant' : 11 ) ;
+                  WRITELN ( LISTDEF ) ;
+                  VFIELD := VARP -> . FSTSUBFLD ;
+                  while VFIELD <> NIL do
+                    begin
+                      DEF_PRINTVAR ( VFIELD ) ;
+                      WRITELN ( LISTDEF ) ;
+                      VFIELD := VFIELD -> . NEXT
+                    end (* while *) ;
+                  DEF_VARIANTLEVEL := DEF_VARIANTLEVEL + 1 ;
+                  DEF_PRINTVARIANTE ( VARP -> . SUBVAR ) ;
+                  DEF_VARIANTLEVEL := DEF_VARIANTLEVEL - 1 ;
+                end (* tag/ca *)
+            end (* case *)
+          end (* then *)
+      end (* DEF_PRINTVARIANTE *) ;
+
+
+   procedure DEF_PRINTTYPE ( TYPP : TTP ) ;
+
+      label 1 ;
+
+      var VP , LVP : IDP ;
+          RMIN , RMAX : INTEGER ;
+          TPT , LPT : DEF_PRINTTYLISTP ;
+          TNO : 0 .. 999 ;
+
+      begin (* DEF_PRINTTYPE *)
+        if TYPP = PTYPE_INT then
+          WRITE ( LISTDEF , ' integer' )
+        else
+          if IS_STDTYPE ( TYPP , 'R' ) then
+            WRITE ( LISTDEF , ' real' )
+          else
+            if TYPP = PTYPE_BOOL then
+              WRITE ( LISTDEF , ' boolean' )
+            else
+              if TYPP = PTYPE_CHAR then
+                WRITE ( LISTDEF , ' char' )
+              else
+                if TYPP <> NIL then
+                  with TYPP -> do
+                    case FORM of
+                      SUBRANGE :
+                        if RANGETYPE = PTYPE_CHAR then
+                          WRITE ( LISTDEF , ' char' )
+                        else
+                          if RANGETYPE = PTYPE_INT then
+                            WRITE ( LISTDEF , ' integer (' , SIZE : 1 ,
+                                    ')' )
+                          else
+                            WRITE ( LISTDEF , ' scalar (' , SIZE : 1 ,
+                                    ')' ) ;
+                      SCALAR :
+                        WRITE ( LISTDEF , ' scalar (' , SIZE : 1 , ')'
+                                ) ;
+                      POINTER :
+                        begin
+                          if ELTYPE <> NIL then
+                            begin
+                              TPT := DEF_PRINTTYPHD ;
+                              LPT := TPT ;
+                              while TPT <> NIL do
+                                if TPT -> . ELT = ELTYPE then
+                                  begin
+                                    TNO := TPT -> . TNO ;
+                                    goto 1
+                                  end (* then *)
+                                else
+                                  begin
+                                    LPT := TPT ;
+                                    TPT := TPT -> . NXT ;
+                                  end (* else *) ;
+                              NEW ( TPT ) ;
+                              if DEF_PRINTTYPHD = NIL then
+                                DEF_PRINTTYPHD := TPT
+                              else
+                                LPT -> . NXT := TPT ;
+                              with TPT -> do
+                                begin
+                                  NXT := NIL ;
+                                  ELT := ELTYPE ;
+                                  DEF_PRINTTYNO := DEF_PRINTTYNO + 1 ;
+                                  TNO := DEF_PRINTTYNO
+                                end (* with *) ;
+                              TNO := DEF_PRINTTYNO ;
+                            end (* then *)
+                          else
+                            TNO := 0 ;
+                          1 :
+                          if TNO = 0 then
+                            WRITE ( LISTDEF , ' pointer' )
+                          else
+                            WRITE ( LISTDEF , ' pointer ->' , TNO : - 3
+                                    ) ;
+                        end (* tag/ca *) ;
+                      POWER : begin
+                                WRITE ( LISTDEF , ' set ' ) ;
+                                if ELSET <> NIL then
+                                  begin
+                                    GETBOUNDS ( ELSET , RMIN , RMAX ) ;
+                                    WRITE ( LISTDEF , ' ' , RMIN : 1 ,
+                                            ' ' , RMAX : 1 ) ;
+                                  end (* then *) ;
+                                WRITELN ( LISTDEF ) ;
+                                WRITE ( LISTDEF , 'element = ' :
+                                        LPREFIX ) ;
+                                DEF_PRINTTYPE ( ELSET ) ;
+                              end (* tag/ca *) ;
+                      FILES : begin
+                                WRITE ( LISTDEF , ' file' ) ;
+                                WRITELN ( LISTDEF ) ;
+                                WRITE ( LISTDEF , 'element = ' :
+                                        LPREFIX ) ;
+                                DEF_PRINTTYPE ( FILTYPE ) ;
+                              end (* tag/ca *) ;
+                      ARRAYS :
+                        begin
+                          WRITE ( LISTDEF , ' array' ) ;
+                          if INXTYPE <> NIL then
+                            begin
+                              GETBOUNDS ( INXTYPE , RMIN , RMAX ) ;
+                              WRITE ( LISTDEF , ' ' , RMIN : 1 , ' ' ,
+                                      RMAX : 1 ) ;
+                            end (* then *) ;
+                          WRITELN ( LISTDEF ) ;
+                          WRITE ( LISTDEF , 'inxtype = ' : LPREFIX ) ;
+                          DEF_PRINTTYPE ( INXTYPE ) ;
+                          WRITELN ( LISTDEF ) ;
+                          WRITE ( LISTDEF , 'aeltype = ' : LPREFIX ) ;
+                          DEF_PRINTTYPE ( AELTYPE ) ;
+                        end (* tag/ca *) ;
+                      RECORDS :
+                        begin
+                          WRITE ( LISTDEF , ' struct' ) ;
+                          if DEF_STRUCTLEVEL > 0 then
+                            WRITE ( LISTDEF , ' level = ' ,
+                                    DEF_STRUCTLEVEL + 1 : 1 ) ;
+                          WRITE ( LISTDEF , ' aln = ' , ALN : 1 ) ;
+                          WRITELN ( LISTDEF ) ;
+                          DEF_STRUCTLEVEL := DEF_STRUCTLEVEL + 1 ;
+                          VP := FSTFLD ;
+                          while VP <> NIL do
+                            begin
+                              DEF_PRINTVAR ( VP ) ;
+                              WRITELN ( LISTDEF ) ;
+                              VP := VP -> . NEXT ;
+                            end (* while *) ;
+                          DEF_VARIANTLEVEL := DEF_VARIANTLEVEL + 1 ;
+                          DEF_PRINTVARIANTE ( RECVAR ) ;
+                          DEF_VARIANTLEVEL := DEF_VARIANTLEVEL - 1 ;
+                          WRITE ( LISTDEF , ' ' : LPREFIX ) ;
+                          WRITE ( LISTDEF , ' endstruct' ) ;
+                          if DEF_STRUCTLEVEL > 1 then
+                            WRITE ( LISTDEF , ' level = ' ,
+                                    DEF_STRUCTLEVEL : 1 ) ;
+                          DEF_STRUCTLEVEL := DEF_STRUCTLEVEL - 1 ;
+                        end (* tag/ca *) ;
+                    end (* case *)
+                else
+                  WRITE ( LISTDEF , ' ' ) ;
+      end (* DEF_PRINTTYPE *) ;
+
+
+   procedure DEF_PRINTVAR ;
+
+      var I : 0 .. IDLNGTH ;
+
+      begin (* DEF_PRINTVAR *)
+        with VRP -> do
+          begin
+            case KLASS of
+              VARS : begin
+                       WRITE ( LISTDEF , NAME , ' ' ) ;
+                       if VKIND = VARPARM then
+                         WRITE ( LISTDEF , 'varparm ' )
+                       else
+                         if STKLASS = XAUTO then
+                           WRITE ( LISTDEF , 'auto    ' )
+                         else
+                           WRITE ( LISTDEF , 'static  ' ) ;
+                       WRITE ( LISTDEF , DECL_LEV : 2 , ' ' ) ;
+                       WRITE ( LISTDEF , VADDR : 6 , ' ' ) ;
+                     end (* tag/ca *) ;
+              FIELD : begin
+                        WRITE ( LISTDEF , '  ' , NAME , ' ' ) ;
+                        WRITE ( LISTDEF , '   field ' ) ;
+                        WRITE ( LISTDEF , FLDADDR : 6 , ' ' ) ;
+                      end (* tag/ca *) ;
+            end (* case *) ;
+            DEF_PRINTTYPE ( IDTYPE ) ;
+          end (* with *)
+      end (* DEF_PRINTVAR *) ;
+
+
+   begin (* DEF_PRINTSYMBOL *)
+     if OPT . PRCODE then
+       if LCP <> NIL then
+         with LCP -> do
+           begin
+             if KLASS = VARS then
+               begin
+                 DEF_PRINTVAR ( LCP ) ;
+                 WRITELN ( LISTDEF ) ;
+               end (* then *)
+             else
+               if KLASS in [ PROC , FUNC ] then
+                 begin
+                   if KLASS = PROC then
+                     DEF_PRINTHEAD ( 1 , NAME )
+                   else
+                     DEF_PRINTHEAD ( 2 , NAME ) ;
+                   WRITELN ( LISTDEF , 'external = ' , EXTRN ) ;
+                   WRITELN ( LISTDEF , 'extlang  = ' , EXTLANG ) ;
+                   WRITELN ( LISTDEF , 'extname  = ' , EXTLANG ) ;
+                   if PFDECKIND = DECLARED then
+                     begin
+                       WRITELN ( LISTDEF , 'forward  = ' , FWDECL ) ;
+                       WRITELN ( LISTDEF , 'level    = ' , PFLEV ) ;
+                       WRITELN ( LISTDEF , 'pfname   = ' , PFNAME ) ;
+                       WRITELN ( LISTDEF , 'cstname  = ' , CSTNAME ) ;
+                     end (* then *) ;
+                   LCP := PRMPTR ;
+                   if LCP = NIL then
+                     DEF_PRINTHEAD ( 3 , NAME )
+                   else
+                     DEF_PRINTHEAD ( 4 , NAME ) ;
+                   while LCP <> NIL do
+
+     (*****************************)
+     (* SKIP PROC/FUNC PARAMETERS *)
+     (*****************************)
+
+                     begin
+                       if LCP -> . KLASS = VARS then
+                         DEF_PRINTSYMBOL ( LCP ) ;
+                       LCP := LCP -> . NEXT
+                     end (* while *) ;
+                 end (* then *) ;
+           end (* with *)
+       else
+
+     (**************************************)
+     (* DUMP HEAP STORAGE TYPE DEFINITIONS *)
+     (**************************************)
+
+         begin
+           TPT1 := DEF_PRINTTYPHD ;
+           while TPT1 <> NIL do
+             begin
+               WRITE ( LISTDEF , '->' , TPT1 -> . TNO : - 3 , ' ' :
+                       LPREFIX - 5 ) ;
+               DEF_PRINTTYPE ( TPT1 -> . ELT ) ;
+               WRITELN ( LISTDEF ) ;
+               TPT1 := TPT1 -> . NXT ;
+             end (* while *) ;
+           DEF_PRINTTYPHD := NIL ;
+           DEF_PRINTTYNO := 0 ;
+         end (* else *) ;
+   end (* DEF_PRINTSYMBOL *) ;
 
 
 
@@ -5361,6 +5760,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                 PARAM2 := 0 ;
               end (* then *) ;
             MODIFY_TYPE_PARMS ( FSP , ID , PARAM1 , PARAM2 ) ;
+            if ERRORFOUND then
+              FSP -> . ERRORFLAG := TRUE ;
             if SY = SYRPARENT then
               INSYMBOL ;
           end (* with *) ;
@@ -5377,6 +5778,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
           LMIN , LMAX : INTEGER ;
           ALNFCT : ALNRNG ;
           OLDPACKST , PACKST2 : BOOLEAN ;
+          ARRAY_ERROR : BOOLEAN ;
 
 
       procedure SIMPLETYPE ( FSYS : SYMSET ; var FSP : TTP ) ;
@@ -6296,20 +6698,63 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                           ERROR ( 8 ) ;
                         PACKDATA := PACKST2 ;
                         TYP ( FSYS , LSP , LSIZE ) ;
+                        ARRAY_ERROR := FALSE ;
                         if LSP <> NIL then
-                          ALIGN ( LSIZE , LSP -> . ALN ) ;
+                          begin
+                            ALIGN ( LSIZE , LSP -> . ALN ) ;
+                            if LSP -> . ERRORFLAG then
+                              ARRAY_ERROR := TRUE ;
+                          end (* then *)
+                        else
+                          ARRAY_ERROR := TRUE ;
                         repeat
+                          if FALSE then
+                            begin
+                              WRITELN ( TRACEF , 'arraytype' ) ;
+                              WRITELN ( TRACEF , 'linecnt = ' , LINECNT
+                                        ) ;
+                            end (* then *) ;
                           with LSP1 -> do
                             begin
                               LSP2 := AELTYPE ;
                               AELTYPE := LSP ;
-                              if INXTYPE <> NIL then
+                              if AELTYPE = NIL then
                                 begin
+                                  if FALSE then
+                                    WRITELN ( TRACEF , 'aeltype = nil'
+                                              ) ;
+                                  ARRAY_ERROR := TRUE
+                                end (* then *)
+                              else
+                                if AELTYPE -> . ERRORFLAG then
+                                  begin
+                                    if FALSE then
+                                      WRITELN ( TRACEF ,
+                                                'aeltype.errorflag' ) ;
+                                    ARRAY_ERROR := TRUE ;
+                                  end (* then *) ;
+                              if INXTYPE = NIL then
+                                begin
+                                  if FALSE then
+                                    WRITELN ( TRACEF , 'inxtype = nil'
+                                              ) ;
+                                  ARRAY_ERROR := TRUE
+                                end (* then *)
+                              else
+                                if INXTYPE -> . ERRORFLAG then
+                                  begin
+                                    if FALSE then
+                                      WRITELN ( TRACEF ,
+                                                'inxtype.errorflag' ) ;
+                                    ARRAY_ERROR := TRUE ;
+                                  end (* then *) ;
 
         //******************************************************
         // compute length and propagate aln                     
         //******************************************************
 
+                              if not ARRAY_ERROR then
+                                begin
                                   GETBOUNDS ( INXTYPE , LMIN , LMAX ) ;
 
         //******************************************************
@@ -6317,40 +6762,42 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
         // if bounds are not in correct sequence                
         //******************************************************
 
-                                  if LMIN <= LMAX then
+                                  if LMIN > LMAX then
                                     begin
-                                      LSIZE := LSIZE * ( LMAX - LMIN +
-                                               1 ) ;
-                                      SIZE := LSIZE ;
-                                      if LSP <> NIL then
-                                        ALN := LSP -> . ALN
+                                      if FALSE then
+                                        WRITELN ( TRACEF ,
+                                                  'lmin > lmax' ) ;
+                                      ARRAY_ERROR := TRUE ;
                                     end (* then *)
-                                  else
-                                    begin
-                                      SIZE := 1 ;
-                                      ALN := 1
-                                    end (* else *) ;
-                                  LSP := LSP1
-                                end (* then *)
-                              else
+                                end (* then *) ;
+                              if not ARRAY_ERROR then
                                 begin
-
-        //******************************************************
-        // INXTYPE = NIL                                        
-        //******************************************************
-
-                                  SIZE := 1 ;
-                                  ALN := 1 ;
-                                  LSP := NIL
-                                end (* else *)
+                                  LSIZE := LSIZE * ( LMAX - LMIN + 1 )
+                                           ;
+                                  SIZE := LSIZE ;
+                                  if FALSE then
+                                    WRITELN ( TRACEF , 'size = ' , SIZE
+                                              ) ;
+                                  if LSP <> NIL then
+                                    ALN := LSP -> . ALN
+                                end (* then *)
                             end (* with *) ;
-
-        //******************************************************
-        // LSP := LSP1 ;                                        
-        //******************************************************
-
+                          LSP := LSP1 ;
                           LSP1 := LSP2
-                        until LSP1 = NIL
+                        until LSP1 = NIL ;
+                        if ARRAY_ERROR then
+                          begin
+                            if FALSE then
+                              WRITELN ( TRACEF , 'array_error' ) ;
+                            LSP -> . ERRORFLAG := TRUE ;
+                            LSP -> . SIZE := 1 ;
+                            LSP -> . ALN := 1 ;
+                          end (* then *)
+                        else
+                          begin
+                            if FALSE then
+                              WRITELN ( TRACEF , 'no array_error' ) ;
+                          end (* else *)
                       end (* tag/ca *) ;
 
         (*******************************)
@@ -6773,6 +7220,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
           SIZE2 : INTEGER ;
           TEST : BOOLEAN ;
           ERRFLAG : BOOLEAN ;
+          FSP2 : TTP ;
 
 
       procedure STOWCONST ( ELSP : TTP ) ;
@@ -6846,13 +7294,33 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
 
           begin
             CONSTANT ( FSYS , FSP , FVALU ) ;
-            WRITELN ( TRACEF , 'in structconst ' , LSP , ' ' , FSP ) ;
-            if FSP <> NIL then
+            if FALSE then
               begin
-                WRITELN ( TRACEF , 'in structconst ' , FSP -> . FORM )
-                          ;
-                WRITELN ( TRACEF , 'in structconst ' , FSP -> . INXTYPE
+                WRITELN ( TRACEF , 'linecnt = ' , LINECNT ) ;
+                WRITELN ( TRACEF , 'in structconst ' , LSP , ' ' , FSP
                           ) ;
+                if FSP <> NIL then
+                  begin
+                    WRITELN ( TRACEF , 'in structconst form ' , FSP ->
+                              . FORM ) ;
+                    WRITELN ( TRACEF , 'in structconst errf ' , FSP ->
+                              . ERRORFLAG ) ;
+                    if FSP -> . FORM = ARRAYS then
+                      begin
+                        WRITELN ( TRACEF , 'in structconst aeltype ' ,
+                                  FSP -> . AELTYPE ) ;
+                        WRITELN ( TRACEF , 'in structconst inxtype ' ,
+                                  FSP -> . INXTYPE ) ;
+                        FSP2 := FSP -> . AELTYPE ;
+                        if FSP2 <> NIL then
+                          begin
+                            WRITELN ( TRACEF , 'in structconst form ' ,
+                                      FSP2 -> . FORM ) ;
+                            WRITELN ( TRACEF , 'in structconst errf ' ,
+                                      FSP2 -> . ERRORFLAG ) ;
+                          end (* then *)
+                      end (* then *)
+                  end (* then *) ;
               end (* then *) ;
             CT_RESULT := COMPTYPES ( LSP , FSP ) ;
             if CT_RESULT in [ 1 , 2 , 3 ] then
@@ -7271,6 +7739,10 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
       begin (* VARDECLARATION *)
         if IS_MODULE and ( LEVEL <= 1 ) then
           ERROR ( 194 ) ;
+        if LEVEL <= 1 then
+          DEF_PRINTHEAD ( 6 , ' ' )
+        else
+          DEF_PRINTHEAD ( 5 , FPROCP -> . NAME ) ;
         LISTTAG := 'D' ;
         NXT := NIL ;
         repeat
@@ -7355,7 +7827,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                 else
                   VADDR := LCOUNTER ;
                 if OPT . DEBUG_LEV > 0 then
-                  PRNTSYMBL ( NXT1 ) ;
+                  DBG_PRINTSYMBOL ( NXT1 ) ;
+                DEF_PRINTSYMBOL ( NXT1 ) ;
                 NXT1 := NEXT ;
               end (* with *) ;
           if SY = SYSEMICOLON then
@@ -7477,7 +7950,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                 else
                   VADDR := CONSTLCOUNTER ;
                 if OPT . DEBUG_LEV > 0 then
-                  PRNTSYMBL ( NXT1 ) ;
+                  DBG_PRINTSYMBOL ( NXT1 ) ;
+                DEF_PRINTSYMBOL ( NXT1 ) ;
                 NXT1 := NEXT ;
               end (* with *) ;
           if SY = SYSEMICOLON then
@@ -8226,7 +8700,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
         else
           begin
             if OPT . DEBUG_LEV > 0 then
-              PRNTSYMBL ( LCP ) ;
+              DBG_PRINTSYMBOL ( LCP ) ;
+            DEF_PRINTSYMBOL ( LCP ) ;
             MARK ( MARKP ) ;
 
         (*****************************)
@@ -17521,7 +17996,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
            WRITELN ( PRR , MN [ 75 ] ) ;
          end (* then *) ;
        if OPT . DEBUG_LEV > 0 then
-         PRNTSYMBL ( NIL ) ;
+         DBG_PRINTSYMBOL ( NIL ) ;
+       DEF_PRINTSYMBOL ( NIL ) ;
 
      (**************************)
      (* PRINT HEAP TYPE DEFNS. *)
@@ -17794,6 +18270,12 @@ procedure PROGRAMME ( FSYS : SYMSET ) ;
                WRITE ( DBGINFO , ' ' , WLU_CNT [ I , J ] : 1 ) ;
            end (* for *) ;
        end (* then *) ;
+
+     (*********************************)
+     (* PRINT end message for listdef *)
+     (*********************************)
+
+     DEF_PRINTHEAD ( 8 , ' ' ) ;
    end (* PROGRAMME *) ;
 
 
@@ -18806,8 +19288,6 @@ procedure INITSCALARS ;
      (*GENERATES UNIQUE NAMES *)
      (*************************)
 
-     PRNTTYPHD := NIL ;
-     PRNTTYNO := 0 ;
      FRTPARHD := NIL ;
      XLABNO := 0 ;
      CTRCNT := 0 ;

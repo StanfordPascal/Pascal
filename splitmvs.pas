@@ -56,8 +56,8 @@ var OUTF001 : TEXT ;
     CPOUT : CHARPTR ;
     TAG : CHAR ( 6 ) ;
     DSN : CHAR ( SIZEDSN ) ;
-    MEM : CHAR ( 8 ) ;
-    EXT : CHAR ( 3 ) ;
+    MEM : CHAR ( SIZEMEM ) ;
+    EXT : CHAR ( SIZEEXT ) ;
     HEXFLAG : CHAR ;
 
 
@@ -77,8 +77,8 @@ procedure ASSIGN_FILE ( PDSN : CHARPTR ; PMEM : CHARPTR ; PEXT :
 
 
    var DSN : CHAR ( SIZEDSN ) ;
-       MEM : CHAR ( 8 ) ;
-       EXT : CHAR ( 3 ) ;
+       MEM : CHAR ( SIZEMEM ) ;
+       EXT : CHAR ( SIZEEXT ) ;
        PFADNAME : CHAR ( SIZEDSN ) ;
        PFADLEN : INTEGER ;
        FILENAME : CHAR ( 100 ) ;

@@ -109,7 +109,7 @@ d) Korrektur falscher Level von Åbergebener Prozedur (MANORBOY-Problem) / gefixt
 Noch folgende Punkte offen (2018.03):
 
 a) CHAR (n) fuer grî·ere Werte von (n) / gefixt
-b) CHAR (n) usw. auch fÅr symbolische Konstanten
+b) CHAR (n) usw. auch fÅr symbolische Konstanten / gefixt
 c) Procedur-Parameter usw. in PCINT (erfordert andere Stack-Verwaltung)
 d) Wann und wo speichern wir die Display-Struktur, wie tief kann man gehen?
 e) CHK A Befehle rein, wenn Pointer dereferenziert werden - PrÅfen auf NIL

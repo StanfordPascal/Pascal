@@ -80,6 +80,27 @@ Auch in der Runtime (= PASMONN) ist nicht mehr Platz.
 da mÅsste man wohl was machen.
 
 
+Nachtrag 2018.03:
+
+Jede Funktion, die selber wieder andere Funktionen ruft, speichert
+am Anfang das bisher bestehende statische Display ihres Levels
+in ihrer Save Area ab (alten Wert nach Register 0, dann STM, am
+Schluss wird rekonstruiert). Damit stellt die Funktion, wenn sie z.B.
+selbst auf Level 4 steht, hinterher das alte Display fÅr Level 4 wieder
+ein. Die Levels darunter bleiben zunÑchst unverÑndert; wenn aber die
+Funktion Unterfunktionen ruft, machen die das entsprechend. D.h., beim
+Aufruf einer Funktion auf - sagen wir - Ebene 3 von Ebene 6 aus und
+nachher zurÅck sind danach die alten Display-Werte wieder eingestellt,
+weil jede Funktion auf ihrer Ebene sichert und rekonstruiert.
+
+Das klappt auch Åber Modulgrenzen hinweg. Ein einziger Display-Vektor
+reicht also demnach fÅr das ganze System aus. Da er derzeit auf 9 Elemente
+beschrÑnkt ist, kînnen wir nur 9 statische Ebenen zulassen. Wenn wir eine
+Funktion in einem externen Modul aufrufen, sind wir wieder bei Ebene 2.
+Eine Vergrî·erung ist schwierig, weil der Display-Vektor vor einer Reihe
+von anderen Feldern mit festen Adressen liegt.
+
+
 Wie man sieht, folgende Baustellen:
 
 a) LR 14,15 im Prolog evtl. sinnlos / gefixt
@@ -88,14 +109,17 @@ b) Schleife zum ZurÅcksetzen am Ende auf X'81' eher mit MVCL / gefixt
 
 c) bei LÑngen kÅrzer als 256 oder 512 evtl. mit MVCs / gefixt
 
-d) Display wird in R12-Kontrollstruktur gespeichert, also ist
+d) DISPLIMIT vom Compiler passt nicht zu Runtime bzw.
+   Prozedur-Parametern (kann aber nicht auf z.B. 9 zurÅckgesetzt
+   werden, fÅhrt zu Fehlern) ... aber MAXLVL = 9 passt;
+   bei grî·eren statischen Levels gibt es einen fatalen Fehler 251 / gefixt
+
+e) Fehler bei MANORBOY.PAS ... / klar, woran es liegt / gefixt
+
+f) Display wird in R12-Kontrollstruktur gespeichert, also ist
    der Bereich in R13 (80 bis 112) sinnlos
 
-e) DISPLIMIT vom Compiler passt nicht zu Runtime bzw.
-   Prozedur-Parametern (kann aber nicht auf z.B. 9 zurÅckgesetzt
-   werden, fÅhrt zu Fehlern)
 
-f) Fehler bei MANORBOY.PAS ... / klar, woran es liegt
 
 
 Erledigt in Release 2018.02:
@@ -110,8 +134,15 @@ Noch folgende Punkte offen (2018.03):
 
 a) CHAR (n) fuer grî·ere Werte von (n) / gefixt
 b) CHAR (n) usw. auch fÅr symbolische Konstanten / gefixt
-c) Procedur-Parameter usw. in PCINT (erfordert andere Stack-Verwaltung)
-d) Wann und wo speichern wir die Display-Struktur, wie tief kann man gehen?
-e) CHK A Befehle rein, wenn Pointer dereferenziert werden - PrÅfen auf NIL
-f) V-Befehle in PASCAL2
+c) Wann und wo speichern wir die Display-Struktur, wie tief kann man gehen? / gefixt
+d) PASCAL1 schreibt neue DEF Konstanten am Prozedurende - ersetzt DBGINFO Informationen / ok
+e) PCODESUM zurueckbauen / ok
+
+f) PASCAL2 liest einmal vorab Informationen fuer Prozeduren und baut Tabelle auf
+g) dadurch: DBGINFO ist obsolet fuer PASCAL2
+h) andere DDNamen fuer PASCAL1 und PASCAL2: Test auf CMS z.B.
+
+- Procedur-Parameter usw. in PCINT (erfordert andere Stack-Verwaltung)
+- CHK A Befehle rein, wenn Pointer dereferenziert werden - PrÅfen auf NIL
+- V-Befehle in PASCAL2
 

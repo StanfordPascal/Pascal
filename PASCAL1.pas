@@ -1,4 +1,4 @@
-program PASCALCOMPILER ( INPUT , OUTPUT , PRR , LISTING , LISTDEF ,
+program PASCALCOMPILER ( INPUT , OUTPUT , PCODE , LISTING , LISTDEF ,
                          DBGINFO , TRACEF ) ;
 
 (********************************************************************)
@@ -1043,6 +1043,9 @@ const VERSION = '2018.03' ;
       PCODE_SAV = 59 ;
       PCODE_RST = 60 ;
       PCODE_ORD = 61 ;
+      PCODE_CHR = 62 ;
+      PCODE_DEF = 63 ;
+      PCODE_LAB = 64 ;
       PCODE_CRD = 65 ;
       PCODE_XPO = 66 ;
       PCODE_ASE = 67 ;
@@ -1575,6 +1578,7 @@ type ALPHA = array [ 1 .. IDLNGTH ] of CHAR ;
 var MXINT2 : INTEGER ;
     MXINT10 : INTEGER ;
     MXINT16 : INTEGER ;
+    PCODE : TEXT ;
     TRACEF : TEXT ;
     LISTING : TEXT ;
     LISTDEF : TEXT ;
@@ -1652,7 +1656,6 @@ var MXINT2 : INTEGER ;
     (* ASSIGNMENT GOING ON,PACKING IN EFFECT  *)
     (******************************************)
 
-    FLIPDEBUG : BOOLEAN ;
     EXTUSED : BOOLEAN ;
 
     (******************************************)
@@ -4393,7 +4396,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
 
    (*****************************)
    (* generate string constant  *)
-   (* into file prr             *)
+   (* into file pcode           *)
    (*****************************)
 
 
@@ -4403,43 +4406,43 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
       begin (* GEN_STRCONST *)
         with VALX , VALX . SVAL -> do
           begin
-            WRITE ( PRR , LENGTH : 1 , ',' ) ;
+            WRITE ( PCODE , LENGTH : 1 , ',' ) ;
             if STRTYPE in [ 'B' , 'X' ] then
-              WRITE ( PRR , STRTYPE ) ;
-            WRITE ( PRR , '''' ) ;
+              WRITE ( PCODE , STRTYPE ) ;
+            WRITE ( PCODE , '''' ) ;
             OUTPOS := 4 ;
             I := 1 ;
             while I <= LENGTH do
               begin
                 if OUTPOS >= 56 then
                   begin
-                    WRITELN ( PRR , ''',' ) ;
-                    WRITE ( PRR , '       ''' ) ;
+                    WRITELN ( PCODE , ''',' ) ;
+                    WRITE ( PCODE , '       ''' ) ;
                     OUTPOS := 0 ;
                   end (* then *) ;
                 case STRTYPE of
                   'X' : begin
-                          WRITEHEXBYTE ( PRR , ORD ( SSTR [ I ] ) ) ;
+                          WRITEHEXBYTE ( PCODE , ORD ( SSTR [ I ] ) ) ;
                           OUTPOS := OUTPOS + 2 ;
                         end (* tag/ca *) ;
                   'B' : begin
-                          WRITEBINBYTE ( PRR , ORD ( SSTR [ I ] ) ) ;
+                          WRITEBINBYTE ( PCODE , ORD ( SSTR [ I ] ) ) ;
                           OUTPOS := OUTPOS + 8 ;
                         end (* tag/ca *) ;
                   otherwise
                     begin
-                      WRITE ( PRR , SSTR [ I ] : 1 ) ;
+                      WRITE ( PCODE , SSTR [ I ] : 1 ) ;
                       OUTPOS := OUTPOS + 1 ;
                       if SSTR [ I ] = '''' then
                         begin
-                          WRITE ( PRR , '''' ) ;
+                          WRITE ( PCODE , '''' ) ;
                           OUTPOS := OUTPOS + 1
                         end (* then *) ;
                     end (* otherw *)
                 end (* case *) ;
                 I := I + 1
               end (* while *) ;
-            WRITE ( PRR , '''' ) ;
+            WRITE ( PCODE , '''' ) ;
           end (* with *)
       end (* GEN_STRCONST *) ;
 
@@ -5257,7 +5260,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
       begin (* PUTIC *)
         if LINECNT > OLDLN then
           begin
-            WRITELN ( PRR , ' LOC ' , LINECNT : 1 ) ;
+            WRITELN ( PCODE , ' LOC ' , LINECNT : 1 ) ;
             OLDLN := LINECNT
           end (* then *) ;
       end (* PUTIC *) ;
@@ -5283,7 +5286,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
         (*CST   *)
         (********)
 
-              WRITELN ( PRR , CSTEXTNAME , MN [ 71 ] , ' ' , NAME ,
+              WRITELN ( PCODE , CSTEXTNAME , MN [ 71 ] , ' ' , NAME ,
                         PFNAME : 5 , ',' , OPT . ASSEMBLE : 1 , ',' ,
                         OPT . GET_STAT : 1 , ',' , OPT . ASMVERB : 1 )
                         ;
@@ -5423,7 +5426,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
         (***********************)
 
         if LEN = 0 then
-          WRITELN ( PRR , 'E()' )
+          WRITELN ( PCODE , 'E()' )
         else
           if ( ELTYPE = PTYPE_CHAR ) and not HEXORBIN then
 
@@ -5444,7 +5447,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
         (***************************************************)
 
             begin
-              WRITE ( PRR , 'C32''' ) ;
+              WRITE ( PCODE , 'C32''' ) ;
               CW := 0 ;
               COL := 11 ;
               for I := 1 to LEN do
@@ -5458,11 +5461,11 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                           CH := CHR ( CW ) ;
                           if COL >= 65 then
                             begin
-                              WRITELN ( PRR , ''',' ) ;
+                              WRITELN ( PCODE , ''',' ) ;
                               COL := 7 ;
-                              WRITE ( PRR , '     ''' ) ;
+                              WRITE ( PCODE , '     ''' ) ;
                             end (* then *) ;
-                          WRITE ( PRR , CH ) ;
+                          WRITE ( PCODE , CH ) ;
                           COL := COL + 1 ;
 
         /*********************/
@@ -5471,7 +5474,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
 
                           if CH = '''' then
                             begin
-                              WRITE ( PRR , CH ) ;
+                              WRITE ( PCODE , CH ) ;
                               COL := COL + 1 ;
                             end (* then *) ;
                         end (* then *) ;
@@ -5479,7 +5482,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                       CW := CW + 1 ;
                     end (* while *) ;
                 end (* for *) ;
-              WRITELN ( PRR , '''' )
+              WRITELN ( PCODE , '''' )
             end (* then *)
           else
 
@@ -5490,20 +5493,20 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
         (***************************************************)
 
             begin
-              WRITE ( PRR , 'X' , LEN : 1 , '''' ) ;
+              WRITE ( PCODE , 'X' , LEN : 1 , '''' ) ;
               COL := 19 ;
               for I := 1 to LEN do
                 begin
                   if COL >= 65 then
                     begin
-                      WRITELN ( PRR , ''',' ) ;
+                      WRITELN ( PCODE , ''',' ) ;
                       COL := 7 ;
-                      WRITE ( PRR , '     ''' ) ;
+                      WRITE ( PCODE , '     ''' ) ;
                     end (* then *) ;
-                  WRITEHEXBYTE ( PRR , ORD ( S [ I ] ) ) ;
+                  WRITEHEXBYTE ( PCODE , ORD ( S [ I ] ) ) ;
                   COL := COL + 2 ;
                 end (* for *) ;
-              WRITELN ( PRR , '''' )
+              WRITELN ( PCODE , '''' )
             end (* else *) ;
       end (* WRITESET *) ;
 
@@ -5515,7 +5518,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
 
       begin (* WRITEDFC *)
         PUTIC ;
-        WRITE ( PRR , CONSTLCOUNTER : 1 , MN [ 70 ] ) ;
+        WRITE ( PCODE , CONSTLCOUNTER : 1 , MN [ 70 ] ) ;
 
         (********)
         (*DFC   *)
@@ -5524,7 +5527,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
         if INIT then
           begin
             if IS_STDTYPE ( ELSP1 , 'R' ) then
-              WRITELN ( PRR , ' R,' , 0.0 )
+              WRITELN ( PCODE , ' R,' , 0.0 )
             else
               if ELSP1 -> . FORM <= SUBRANGE then
                 begin
@@ -5538,25 +5541,25 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                       else
                         CH := 'B' ;
                   if CH = 'C' then
-                    WRITELN ( PRR , CH : 2 , ','' ''' )
+                    WRITELN ( PCODE , CH : 2 , ','' ''' )
                   else
-                    WRITELN ( PRR , CH : 2 , ',' , 0 : 1 )
+                    WRITELN ( PCODE , CH : 2 , ',' , 0 : 1 )
                 end (* then *)
               else
                 if ELSP1 -> . FORM = POINTER then
-                  WRITELN ( PRR , ' N' )
+                  WRITELN ( PCODE , ' N' )
                 else
                   if IS_CARRAY ( ELSP1 ) then
                     begin
-                      WRITE ( PRR , ' M,' ) ;
-                      WRITE ( PRR , ELSIZE : 1 ) ;
-                      WRITE ( PRR , ','' ''' ) ;
-                      WRITELN ( PRR ) ;
+                      WRITE ( PCODE , ' M,' ) ;
+                      WRITE ( PCODE , ELSIZE : 1 ) ;
+                      WRITE ( PCODE , ','' ''' ) ;
+                      WRITELN ( PCODE ) ;
                     end (* then *)
                   else
                     begin
-                      WRITE ( PRR , ' 0,' , ELSIZE : 1 ) ;
-                      WRITELN ( PRR ) ;
+                      WRITE ( PCODE , ' 0,' , ELSIZE : 1 ) ;
+                      WRITELN ( PCODE ) ;
                     end (* else *)
           end (* then *)
         else
@@ -5565,7 +5568,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
               return ;
             if IS_STDTYPE ( ELSP1 , 'R' ) then
               begin
-                WRITELN ( PRR , ' R,' , LVALU . RVAL ) ;
+                WRITELN ( PCODE , ' R,' , LVALU . RVAL ) ;
                 return
               end (* then *) ;
             if ELSP1 -> . FORM <= SUBRANGE then
@@ -5583,29 +5586,29 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                     else
                       CH := 'B' ;
                 if CH = 'C' then
-                  WRITELN ( PRR , CH : 2 , ',' , '''' , CHR ( LVALU .
+                  WRITELN ( PCODE , CH : 2 , ',' , '''' , CHR ( LVALU .
                             IVAL ) , '''' )
                 else
-                  WRITELN ( PRR , CH : 2 , ',' , LVALU . IVAL : 1 ) ;
+                  WRITELN ( PCODE , CH : 2 , ',' , LVALU . IVAL : 1 ) ;
                 return ;
               end (* then *) ;
             if ELSP1 -> . FORM = POINTER then
               begin
-                WRITELN ( PRR , ' N' ) ;
+                WRITELN ( PCODE , ' N' ) ;
                 return
               end (* then *) ;
             if ELSP1 -> . FORM = POWER then
               begin
-                WRITE ( PRR , ' S,' ) ;
+                WRITE ( PCODE , ' S,' ) ;
                 LVALU . PVAL -> . LENGTH := ELSP1 -> . SIZE ;
                 WRITESET ( LVALU , ELSP1 -> . ELSET ) ;
                 return ;
               end (* then *) ;
             if IS_CARRAY ( ELSP1 ) then
               begin
-                WRITE ( PRR , ' M,' ) ;
+                WRITE ( PCODE , ' M,' ) ;
                 GEN_STRCONST ( LVALU ) ;
-                WRITELN ( PRR ) ;
+                WRITELN ( PCODE ) ;
                 return ;
               end (* then *)
           end (* else *)
@@ -6060,16 +6063,16 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                  begin
                    IDL := GETIDLEN ( LCP1 -> . NAME ) + 1 ;
                    WRITEDFC ( NIL , IDL , VALX , FALSE ) ;
-                   WRITE ( PRR , ' M,''' ) ;
+                   WRITE ( PCODE , ' M,''' ) ;
                    for IX := 1 to IDL - 1 do
-                     WRITE ( PRR , LCP1 -> . NAME [ IX ] ) ;
-                   WRITELN ( PRR , ' ''' ) ;
+                     WRITE ( PCODE , LCP1 -> . NAME [ IX ] ) ;
+                   WRITELN ( PCODE , ' ''' ) ;
                    CONSTLCOUNTER := CONSTLCOUNTER + IDL ;
                    LCP1 := LCP1 -> . NEXT ;
                  end (* while *) ;
                IDL := 1 ;
                WRITEDFC ( NIL , IDL , VALX , FALSE ) ;
-               WRITELN ( PRR , ' M,''*''' ) ;
+               WRITELN ( PCODE , ' M,''*''' ) ;
                CONSTLCOUNTER := CONSTLCOUNTER + IDL ;
 
            /***************************************/
@@ -7594,8 +7597,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                               ERRKIND := 'W' ;
                               ERROR ( 306 ) ;
                               if OPT . PRCODE then
-                                WRITELN ( PRR , SLC + SIZE - 1 : 1 , MN
-                                          [ 70 ] , ' B,0' ) ;
+                                WRITELN ( PCODE , SLC + SIZE - 1 : 1 ,
+                                          MN [ 70 ] , ' B,0' ) ;
 
         (********)
         (*DFC   *)
@@ -8947,7 +8950,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
            if OPT . PRCODE then
              begin
                PUTIC ;
-               WRITELN ( PRR , MN [ FOP ] : 4 )
+               WRITELN ( PCODE , MN [ FOP ] : 4 )
              end (* then *) ;
            ICOUNTER := ICOUNTER + 1
          end (* GEN0 *) ;
@@ -8959,8 +8962,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
            if OPT . PRCODE then
              begin
                PUTIC ;
-               WRITE ( PRR , MN [ PCODE_LCA ] : 4 ) ;
-               WRITE ( PRR , ' S,' ) ;
+               WRITE ( PCODE , MN [ PCODE_LCA ] : 4 ) ;
+               WRITE ( PCODE , ' S,' ) ;
                WRITESET ( VALX , ELTYPE ) ;
              end (* then *) ;
            ICOUNTER := ICOUNTER + 1
@@ -8973,11 +8976,11 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
            if OPT . PRCODE then
              begin
                PUTIC ;
-               WRITE ( PRR , MN [ PCODE_LCA ] : 4 ) ;
-               WRITE ( PRR , ' M,' ) ;
+               WRITE ( PCODE , MN [ PCODE_LCA ] : 4 ) ;
+               WRITE ( PCODE , ' M,' ) ;
                GEN_STRCONST ( VALX ) ;
                STRCOUNTER := STRCOUNTER + VALX . SVAL -> . LENGTH ;
-               WRITELN ( PRR ) ;
+               WRITELN ( PCODE ) ;
              end (* then *) ;
            ICOUNTER := ICOUNTER + 1
          end (* GEN_LCA_M *) ;
@@ -8992,14 +8995,14 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
            if OPT . PRCODE then
              begin
                PUTIC ;
-               WRITE ( PRR , MN [ FOP ] : 4 ) ;
+               WRITE ( PCODE , MN [ FOP ] : 4 ) ;
                case FOP of
                  PCODE_CSP :
                    begin
-                     WRITE ( PRR , CSPNAME [ FP2 ] : 4 ) ;
+                     WRITE ( PCODE , CSPNAME [ FP2 ] : 4 ) ;
                      LCCALLER := LCOUNTER ;
                      ALIGN ( LCCALLER , MXDATASZE ) ;
-                     WRITELN ( PRR , ',' , LCCALLER : 1 ) ;
+                     WRITELN ( PCODE , ',' , LCCALLER : 1 ) ;
                    end (* tag/ca *) ;
 
            (************************************************)
@@ -9009,15 +9012,15 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                  PCODE_LCA :
                    begin
                      if FP2 = ORD ( 'P' ) then
-                       WRITELN ( PRR , ' P,' , SYID : EXTNAMSZ )
+                       WRITELN ( PCODE , ' P,' , SYID : EXTNAMSZ )
                    end (* tag/ca *) ;
                  PCODE_STO , PCODE_RET :
                    begin
-                     WRITELN ( PRR , CHR ( FP2 ) : 2 )
+                     WRITELN ( PCODE , CHR ( FP2 ) : 2 )
                    end (* tag/ca *) ;
                  otherwise
                    begin
-                     WRITELN ( PRR , ' ' , FP2 : 1 )
+                     WRITELN ( PCODE , ' ' , FP2 : 1 )
                    end (* otherw *)
                end (* case *)
              end (* then *) ;
@@ -9033,7 +9036,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
            if OPT . PRCODE then
              begin
                PUTIC ;
-               WRITE ( PRR , MN [ FOP ] : 4 , ' ' ) ;
+               WRITE ( PCODE , MN [ FOP ] : 4 , ' ' ) ;
                case FOP of
 
            //************************************************
@@ -9042,7 +9045,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
 
                  PCODE_DEC , PCODE_INC , PCODE_IND , PCODE_CTI ,
                  PCODE_STP :
-                   WRITELN ( PRR , CHR ( FP1 ) , ',' , FP2 : 1 ) ;
+                   WRITELN ( PCODE , CHR ( FP1 ) , ',' , FP2 : 1 ) ;
 
            //************************************************
            // two integer parameters (level and address      
@@ -9052,14 +9055,14 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                  PCODE_SCL , PCODE_MST , PCODE_LDA , PCODE_SLD ,
                  PCODE_SMV , PCODE_NEW , PCODE_VST , PCODE_VPU ,
                  PCODE_VPO , PCODE_VLD :
-                   WRITELN ( PRR , FP1 : 1 , ',' , FP2 : 1 ) ;
+                   WRITELN ( PCODE , FP1 : 1 , ',' , FP2 : 1 ) ;
 
            //************************************************
            // logical instructions                           
            //************************************************
 
                  PCODE_AND , PCODE_IOR , PCODE_NOT , PCODE_XOR :
-                   WRITELN ( PRR , CHR ( FP1 ) ) ;
+                   WRITELN ( PCODE , CHR ( FP1 ) ) ;
 
            //************************************************
            // compare instructions                           
@@ -9068,10 +9071,10 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                  PCODE_EQU , PCODE_GEQ , PCODE_GRT , PCODE_LEQ ,
                  PCODE_LES , PCODE_NEQ :
                    begin
-                     WRITE ( PRR , CHR ( FP1 ) ) ;
+                     WRITE ( PCODE , CHR ( FP1 ) ) ;
                      if FP1 = ORD ( 'M' ) then
-                       WRITE ( PRR , ',' , FP2 : 1 ) ;
-                     WRITELN ( PRR )
+                       WRITE ( PCODE , ',' , FP2 : 1 ) ;
+                     WRITELN ( PCODE )
                    end (* tag/ca *) ;
 
            //************************************************
@@ -9081,19 +9084,19 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
 
                  PCODE_LDC :
                    case FP1 of
-                     0 : WRITELN ( PRR , 'C,''' , CHR ( FP2 ) : 1 ,
+                     0 : WRITELN ( PCODE , 'C,''' , CHR ( FP2 ) : 1 ,
                                    '''' ) ;
-                     1 : WRITELN ( PRR , 'I,' , FP2 : 1 ) ;
+                     1 : WRITELN ( PCODE , 'I,' , FP2 : 1 ) ;
                      2 : begin
-                           WRITE ( PRR , 'R,' ) ;
+                           WRITE ( PCODE , 'R,' ) ;
                            with CNSTPTR -> do
                              for K := 1 to REALLNGTH do
                                if RVAL [ K ] <> ' ' then
-                                 WRITE ( PRR , RVAL [ K ] ) ;
-                           WRITELN ( PRR )
+                                 WRITE ( PCODE , RVAL [ K ] ) ;
+                           WRITELN ( PCODE )
                          end (* tag/ca *) ;
-                     3 : WRITELN ( PRR , 'B,' , FP2 : 1 ) ;
-                     4 : WRITELN ( PRR , 'N' ) ;
+                     3 : WRITELN ( PCODE , 'B,' , FP2 : 1 ) ;
+                     4 : WRITELN ( PCODE , 'N' ) ;
                      otherwise
                        ERROR ( 412 ) ;
                    end (* case *)
@@ -9117,11 +9120,11 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
 
 
                then
-                 WRITELN ( PRR , MN [ FOP ] : 4 , ' ' , FP0 : 1 , ' ' ,
-                           FP1 : 1 , ' ' , FP2 : 1 )
+                 WRITELN ( PCODE , MN [ FOP ] : 4 , ' ' , FP0 : 1 , ' '
+                           , FP1 : 1 , ' ' , FP2 : 1 )
                else
-                 WRITELN ( PRR , MN [ FOP ] : 4 , CHR ( FP0 ) : 2 , ','
-                           , FP1 : 1 , ',' , FP2 : 1 )
+                 WRITELN ( PCODE , MN [ FOP ] : 4 , CHR ( FP0 ) : 2 ,
+                           ',' , FP1 : 1 , ',' , FP2 : 1 )
              end (* then *) ;
            ICOUNTER := ICOUNTER + 1
          end (* GEN3 *) ;
@@ -9304,7 +9307,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
            if OPT . PRCODE then
              begin
                PUTIC ;
-               WRITELN ( PRR , MN [ 33 ] : 4 , ' L' , FADDR : 1 )
+               WRITELN ( PCODE , MN [ 33 ] : 4 , ' L' , FADDR : 1 )
              end (* then *) ;
            ICOUNTER := ICOUNTER + 1
          end (* GENFJP *) ;
@@ -9319,13 +9322,14 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                if FOP = 44 then
                  begin
                    if PORTABLE_BRANCHTABLE then
-                     WRITELN ( PRR , MN [ FOP ] : 4 , ' N,L' , FP2 : 1
-                               )
+                     WRITELN ( PCODE , MN [ FOP ] : 4 , ' N,L' , FP2 :
+                               1 )
                    else
-                     WRITELN ( PRR , MN [ FOP ] : 4 , ' L' , FP2 : 1 )
+                     WRITELN ( PCODE , MN [ FOP ] : 4 , ' L' , FP2 : 1
+                               )
                  end (* then *)
                else
-                 WRITELN ( PRR , MN [ FOP ] : 4 , ' L' , FP2 : 1 )
+                 WRITELN ( PCODE , MN [ FOP ] : 4 , ' L' , FP2 : 1 )
              end (* then *) ;
            ICOUNTER := ICOUNTER + 1
          end (* GENUJPFJP *) ;
@@ -9338,22 +9342,48 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
            if OPT . PRCODE then
              begin
                PUTIC ;
-
-           (********)
-           (*DEF   *)
-           (********)
-
                if LABELNR > 0 then
-                 WRITE ( PRR , 'L' , LABELNR : 1 ) ;
-               WRITE ( PRR , MN [ 63 ] , ' ' ) ;
-               WRITE ( PRR , TYP , ',' ) ;
+                 WRITE ( PCODE , 'L' , LABELNR : 1 ) ;
+               WRITE ( PCODE , MN [ PCODE_DEF ] , ' ' ) ;
+               WRITE ( PCODE , TYP , ',' ) ;
                case TYP of
-                 'I' : WRITE ( PRR , WERT : 1 ) ;
-                 'C' : WRITE ( PRR , '''' , CHR ( WERT ) , '''' ) ;
+                 'I' : WRITE ( PCODE , WERT : 1 ) ;
+                 'C' : WRITE ( PCODE , '''' , CHR ( WERT ) , '''' ) ;
                end (* case *) ;
-               WRITELN ( PRR ) ;
+               WRITELN ( PCODE ) ;
              end (* then *)
          end (* GENDEF *) ;
+
+
+      procedure GENPROCINFO ( LABELNR : ADDRRANGE ; WERT1 : ADDRRANGE ;
+                            WERT2 : ADDRRANGE ; WERT3 : BOOLEAN ) ;
+
+         var IWERT : INTEGER ;
+
+         begin (* GENPROCINFO *)
+           if OPT . PRCODE then
+             begin
+               PUTIC ;
+               if LABELNR > 0 then
+                 WRITE ( PCODE , 'L' , LABELNR : 1 ) ;
+               WRITE ( PCODE , MN [ PCODE_DEF ] , ' ' ) ;
+               WRITE ( PCODE , 'I' , ',' ) ;
+               WRITE ( PCODE , WERT1 : 1 ) ;
+               WRITELN ( PCODE ) ;
+               WRITE ( PCODE , MN [ PCODE_DEF ] , ' ' ) ;
+               WRITE ( PCODE , 'I' , ',' ) ;
+               WRITE ( PCODE , WERT2 : 1 ) ;
+               WRITELN ( PCODE ) ;
+               WRITE ( PCODE , MN [ PCODE_DEF ] , ' ' ) ;
+               WRITE ( PCODE , 'B' , ',' ) ;
+               if WERT3 then
+                 IWERT := 1
+               else
+                 IWERT := 0 ;
+               WRITE ( PCODE , IWERT : 1 ) ;
+               WRITELN ( PCODE ) ;
+             end (* then *)
+         end (* GENPROCINFO *) ;
 
 
       procedure CHKBNDS ( ASSIGN : BOOLEAN ; FSP : TTP ) ;
@@ -9415,7 +9445,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
            (*LAB   *)
            (********)
 
-             WRITELN ( PRR , 'L' , LABNAME : 1 , MN [ 64 ] )
+             WRITELN ( PCODE , 'L' , LABNAME : 1 , MN [ PCODE_LAB ] )
          end (* PUTLABEL *) ;
 
 
@@ -10019,12 +10049,12 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                  if OPT . PRCODE then
                    begin
                      PUTIC ;
-                     WRITE ( PRR , MN [ PCODE_CUP ] ) ;
-                     WRITE ( PRR , PROCTYPE ( FCP ) : 2 ) ;
-                     WRITE ( PRR , ',' , FCP -> . PARMCNT * 2 + 3 : 1 )
-                             ;
-                     WRITE ( PRR , ',' , FCP -> . LIBNAME ) ;
-                     WRITELN ( PRR , ',' , LLCALLER : 1 ) ;
+                     WRITE ( PCODE , MN [ PCODE_CUP ] ) ;
+                     WRITE ( PCODE , PROCTYPE ( FCP ) : 2 ) ;
+                     WRITE ( PCODE , ',' , FCP -> . PARMCNT * 2 + 3 : 1
+                             ) ;
+                     WRITE ( PCODE , ',' , FCP -> . LIBNAME ) ;
+                     WRITELN ( PCODE , ',' , LLCALLER : 1 ) ;
                    end (* then *) ;
                end (* CALLLIBRARYFUNC *) ;
 
@@ -13447,7 +13477,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                  (*CHR   *)
                  (********)
 
-                 GEN0 ( 62 ) ;
+                 GEN0 ( PCODE_CHR ) ;
                  GATTR . TYPTR := PTYPE_CHAR
                end (* CHR1 *) ;
 
@@ -14548,13 +14578,13 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                      if OPT . PRCODE then
                        begin
                          PUTIC ;
-                         WRITE ( PRR , MN [ PCODE_CUP ] ) ;
-                         WRITE ( PRR , PROCTYPE ( FCP ) : 2 ) ;
+                         WRITE ( PCODE , MN [ PCODE_CUP ] ) ;
+                         WRITE ( PCODE , PROCTYPE ( FCP ) : 2 ) ;
                          if FCP -> . EXTLANG <> ' ' then
-                           WRITE ( PRR , FCP -> . EXTLANG ) ;
-                         WRITE ( PRR , ',' , LOCPAR : 1 ) ;
-                         WRITE ( PRR , ',' , EXTNAME ) ;
-                         WRITELN ( PRR , ',' , LLC1 : 1 ) ;
+                           WRITE ( PCODE , FCP -> . EXTLANG ) ;
+                         WRITE ( PCODE , ',' , LOCPAR : 1 ) ;
+                         WRITE ( PCODE , ',' , EXTNAME ) ;
+                         WRITELN ( PCODE , ',' , LLC1 : 1 ) ;
                        end (* then *) ;
                    end (* with *) ;
                  with GATTR do
@@ -16506,7 +16536,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                                 XLABEL := '############' ;
                                 MKNAME ( XLABEL , XNO , FALSE ) ;
                                 if OPT . PRCODE then
-                                  WRITELN ( PRR , MN [ 73 ] , ' ' ,
+                                  WRITELN ( PCODE , MN [ 73 ] , ' ' ,
                                             XLABEL : EXTNAMSZ ) ;
                               end (* else *) ;
                             CTREMIT ( CTRGOTO , 0 , LINECNT , 0 ,
@@ -17464,7 +17494,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                            XLABEL := '############' ;
                            MKNAME ( XLABEL , XNO , FALSE ) ;
                            if OPT . PRCODE then
-                             WRITELN ( PRR , XLABEL : EXTNAMSZ , MN [
+                             WRITELN ( PCODE , XLABEL : EXTNAMSZ , MN [
                                        74 ] ) ;
                            XNO := 0 ;
 
@@ -17653,24 +17683,39 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                  ICOUNTER := 0 ;
                  PT := PROCTYPE ( FRTPARHD ) ;
                  FNAME := NAME ;
+
+           //************************************************
+           // output ENT PCode                               
+           //************************************************
+
                  MKPROCNAME ( FNAME , NAME_PATTERN , PFNAME , TRUE ) ;
-                 WRITE ( PRR , FNAME : 8 , MN [ PCODE_ENT ] ) ;
-                 WRITE ( PRR , PT : 2 ) ;
-                 WRITE ( PRR , ',' , LEVEL : 1 ) ;
-                 WRITE ( PRR , ',L' , SEGSIZE : 1 ) ;
-                 WRITE ( PRR , NAME : IDLNGTH + 2 ) ;
-                 WRITE ( PRR , ',' , OPT . SAVEREGS : 1 ) ;
-                 WRITE ( PRR , ',' , OPT . ASSEMBLE : 1 ) ;
-                 WRITE ( PRR , ',' , OPT . GET_STAT : 1 ) ;
-                 WRITE ( PRR , ',' , OPT . ASMVERB : 1 ) ;
-                 WRITE ( PRR , ',' , OPT . DEBUG_LEV : 1 ) ;
-                 WRITE ( PRR , ',' , PFNAME : 1 , ',,' ) ;
+                 WRITE ( PCODE , FNAME : 8 , MN [ PCODE_ENT ] ) ;
+                 WRITE ( PCODE , PT : 2 ) ;
+                 WRITE ( PCODE , ',' , LEVEL : 1 ) ;
+                 WRITE ( PCODE , ',L' , SEGSIZE : 1 ) ;
+                 WRITE ( PCODE , NAME : IDLNGTH + 2 ) ;
+                 WRITE ( PCODE , ',' , OPT . SAVEREGS : 1 ) ;
+                 WRITE ( PCODE , ',' , OPT . ASSEMBLE : 1 ) ;
+                 WRITE ( PCODE , ',' , OPT . GET_STAT : 1 ) ;
+                 WRITE ( PCODE , ',' , OPT . ASMVERB : 1 ) ;
+                 WRITE ( PCODE , ',' , OPT . DEBUG_LEV : 1 ) ;
+                 WRITE ( PCODE , ',' , PFNAME : 1 , ',,' ) ;
                  if OPT . DEBUG_LEV > 0 then
                    begin
-                     WRITE ( PRR , SOURCENAME ) ;
+                     WRITE ( PCODE , SOURCENAME ) ;
                    end (* then *) ;
-                 WRITELN ( PRR ) ;
-                 WRITELN ( PRR , ' LOC ' , LINECNT : 1 ) ;
+                 WRITELN ( PCODE ) ;
+
+           //************************************************
+           // output location into pcode                     
+           //************************************************
+
+                 WRITELN ( PCODE , ' LOC ' , LINECNT : 1 ) ;
+
+           //************************************************
+           // output debug information                       
+           //************************************************
+
                  WRITELN ( DBGINFO , '#BGN    ' , NAME , ' ' , LEVEL :
                            4 ) ;
                  LCP1 := PRMPTR ;
@@ -17712,16 +17757,27 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                      end (* with *) ;
                  LOCPAR := ( LLC - LCOUNTER ) DIV 2 + 1 ;
                  PUTIC ;
-                 WRITE ( PRR , MN [ PCODE_CUP ] ) ;
-                 WRITE ( PRR , PROCTYPE ( FRTPARHD ) : 2 ) ;
-                 WRITE ( PRR , 'F' ) ;
-                 WRITE ( PRR , ',' , LOCPAR : 1 ) ;
-                 WRITE ( PRR , ',' , EXTNAME ) ;
-                 WRITELN ( PRR , ',' , LCOUNTER : 1 ) ;
+                 WRITE ( PCODE , MN [ PCODE_CUP ] ) ;
+                 WRITE ( PCODE , PROCTYPE ( FRTPARHD ) : 2 ) ;
+                 WRITE ( PCODE , 'F' ) ;
+                 WRITE ( PCODE , ',' , LOCPAR : 1 ) ;
+                 WRITE ( PCODE , ',' , EXTNAME ) ;
+                 WRITELN ( PCODE , ',' , LCOUNTER : 1 ) ;
                  if KLASS = FUNC then
                    GEN3 ( PCODE_STR , ORD ( PT ) , LEVEL , FNCRSLT ) ;
                  GEN1 ( PCODE_RET , ORD ( PT ) ) ;
-                 GENDEF ( SEGSIZE , 'I' , LLC ) ;
+
+           //************************************************
+           // output pcode summary information               
+           // into DEF constants                             
+           //************************************************
+
+                 GENPROCINFO ( SEGSIZE , LLC , ICOUNTER , FALSE ) ;
+
+           //************************************************
+           // output debug information                       
+           //************************************************
+
                  WRITELN ( DBGINFO , '#PROC   ' , NAME : IDLNGTH , ' '
                            , PFNAME : 4 , ' ' , FALSE : 1 , ICOUNTER :
                            6 , LLC : 8 , ' ' , FALSE : 1 ) ;
@@ -17740,40 +17796,55 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
         STMTNEST := 1 ;
         LISTTAG := 'N' ;
         PUTIC ;
+
+        //******************************************************
+        // output BGN Pcode (only for main program)             
+        //******************************************************
+
         if FPROCP = MAINPROG then
-          WRITELN ( PRR , MN [ PCODE_BGN ] , ' ' , PROGNAME , ' ' ,
+          WRITELN ( PCODE , MN [ PCODE_BGN ] , ' ' , PROGNAME , ' ' ,
                     TIME : 8 , ' ' , DATE ) ;
-        WRITE ( PRR , FPROCP -> . EXTNAME , MN [ PCODE_ENT ] ) ;
-        WRITE ( PRR , PROCTYPE ( FPROCP ) : 2 ) ;
-        WRITE ( PRR , ',' , LEVEL : 1 ) ;
-        WRITE ( PRR , ',L' , SEGSIZE : 1 ) ;
-        WRITE ( PRR , FPROCP -> . NAME : IDLNGTH + 2 ) ;
-        WRITE ( PRR , ',' , OPT . SAVEREGS : 1 ) ;
-        WRITE ( PRR , ',' , OPT . ASSEMBLE : 1 ) ;
-        WRITE ( PRR , ',' , OPT . GET_STAT : 1 ) ;
-        WRITE ( PRR , ',' , OPT . ASMVERB : 1 ) ;
-        WRITE ( PRR , ',' , OPT . DEBUG_LEV : 1 ) ;
-        WRITE ( PRR , ',' , FPROCP -> . PFNAME : 1 , ',' ) ;
+
+        //******************************************************
+        // output ENT Pcode                                     
+        //******************************************************
+
+        WRITE ( PCODE , FPROCP -> . EXTNAME , MN [ PCODE_ENT ] ) ;
+        WRITE ( PCODE , PROCTYPE ( FPROCP ) : 2 ) ;
+        WRITE ( PCODE , ',' , LEVEL : 1 ) ;
+        WRITE ( PCODE , ',L' , SEGSIZE : 1 ) ;
+        WRITE ( PCODE , FPROCP -> . NAME : IDLNGTH + 2 ) ;
+        WRITE ( PCODE , ',' , OPT . SAVEREGS : 1 ) ;
+        WRITE ( PCODE , ',' , OPT . ASSEMBLE : 1 ) ;
+        WRITE ( PCODE , ',' , OPT . GET_STAT : 1 ) ;
+        WRITE ( PCODE , ',' , OPT . ASMVERB : 1 ) ;
+        WRITE ( PCODE , ',' , OPT . DEBUG_LEV : 1 ) ;
+        WRITE ( PCODE , ',' , FPROCP -> . PFNAME : 1 , ',' ) ;
         if STATIC_VORHANDEN then
           begin
             CSTEXTNAME := FPROCP -> . CSTNAME ;
-            WRITE ( PRR , CSTEXTNAME ) ;
+            WRITE ( PCODE , CSTEXTNAME ) ;
           end (* then *) ;
-        WRITE ( PRR , ',' ) ;
+        WRITE ( PCODE , ',' ) ;
         if OPT . DEBUG_LEV > 0 then
           begin
-            WRITE ( PRR , SOURCENAME ) ;
+            WRITE ( PCODE , SOURCENAME ) ;
           end (* then *) ;
-        WRITELN ( PRR ) ;
+        WRITELN ( PCODE ) ;
+
+        //******************************************************
+        // debug information and LOC PCode                      
+        //******************************************************
+
         WRITELN ( DBGINFO , '#BGN    ' , FPROCP -> . NAME , ' ' , LEVEL
                   : 4 ) ;
-        WRITELN ( PRR , ' LOC ' , LINECNT : 1 ) ;
+        WRITELN ( PCODE , ' LOC ' , LINECNT : 1 ) ;
         ICOUNTER := ICOUNTER + 1 ;
         STRCOUNTER := 0 ;
 
-        (******************************************************)
-        (* allocate room for VPU Stringarea control field     *)
-        (******************************************************)
+        //******************************************************
+        // allocate room for VPU Stringarea control field       
+        //******************************************************
 
         if FALSE then
           WRITELN ( TRACEF , 'alloc VPU1 field for ' , FPROCP -> . NAME
@@ -18024,13 +18095,25 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
           end (* then *) ;
         GEN1 ( PCODE_RET , ORD ( PROCTYPE ( FPROCP ) ) ) ;
         ALIGN ( LCMAX , MXDATASZE ) ;
+
+        //******************************************************
+        // output pcode summary information                     
+        // into DEF constants                                   
+        //******************************************************
+
         if OPT . PRCODE then
-          GENDEF ( SEGSIZE , 'I' , LCMAX ) ;
+          GENPROCINFO ( SEGSIZE , LCMAX , ICOUNTER + ( STRCOUNTER DIV 4
+                        ) , LOCAL_CALL ) ;
         CALL_LVL [ LOCAL_CALL ] := CALL_LVL [ LOCAL_CALL ] + 1 ;
+
+        //******************************************************
+        // output debug information                             
+        //******************************************************
+
         WRITELN ( DBGINFO , '#PROC   ' , FPROCP -> . NAME : IDLNGTH ,
                   ' ' , FPROCP -> . PFNAME : 4 , ' ' , LOCAL_CALL : 1 ,
                   ' ' , ICOUNTER + ( STRCOUNTER DIV 4 ) : 6 , ' ' ,
-                  LCMAX : 8 , ' ' , FLIPDEBUG : 1 ) ;
+                  LCMAX : 8 , ' ' , FALSE : 1 ) ;
         WRITE ( DBGINFO , '#VARS   ' , 'REF/MOD RATIO      ' , VAR_MOD
                 : 6 , VAR_MOD + VAR_REF : 6 ) ;
         if ( VAR_MOD + VAR_REF ) = 0 then
@@ -18122,7 +18205,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
          begin
            CONSTLCOUNTER := 0 ;
            STATIC_VORHANDEN := TRUE ;
-           WRITELN ( PRR , MN [ 75 ] ) ;
+           WRITELN ( PCODE , MN [ 75 ] ) ;
          end (* then *) ;
        if OPT . DEBUG_LEV > 0 then
          DBG_PRINTSYMBOL ( NIL ) ;
@@ -18188,7 +18271,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
          if OPT . PRCODE then
            begin
              PUTIC ;
-             WRITELN ( PRR , MN [ 43 ] )
+             WRITELN ( PCODE , MN [ 43 ] )
            end (* then *) ;
          ICOUNTER := ICOUNTER + 1
        end (* then *)
@@ -19408,7 +19491,6 @@ procedure INITSCALARS ;
      ERRORCNT := 0 ;
      WARNCNT := 0 ;
      ERRKIND := 'E' ;
-     FLIPDEBUG := FALSE ;
      EXTUSED := FALSE ;
      PACKDATA := FALSE ;
      IS_MODULE := FALSE ;

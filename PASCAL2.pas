@@ -1,5 +1,5 @@
-program PCODE_TRANSLATOR ( INPUT , OUTPUT , PRR , ASMOUT , DBGINFO ,
-                           TRACEF ) ;
+program PCODE_TRANSLATOR ( INPUT , OUTPUT , DBGINFO , OBJCODE , ASMOUT
+                           , TRACEF ) ;
 
 (********************************************************************)
 (*$D-,N+                                                            *)
@@ -331,7 +331,8 @@ const VERSION = '2018.03' ;        // Version for display message
       (* cixmax: maximum difference of highest   *)
       (* and lowest case label                   *)
       (* must be coherent with pass 1            *)
-      (* should be communicated via PRR file     *)
+      (* should be communicated via OBJCODE file *)
+      (*                                         *)
       (*******************************************)
 
       CIXMAX = 400 ;
@@ -738,6 +739,15 @@ type OPTYPE = ( PCTS , PCTI , PLOD , PSTR , PLDA , PLOC , PSTO , PLDC ,
      ADRRNG = 0 .. MXADR ;
      LVLRNG = - 2 .. MXLVL ;
 
+     //****************************************************************
+     //* this new structure records the global state of processing     
+     //****************************************************************
+
+     GLOBAL_STATE = record
+                      IN_PROCBODY : BOOLEAN ;
+                      IGNORE_DEFS : BOOLEAN ;
+                    end ;
+
      (********************************************)
      (* REGISTER NUMBER RANGE                    *)
      (********************************************)
@@ -820,7 +830,8 @@ type OPTYPE = ( PCTS , PCTI , PLOD , PSTR , PLDA , PLOC , PSTO , PLDC ,
              end ;
 
 
-var OPC , OLDOPC : OPTYPE ;
+var GS : GLOBAL_STATE ;
+    OPC , OLDOPC : OPTYPE ;
 
     (*******************************************)
     (* CURRENT/OLD INST. OPCODE                *)
@@ -994,7 +1005,7 @@ var OPC , OLDOPC : OPTYPE ;
     (* CLEAR BEFORE LOADING THE REG.           *)
     (*******************************************)
 
-    SAVERGS , SAVEFPRS , DEBUG , OS_STYLE : BOOLEAN ;
+    SAVERGS , SAVEFPRS , DEBUG : BOOLEAN ;
 
     (*******************************************)
     (* indicates, if we are inside of          *)
@@ -1019,7 +1030,7 @@ var OPC , OLDOPC : OPTYPE ;
     (* VARIOUS OPTIONS                         *)
     (*******************************************)
 
-    TRACE , NEWLINE , FLIPDEBUG : BOOLEAN ;
+    TRACE , NEWLINE : BOOLEAN ;
     RUNPROFILE , CKMODE , FLOW_TRACE : BOOLEAN ;
 
     (*******************************************)
@@ -1206,14 +1217,27 @@ var OPC , OLDOPC : OPTYPE ;
                  LLEN : BYTE ;
                end ;
 
-    (******************************************************)
-    (* PRE-PASS (PRD FILE) INFORMATION - now dbginfo      *)
-    (******************************************************)
+    //******************************************************
+    // PRE-PASS (PRD FILE) INFORMATION - now DBGINFO        
+    // opp - 2018.03:                                       
+    // pcode summary file contains informations for         
+    // procedures that are available at the end of the      
+    // parsing of the procedure, but they are needed at     
+    // the beginning of the code generation already. to     
+    // keep the one pass paradigm of PASCAL1 and PASCAL2,   
+    // this informtion is written to a separate file and    
+    // read when a new procedure begins (tagged with the    
+    // procedure name in the leading column)                
+    // - proc size = code size of the procedure             
+    // - data size = data size of the procedure             
+    // - call higher = other procedure calls, that is,      
+    // the display position at the static level has to      
+    // be saved and restored                                
+    //******************************************************
 
     PROC_SIZE : ICRNG ;
     DATA_SIZE : ADRRNG ;
-    CALL_CNT : 0 .. 50 ;
-    CALL_HIGHER , LARGE_PROC , LARGE_DFRAME , PRE_PASS : BOOLEAN ;
+    CALL_HIGHER , LARGE_PROC : BOOLEAN ;
 
     (******************************************************)
     (* POINTERS TO LAST ELEMENTS OF 'OBJECT' CODE TABLES  *)
@@ -1343,6 +1367,7 @@ var OPC , OLDOPC : OPTYPE ;
     (* posofproclen = Position des ProcLen-Feldes          *)
     (*******************************************************)
 
+    OBJCODE : TEXT ;
     ASMOUT : TEXT ;
     TRACEF : TEXT ;
     DBGINFO : TEXT ;
@@ -2247,12 +2272,20 @@ procedure READNXTINST ;
                       OPNDTYPE := TYPCDE [ 'I' ] ;
                     end (* then *)
                   else
-                    begin
-                      READLN ( Q ) ;
-                      if ASM then
-                        WRITELN ( ASMOUT , ' ' : 2 , Q : 1 ) ;
-                      OPNDTYPE := TYPCDE [ 'I' ] ;
-                    end (* else *)
+                    if INPUT -> = 'B' then
+                      begin
+                        READLN ( CH , CH , Q ) ;
+                        if ASM then
+                          WRITELN ( ASMOUT , '  I,' , Q : 1 ) ;
+                        OPNDTYPE := TYPCDE [ 'I' ] ;
+                      end (* then *)
+                    else
+                      begin
+                        READLN ( Q ) ;
+                        if ASM then
+                          WRITELN ( ASMOUT , ' ' : 2 , Q : 1 ) ;
+                        OPNDTYPE := TYPCDE [ 'I' ] ;
+                      end (* else *)
               end (* tag/ca *) ;
        PCTI , PIXA , PASE , PMOV , PMFI , PMZE , PMSE , PDBG :
          begin
@@ -2537,6 +2570,11 @@ procedure READNXTINST ;
                       WRITE ( ASMOUT , SOURCENAME ) ;
                     WRITELN ( ASMOUT ) ;
                   end (* then *) ;
+
+     //************************************************************
+     // read pcode summary information from DBGINFO                
+     //************************************************************
+
                 repeat
                   READLN ( DBGINFO ) ;
                   READ ( DBGINFO , LBL2 . NAM ) ;
@@ -2546,17 +2584,12 @@ procedure READNXTINST ;
                       EXIT ( 614 )
                     end (* then *) ;
                 until LBL2 . NAM = '#PROC   ' ;
-
-     (********************************)
-     (* POSITION TO NEXT PROC. INFO. *)
-     (********************************)
-
                 READ ( DBGINFO , TEMPLBL ) ;
                 if TEMPLBL <> CURPNAME then
                   IVAL := - 1
                 else
                   READLN ( DBGINFO , IVAL , CALL_HIGHER , PROC_SIZE ,
-                           DATA_SIZE , FLIPDEBUG ) ;
+                           DATA_SIZE ) ;
                 if IVAL <> CURPNO then
                   ERROR ( 614 ) ;
                 LARGE_PROC := ( PROC_SIZE > SHRT_PROC ) or DEBUG ;
@@ -8817,7 +8850,7 @@ procedure ASMNXTINST ;
                    begin
                      I4 [ 3 ] := BLNK2 * SL16 + J * 16 ;
                      I4 [ 4 ] := K ;
-                     WRITE ( PRR , C80 ) ;
+                     WRITE ( OBJCODE , C80 ) ;
                      if I < NXTPRC then
                        K := K + 3
                      else
@@ -8859,7 +8892,7 @@ procedure ASMNXTINST ;
                    CARD . H [ 6 ] := LNGTH ;
                  end (* then *) ;
                CARD . H [ 4 ] := TPC ;
-               WRITE ( PRR , CARD . C : 16 , CODE . TXTCARD [ I ] :
+               WRITE ( OBJCODE , CARD . C : 16 , CODE . TXTCARD [ I ] :
                        LNGTH , ' ' : 64 - LNGTH ) ;
                I := I + 1 ;
                TPC := TPC + TXTCHUNK ;
@@ -8925,7 +8958,7 @@ procedure ASMNXTINST ;
                              CARD . I [ LNGTH + 5 ] := BLNK4 ;
                              LNGTH := LNGTH + 1
                            end (* while *) ;
-                         WRITE ( PRR , CARD . C ) ;
+                         WRITE ( OBJCODE , CARD . C ) ;
                          LNGTH := 0 ;
                        end (* then *) ;
                    end (* then *) ;
@@ -8944,8 +8977,8 @@ procedure ASMNXTINST ;
                  CARD . I [ 2 ] := BLNK1 * SL24 ;
                  CARD . H [ 8 ] := NXTPRC + 1
                end (* then *) ;
-           WRITE ( PRR , CARD . C : 32 , 'PASCAL:' : 7 , DATE : 11 ,
-                   ' ' : 30 ) ;
+           WRITE ( OBJCODE , CARD . C : 32 , 'PASCAL:' : 7 , DATE : 11
+                   , ' ' : 30 ) ;
            if ASM then
              PRINT_CSECT ( PCOUNTER ) ;
            if ASMVERB then
@@ -8982,11 +9015,11 @@ procedure ASMNXTINST ;
            (* PUT OUT ESD CARD TO BEGIN CSECT *)
            (***********************************)
 
-               WRITE ( PRR , CHR ( 02 ) , 'ESD      ' , CHR ( 0 ) , CHR
-                       ( 16 ) , '  ' , CHR ( 0 ) , CHR ( 1 ) , PRCTBL [
-                       0 ] . NAME , CHR ( 0 ) , CHR ( 0 ) , CHR ( 0 ) ,
-                       CHR ( 0 ) , ' ' , CHR ( 0 ) , CHR ( 0 ) , CHR (
-                       0 ) , ' ' : 48 ) ;
+               WRITE ( OBJCODE , CHR ( 02 ) , 'ESD      ' , CHR ( 0 ) ,
+                       CHR ( 16 ) , '  ' , CHR ( 0 ) , CHR ( 1 ) ,
+                       PRCTBL [ 0 ] . NAME , CHR ( 0 ) , CHR ( 0 ) ,
+                       CHR ( 0 ) , CHR ( 0 ) , ' ' , CHR ( 0 ) , CHR (
+                       0 ) , CHR ( 0 ) , ' ' : 48 ) ;
              end (* then *) ;
            CPC1 := CSEGSTRT ;
            TXTNUM := 0 ;
@@ -8996,11 +9029,11 @@ procedure ASMNXTINST ;
                if ( CPCOUNTER - CPC1 ) < TXTCHUNK then
                  LEN := CPCOUNTER - CPC1 ;
                if ( LEN = TXTCHUNK ) or CLOSE then
-                 WRITE ( PRR , CHR ( 02 ) , 'TXT ' , CHR ( 0 ) , CHR (
-                         CPC1 DIV 256 ) , CHR ( CPC1 MOD 256 ) , '  ' ,
-                         CHR ( 0 ) , CHR ( LEN ) , '  ' , CHR ( 0 ) ,
-                         CHR ( 1 ) , CODE . TXTCARD [ TXTNUM ] : LEN ,
-                         ' ' : 64 - LEN ) ;
+                 WRITE ( OBJCODE , CHR ( 02 ) , 'TXT ' , CHR ( 0 ) ,
+                         CHR ( CPC1 DIV 256 ) , CHR ( CPC1 MOD 256 ) ,
+                         '  ' , CHR ( 0 ) , CHR ( LEN ) , '  ' , CHR (
+                         0 ) , CHR ( 1 ) , CODE . TXTCARD [ TXTNUM ] :
+                         LEN , ' ' : 64 - LEN ) ;
                TXTNUM := TXTNUM + 1 ;
                CPC1 := CPC1 + LEN ;
              end (* while *) ;
@@ -9011,9 +9044,9 @@ procedure ASMNXTINST ;
            (*******************************)
 
              begin
-               WRITE ( PRR , CHR ( 02 ) , 'END' , ' ' : 24 , CHR ( 0 )
-                       , CHR ( 0 ) , CHR ( CPC1 DIV 256 ) , CHR ( CPC1
-                       MOD 256 ) , ' ' : 48 ) ;
+               WRITE ( OBJCODE , CHR ( 02 ) , 'END' , ' ' : 24 , CHR (
+                       0 ) , CHR ( 0 ) , CHR ( CPC1 DIV 256 ) , CHR (
+                       CPC1 MOD 256 ) , ' ' : 48 ) ;
                if ASMVERB then
                  begin
                    WRITELN ( OUTPUT , '****' : 7 , ' CONSTS: ' , PRCTBL
@@ -9061,64 +9094,62 @@ procedure ASMNXTINST ;
            (*********************************)
 
                STATIC_ADDR := PCOUNTER * 2 - 4 ;
+
+           //***********************************************************
+           // if there are local calls, the display value at the        
+           // current static level has to saved and restored at         
+           // the end ... load it to R0, it will be saved by the        
+           // following stm 14,12,...                                   
+           //***********************************************************
+
                if CALL_HIGHER then
-                 GENRX ( XL , TRG0 , DISPLAY + 4 * CURLVL , GBR , 0 ) ;
+                 begin
+                   if ASM then
+                     begin
+                       HEXHW ( PCOUNTER * 2 , HEXPC ) ;
+                       WRITE ( ASMOUT , ASMTAG , HEXPC , ': ' ) ;
+                       WRITE ( ASMOUT , '*' , ' ' : 26 ,
+                               '-- save display level ' , CURLVL : 1 )
+                               ;
+                       WRITELN ( ASMOUT ) ;
+                     end (* then *) ;
+                   GENRX ( XL , TRG0 , DISPLAY + 4 * CURLVL , GBR , 0 )
+                           ;
+                 end (* then *) ;
 
            (***************************)
            (* TO SAVE DISPLAY[CURLVL] *)
            (***************************)
 
-               if SAVERGS or ( OPNDTYPE <> PROC ) then
+               if ASM then
                  begin
-                   if OS_STYLE then
-                     begin
-                       GENRS ( XSTM , 14 , 12 , 12 , TRG1 ) ;
+                   HEXHW ( PCOUNTER * 2 , HEXPC ) ;
+                   WRITE ( ASMOUT , ASMTAG , HEXPC , ': ' ) ;
+                   WRITE ( ASMOUT , '*' , ' ' : 26 ,
+                           '-- save registers and chain areas' ) ;
+                   WRITELN ( ASMOUT ) ;
+                 end (* then *) ;
+               GENRS ( XSTM , 14 , 12 , 12 , TRG1 ) ;
 
            (*********************************)
            (*SAVE OLD DISPLAY[CURLVL] & REGS*)
            (*********************************)
 
-                       GENRX ( XST , TRG1 , 8 , LBR , 0 ) ;
+               GENRX ( XST , TRG1 , 8 , LBR , 0 ) ;
 
            (*****************************)
            (*FORWARD CHAIN OF SAVE AREAS*)
            (*****************************)
 
-                       GENRX ( XST , LBR , 4 , TRG1 , 0 ) ;
+               GENRX ( XST , LBR , 4 , TRG1 , 0 ) ;
 
            (************************************)
            (*DYNAMIC LINK, ALSO SAVE AREA CHAIN*)
            (************************************)
+           (***************************        *)
+           (* SAVE DYNAMIC LINK + REGS         *)
+           (***************************        *)
 
-                     end (* then *)
-                   else
-                     GENRS ( XSTM , 13 , 12 , 8 , TRG1 ) ;
-
-           (****************************)
-           (* SAVE DYNAMIC LINK + REGS *)
-           (****************************)
-
-                 end (* then *)
-               else
-
-           (*******************************************)
-           (*JUST SAVE RETURN ADR. & PROGRAM BASE REGS*)
-           (*******************************************)
-
-                 begin
-                   GENRX ( XST , LBR , 4 , TRG1 , 0 ) ;
-
-           (********************)
-           (* SET DYNAMIC LINK *)
-           (********************)
-
-                   if CALL_HIGHER then
-                     GENRX ( XST , TRG0 , 20 , TRG1 , 0 ) ;
-                   GENRX ( XST , RTREG , 12 , TRG1 , 0 ) ;
-                   GENRX ( XST , PBR1 , 60 , TRG1 , 0 ) ;
-                   if LARGE_PROC then
-                     GENRX ( XST , PBR2 , 64 , TRG1 , 0 ) ;
-                 end (* else *) ;
                GENRR ( XLR , LBR , TRG1 ) ;
 
            (*****************)
@@ -9126,12 +9157,31 @@ procedure ASMNXTINST ;
            (*****************)
 
                if CALL_HIGHER then
-                 GENRX ( XST , LBR , DISPLAY + 4 * CURLVL , GBR , 0 ) ;
+                 begin
+                   if ASM then
+                     begin
+                       HEXHW ( PCOUNTER * 2 , HEXPC ) ;
+                       WRITE ( ASMOUT , ASMTAG , HEXPC , ': ' ) ;
+                       WRITE ( ASMOUT , '*' , ' ' : 26 ,
+                               '-- update current display' ) ;
+                       WRITELN ( ASMOUT ) ;
+                     end (* then *) ;
+                   GENRX ( XST , LBR , DISPLAY + 4 * CURLVL , GBR , 0 )
+                           ;
+                 end (* then *) ;
 
            (************************)
            (*UPDATE DISPLAY[CURLVL]*)
            (************************)
 
+               if ASM then
+                 begin
+                   HEXHW ( PCOUNTER * 2 , HEXPC ) ;
+                   WRITE ( ASMOUT , ASMTAG , HEXPC , ': ' ) ;
+                   WRITE ( ASMOUT , '*' , ' ' : 26 ,
+                           '-- setup base registers' ) ;
+                   WRITELN ( ASMOUT ) ;
+                 end (* then *) ;
                GENRR ( XLR , PBR1 , JREG ) ;
 
            (*********************************)
@@ -9149,6 +9199,14 @@ procedure ASMNXTINST ;
            // SAVE CURR. LOC. FOR ERROR ROUTINE              
            //************************************************
 
+                   if ASM then
+                     begin
+                       HEXHW ( PCOUNTER * 2 , HEXPC ) ;
+                       WRITE ( ASMOUT , ASMTAG , HEXPC , ': ' ) ;
+                       WRITE ( ASMOUT , '*' , ' ' : 26 ,
+                               '-- check for enough stack space' ) ;
+                       WRITELN ( ASMOUT ) ;
+                     end (* then *) ;
                    if DATA_SIZE < 4096 then
                      GENRX ( XLA , TRG1 , DATA_SIZE , TRG1 , 0 )
                    else
@@ -9217,6 +9275,14 @@ procedure ASMNXTINST ;
                if DEBUG and ( CURLVL > 1 ) and ( DATA_SIZE > 80 ) then
                  if DATA_SIZE < 1500 then
                    begin
+                     if ASM then
+                       begin
+                         HEXHW ( PCOUNTER * 2 , HEXPC ) ;
+                         WRITE ( ASMOUT , ASMTAG , HEXPC , ': ' ) ;
+                         WRITE ( ASMOUT , '*' , ' ' : 26 ,
+                                 '-- clear stack frame using MVCs' ) ;
+                         WRITELN ( ASMOUT ) ;
+                       end (* then *) ;
 
            //************************************************
            // optimizing: generate MVC instead of MVCL       
@@ -9239,6 +9305,14 @@ procedure ASMNXTINST ;
                    end (* then *)
                  else
                    begin
+                     if ASM then
+                       begin
+                         HEXHW ( PCOUNTER * 2 , HEXPC ) ;
+                         WRITE ( ASMOUT , ASMTAG , HEXPC , ': ' ) ;
+                         WRITE ( ASMOUT , '*' , ' ' : 26 ,
+                                 '-- clear stack frame using MVCL' ) ;
+                         WRITELN ( ASMOUT ) ;
+                       end (* then *) ;
 
            //******************************
            // clear the stack frame        
@@ -9266,51 +9340,43 @@ procedure ASMNXTINST ;
                      GENRX ( XSLL , TRG15 , 24 , 0 , 0 ) ;
                      GENRR ( XMVCL , TRG0 , TRG14 ) ;
                    end (* else *) ;
-               if SAVERGS or ( OPNDTYPE <> PROC ) then
+
+           //************************************************
+           // restore the general registers                  
+           //************************************************
+
+               if ASM then
                  begin
-                   if OS_STYLE then
-                     begin
-                       GENRS ( XLM , 14 , 12 , 12 , LBR ) ;
-                       GENRX ( XL , LBR , 4 , LBR , 0 )
-                     end (* then *)
-                   else
-                     GENRS ( XLM , 13 , 12 , 8 , LBR )
-                 end (* then *)
+                   HEXHW ( PCOUNTER * 2 , HEXPC ) ;
+                   WRITE ( ASMOUT , ASMTAG , HEXPC , ': ' ) ;
+                   WRITE ( ASMOUT , '*' , ' ' : 26 ,
+                           '-- restore registers' ) ;
+                   WRITELN ( ASMOUT ) ;
+                 end (* then *) ;
+               GENRS ( XLM , 14 , 12 , 12 , LBR ) ;
+               GENRX ( XL , LBR , 4 , LBR , 0 ) ;
 
-           (***********************************)
-           (* UPDATE ALL INCL. LOCAL BASE REG *)
-           (***********************************)
+           //************************************************
+           // restore the display value at the               
+           // current static level; it has been reloaded from
+           // the                                            
+           // save area to R0 ...                            
+           //************************************************
 
-               else
-
-           (****************************************)
-           (*RESTORE BASE REGS AND RETURN ADR. ONLY*)
-           (****************************************)
-
-                 begin
-                   if OPNDTYPE <> PROC then
-                     GENRR ( XLR , TRG1 , LBR ) ;
-
-           (*******************)
-           (* FOR FUNC. RSLT. *)
-           (*******************)
-
-                   if CALL_HIGHER then
-                     GENRX ( XL , TRG0 , 20 , LBR , 0 ) ;
-                   GENRX ( XL , RTREG , 12 , LBR , 0 ) ;
-                   GENRX ( XL , PBR1 , 60 , LBR , 0 ) ;
-                   if LARGE_PROC then
-                     GENRX ( XL , PBR2 , 64 , LBR , 0 ) ;
-                   GENRX ( XL , LBR , 4 , LBR , 0 ) ;
-
-           (***************************************)
-           (* RESET LOCAL PTR TO PREV ACTIV. REC. *)
-           (***************************************)
-
-                 end (* else *) ;
                if CALL_HIGHER then
-                 GENRX ( XST , TRG0 , DISPLAY + 4 * CURLVL , GBR , 0 )
-                         ;
+                 begin
+                   if ASM then
+                     begin
+                       HEXHW ( PCOUNTER * 2 , HEXPC ) ;
+                       WRITE ( ASMOUT , ASMTAG , HEXPC , ': ' ) ;
+                       WRITE ( ASMOUT , '*' , ' ' : 26 ,
+                               '-- restore display level ' , CURLVL : 1
+                               ) ;
+                       WRITELN ( ASMOUT ) ;
+                     end (* then *) ;
+                   GENRX ( XST , TRG0 , DISPLAY + 4 * CURLVL , GBR , 0
+                           ) ;
+                 end (* then *) ;
                if DEBUG and ( CURLVL > 1 ) then
 
            (***********************)
@@ -9318,10 +9384,26 @@ procedure ASMNXTINST ;
            (***********************)
 
                  begin
+                   if ASM then
+                     begin
+                       HEXHW ( PCOUNTER * 2 , HEXPC ) ;
+                       WRITE ( ASMOUT , ASMTAG , HEXPC , ': ' ) ;
+                       WRITE ( ASMOUT , '*' , ' ' : 26 ,
+                               '-- clear the save area' ) ;
+                       WRITELN ( ASMOUT ) ;
+                     end (* then *) ;
                    I := 80 ;
                    if OPNDTYPE <> PROC then
                      I := 72 ;
                    GENSS ( XMVC , I , 0 , TRG1 , 80 , TRG1 ) ;
+                 end (* then *) ;
+               if ASM then
+                 begin
+                   HEXHW ( PCOUNTER * 2 , HEXPC ) ;
+                   WRITE ( ASMOUT , ASMTAG , HEXPC , ': ' ) ;
+                   WRITE ( ASMOUT , '*' , ' ' : 26 ,
+                           '-- branch to return address' ) ;
+                   WRITELN ( ASMOUT ) ;
                  end (* then *) ;
                if FLOW_TRACE then
                  begin
@@ -9356,6 +9438,16 @@ procedure ASMNXTINST ;
            /* dann zweimal fuer lower und upper limit         */
            /***************************************************/
 
+           if GS . IGNORE_DEFS then
+             return ;
+
+           /***************************************************/
+           /* ende einer prozedur ... hier folgen             */
+           /* ab 2018.03 noch mehrere defs, die weitere       */
+           /* informationen fuer die prozedur enthalten       */
+           /* diese werden zunaechst ignoriert.               */
+           /***************************************************/
+
            if OLDOPC = PRET then
              begin
                PDEF_CNT := 0 ;
@@ -9366,83 +9458,88 @@ procedure ASMNXTINST ;
                GEN_CSECT ( Q ) ;
                CURPNO := - 1 ;
                PCOUNTER := 0 ;
-             end (* then *)
-           else
-             if LBL1 . LEN > 0 then
-               begin
-                 PDEF_CNT := PDEF_CNT + 1 ;
+               GS . IGNORE_DEFS := TRUE ;
+               return ;
+             end (* then *) ;
+
+           /***************************************************/
+           /* am anfang einer branch table,                   */
+           /* dann zweimal fuer lower und upper limit         */
+           /***************************************************/
+
+           if LBL1 . LEN > 0 then
+             begin
+               PDEF_CNT := PDEF_CNT + 1 ;
 
            /*************************************/
            /* CTR/CASE EXPRESSION RANGE,        */
            /* PUT BOUNDS IN 'CONSTANT' TABLE    */
            /* but not for constants             */
            /* in new portable branch table      */
-           /*                                   */
            /*************************************/
 
-                 UPD_INTTBL ( LBLTBL [ LBLMAP ( LBL1 . NAM ) ] . LNK ,
-                              Q ) ;
-               end (* then *)
-             else
-               begin
-                 PDEF_CNT := PDEF_CNT + 1 ;
-                 if PDEF_CNT = 1 then
-                   begin
-                     CASE_LOW := Q ;
-                     CASE_HIGH := Q ;
-                   end (* then *) ;
-                 if not CASE_FLAG_NEW then
+               UPD_INTTBL ( LBLTBL [ LBLMAP ( LBL1 . NAM ) ] . LNK , Q
+                            ) ;
+             end (* then *)
+           else
+             begin
+               PDEF_CNT := PDEF_CNT + 1 ;
+               if PDEF_CNT = 1 then
+                 begin
+                   CASE_LOW := Q ;
+                   CASE_HIGH := Q ;
+                 end (* then *) ;
+               if not CASE_FLAG_NEW then
 
            /**********************************/
            /* portable branch table beginnt  */
            /**********************************/
 
-                   begin
-                     CASE_FLAG := TRUE ;
-                     CASE_FLAG_NEW := TRUE ;
-                     CASE_DEFAULT := LBLMAP ( LBL1 . NAM ) + 1 ;
-                     CASE_OPNDTYPE := OPNDTYPE ;
+                 begin
+                   CASE_FLAG := TRUE ;
+                   CASE_FLAG_NEW := TRUE ;
+                   CASE_DEFAULT := LBLMAP ( LBL1 . NAM ) + 1 ;
+                   CASE_OPNDTYPE := OPNDTYPE ;
 
            /**********************************/
            /* pre-format area of branch-     */
            /* table with zeroes              */
            /**********************************/
 
-                     PCNEU := NEXTPC ( CIXMAX ) ;
-                     for PC := PCOUNTER to PCNEU do
-                       CODE . H [ PC ] := 0 ;
-                     if CASE_OPNDTYPE = CHRC then
-                       for C := CHR ( 0 ) to CHR ( 255 ) do
-                         CASE_CHARTABLE [ C ] := - 1 ;
-                     if FALSE then
-                       begin
-                         WRITELN ( TRACEF , '---------------------'
-                                   '---------------------' ) ;
-                         WRITELN ( TRACEF , 'pcounter      = ' ,
-                                   PCOUNTER ) ;
-                         WRITELN ( TRACEF , 'case_low      = ' ,
-                                   CASE_LOW ) ;
-                         WRITELN ( TRACEF , 'case_flag     = ' ,
-                                   CASE_FLAG ) ;
-                         WRITELN ( TRACEF , 'case_flag_new = ' ,
-                                   CASE_FLAG_NEW ) ;
-                         WRITELN ( TRACEF , 'case_default  = ' ,
-                                   CASE_DEFAULT ) ;
-                         WRITELN ( TRACEF , 'case_opndtype = ' ,
-                                   CASE_OPNDTYPE ) ;
-                         WRITELN ( TRACEF , '---------------------'
-                                   '---------------------' ) ;
-                       end (* then *) ;
-                   end (* then *) ;
-                 CASE_LABEL := Q ;
-                 if FALSE then
-                   begin
-                     WRITELN ( TRACEF , 'case_label = ' , CASE_LABEL )
-                               ;
-                     WRITELN ( TRACEF , '---------------------'
-                               '---------------------' ) ;
-                   end (* then *)
-               end (* else *)
+                   PCNEU := NEXTPC ( CIXMAX ) ;
+                   for PC := PCOUNTER to PCNEU do
+                     CODE . H [ PC ] := 0 ;
+                   if CASE_OPNDTYPE = CHRC then
+                     for C := CHR ( 0 ) to CHR ( 255 ) do
+                       CASE_CHARTABLE [ C ] := - 1 ;
+                   if FALSE then
+                     begin
+                       WRITELN ( TRACEF , '---------------------'
+                                 '---------------------' ) ;
+                       WRITELN ( TRACEF , 'pcounter      = ' , PCOUNTER
+                                 ) ;
+                       WRITELN ( TRACEF , 'case_low      = ' , CASE_LOW
+                                 ) ;
+                       WRITELN ( TRACEF , 'case_flag     = ' ,
+                                 CASE_FLAG ) ;
+                       WRITELN ( TRACEF , 'case_flag_new = ' ,
+                                 CASE_FLAG_NEW ) ;
+                       WRITELN ( TRACEF , 'case_default  = ' ,
+                                 CASE_DEFAULT ) ;
+                       WRITELN ( TRACEF , 'case_opndtype = ' ,
+                                 CASE_OPNDTYPE ) ;
+                       WRITELN ( TRACEF , '---------------------'
+                                 '---------------------' ) ;
+                     end (* then *) ;
+                 end (* then *) ;
+               CASE_LABEL := Q ;
+               if FALSE then
+                 begin
+                   WRITELN ( TRACEF , 'case_label = ' , CASE_LABEL ) ;
+                   WRITELN ( TRACEF , '---------------------'
+                             '---------------------' ) ;
+                 end (* then *)
+             end (* else *)
          end (* DEF_OPERATION *) ;
 
 
@@ -10083,7 +10180,17 @@ procedure ASMNXTINST ;
                    OLDCSP := PSIO ;
                  end (* tag/ca *) ;
           PENT , PRET :
-            ENT_RET ;
+            begin
+              if OPC = PENT then
+                begin
+                  ;
+                  GS . IN_PROCBODY := TRUE ;
+                  GS . IGNORE_DEFS := FALSE
+                end (* then *)
+              else
+                GS . IN_PROCBODY := FALSE ;
+              ENT_RET ;
+            end (* tag/ca *) ;
           PCSP : case CSP of
                    PDAT : CALLSTNDRD ;
                    PTIM : CALLSTNDRD ;
@@ -11824,26 +11931,26 @@ procedure ASMNXTINST ;
                             if FPA . DSPLMT = 0 then
                               GENRR ( XLTR , L . RGADR , L . RGADR )
                             else
-                              if ( OPNDTYPE = ADR ) and ( not FLIPDEBUG
-                              ) then
+                              if ( OPNDTYPE = ADR ) then
                                 begin
 
-        (********************************)
-        (* CONSTANT OF TYPE ADR = NIL ! *)
-        (* FOLLOWING VALID ONLY IF $D-  *)
-        (*IS USED                       *)
-        (********************************)
+        //******************************************************
+        // CONSTANT OF TYPE ADR = NIL !                         
+        // FOLLOWING VALID ONLY IF $D- IS USED                  
+        //******************************************************
 
                                   GENRR ( XLTR , L . RGADR , L . RGADR
                                           ) ;
+
+        //******************************************************
+        // opc is pequ or pneq                                  
+        // this logic applies imo                               
+        // because nil = -1                                     
+        //******************************************************
+
                                   if OPC = PEQU then
                                     OPC := PLES
                                   else
-
-        (**************)
-        (* OPC = PNEQ *)
-        (**************)
-
                                     OPC := PGEQ ;
                                 end (* then *)
                               else
@@ -12708,6 +12815,8 @@ procedure SETUP ;
    var I : INTEGER ;
 
    begin (* SETUP *)
+     GS . IN_PROCBODY := FALSE ;
+     GS . IGNORE_DEFS := FALSE ;
      EMPTY := '   ' ;
      BRMSK [ PEQU ] := 8 ;
      BRMSK [ PNEQ ] := 7 ;
@@ -12784,8 +12893,6 @@ procedure SETUP ;
      SAVERGS := TRUE ;
      SAVEFPRS := TRUE ;
      CLEAR_REG := TRUE ;
-     PRE_PASS := TRUE ;
-     OS_STYLE := TRUE ;
      TOTALBYTES := 0 ;
      CASE_FLAG := FALSE ;
      CASE_FLAG_NEW := FALSE ;

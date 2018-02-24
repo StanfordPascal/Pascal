@@ -6,29 +6,33 @@
 
 Variables of Main Program
 ------------------------------------------------------------------------
-GS                   auto     1    352  struct aln = 1
+GS                   auto     1    352  struct aln = 4
   IN_PROCBODY             field      0  boolean
-  IGNORE_DEFS             field      1  boolean
+  FILL_LINEPTR            field      1  boolean
+  MOD1DEFSTEP             field      4  integer
+  MOD2DEFSTEP             field      8  integer
                                         endstruct
-OPC                  auto     1    354  scalar (2)
-OLDOPC               auto     1    356  scalar (2)
-CSP                  auto     1    358  scalar (2)
-OLDCSP               auto     1    360  scalar (2)
-PROCOFFSET           auto     1    364  integer
-NMCDE                auto     1    368  array 1 3
+PIANKER              auto     1    364  pointer ->001
+PIAKT                auto     1    368  pointer ->001
+OPC                  auto     1    372  scalar (2)
+OLDOPC               auto     1    374  scalar (2)
+CSP                  auto     1    376  scalar (2)
+OLDCSP               auto     1    378  scalar (2)
+NMCDE                auto     1    380  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-EMPTY                auto     1    371  array 1 3
+EMPTY                auto     1    383  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-OP_SP                auto     1    374  boolean
-INIT                 auto     1    375  boolean
-CH                   auto     1    376  char
-BVAL                 auto     1    377  boolean
-CHVAL                auto     1    378  char
-IVAL                 auto     1    380  integer
-RVAL                 auto     1    384  real
-PSVAL                auto     1    392  struct aln = 4
+PROCOFFSET           auto     1    388  integer
+OP_SP                auto     1    392  boolean
+INIT                 auto     1    393  boolean
+CH                   auto     1    394  char
+BVAL                 auto     1    395  boolean
+CHVAL                auto     1    396  char
+IVAL                 auto     1    400  integer
+RVAL                 auto     1    408  real
+PSVAL                auto     1    416  struct aln = 4
                         variant
   S                       field      0  array 1 32
                              inxtype =  integer (2)
@@ -39,113 +43,101 @@ PSVAL                auto     1    392  struct aln = 4
                              inxtype =  integer (2)
                              aeltype =  char
                                         endstruct
-STRPTR               auto     1    648  pointer ->001
-PSLNGTH              auto     1    652  integer (2)
-SVAL                 auto     1    654  array 1 254
+STRPTR               auto     1    672  pointer ->002
+PSLNGTH              auto     1    676  integer (2)
+SVAL                 auto     1    678  array 1 254
                              inxtype =  integer (2)
                              aeltype =  char
-SLNGTH               auto     1    908  integer (2)
-CURLVL               auto     1    910  integer (2)
-TOP                  auto     1    912  integer (2)
-CALDPTH              auto     1    914  integer (2)
-LASTLN               auto     1    916  integer
-NXTLNP               auto     1    920  integer
-LASTPC               auto     1    924  integer
-LASTPCDIF            auto     1    928  integer
-LBL1                 auto     1    932  struct aln = 4
+SLNGTH               auto     1    932  integer (2)
+CURLVL               auto     1    934  integer (2)
+TOP                  auto     1    936  integer (2)
+CALDPTH              auto     1    938  integer (2)
+LASTLN               auto     1    940  integer
+NXTLNP               auto     1    944  integer
+LASTPC               auto     1    948  integer
+LASTPCDIF            auto     1    952  integer
+LBL1                 auto     1    956  struct aln = 4
   NAM                     field      0  array 1 8
                              inxtype =  integer (2)
                              aeltype =  char
   LEN                     field      8  integer (2)
   CADDR                   field     12  integer (4)
                                         endstruct
-LBL2                 auto     1    948  struct aln = 4
+LBL2                 auto     1    972  struct aln = 4
   NAM                     field      0  array 1 8
                              inxtype =  integer (2)
                              aeltype =  char
   LEN                     field      8  integer (2)
   CADDR                   field     12  integer (4)
                                         endstruct
-LBL3                 auto     1    964  struct aln = 4
+LBL3                 auto     1    988  struct aln = 4
   NAM                     field      0  array 1 8
                              inxtype =  integer (2)
                              aeltype =  char
   LEN                     field      8  integer (2)
   CADDR                   field     12  integer (4)
                                         endstruct
-SEGSZE               auto     1    980  struct aln = 4
+STATCSECT            auto     1   1004  struct aln = 4
   NAM                     field      0  array 1 8
                              inxtype =  integer (2)
                              aeltype =  char
   LEN                     field      8  integer (2)
   CADDR                   field     12  integer (4)
                                         endstruct
-STATCSECT            auto     1    996  struct aln = 4
-  NAM                     field      0  array 1 8
-                             inxtype =  integer (2)
-                             aeltype =  char
-  LEN                     field      8  integer (2)
-  CADDR                   field     12  integer (4)
-                                        endstruct
-XJPFLAG              auto     1   1012  char
-OPNDTYPE             auto     1   1014  scalar (2)
-EXTLANG              auto     1   1016  char
-P                    auto     1   1020  integer
-Q                    auto     1   1024  integer
-R                    auto     1   1028  integer
-SP                   auto     1   1032  integer (4)
-LCAFTSAREA           auto     1   1036  integer (4)
-FILECNT              auto     1   1040  integer (2)
-DEBUG_LEV            auto     1   1042  integer (2)
-PDEF_CNT             auto     1   1044  integer
-CASE_LOW             auto     1   1048  integer
-CASE_HIGH            auto     1   1052  integer
-CASE_LABEL           auto     1   1056  integer
-CASE_DEFAULT         auto     1   1060  integer
-CASE_OPNDTYPE        auto     1   1064  scalar (2)
-CASE_CHARTABLE       auto     1   1066  array 0 255
+XJPFLAG              auto     1   1020  char
+OPNDTYPE             auto     1   1022  scalar (2)
+EXTLANG              auto     1   1024  char
+P                    auto     1   1028  integer
+Q                    auto     1   1032  integer
+R                    auto     1   1036  integer
+SP                   auto     1   1040  integer (4)
+LCAFTSAREA           auto     1   1044  integer (4)
+FILECNT              auto     1   1048  integer (2)
+PDEF_CNT             auto     1   1052  integer
+CASE_LOW             auto     1   1056  integer
+CASE_HIGH            auto     1   1060  integer
+CASE_LABEL           auto     1   1064  integer
+CASE_DEFAULT         auto     1   1068  integer
+CASE_OPNDTYPE        auto     1   1072  scalar (2)
+CASE_CHARTABLE       auto     1   1074  array 0 255
                              inxtype =  char
                              aeltype =  integer (2)
-NXTRG                auto     1   1578  integer (2)
-TXRG                 auto     1   1580  integer (2)
-DBLALN               auto     1   1582  boolean
-OPT_FLG              auto     1   1583  boolean
-FILREGACTIVE         auto     1   1584  boolean
-CSPREGACTIVE         auto     1   1585  boolean
-PROCOFFSET_OLD       auto     1   1588  integer
-CSTBLK               auto     1   1592  boolean
-MUSIC                auto     1   1593  boolean
-CLEAR_REG            auto     1   1594  boolean
-NEG_CND              auto     1   1595  boolean
-SAVERGS              auto     1   1596  boolean
-SAVEFPRS             auto     1   1597  boolean
-DEBUG                auto     1   1598  boolean
-CASE_FLAG            auto     1   1599  boolean
-CASE_FLAG_NEW        auto     1   1600  boolean
-ASM                  auto     1   1601  boolean
-ASM_SAVE             auto     1   1602  boolean
-FIRST_ASMOUT         auto     1   1603  boolean
-ASMVERB              auto     1   1604  boolean
-TRACE                auto     1   1605  boolean
-NEWLINE              auto     1   1606  boolean
-RUNPROFILE           auto     1   1607  boolean
-CKMODE               auto     1   1608  boolean
-FLOW_TRACE           auto     1   1609  boolean
-GET_STAT             auto     1   1610  boolean
-CURLINE              auto     1   1612  integer (2)
-POOL_SIZE            auto     1   1614  integer (2)
-NUMLITS              auto     1   1616  integer
-PCAFTLIT             auto     1   1620  integer (2)
-MDTAG                auto     1   1622  scalar (2)
-HEAPMARK             auto     1   1624  pointer ->002
-TESTCNT              auto     1   1628  integer
-ZEROBL               auto     1   1632  struct aln = 4
+NXTRG                auto     1   1586  integer (2)
+TXRG                 auto     1   1588  integer (2)
+DBLALN               auto     1   1590  boolean
+OPT_FLG              auto     1   1591  boolean
+FILREGACTIVE         auto     1   1592  boolean
+CSPREGACTIVE         auto     1   1593  boolean
+PROCOFFSET_OLD       auto     1   1596  integer
+CSTBLK               auto     1   1600  boolean
+MUSIC                auto     1   1601  boolean
+CLEAR_REG            auto     1   1602  boolean
+NEG_CND              auto     1   1603  boolean
+SAVEFPRS             auto     1   1604  boolean
+DEBUG                auto     1   1605  boolean
+CASE_FLAG            auto     1   1606  boolean
+CASE_FLAG_NEW        auto     1   1607  boolean
+ASM                  auto     1   1608  boolean
+FIRST_ASMOUT         auto     1   1609  boolean
+TRACE                auto     1   1610  boolean
+NEWLINE              auto     1   1611  boolean
+RUNPROFILE           auto     1   1612  boolean
+CKMODE               auto     1   1613  boolean
+FLOW_TRACE           auto     1   1614  boolean
+CURLINE              auto     1   1616  integer (2)
+POOL_SIZE            auto     1   1618  integer (2)
+NUMLITS              auto     1   1620  integer
+PCAFTLIT             auto     1   1624  integer (2)
+MDTAG                auto     1   1626  scalar (2)
+HEAPMARK             auto     1   1628  pointer ->003
+TESTCNT              auto     1   1632  integer
+ZEROBL               auto     1   1636  struct aln = 4
   DSPLMT                  field      0  integer
   LVL                     field      4  integer (2)
                                         endstruct
-TOTALBYTES           auto     1   1640  integer
-ERRORCNT             auto     1   1644  integer
-S370CNT              auto     1   1648  integer
+TOTALBYTES           auto     1   1644  integer
+ERRORCNT             auto     1   1648  integer
+S370CNT              auto     1   1652  integer
 I_S_R                auto     1   1656  struct aln = 8
                         variant
   I1                      field      0  integer
@@ -168,7 +160,7 @@ STK                  auto     1   1720  array 0 15
                              inxtype =  integer (2)
                              aeltype =  struct aln = 8
   RCNST                   field      0  real
-  PCNST                   field      8  pointer ->003
+  PCNST                   field      8  pointer ->004
   STKADR                  field     12  integer (4)
   FPA                     field     16  struct level = 2 aln = 4
   DSPLMT                  field      0  integer
@@ -253,33 +245,32 @@ LAST_MVC             auto     1   3804  struct aln = 2
   LPC                     field      0  integer (2)
   LLEN                    field      2  integer (2)
                                         endstruct
-PROC_SIZE            auto     1   3808  integer (2)
-DATA_SIZE            auto     1   3812  integer (4)
-CALL_HIGHER          auto     1   3816  boolean
-LARGE_PROC           auto     1   3817  boolean
-NXTINT               auto     1   3818  integer (2)
-NXTDBL               auto     1   3820  integer (2)
-NXTCH                auto     1   3822  integer (2)
-NXTPRC               auto     1   3824  integer (2)
-NXTEP                auto     1   3826  integer (2)
-HEXPC                auto     1   3828  array 1 4
+NXTINT               auto     1   3808  integer (2)
+NXTDBL               auto     1   3810  integer (2)
+NXTCH                auto     1   3812  integer (2)
+NXTPRC               auto     1   3814  integer (2)
+NXTEP                auto     1   3816  integer (2)
+HEXPC                auto     1   3818  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-PCOUNTER             auto     1   3832  integer (2)
-CPCOUNTER            auto     1   3834  integer (2)
-CSEGSTRT             auto     1   3836  integer (2)
-CSEGLIMIT            auto     1   3838  integer (2)
-MINLBL               auto     1   3840  integer (2)
-CURPNAME             auto     1   3842  array 1 20
+PCOUNTER             auto     1   3822  integer (2)
+CPCOUNTER            auto     1   3824  integer (2)
+CSEGSTRT             auto     1   3826  integer (2)
+CSEGLIMIT            auto     1   3828  integer (2)
+MINLBL               auto     1   3830  integer (2)
+CST_CURPNAME         auto     1   3832  array 1 20
                              inxtype =  integer (2)
                              aeltype =  char
-CURPNO               auto     1   3864  integer
-NXTLIT               auto     1   3868  integer (2)
-HW_GAP               auto     1   3870  integer (2)
-INT_GAP              auto     1   3872  integer (2)
-IHCONF               auto     1   3874  integer (2)
-RICONF               auto     1   3876  integer (2)
-RHCONF               auto     1   3878  integer (2)
+CST_CURPNO           auto     1   3852  integer
+CST_ASMVERB          auto     1   3856  boolean
+CST_GET_STAT         auto     1   3857  boolean
+MATCH_CURPNO         auto     1   3860  integer
+NXTLIT               auto     1   3864  integer (2)
+HW_GAP               auto     1   3866  integer (2)
+INT_GAP              auto     1   3868  integer (2)
+IHCONF               auto     1   3870  integer (2)
+RICONF               auto     1   3872  integer (2)
+RHCONF               auto     1   3874  integer (2)
 CODE                 auto     1   3880  struct aln = 8
                         variant
   H                       field      0  array 0 4500
@@ -362,15 +353,7 @@ ASMOUT               auto     1  19796  file
                              element =  char
 TRACEF               auto     1  19808  file
                              element =  char
-DBGINFO              auto     1  19820  file
-                             element =  char
-STATNAME             auto     1  19832  array 1 8
-                             inxtype =  integer (2)
-                             aeltype =  char
-SOURCENAME           auto     1  19840  array 1 8
-                             inxtype =  integer (2)
-                             aeltype =  char
-POSOFPROCLEN         auto     1  19848  integer (2)
+POSOFPROCLEN         auto     1  19820  integer (2)
 
 Stored Constants of Main Program
 ------------------------------------------------------------------------
@@ -1613,11 +1596,42 @@ CSPTBL               static       2984  array 1 3
 
 Heap Data Types of Main Program
 ------------------------------------------------------------------------
-->001                                   array 1 254
+->001                                   struct aln = 4
+  CURPNAME                field      0  array 1 20
                              inxtype =  integer (2)
                              aeltype =  char
-->002                                   integer
-->003                                   struct aln = 4
+  CURPNO                  field     20  integer
+  OPNDTYPE                field     24  scalar (2)
+  SEGSZE                  field     28  struct level = 2 aln = 4
+  NAM                     field      0  array 1 8
+                             inxtype =  integer (2)
+                             aeltype =  char
+  LEN                     field      8  integer (2)
+  CADDR                   field     12  integer (4)
+                                        endstruct level = 2
+  SAVERGS                 field     44  boolean
+  ASM                     field     45  boolean
+  ASMVERB                 field     46  boolean
+  GET_STAT                field     47  boolean
+  DEBUG_LEV               field     48  integer (2)
+  STATNAME                field     50  array 1 8
+                             inxtype =  integer (2)
+                             aeltype =  char
+  SOURCENAME              field     58  array 1 8
+                             inxtype =  integer (2)
+                             aeltype =  char
+  FLOW_TRACE              field     66  boolean
+  CALL_HIGHER             field     67  boolean
+  LARGE_PROC              field     68  boolean
+  CODE_SIZE               field     70  integer (2)
+  DATA_SIZE               field     72  integer (4)
+  NEXT                    field     76  pointer ->001
+                                        endstruct
+->002                                   array 1 254
+                             inxtype =  integer (2)
+                             aeltype =  char
+->003                                   integer
+->004                                   struct aln = 4
                         variant
   S                       field      0  array 1 32
                              inxtype =  integer (2)
@@ -1841,33 +1855,47 @@ level    =            1
 pfname   =            9
 cstname  = $PR#0009
 
-No Parameters for READNXTINST         
+Parameters for READNXTINST         
+------------------------------------------------------------------------
+MODUS                auto     2    112  integer
 
 Variables of READNXTINST         
 ------------------------------------------------------------------------
-I                    auto     2    112  integer
-J                    auto     2    116  integer
-K                    auto     2    120  integer
-DUMMYCH              auto     2    124  char
-CH1                  auto     2    125  char
-TEMPLBL              auto     2    126  array 1 20
+I                    auto     2    116  integer
+J                    auto     2    120  integer
+K                    auto     2    124  integer
+DUMMYCH              auto     2    128  char
+CH1                  auto     2    129  char
+TEMPLBL              auto     2    130  array 1 20
                              inxtype =  integer (2)
                              aeltype =  char
-HLOC                 auto     2    146  array 1 4
+HLOC                 auto     2    150  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-LEN                  auto     2    152  integer
-BUFFER               auto     2    156  array 1 80
+LEN                  auto     2    156  integer
+BUFFER               auto     2    160  array 1 80
                              inxtype =  integer (2)
                              aeltype =  char
-OUTPOS               auto     2    236  integer
-BUF20                auto     2    240  array 1 80
+OUTPOS               auto     2    240  integer
+BUF20                auto     2    244  array 1 80
                              inxtype =  integer (2)
                              aeltype =  char
-LSTART               auto     2    320  integer
-CP1                  auto     2    324  pointer ->001
-CP2                  auto     2    328  pointer ->001
-X1                   auto     2    332  integer
+LSTART               auto     2    324  integer
+CP1                  auto     2    328  pointer ->001
+CP2                  auto     2    332  pointer ->001
+X1                   auto     2    336  integer
+DUMMYNAME            auto     2    340  array 1 20
+                             inxtype =  integer (2)
+                             aeltype =  char
+DUMMYINT             auto     2    360  integer
+DUMMYBOOL            auto     2    364  boolean
+DUMMYLABEL           auto     2    368  struct aln = 4
+  NAM                     field      0  array 1 8
+                             inxtype =  integer (2)
+                             aeltype =  char
+  LEN                     field      8  integer (2)
+  CADDR                   field     12  integer (4)
+                                        endstruct
 
 Heap Data Types of READNXTINST         
 ------------------------------------------------------------------------

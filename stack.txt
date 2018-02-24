@@ -120,8 +120,6 @@ f) Display wird in R12-Kontrollstruktur gespeichert, also ist
    der Bereich in R13 (80 bis 112) sinnlos
 
 
-
-
 Erledigt in Release 2018.02:
 
 a) VPU-Befehl raus, wenn man ihn nicht braucht (geht das?) / derzeit nicht
@@ -137,10 +135,9 @@ b) CHAR (n) usw. auch fÅr symbolische Konstanten / gefixt
 c) Wann und wo speichern wir die Display-Struktur, wie tief kann man gehen? / gefixt
 d) PASCAL1 schreibt neue DEF Konstanten am Prozedurende - ersetzt DBGINFO Informationen / ok
 e) PCODESUM zurueckbauen / ok
-
-f) PASCAL2 liest einmal vorab Informationen fuer Prozeduren und baut Tabelle auf
-g) dadurch: DBGINFO ist obsolet fuer PASCAL2
-h) andere DDNamen fuer PASCAL1 und PASCAL2: Test auf CMS z.B.
+f) PASCAL2 liest einmal vorab Informationen fuer Prozeduren und baut Tabelle auf / ok
+g) dadurch: DBGINFO ist obsolet fuer PASCAL2 / ok
+h) andere DDNamen fuer PASCAL1 und PASCAL2: Test auf CMS z.B. / ok
 
 - Procedur-Parameter usw. in PCINT (erfordert andere Stack-Verwaltung)
 - CHK A Befehle rein, wenn Pointer dereferenziert werden - PrÅfen auf NIL

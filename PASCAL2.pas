@@ -1,5 +1,5 @@
-program PCODE_TRANSLATOR ( INPUT , OUTPUT , DBGINFO , OBJCODE , ASMOUT
-                           , TRACEF ) ;
+program PCODE_TRANSLATOR ( INPUT , OUTPUT , OBJCODE , ASMOUT , TRACEF )
+                           ;
 
 (********************************************************************)
 (*$D-,N+                                                            *)
@@ -82,7 +82,7 @@ program PCODE_TRANSLATOR ( INPUT , OUTPUT , DBGINFO , OBJCODE , ASMOUT
 (*  615- OPERAND SHOULD BE OF TYPE 'SET'.                           *)
 (*  616- CONSISTENCY CHECK ON 'SET' OPS FAILED.                     *)
 (*  617- BAD DISPLACEMENT FOR STRUCTURED CONSTANT.                  *)
-(*  618- UNEXPECTED END-OF-FILE WHEN READING P-CODE.                *)
+(*  618- UNEXPECTED END-OF-LINE WHEN READING P-CODE.                *)
 (*  619- BAD OPERANDS FOR PACK/UNPACK PROCEDURE.                    *)
 (*                                                                  *)
 (*  THIS PROGRAM SHOULD NOT BE COMPILED WITH THE 'D+' OPTION.       *)
@@ -739,15 +739,6 @@ type OPTYPE = ( PCTS , PCTI , PLOD , PSTR , PLDA , PLOC , PSTO , PLDC ,
      ADRRNG = 0 .. MXADR ;
      LVLRNG = - 2 .. MXLVL ;
 
-     //****************************************************************
-     //* this new structure records the global state of processing     
-     //****************************************************************
-
-     GLOBAL_STATE = record
-                      IN_PROCBODY : BOOLEAN ;
-                      IGNORE_DEFS : BOOLEAN ;
-                    end ;
-
      (********************************************)
      (* REGISTER NUMBER RANGE                    *)
      (********************************************)
@@ -829,27 +820,89 @@ type OPTYPE = ( PCTS , PCTI , PLOD , PSTR , PLDA , PLOC , PSTO , PLDC ,
                    ( MEMADR : LVLDSP )
              end ;
 
+     //****************************************************************
+     //* this new structure records the global state of processing     
+     //****************************************************************
+
+     GLOBAL_STATE = record
+                      IN_PROCBODY : BOOLEAN ;
+                      FILL_LINEPTR : BOOLEAN ;
+                      MOD1DEFSTEP : INTEGER ;
+                      MOD2DEFSTEP : INTEGER ;
+                    end ;
+
+     //****************************************************************
+     // chain of procedure definitions                                 
+     // built from pcode file in first pass                            
+     // before actual pcode processing                                 
+     //****************************************************************
+     // PRE-PASS (PRD FILE) INFORMATION - now DBGINFO                  
+     // opp - 2018.03:                                                 
+     // pcode summary file contains informations for                   
+     // procedures that are available at the end of the                
+     // parsing of the procedure, but they are needed at               
+     // the beginning of the code generation already. to               
+     // keep the one pass paradigm of PASCAL1 and PASCAL2,             
+     // this informtion is written to a separate file and              
+     // read when a new procedure begins (tagged with the              
+     // procedure name in the leading column)                          
+     // - proc size = code size of the procedure                       
+     // - data size = data size of the procedure                       
+     // - call higher = other procedure calls, that is,                
+     // the display position at the static level has to                
+     // be saved and restored                                          
+     //****************************************************************
+     // later: this information is written into the normal             
+     // pcode file, via def constants, after every procedure.          
+     // because it is needed before code generation, but it            
+     // is located after the procedure (the compiler does not          
+     // know it before processing the procedure), the p-code           
+     // translator (this program) reads the input twice.               
+     // see the main program ... two processing loops                  
+     //****************************************************************
+
+     PPI = -> PROCEDURE_INFO ;
+     PROCEDURE_INFO = record
+                        CURPNAME : array [ 1 .. IDLNGTH ] of CHAR ;
+                        CURPNO : INTEGER ;
+                        OPNDTYPE : DATATYPE ;
+                        SEGSZE : PLABEL ;
+                        SAVERGS : BOOLEAN ;
+                        ASM : BOOLEAN ;
+                        ASMVERB : BOOLEAN ;
+                        GET_STAT : BOOLEAN ;
+                        DEBUG_LEV : 0 .. 9 ;
+                        STATNAME : ALFA ;
+                        SOURCENAME : ALFA ;
+                        FLOW_TRACE : BOOLEAN ;
+                        CALL_HIGHER : BOOLEAN ;
+                        LARGE_PROC : BOOLEAN ;
+                        CODE_SIZE : ICRNG ;
+                        DATA_SIZE : ADRRNG ;
+                        NEXT : PPI
+                      end ;
+
 
 var GS : GLOBAL_STATE ;
+
+    //**************************************************************
+    // anchor for procedure information chain                       
+    // built during first p-code reading                            
+    //**************************************************************
+
+    PIANKER : PPI ;
+    PIAKT : PPI ;
+
+    //**************************************************************
+    // CURRENT/OLD INST. OPCODE                                     
+    // CURRENT STND. PROC. CODE                                     
+    // CURRENT (SYMBOLIC) PCODE /CSP NAME                           
+    //**************************************************************
+
     OPC , OLDOPC : OPTYPE ;
-
-    (*******************************************)
-    (* CURRENT/OLD INST. OPCODE                *)
-    (*******************************************)
-
     CSP , OLDCSP : CSPTYPE ;
-    PROCOFFSET : INTEGER ;
-
-    (*******************************************)
-    (* CURRENT STND. PROC. CODE                *)
-    (*******************************************)
-
     NMCDE , EMPTY : BETA ;
-
-    (*******************************************)
-    (* CURRENT (SYMBOLIC) PCODE /CSP NAME      *)
-    (*******************************************)
-
+    PROCOFFSET : INTEGER ;
     OP_SP : BOOLEAN ;
 
     (*******************************************)
@@ -896,7 +949,7 @@ var GS : GLOBAL_STATE ;
     (*******************************************)
 
     LASTLN , NXTLNP , LASTPC , LASTPCDIF : INTEGER ;
-    LBL1 , LBL2 , LBL3 , SEGSZE : PLABEL ;
+    LBL1 , LBL2 , LBL3 : PLABEL ;
     STATCSECT : PLABEL ;
 
     (*******************************************)
@@ -937,9 +990,6 @@ var GS : GLOBAL_STATE ;
     (*******************************************)
     (* COUNT OF ACTIVE FILE ADDRESSES          *)
     (*******************************************)
-
-    DEBUG_LEV : 0 .. 9 ;
-
     (*******************************************)
     (* PDEF_CNT = PDEF before branch_table     *)
     (*******************************************)
@@ -953,7 +1003,7 @@ var GS : GLOBAL_STATE ;
     CASE_CHARTABLE : array [ CHAR ] of LBLRNG ;
 
     (*******************************************)
-    (* DEBUG CHECK LEVEL                       *)
+    (* variables for case implementation       *)
     (*******************************************)
 
     NXTRG , TXRG : RGRNG ;
@@ -1005,7 +1055,7 @@ var GS : GLOBAL_STATE ;
     (* CLEAR BEFORE LOADING THE REG.           *)
     (*******************************************)
 
-    SAVERGS , SAVEFPRS , DEBUG : BOOLEAN ;
+    SAVEFPRS , DEBUG : BOOLEAN ;
 
     (*******************************************)
     (* indicates, if we are inside of          *)
@@ -1018,13 +1068,10 @@ var GS : GLOBAL_STATE ;
     (*******************************************)
     (* if asm output is to be printed          *)
     (* first_asmout = first output to asmout   *)
-    (* asmverb = VERBOSE ASSEMBLY              *)
     (*******************************************)
 
     ASM : BOOLEAN ;
-    ASM_SAVE : BOOLEAN ;
     FIRST_ASMOUT : BOOLEAN ;
-    ASMVERB : BOOLEAN ;
 
     (*******************************************)
     (* VARIOUS OPTIONS                         *)
@@ -1038,9 +1085,6 @@ var GS : GLOBAL_STATE ;
     (* (flow trace will probably not work      *)
     (* at the moment - 2016)                   *)
     (*******************************************)
-
-    GET_STAT : BOOLEAN ;
-
     (*******************************************)
     (* CURRENTLY UNUSED                        *)
     (*******************************************)
@@ -1217,28 +1261,6 @@ var GS : GLOBAL_STATE ;
                  LLEN : BYTE ;
                end ;
 
-    //******************************************************
-    // PRE-PASS (PRD FILE) INFORMATION - now DBGINFO        
-    // opp - 2018.03:                                       
-    // pcode summary file contains informations for         
-    // procedures that are available at the end of the      
-    // parsing of the procedure, but they are needed at     
-    // the beginning of the code generation already. to     
-    // keep the one pass paradigm of PASCAL1 and PASCAL2,   
-    // this informtion is written to a separate file and    
-    // read when a new procedure begins (tagged with the    
-    // procedure name in the leading column)                
-    // - proc size = code size of the procedure             
-    // - data size = data size of the procedure             
-    // - call higher = other procedure calls, that is,      
-    // the display position at the static level has to      
-    // be saved and restored                                
-    //******************************************************
-
-    PROC_SIZE : ICRNG ;
-    DATA_SIZE : ADRRNG ;
-    CALL_HIGHER , LARGE_PROC : BOOLEAN ;
-
     (******************************************************)
     (* POINTERS TO LAST ELEMENTS OF 'OBJECT' CODE TABLES  *)
     (******************************************************)
@@ -1280,13 +1302,11 @@ var GS : GLOBAL_STATE ;
     (* TO GENERATE OBJECT MODULE                      *)
     (**************************************************)
 
-    CURPNAME : array [ 1 .. IDLNGTH ] of CHAR ;
-
-    (**********************************)
-    (*NAME OF THE CURRENT PROC        *)
-    (**********************************)
-
-    CURPNO : INTEGER ;
+    CST_CURPNAME : array [ 1 .. IDLNGTH ] of CHAR ;
+    CST_CURPNO : INTEGER ;
+    CST_ASMVERB : BOOLEAN ;
+    CST_GET_STAT : BOOLEAN ;
+    MATCH_CURPNO : INTEGER ;
 
     (**********************************)
     (*CURRENT PROC #                  *)
@@ -1370,9 +1390,6 @@ var GS : GLOBAL_STATE ;
     OBJCODE : TEXT ;
     ASMOUT : TEXT ;
     TRACEF : TEXT ;
-    DBGINFO : TEXT ;
-    STATNAME : ALFA ;
-    SOURCENAME : ALFA ;
     POSOFPROCLEN : ICRNG ;
 
     (*******************************************************)
@@ -1479,7 +1496,8 @@ procedure ERROR ( ERRCDE : INTEGER ) ;
    begin (* ERROR *)
      ERRORCNT := ERRORCNT + 1 ;
      WRITELN ( OUTPUT , '   ++++ PERROR ' , ERRCDE : 5 , ' (NEAR LINE '
-               , LASTLN : 6 , ' OF PROCEDURE ' , CURPNAME , ')' ) ;
+               , LASTLN : 6 , ' OF PROCEDURE ' , PIAKT -> . CURPNAME ,
+               ')' ) ;
      if ERRCDE = 253 then
        WRITELN ( OUTPUT , ' ' : 8 , 'PROCEDURE TOO LARGE.' ) ;
      if ERRCDE = 254 then
@@ -1507,7 +1525,7 @@ procedure ERROR ( ERRCDE : INTEGER ) ;
        WRITELN ( OUTPUT , ' ' : 8 , 'ARRAY COMPONENT TOO LARGE (>32K).'
                  ) ;
      if ERRCDE = 618 then
-       WRITELN ( OUTPUT , ' ' : 8 , 'UNEXPECTED EOF IN P-CODE INPUT' )
+       WRITELN ( OUTPUT , ' ' : 8 , 'UNEXPECTED EOL IN P-CODE INPUT' )
                  ;
    end (* ERROR *) ;
 
@@ -1568,7 +1586,7 @@ procedure CHECKFREEREGS ;
                    RGNO : 3 ) ;
          WRITELN ( OUTPUT ) ;
          WRITELN ( OUTPUT , '(NEAR LINE' : 34 , LASTLN : 6 ,
-                   'OF PROCEDURE:' : 15 , CURPNAME , ')' ) ;
+                   'OF PROCEDURE:' : 15 , PIAKT -> . CURPNAME , ')' ) ;
        end (* then *) ;
    end (* CHECKFREEREGS *) ;
 
@@ -1715,7 +1733,7 @@ procedure HEXHW ( HW : HINTEGER ; var HEX : HEX4 ) ;
 
 
 
-procedure READNXTINST ;
+procedure READNXTINST ( MODUS : INTEGER ) ;
 
 (*****************************************)
 (* TO READ AND DECODE NEXT P_INSTRUCTION *)
@@ -1737,6 +1755,10 @@ procedure READNXTINST ;
        CP1 : -> CHAR ;
        CP2 : -> CHAR ;
        X1 : INTEGER ;
+       DUMMYNAME : array [ 1 .. IDLNGTH ] of CHAR ;
+       DUMMYINT : INTEGER ;
+       DUMMYBOOL : BOOLEAN ;
+       DUMMYLABEL : PLABEL ;
 
 
    procedure READLBL ( var LBL : PLABEL ) ;
@@ -2218,26 +2240,38 @@ procedure READNXTINST ;
      Q := 0 ;
      LBL1 . LEN := 0 ;
      if INPUT -> <> ' ' then
-       READLBL ( LBL1 ) ;
+       begin
+         READLBL ( LBL1 ) ;
+       end (* then *) ;
      GET ( INPUT ) ;
      if INPUT -> = ' ' then
        SKIPBLANKS ;
      READ ( NMCDE ) ;
-     if ASM and ( NMCDE <> 'LOC' ) then
+     if MODUS = 1 then
        begin
-         if NMCDE = 'DFC' then
-           HEXHW ( LBL1 . CADDR , HLOC )
-         else
-           HEXHW ( 2 * PCOUNTER , HLOC ) ;
-         WRITE ( ASMOUT , HLOC : 9 , ':  ' , LBL1 . NAM : LBL1 . LEN ,
-                 ' ' : 6 - LBL1 . LEN , NMCDE : 6 ) ;
-       end (* then *) ;
+         if ( NMCDE <> 'ENT' ) and ( NMCDE <> 'RET' ) and ( NMCDE <>
+         'DEF' ) and ( NMCDE <> 'STP' ) then
+           begin
+             READLN ( INPUT ) ;
+             return ;
+           end (* then *) ;
+       end (* then *)
+     else
+       if ASM and ( NMCDE <> 'LOC' ) and ( NMCDE <> 'ENT' ) then
+         begin
+           if NMCDE = 'DFC' then
+             HEXHW ( LBL1 . CADDR , HLOC )
+           else
+             HEXHW ( 2 * PCOUNTER , HLOC ) ;
+           WRITE ( ASMOUT , HLOC : 9 , ':  ' , LBL1 . NAM : LBL1 . LEN
+                   , ' ' : 6 - LBL1 . LEN , NMCDE : 6 ) ;
+         end (* then *) ;
      ENTERLOOKUP ;
      case OPC of
        PADI , PADR , PSBI , PSBR , PFLT , PFLO , PNGI , PNGR , PSQI ,
        PSQR , PABI , PABR , PMOD , PODD , PMPI , PMPR , PDVI , PDVR ,
-       PSTP , PUNI , PINT , PDIF , PINN , PCRD , PLAB , PSAV , PRST ,
-       PCHR , PORD , PXPO , PPOP , PXLB , PEND , PADA , PSBA , PMCP :
+       PUNI , PINT , PDIF , PINN , PCRD , PLAB , PSAV , PRST , PCHR ,
+       PORD , PXPO , PPOP , PXLB , PEND , PADA , PSBA , PMCP :
          begin
 
      (***************)
@@ -2248,7 +2282,50 @@ procedure READNXTINST ;
            if ASM then
              WRITELN ( ASMOUT ) ;
          end (* tag/ca *) ;
+       PSTP : begin
+                if MODUS = 1 then
+                  begin
+                    READLN ( INPUT ) ;
+                    return
+                  end (* then *) ;
+
+     (***************)
+     (* NO OPERANDS *)
+     (***************)
+
+                READLN ( INPUT ) ;
+                if ASM then
+                  WRITELN ( ASMOUT ) ;
+              end (* tag/ca *) ;
        PDEF : begin
+                if MODUS = 1 then
+                  begin
+                    SKIPBLANKS ;
+                    case GS . MOD1DEFSTEP of
+                      0 : begin
+                            READLN ( CH , CH , Q ) ;
+                            PIAKT -> . DATA_SIZE := Q ;
+                            GS . MOD1DEFSTEP := 1 ;
+                          end (* tag/ca *) ;
+                      1 : begin
+                            READLN ( CH , CH , Q ) ;
+                            PIAKT -> . CODE_SIZE := Q ;
+                            PIAKT -> . LARGE_PROC := ( PIAKT -> .
+                                                   CODE_SIZE >
+                                                   SHRT_PROC ) or DEBUG
+                                                   ;
+                            GS . MOD1DEFSTEP := 2 ;
+                          end (* tag/ca *) ;
+                      2 : begin
+                            READLN ( CH , CH , Q ) ;
+                            PIAKT -> . CALL_HIGHER := ( Q <> 0 ) ;
+                            GS . MOD1DEFSTEP := - 1 ;
+                          end (* tag/ca *) ;
+                      otherwise
+                        READLN
+                    end (* case *) ;
+                    return
+                  end (* then *) ;
 
      (*****************************************)
      (* Type-Code and Integer or Char Operand *)
@@ -2386,7 +2463,7 @@ procedure READNXTINST ;
                   WRITELN ( ASMOUT , CH1 : 3 , ',' , P : 1 , ',' , Q :
                             1 ) ;
               end (* tag/ca *) ;
-       PEQU , PNEQ , PLES , PGRT , PLEQ , PGEQ , PSTO , PRET :
+       PEQU , PNEQ , PLES , PGRT , PLEQ , PGEQ , PSTO :
          begin
 
      (*********************************************)
@@ -2408,6 +2485,33 @@ procedure READNXTINST ;
                  WRITELN ( ASMOUT , CH1 : 3 ) ;
              end (* else *) ;
          end (* tag/ca *) ;
+       PRET : begin
+                if MODUS = 1 then
+                  begin
+                    GS . MOD1DEFSTEP := 0 ;
+                    READLN ( INPUT ) ;
+                    return
+                  end (* then *) ;
+
+     (*********************************************)
+     (* TYPE-CODE AND POSSIBLY AN INTEGER OPERAND *)
+     (*********************************************)
+
+                SKIPBLANKS ;
+                OPNDTYPE := TYPCDE [ INPUT -> ] ;
+                if OPNDTYPE = STRG then
+                  begin
+                    READLN ( CH1 , CH , Q ) ;
+                    if ASM then
+                      WRITELN ( ASMOUT , CH1 : 3 , ',' , Q : 1 ) ;
+                  end (* then *)
+                else
+                  begin
+                    READLN ( CH1 ) ;
+                    if ASM then
+                      WRITELN ( ASMOUT , CH1 : 3 ) ;
+                  end (* else *) ;
+              end (* tag/ca *) ;
        PFJP , PUJP , PCTS , PUXJ :
          begin
 
@@ -2466,8 +2570,8 @@ procedure READNXTINST ;
      (* PROCEDURE NAME & NUMBER OPERANDS *)
      (************************************)
 
-                READLN ( CH1 , CURPNAME , CURPNO , CH , ASM , CH ,
-                         GET_STAT , CH , ASMVERB ) ;
+                READLN ( CH1 , CST_CURPNAME , CST_CURPNO , CH , ASM ,
+                         CH , CST_GET_STAT , CH , CST_ASMVERB ) ;
                 if ASM then
                   begin
                     if FIRST_ASMOUT then
@@ -2478,9 +2582,10 @@ procedure READNXTINST ;
                     WRITE ( ASMOUT , '     0000:  ' , LBL1 . NAM : LBL1
                             . LEN , ' ' : 6 - LBL1 . LEN , NMCDE : 4 )
                             ;
-                    WRITELN ( ASMOUT , CURPNAME : IDLNGTH + 2 , CURPNO
-                              : 4 , ',' , ASM : 1 , ',' , GET_STAT : 1
-                              , ',' , ASMVERB : 1 ) ;
+                    WRITELN ( ASMOUT , CST_CURPNAME : IDLNGTH + 2 ,
+                              CST_CURPNO : 4 , ',' , ASM : 1 , ',' ,
+                              CST_GET_STAT : 1 , ',' , CST_ASMVERB : 1
+                              ) ;
                   end (* then *) ;
               end (* tag/ca *) ;
        PCUP : begin
@@ -2530,69 +2635,102 @@ procedure READNXTINST ;
      (* TYPE-CODE,LEXIC-LEVEL,LABEL,THREE FLAGS,INTEGER OPERANDS  *)
      (*************************************************************)
 
-                SKIPBLANKS ;
-                OPNDTYPE := TYPCDE [ INPUT -> ] ;
-                READ ( CH1 , CH , P , CH ) ;
-                READLBL ( SEGSZE ) ;
-                if INPUT -> = ' ' then
-                  SKIPBLANKS ;
-                READ ( CURPNAME , CH , SAVERGS , CH , ASM , CH ,
-                       GET_STAT , CH , ASMVERB , CH , DEBUG_LEV , CH ,
-                       CURPNO , CH ) ;
-                STATNAME := ' ' ;
-                SOURCENAME := ' ' ;
-                if INPUT -> <> ',' then
-                  READ ( STATNAME , CH )
-                else
-                  READ ( CH ) ;
-                READ ( SOURCENAME ) ;
-                READLN ( INPUT ) ;
-                DEBUG := DEBUG_LEV >= 2 ;
-                FLOW_TRACE := DEBUG_LEV >= 3 ;
-                if ASM then
+                if MODUS = 1 then
                   begin
-                    WRITELN ( ASMOUT ) ;
-                    HEXHW ( 2 * PCOUNTER , HLOC ) ;
-                    WRITE ( ASMOUT , HLOC : 9 , ':  ' , LBL1 . NAM :
-                            LBL1 . LEN , ' ' : 6 - LBL1 . LEN , NMCDE :
-                            4 ) ;
-                    WRITELN ( ASMOUT , CH1 : 3 , ',' , P : 1 , ',' ,
-                              SEGSZE . NAM : 4 , CURPNAME : IDLNGTH + 2
-                              , ',' ) ;
-                    WRITE ( ASMOUT , HLOC : 9 , ':  ' , ' ' : 14 ,
-                            SAVERGS : 1 , ',' , ASM : 1 , ',' ,
-                            GET_STAT : 1 , ',' , ASMVERB : 1 , ',' ,
-                            DEBUG_LEV : 1 , ',' , CURPNO : 1 , ',' ) ;
-                    if STATNAME <> '        ' then
-                      WRITE ( ASMOUT , STATNAME ) ;
-                    WRITE ( ASMOUT , ',' ) ;
-                    if SOURCENAME <> '        ' then
-                      WRITE ( ASMOUT , SOURCENAME ) ;
-                    WRITELN ( ASMOUT ) ;
-                  end (* then *) ;
-
-     //************************************************************
-     // read pcode summary information from DBGINFO                
-     //************************************************************
-
-                repeat
-                  READLN ( DBGINFO ) ;
-                  READ ( DBGINFO , LBL2 . NAM ) ;
-                  if EOF ( DBGINFO ) then
-                    begin
-                      ERROR ( 614 ) ;
-                      EXIT ( 614 )
-                    end (* then *) ;
-                until LBL2 . NAM = '#PROC   ' ;
-                READ ( DBGINFO , TEMPLBL ) ;
-                if TEMPLBL <> CURPNAME then
-                  IVAL := - 1
+                    if PIANKER = NIL then
+                      begin
+                        NEW ( PIANKER ) ;
+                        PIAKT := PIANKER
+                      end (* then *)
+                    else
+                      begin
+                        NEW ( PIAKT -> . NEXT ) ;
+                        PIAKT := PIAKT -> . NEXT
+                      end (* else *) ;
+                    PIAKT -> . NEXT := NIL ;
+                    SKIPBLANKS ;
+                    PIAKT -> . OPNDTYPE := TYPCDE [ INPUT -> ] ;
+                    READ ( CH1 , CH , P , CH ) ;
+                    READLBL ( PIAKT -> . SEGSZE ) ;
+                    if INPUT -> = ' ' then
+                      SKIPBLANKS ;
+                    READ ( PIAKT -> . CURPNAME , CH ) ;
+                    READ ( PIAKT -> . SAVERGS , CH ) ;
+                    READ ( PIAKT -> . ASM , CH ) ;
+                    READ ( PIAKT -> . GET_STAT , CH ) ;
+                    READ ( PIAKT -> . ASMVERB , CH ) ;
+                    READ ( PIAKT -> . DEBUG_LEV , CH ) ;
+                    READ ( PIAKT -> . CURPNO , CH ) ;
+                    PIAKT -> . STATNAME := ' ' ;
+                    PIAKT -> . SOURCENAME := ' ' ;
+                    if INPUT -> <> ',' then
+                      READ ( PIAKT -> . STATNAME , CH )
+                    else
+                      READ ( CH ) ;
+                    READ ( PIAKT -> . SOURCENAME ) ;
+                    READLN ( INPUT ) ;
+                    DEBUG := PIAKT -> . DEBUG_LEV >= 2 ;
+                    PIAKT -> . FLOW_TRACE := PIAKT -> . DEBUG_LEV >= 3
+                                             ;
+                    return ;
+                  end (* then *)
                 else
-                  READLN ( DBGINFO , IVAL , CALL_HIGHER , PROC_SIZE ,
-                           DATA_SIZE ) ;
-                if IVAL <> CURPNO then
-                  ERROR ( 614 ) ;
-                LARGE_PROC := ( PROC_SIZE > SHRT_PROC ) or DEBUG ;
+                  begin
+                    SKIPBLANKS ;
+                    READ ( CH1 , CH , P , CH ) ;
+                    READLBL ( DUMMYLABEL ) ;
+                    if INPUT -> = ' ' then
+                      SKIPBLANKS ;
+                    READ ( DUMMYNAME , CH , DUMMYBOOL , CH , DUMMYBOOL
+                           , CH , DUMMYBOOL , CH , DUMMYBOOL , CH ,
+                           DUMMYINT , CH , MATCH_CURPNO , CH ) ;
+                    READLN ( INPUT ) ;
+                    PIAKT := PIANKER ;
+                    while PIAKT <> NIL do
+                      begin
+                        if PIAKT -> . CURPNO <> MATCH_CURPNO then
+                          PIAKT := PIAKT -> . NEXT
+                        else
+                          break ;
+                      end (* while *) ;
+                    OPNDTYPE := PIAKT -> . OPNDTYPE ;
+                    ASM := PIAKT -> . ASM ;
+                    FLOW_TRACE := PIAKT -> . FLOW_TRACE ;
+                    if ASM then
+                      begin
+                        WRITELN ( ASMOUT ) ;
+                        HEXHW ( 2 * PCOUNTER , HLOC ) ;
+                        WRITE ( ASMOUT , HLOC : 9 , ':  ' ) ;
+                        WRITE ( ASMOUT , LBL1 . NAM : LBL1 . LEN ) ;
+                        WRITE ( ASMOUT , ' ' : 6 - LBL1 . LEN ) ;
+                        WRITE ( ASMOUT , NMCDE : 4 ) ;
+                        WRITE ( ASMOUT , CH1 : 3 , ',' ) ;
+                        WRITE ( ASMOUT , P : 1 , ',' ) ;
+                        WRITE ( ASMOUT , PIAKT -> . SEGSZE . NAM : 4 )
+                                ;
+                        WRITELN ( ASMOUT , PIAKT -> . CURPNAME :
+                                  IDLNGTH + 2 , ',' ) ;
+                        WRITE ( ASMOUT , HLOC : 9 , ':  ' ) ;
+                        WRITE ( ASMOUT , ' ' : 14 ) ;
+                        WRITE ( ASMOUT , PIAKT -> . SAVERGS : 1 , ',' )
+                                ;
+                        WRITE ( ASMOUT , PIAKT -> . ASM : 1 , ',' ) ;
+                        WRITE ( ASMOUT , PIAKT -> . GET_STAT : 1 , ','
+                                ) ;
+                        WRITE ( ASMOUT , PIAKT -> . ASMVERB : 1 , ',' )
+                                ;
+                        WRITE ( ASMOUT , PIAKT -> . DEBUG_LEV : 1 , ','
+                                ) ;
+                        WRITE ( ASMOUT , PIAKT -> . CURPNO : 1 , ',' )
+                                ;
+                        if PIAKT -> . STATNAME <> '        ' then
+                          WRITE ( ASMOUT , PIAKT -> . STATNAME ) ;
+                        WRITE ( ASMOUT , ',' ) ;
+                        if PIAKT -> . SOURCENAME <> '        ' then
+                          WRITE ( ASMOUT , PIAKT -> . SOURCENAME ) ;
+                        WRITELN ( ASMOUT ) ;
+                      end (* then *) ;
+                  end (* else *)
               end (* tag/ca *) ;
        PLDC , PLCA , PDFC :
          READLOADINSTRUCTIONS ;
@@ -8333,7 +8471,7 @@ procedure ASMNXTINST ;
            NXTEP := PRCCNT ;
            CALDPTH := 0 ;
            PCOUNTER := 0 ;
-           MINLBL := LBLMAP ( SEGSZE . NAM ) ;
+           MINLBL := LBLMAP ( PIAKT -> . SEGSZE . NAM ) ;
            LASTPC := 0 ;
 
            (*************************************************)
@@ -8348,10 +8486,10 @@ procedure ASMNXTINST ;
              begin
                if CURLVL = 1 then
                  WRITELN ( ASMOUT , 'BGN  ' : 26 , CSECT_NAME , ',' ,
-                           CURPNAME , ',' , PROGHDR : 1 )
+                           PIAKT -> . CURPNAME , ',' , PROGHDR : 1 )
                else
                  WRITELN ( ASMOUT , 'BGN  ' : 26 , CSECT_NAME , ',' ,
-                           CURPNAME ) ;
+                           PIAKT -> . CURPNAME ) ;
                HEXHW ( PCOUNTER * 2 , HEXPC ) ;
                WRITE ( ASMOUT , ASMTAG , HEXPC , ': ' ) ;
                WRITELN ( ASMOUT , CSECT_NAME , ' CSECT' ) ;
@@ -8386,7 +8524,7 @@ procedure ASMNXTINST ;
            IXCODE := 13 ;
            CODE . C [ IXCODE ] := ' ' ;
            for I := 1 to IDLNGTH do
-             CODE . C [ IXCODE + I ] := CURPNAME [ I ] ;
+             CODE . C [ IXCODE + I ] := PIAKT -> . CURPNAME [ I ] ;
            if CURLVL = 1 then
              begin
                IXCODE := 14 + IDLNGTH ;
@@ -8419,7 +8557,7 @@ procedure ASMNXTINST ;
                                         ;
            CODE . H [ PCOUNTER - 6 ] := VERSION2 ;
            CODE . H [ PCOUNTER - 5 ] := 0 ;
-           CODE . H [ PCOUNTER - 4 ] := DEBUG_LEV ;
+           CODE . H [ PCOUNTER - 4 ] := PIAKT -> . DEBUG_LEV ;
            CODE . H [ PCOUNTER - 3 ] := 0 ;
            CODE . H [ PCOUNTER - 2 ] := 0 ;
            CODE . H [ PCOUNTER - 1 ] := 0 ;
@@ -8435,8 +8573,8 @@ procedure ASMNXTINST ;
            (* von hier.                                 *)
            (*********************************************)
 
-           if STATNAME [ 1 ] <> ' ' then
-             INS_PRCTBL ( STATNAME , PCOUNTER - 2 ) ;
+           if PIAKT -> . STATNAME [ 1 ] <> ' ' then
+             INS_PRCTBL ( PIAKT -> . STATNAME , PCOUNTER - 2 ) ;
 
            (*********************************************)
            (* pos of proc len                           *)
@@ -8448,7 +8586,7 @@ procedure ASMNXTINST ;
            (* UNIQUE PROC NO                            *)
            (*********************************************)
 
-           CODE . H [ MXCODE ] := CURPNO ;
+           CODE . H [ MXCODE ] := PIAKT -> . CURPNO ;
 
            (************************************************)
            (* the procedure name which is written          *)
@@ -8457,14 +8595,15 @@ procedure ASMNXTINST ;
            (* 24 instead of 16 - opp 2016                  *)
            (************************************************)
 
-           if DEBUG_LEV > 0 then
+           if PIAKT -> . DEBUG_LEV > 0 then
              begin
                CODE . H [ MXCODE + 1 ] := LASTLN ;
                CODEPOS := MXCODE * 2 + 3 ;
                for I := 1 to 8 do
                  begin
                    CODEPOS := CODEPOS + 1 ;
-                   CODE . C [ CODEPOS ] := SOURCENAME [ I ] ;
+                   CODE . C [ CODEPOS ] := PIAKT -> . SOURCENAME [ I ]
+                                           ;
                  end (* for *) ;
                NXTLNP := 12 ;
              end (* then *)
@@ -8484,7 +8623,7 @@ procedure ASMNXTINST ;
                  WRITE ( ASMOUT , CSECT_NAME [ I ] ) ;
                WRITE ( ASMOUT , ' ' ) ;
                for I := 1 to IDLNGTH do
-                 WRITE ( ASMOUT , CURPNAME [ I ] ) ;
+                 WRITE ( ASMOUT , PIAKT -> . CURPNAME [ I ] ) ;
                if CURLVL = 1 then
                  begin
                    WRITE ( ASMOUT , ' ' ) ;
@@ -8510,8 +8649,8 @@ procedure ASMNXTINST ;
                HEXHW ( POSOFPROCLEN - 2 , HEXPC ) ;
                WRITE ( ASMOUT , ASMTAG , HEXPC , ': ' ) ;
                WRITE ( ASMOUT , 'DC  ' : COLASMI , ' ' : SPACEASMI ) ;
-               WRITELN ( ASMOUT , 'AL2(' , DEBUG_LEV : 1 , ')' ,
-                         '         -- Debug-Level' ) ;
+               WRITELN ( ASMOUT , 'AL2(' , PIAKT -> . DEBUG_LEV : 1 ,
+                         ')' , '         -- Debug-Level' ) ;
                HEXHW ( POSOFPROCLEN , HEXPC ) ;
                WRITE ( ASMOUT , ASMTAG , HEXPC , ': ' ) ;
                WRITE ( ASMOUT , 'DC  ' : COLASMI , ' ' : SPACEASMI ) ;
@@ -8520,8 +8659,8 @@ procedure ASMNXTINST ;
                HEXHW ( POSOFPROCLEN + 2 , HEXPC ) ;
                WRITE ( ASMOUT , ASMTAG , HEXPC , ': ' ) ;
                WRITE ( ASMOUT , 'DC  ' : COLASMI , ' ' : SPACEASMI ) ;
-               if STATNAME [ 1 ] <> ' ' then
-                 WRITELN ( ASMOUT , 'V(' , STATNAME , ')' ,
+               if PIAKT -> . STATNAME [ 1 ] <> ' ' then
+                 WRITELN ( ASMOUT , 'V(' , PIAKT -> . STATNAME , ')' ,
                            '    -- Static CSECT' )
                else
                  WRITELN ( ASMOUT , 'A(0)' ,
@@ -8633,8 +8772,8 @@ procedure ASMNXTINST ;
             begin (* PRINT_CSECT *)
               WRITELN ( ASMOUT ) ;
               WRITELN ( ASMOUT , ' OBJECT CODE FOR CSECT' , PRCTBL [ 0
-                        ] . NAME : 9 , '(PROCEDURE ' : 13 , CURPNAME ,
-                        ')' ) ;
+                        ] . NAME : 9 , '(PROCEDURE ' : 13 , PIAKT -> .
+                        CURPNAME , ')' ) ;
               APC := 0 ;
               APC1 := 0 ;
               repeat
@@ -8688,19 +8827,21 @@ procedure ASMNXTINST ;
                 end (* then *)
               else
                 WRITELN ( ASMOUT ) ;
-              if DEBUG_LEV > 0 then
+              if PIAKT -> . DEBUG_LEV > 0 then
                 begin
                   WRITELN ( ASMOUT ) ;
                   WRITELN ( ASMOUT , ' DEBUG INFORMATION:' ) ;
                   WRITELN ( ASMOUT ) ;
-                  WRITELN ( ASMOUT , ' DEBUG LEVEL  = ' , DEBUG_LEV : 1
-                            ) ;
-                  WRITELN ( ASMOUT , ' SOURCENAME   = ' , SOURCENAME )
-                            ;
-                  WRITELN ( ASMOUT , ' PROCNAME     = ' , CURPNAME ) ;
+                  WRITELN ( ASMOUT , ' DEBUG LEVEL  = ' , PIAKT -> .
+                            DEBUG_LEV : 1 ) ;
+                  WRITELN ( ASMOUT , ' SOURCENAME   = ' , PIAKT -> .
+                            SOURCENAME ) ;
+                  WRITELN ( ASMOUT , ' PROCNAME     = ' , PIAKT -> .
+                            CURPNAME ) ;
                   WRITELN ( ASMOUT , ' CODESIZE     = ' , CODESIZE : 1
                             ) ;
-                  WRITELN ( ASMOUT , ' STATIC CSECT = ' , STATNAME ) ;
+                  WRITELN ( ASMOUT , ' STATIC CSECT = ' , PIAKT -> .
+                            STATNAME ) ;
                   WRITELN ( ASMOUT , ' STACKSIZE    = ' , STACKSIZE : 1
                             ) ;
                 end (* then *) ;
@@ -8759,7 +8900,7 @@ procedure ASMNXTINST ;
            CODESIZE := PCOUNTER * 2 ;
            CODE . H [ POSOFPROCLEN DIV 2 ] := CODESIZE ;
            CODE . H [ POSOFPROCLEN DIV 2 - 2 ] := STACKSIZE ;
-           if DEBUG_LEV > 0 then
+           if PIAKT -> . DEBUG_LEV > 0 then
              begin
                repeat
                  ADDLNP ( 255 )
@@ -8770,7 +8911,7 @@ procedure ASMNXTINST ;
            (*SHORT PROC TOO LONG*)
            (*********************)
 
-           if not LARGE_PROC then
+           if not PIAKT -> . LARGE_PROC then
              if PCOUNTER > 4096 then
                ERROR ( 609 ) ;
 
@@ -8981,13 +9122,13 @@ procedure ASMNXTINST ;
                    , ' ' : 30 ) ;
            if ASM then
              PRINT_CSECT ( PCOUNTER ) ;
-           if ASMVERB then
+           if PIAKT -> . ASMVERB then
              begin
                WRITELN ( OUTPUT , '****' : 7 , ' PROC: ' , PRCTBL [ 0 ]
-                         . NAME , '; ' , PROC_SIZE : 1 , ' P-STMTS, ' ,
-                         PCOUNTER * 2 : 1 , ' BYTES, ' , NXTPRC - 1 : 1
-                         , ' EXT. REFS., ' , NUMLITS : 1 ,
-                         ' CONSTANTS, ' , POOL_SIZE : 1 ,
+                         . NAME , '; ' , PIAKT -> . CODE_SIZE : 1 ,
+                         ' P-STMTS, ' , PCOUNTER * 2 : 1 , ' BYTES, ' ,
+                         NXTPRC - 1 : 1 , ' EXT. REFS., ' , NUMLITS : 1
+                         , ' CONSTANTS, ' , POOL_SIZE : 1 ,
                          ' BYTES OF CONSTANTS.' ) ;
                WRITELN ( OUTPUT ) ;
              end (* then *) ;
@@ -9047,7 +9188,7 @@ procedure ASMNXTINST ;
                WRITE ( OBJCODE , CHR ( 02 ) , 'END' , ' ' : 24 , CHR (
                        0 ) , CHR ( 0 ) , CHR ( CPC1 DIV 256 ) , CHR (
                        CPC1 MOD 256 ) , ' ' : 48 ) ;
-               if ASMVERB then
+               if CST_ASMVERB then
                  begin
                    WRITELN ( OUTPUT , '****' : 7 , ' CONSTS: ' , PRCTBL
                              [ 0 ] . NAME , '; ' , CPC1 : 1 , ' BYTES.'
@@ -9102,7 +9243,7 @@ procedure ASMNXTINST ;
            // following stm 14,12,...                                   
            //***********************************************************
 
-               if CALL_HIGHER then
+               if PIAKT -> . CALL_HIGHER then
                  begin
                    if ASM then
                      begin
@@ -9156,7 +9297,7 @@ procedure ASMNXTINST ;
            (*UPDATE THE 'MP'*)
            (*****************)
 
-               if CALL_HIGHER then
+               if PIAKT -> . CALL_HIGHER then
                  begin
                    if ASM then
                      begin
@@ -9188,7 +9329,7 @@ procedure ASMNXTINST ;
            (* SET UP PROGRAM BASE REGISTERS *)
            (*********************************)
 
-               if LARGE_PROC then
+               if PIAKT -> . LARGE_PROC then
                  GENRX ( XLA , PBR2 , 4092 , PBR1 , 0 ) ;
                if DEBUG or MUSIC then
                  begin
@@ -9207,10 +9348,11 @@ procedure ASMNXTINST ;
                                '-- check for enough stack space' ) ;
                        WRITELN ( ASMOUT ) ;
                      end (* then *) ;
-                   if DATA_SIZE < 4096 then
-                     GENRX ( XLA , TRG1 , DATA_SIZE , TRG1 , 0 )
+                   if PIAKT -> . DATA_SIZE < 4096 then
+                     GENRX ( XLA , TRG1 , PIAKT -> . DATA_SIZE , TRG1 ,
+                             0 )
                    else
-                     GENRXLAB ( XA , TRG1 , SEGSZE , - 1 ) ;
+                     GENRXLAB ( XA , TRG1 , PIAKT -> . SEGSZE , - 1 ) ;
                    GENRX ( XC , TRG1 , NEWPTR , GBR , 0 ) ;
 
            (*************************)
@@ -9272,8 +9414,9 @@ procedure ASMNXTINST ;
            (*RESTORES DISPLAY[CURLVL] AND MP, THEN RETURNS*)
            (***********************************************)
 
-               if DEBUG and ( CURLVL > 1 ) and ( DATA_SIZE > 80 ) then
-                 if DATA_SIZE < 1500 then
+               if DEBUG and ( CURLVL > 1 ) and ( PIAKT -> . DATA_SIZE >
+               80 ) then
+                 if PIAKT -> . DATA_SIZE < 1500 then
                    begin
                      if ASM then
                        begin
@@ -9292,7 +9435,7 @@ procedure ASMNXTINST ;
 
                      GENSI ( XMVI , LCAFTMST , LBR , 0x81 ) ;
                      OFFS_WORK := LCAFTMST + 1 ;
-                     SIZE_REST := DATA_SIZE - LCAFTMST - 1 ;
+                     SIZE_REST := PIAKT -> . DATA_SIZE - LCAFTMST - 1 ;
                      while SIZE_REST > 256 do
                        begin
                          GENSS ( XMVC , 256 , OFFS_WORK , LBR ,
@@ -9326,12 +9469,13 @@ procedure ASMNXTINST ;
            //******************************
 
                      GENRX ( XLA , TRG0 , LCAFTMST , LBR , 0 ) ;
-                     if DATA_SIZE < 4096 then
-                       GENRX ( XLA , TRG1 , DATA_SIZE - LCAFTMST , 0 ,
-                               0 )
+                     if PIAKT -> . DATA_SIZE < 4096 then
+                       GENRX ( XLA , TRG1 , PIAKT -> . DATA_SIZE -
+                               LCAFTMST , 0 , 0 )
                      else
                        begin
-                         GENRXLAB ( XL , TRG1 , SEGSZE , - 1 ) ;
+                         GENRXLAB ( XL , TRG1 , PIAKT -> . SEGSZE , - 1
+                                    ) ;
                          GENRXLIT ( XS , TRG1 , LCAFTMST - REALSIZE , 0
                                     ) ;
                        end (* else *) ;
@@ -9363,7 +9507,7 @@ procedure ASMNXTINST ;
            // save area to R0 ...                            
            //************************************************
 
-               if CALL_HIGHER then
+               if PIAKT -> . CALL_HIGHER then
                  begin
                    if ASM then
                      begin
@@ -9438,28 +9582,28 @@ procedure ASMNXTINST ;
            /* dann zweimal fuer lower und upper limit         */
            /***************************************************/
 
-           if GS . IGNORE_DEFS then
-             return ;
+           if GS . MOD2DEFSTEP >= 0 then
+             begin
 
            /***************************************************/
            /* ende einer prozedur ... hier folgen             */
            /* ab 2018.03 noch mehrere defs, die weitere       */
            /* informationen fuer die prozedur enthalten       */
-           /* diese werden zunaechst ignoriert.               */
            /***************************************************/
 
-           if OLDOPC = PRET then
-             begin
-               PDEF_CNT := 0 ;
-               if ASM then
-                 begin
-                   WRITELN ( ASMOUT , ' PEND' ) ;
-                 end (* then *) ;
-               GEN_CSECT ( Q ) ;
-               CURPNO := - 1 ;
-               PCOUNTER := 0 ;
-               GS . IGNORE_DEFS := TRUE ;
-               return ;
+               case GS . MOD2DEFSTEP of
+                 0 : GS . MOD2DEFSTEP := 1 ;
+                 1 : GS . MOD2DEFSTEP := 2 ;
+                 2 : begin
+                       GS . MOD2DEFSTEP := - 1 ;
+                       PDEF_CNT := 0 ;
+                       GEN_CSECT ( Q ) ;
+                       GS . FILL_LINEPTR := FALSE ;
+                       PIAKT := NIL ;
+                       PCOUNTER := 0 ;
+                     end (* tag/ca *)
+               end (* case *) ;
+               return
              end (* then *) ;
 
            /***************************************************/
@@ -9587,7 +9731,7 @@ procedure ASMNXTINST ;
         (*******************)
 
                    GENRX ( XSH , PBR1 , 4 , RTREG , 0 ) ;
-                   if LARGE_PROC then
+                   if PIAKT -> . LARGE_PROC then
                      GENRX ( XLA , PBR2 , 4092 , PBR1 , 0 )
                    else
                      GENRX ( XBC , NOCND , 0 , 0 , 0 ) ;
@@ -9750,14 +9894,14 @@ procedure ASMNXTINST ;
                      CHECKFREEREGS ;
                  end (* tag/ca *) ;
           PLOC : begin
-                   if CURPNO >= 0 then
+                   if GS . FILL_LINEPTR then
                      begin
-                       if DEBUG_LEV > 0 then
 
         (***************************************)
         (* FILL THE ENTRIES OF LINE PTR TABLE  *)
         (***************************************)
 
+                       if PIAKT -> . DEBUG_LEV > 0 then
                          for I := LASTLN to Q - 1 do
                            begin
                              UPDLNTBL ( PCOUNTER - LASTPC ) ;
@@ -9819,7 +9963,7 @@ procedure ASMNXTINST ;
                        end (* else *) ;
                  end (* tag/ca *) ;
           PUXJ : begin
-                   if CALL_HIGHER then
+                   if PIAKT -> . CALL_HIGHER then
                      begin
                        GENRX ( XL , TRG0 , 20 , LBR , 0 ) ;
                        GENRX ( XST , TRG0 , DISPLAY + 4 * CURLVL , GBR
@@ -10183,12 +10327,14 @@ procedure ASMNXTINST ;
             begin
               if OPC = PENT then
                 begin
-                  ;
                   GS . IN_PROCBODY := TRUE ;
-                  GS . IGNORE_DEFS := FALSE
+                  GS . FILL_LINEPTR := TRUE ;
                 end (* then *)
               else
-                GS . IN_PROCBODY := FALSE ;
+                begin
+                  GS . IN_PROCBODY := FALSE ;
+                  GS . MOD2DEFSTEP := 0
+                end (* else *) ;
               ENT_RET ;
             end (* tag/ca *) ;
           PCSP : case CSP of
@@ -10570,7 +10716,8 @@ procedure ASMNXTINST ;
         (*************************************)
 
                      begin
-                       GENRXLAB ( XS , TRG0 , SEGSZE , - 1 ) ;
+                       GENRXLAB ( XS , TRG0 , PIAKT -> . SEGSZE , - 1 )
+                                  ;
                        GENRR ( XCR , TRG0 , LBR ) ;
                        GENRR ( XBALR , RTREG , 0 ) ;
                        GENRX ( XBC , LEQCND , STKCHK , GBR , 0 ) ;
@@ -12816,7 +12963,9 @@ procedure SETUP ;
 
    begin (* SETUP *)
      GS . IN_PROCBODY := FALSE ;
-     GS . IGNORE_DEFS := FALSE ;
+     GS . FILL_LINEPTR := FALSE ;
+     GS . MOD1DEFSTEP := - 1 ;
+     GS . MOD2DEFSTEP := - 1 ;
      EMPTY := '   ' ;
      BRMSK [ PEQU ] := 8 ;
      BRMSK [ PNEQ ] := 7 ;
@@ -12890,7 +13039,6 @@ procedure SETUP ;
      ERRORCNT := 0 ;
      S370CNT := 0 ;
      LCAFTSAREA := LCAFTMST ;
-     SAVERGS := TRUE ;
      SAVEFPRS := TRUE ;
      CLEAR_REG := TRUE ;
      TOTALBYTES := 0 ;
@@ -12899,10 +13047,9 @@ procedure SETUP ;
      FILECNT := 0 ;
      CKMODE := FALSE ;
      ASM := FALSE ;
-     ASMVERB := FALSE ;
+     CST_ASMVERB := FALSE ;
      DEBUG := TRUE ;
      FLOW_TRACE := FALSE ;
-     CURPNO := - 1 ;
      NXTLIT := 0 ;
      NXTDBL := 0 ;
      LAST_CC . LPC := 0 ;
@@ -12914,7 +13061,6 @@ procedure SETUP ;
      HEXCHARS := '0123456789ABCDEF' ;
      TESTCNT := 0 ;
      PDEF_CNT := 0 ;
-     MARK ( HEAPMARK ) ;
      CSPREGACTIVE := FALSE ;
      PROCOFFSET_OLD := 0 ;
      PCOUNTER := 0 ;
@@ -12924,7 +13070,6 @@ procedure SETUP ;
 
 begin (* HAUPTPROGRAMM *)
   RESET ( INPUT ) ;
-  RESET ( DBGINFO ) ;
   FIRST_ASMOUT := TRUE ;
   INIT := TRUE ;
   SETUP ;
@@ -12954,12 +13099,68 @@ begin (* HAUPTPROGRAMM *)
             VERSION ) ;
   if not MUSIC then
     WRITELN ( OUTPUT ) ;
+
+  //******************************************************************
+  // read input first time to gather procedure information            
+  //******************************************************************
+
+  PIANKER := NIL ;
   repeat
-    READNXTINST ;
+    READNXTINST ( 1 ) ;
+  until OPC = PSTP ;
+  if FALSE then
+    begin
+      PIAKT := PIANKER ;
+      while PIAKT <> NIL do
+        begin
+          WRITELN ( TRACEF , 'information in procedure info chain' ) ;
+          WRITELN ( TRACEF , '-----------------------------------' ) ;
+          WRITELN ( TRACEF , 'CURPNAME...: ' , PIAKT -> . CURPNAME ) ;
+          WRITELN ( TRACEF , 'CURPNO.....: ' , PIAKT -> . CURPNO ) ;
+          WRITELN ( TRACEF , 'OPNDTYPE...: ' , PIAKT -> . OPNDTYPE ) ;
+          WRITELN ( TRACEF , 'SEGSZE.....: ' , PIAKT -> . SEGSZE . NAM
+                    ) ;
+          WRITELN ( TRACEF , 'SAVERGS....: ' , PIAKT -> . SAVERGS ) ;
+          WRITELN ( TRACEF , 'ASM........: ' , PIAKT -> . ASM ) ;
+          WRITELN ( TRACEF , 'ASMVERB....: ' , PIAKT -> . ASMVERB ) ;
+          WRITELN ( TRACEF , 'GET_STAT...: ' , PIAKT -> . GET_STAT ) ;
+          WRITELN ( TRACEF , 'DEBUG_LEV..: ' , PIAKT -> . DEBUG_LEV ) ;
+          WRITELN ( TRACEF , 'STATNAME...: ' , PIAKT -> . STATNAME ) ;
+          WRITELN ( TRACEF , 'SOURCENAME.: ' , PIAKT -> . SOURCENAME )
+                    ;
+          WRITELN ( TRACEF , 'FLOW_TRACE.: ' , PIAKT -> . FLOW_TRACE )
+                    ;
+          WRITELN ( TRACEF , 'CALL_HIGHER: ' , PIAKT -> . CALL_HIGHER )
+                    ;
+          WRITELN ( TRACEF , 'LARGE_PROC.: ' , PIAKT -> . LARGE_PROC )
+                    ;
+          WRITELN ( TRACEF , 'code_size..: ' , PIAKT -> . CODE_SIZE ) ;
+          WRITELN ( TRACEF , 'DATA_SIZE..: ' , PIAKT -> . DATA_SIZE ) ;
+          PIAKT := PIAKT -> . NEXT
+        end (* while *)
+    end (* then *) ;
+  PIAKT := NIL ;
+
+  //******************************************************************
+  // read input second time to process p-codes                        
+  // curpno must be set to minus 1 again,                             
+  // otherwise the first LOC instruction will go wild ...             
+  // mark (heapmark) must be delayed after the first read loop :-)    
+  //******************************************************************
+
+  MARK ( HEAPMARK ) ;
+  RESET ( INPUT ) ;
+  repeat
+    READNXTINST ( 2 ) ;
     ASMNXTINST ;
     if TRACE then
       DUMPSTK ( 1 , TOP - 1 ) ;
   until OPC = PSTP ;
+
+  //******************************************************************
+  // check timer                                                      
+  //******************************************************************
+
   TIMER := CLOCK ( 0 ) - TIMER ;
   WRITE ( OUTPUT , '****' : 7 ) ;
   if ERRORCNT > 0 then

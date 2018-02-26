@@ -134,6 +134,7 @@
 #define STRINGSIZE     16
 #define STRINGRANGE    17
 #define NILPOINTER     18
+#define FTNFUNCNDEF    19
 
 static const char *runtime_errmsg [] =
 
@@ -156,6 +157,7 @@ static const char *runtime_errmsg [] =
    "STRINGSIZE",
    "STRINGRANGE",
    "NILPOINTER",
+   "FTNFUNCNDEF",
    NULL
 };
 
@@ -272,15 +274,17 @@ ent_section;
 
 typedef struct cup_sect
 {
-   char eyecatch [4];
-   int backchain;
-   int back_static;
-   short level_caller;
-   short level_called;
-   int olddisp;
-   int newdisp;
-   int returnaddr;
-   int calladdr;
+   char eyecatch [4];             // always CUPS eye catcher
+   int backchain;                 // backchain to last CUPS element
+   short level_caller;            // static level of caller
+   short level_called;            // static level of called
+   int olddisp;                   // old displacement of CUPS
+   int oldstaticdisp;             // save display elem. of same level
+   int newdisp;                   // new displacement of CUPS
+   int is_procparm;               // 1 if called proc/func is parm
+   int displayaddr;               // addr of saved display vector
+   int returnaddr;                // return address
+   int calladdr;                  // call address
 }
 cup_section;
 
@@ -371,8 +375,15 @@ typedef struct
    int ip;                        /* Instruktion-Pointer            */
    int sp;                        /* Stack-Pointer                  */
    int hp;                        /* Heap-Pointer                   */
-   int display [256];             /* Display fuer 256 Levels        */
+   int *display;                  /* Display Vector                 */
+                                  /* - points to store (offs 80)    */
+                                  /* - must be this way due to      */
+                                  /*   implementation of proc parms */
    int level;                     /* Display fuer 256 Levels        */
+   int mst_pfparm;                /* 1 if called proc if proc parm  */
+   int mst_addr1;                 /* temp stor for MST information  */
+   int mst_level;                 /* temp stor for MST information  */
+   int mst_addr2;                 /* temp stor for MST information  */
    int pcups;                     /* Pointer auf CUP-Savearea       */
    int stepanz;                   /* Stepanzahl Debugger            */
                                   /*--------------------------------*/

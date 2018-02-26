@@ -1,0 +1,484 @@
+
+     0000:  $PRV0001 ENT  I,2,L1    ZERO                ,
+     0000:                T,T,F,F,2,1,,
+                     BGN  $PRV0001,ZERO                
+@@ 0000: $PRV0001 CSECT
+@@ 0000:       BC    15,52(0,15)
+@@ 0004:       DC    AL1(29)
+@@ 0005:       DC    C'$PRV0001 ZERO                '
+@@ 0022:       DC    CL6'STPASC'    -- Compiler signature
+@@ 0028:       DC    XL2'1803'      -- Compiler version
+@@ 002A:       DC    AL2(0)         -- Stacksize
+@@ 002C:       DC    AL2(2)         -- Debug-Level
+@@ 002E:       DC    AL2(0)         -- Length of Proc
+@@ 0030:       DC    A(0)           -- Static CSECT
+@@ 0034: *                          -- save display level 2
+@@ 0034:       L     0,88(12)
+@@ 0038: *                          -- save registers and chain areas
+@@ 0038:       STM   14,12,12(1)
+@@ 003C:       ST    1,8(13)
+@@ 0040:       ST    13,4(1)
+@@ 0044:       LR    13,1
+@@ 0046: *                          -- update current display
+@@ 0046:       ST    13,88(12)
+@@ 004A: *                          -- setup base registers
+@@ 004A:       LR    10,15
+@@ 004C:       LA    11,4092(10)
+@@ 0050: *                          -- check for enough stack space
+@@ 0050:       LA    1,120(1)
+@@ 0054:       C     1,72(12)
+@@ 0058:       BC    11,224(12)
+-------------------- LOC  17 --------------------------------
+     005C:           VPU  2,112
+-------------------- LOC  18 --------------------------------
+     005C:           LDC  I,0
+     005C:           STR  I,2,72
+@@ 005C:       SR    2,2
+@@ 005E:       ST    2,72(13)
+     0062:           VPU  2,112
+     0062:           RET  I
+@@ 0062: *                          -- clear stack frame using MVCs
+@@ 0062:       MVI   80(13),129
+@@ 0066:       MVC   81(39,13),80(13)
+@@ 006C: *                          -- restore registers
+@@ 006C:       LM    14,12,12(13)
+@@ 0070:       L     13,4(13)
+@@ 0074: *                          -- restore display level 2
+@@ 0074:       ST    0,88(12)
+@@ 0078: *                          -- clear the save area
+@@ 0078:       MVC   0(72,1),80(1)
+@@ 007E: *                          -- branch to return address
+@@ 007E:       BCR   15,14
+     0080:  L1       DEF  I,120
+-------------------- LOC  25 --------------------------------
+
+     0080:  $PRV0002 ENT  I,2,L1    ONE                 ,
+     0080:                T,T,F,F,2,2,,
+                     BGN  $PRV0002,ONE                 
+@@ 0000: $PRV0002 CSECT
+@@ 0000:       BC    15,52(0,15)
+@@ 0004:       DC    AL1(29)
+@@ 0005:       DC    C'$PRV0002 ONE                 '
+@@ 0022:       DC    CL6'STPASC'    -- Compiler signature
+@@ 0028:       DC    XL2'1803'      -- Compiler version
+@@ 002A:       DC    AL2(0)         -- Stacksize
+@@ 002C:       DC    AL2(2)         -- Debug-Level
+@@ 002E:       DC    AL2(0)         -- Length of Proc
+@@ 0030:       DC    A(0)           -- Static CSECT
+@@ 0034: *                          -- save display level 2
+@@ 0034:       L     0,88(12)
+@@ 0038: *                          -- save registers and chain areas
+@@ 0038:       STM   14,12,12(1)
+@@ 003C:       ST    1,8(13)
+@@ 0040:       ST    13,4(1)
+@@ 0044:       LR    13,1
+@@ 0046: *                          -- update current display
+@@ 0046:       ST    13,88(12)
+@@ 004A: *                          -- setup base registers
+@@ 004A:       LR    10,15
+@@ 004C:       LA    11,4092(10)
+@@ 0050: *                          -- check for enough stack space
+@@ 0050:       LA    1,120(1)
+@@ 0054:       C     1,72(12)
+@@ 0058:       BC    11,224(12)
+-------------------- LOC  25 --------------------------------
+     005C:           VPU  2,112
+-------------------- LOC  26 --------------------------------
+     005C:           LDC  I,1
+     005C:           STR  I,2,72
+@@ 005C:       LA    2,1
+@@ 0060:       ST    2,72(13)
+     0064:           RET  I
+@@ 0064: *                          -- clear stack frame using MVCs
+@@ 0064:       MVI   80(13),129
+@@ 0068:       MVC   81(39,13),80(13)
+@@ 006E: *                          -- restore registers
+@@ 006E:       LM    14,12,12(13)
+@@ 0072:       L     13,4(13)
+@@ 0076: *                          -- restore display level 2
+@@ 0076:       ST    0,88(12)
+@@ 007A: *                          -- clear the save area
+@@ 007A:       MVC   0(72,1),80(1)
+@@ 0080: *                          -- branch to return address
+@@ 0080:       BCR   15,14
+     0082:  L1       DEF  I,120
+-------------------- LOC  33 --------------------------------
+
+     0082:  $PRV0003 ENT  I,2,L1    NEGONE              ,
+     0082:                T,T,F,F,2,3,,
+                     BGN  $PRV0003,NEGONE              
+@@ 0000: $PRV0003 CSECT
+@@ 0000:       BC    15,52(0,15)
+@@ 0004:       DC    AL1(29)
+@@ 0005:       DC    C'$PRV0003 NEGONE              '
+@@ 0022:       DC    CL6'STPASC'    -- Compiler signature
+@@ 0028:       DC    XL2'1803'      -- Compiler version
+@@ 002A:       DC    AL2(0)         -- Stacksize
+@@ 002C:       DC    AL2(2)         -- Debug-Level
+@@ 002E:       DC    AL2(0)         -- Length of Proc
+@@ 0030:       DC    A(0)           -- Static CSECT
+@@ 0034: *                          -- save display level 2
+@@ 0034:       L     0,88(12)
+@@ 0038: *                          -- save registers and chain areas
+@@ 0038:       STM   14,12,12(1)
+@@ 003C:       ST    1,8(13)
+@@ 0040:       ST    13,4(1)
+@@ 0044:       LR    13,1
+@@ 0046: *                          -- update current display
+@@ 0046:       ST    13,88(12)
+@@ 004A: *                          -- setup base registers
+@@ 004A:       LR    10,15
+@@ 004C:       LA    11,4092(10)
+@@ 0050: *                          -- check for enough stack space
+@@ 0050:       LA    1,120(1)
+@@ 0054:       C     1,72(12)
+@@ 0058:       BC    11,224(12)
+-------------------- LOC  33 --------------------------------
+     005C:           VPU  2,112
+-------------------- LOC  34 --------------------------------
+     005C:           LDC  I,1
+     005C:           NGI
+     005C:           STR  I,2,72
+@@ 005C:       LH    2,=H'-1'
+@@ 0060:       ST    2,72(13)
+     0064:           RET  I
+@@ 0064: *                          -- clear stack frame using MVCs
+@@ 0064:       MVI   80(13),129
+@@ 0068:       MVC   81(39,13),80(13)
+@@ 006E: *                          -- restore registers
+@@ 006E:       LM    14,12,12(13)
+@@ 0072:       L     13,4(13)
+@@ 0076: *                          -- restore display level 2
+@@ 0076:       ST    0,88(12)
+@@ 007A: *                          -- clear the save area
+@@ 007A:       MVC   0(72,1),80(1)
+@@ 0080: *                          -- branch to return address
+@@ 0080:       BCR   15,14
+     0082:  L1       DEF  I,120
+-------------------- LOC  50 --------------------------------
+
+     0082:  $PRV0010 ENT  I,3,L1    B                   ,
+     0082:                T,T,F,F,2,10,,
+                     BGN  $PRV0010,B                   
+@@ 0000: $PRV0010 CSECT
+@@ 0000:       BC    15,52(0,15)
+@@ 0004:       DC    AL1(29)
+@@ 0005:       DC    C'$PRV0010 B                   '
+@@ 0022:       DC    CL6'STPASC'    -- Compiler signature
+@@ 0028:       DC    XL2'1803'      -- Compiler version
+@@ 002A:       DC    AL2(0)         -- Stacksize
+@@ 002C:       DC    AL2(2)         -- Debug-Level
+@@ 002E:       DC    AL2(0)         -- Length of Proc
+@@ 0030:       DC    A(0)           -- Static CSECT
+@@ 0034: *                          -- save display level 3
+@@ 0034:       L     0,92(12)
+@@ 0038: *                          -- save registers and chain areas
+@@ 0038:       STM   14,12,12(1)
+@@ 003C:       ST    1,8(13)
+@@ 0040:       ST    13,4(1)
+@@ 0044:       LR    13,1
+@@ 0046: *                          -- update current display
+@@ 0046:       ST    13,92(12)
+@@ 004A: *                          -- setup base registers
+@@ 004A:       LR    10,15
+@@ 004C:       LA    11,4092(10)
+@@ 0050: *                          -- check for enough stack space
+@@ 0050:       LA    1,440(1)
+@@ 0054:       C     1,72(12)
+@@ 0058:       BC    11,224(12)
+-------------------- LOC  50 --------------------------------
+     005C:           VPU  3,116
+     005C:           LOD  I,2,112
+     005C:           LDC  I,1
+     005C:           SBI
+     005C:           STR  I,2,112
+@@ 005C:       L     14,88(12)
+@@ 0060:       L     2,112(0,14)
+@@ 0064:       BCTR  2,0
+@@ 0066:       ST    2,112(0,14)
+-------------------- LOC  51 --------------------------------
+     006A:           MST  2362,120
+     006A:           CUP  I,1,*PFPARM*,160
+@@ 006A:       LR    2,13
+@@ 006C:       MVC   120(40,2),80(12)
+@@ 0072:       MVC   84(36,12),240(14)
+@@ 0078:       L     15,236(14)
+@@ 007C:       LA    1,160(13)
+@@ 0080:       BALR  14,15
+@@ 0082:       MVC   80(40,12),120(2)
+@@ 0088:       L     2,72(1)
+     008C:           STR  I,3,112
+@@ 008C:       ST    2,112(13)
+-------------------- LOC  52 --------------------------------
+     0090:           MST  1,0
+     0090:           LOD  I,2,112
+     0090:           STR  I,3,232
+@@ 0090:       L     14,88(12)
+@@ 0094:       L     2,112(0,14)
+@@ 0098:       ST    2,232(13)
+     009C:           LCA  P,$PRV0010
+@@ 009C:       L     2,=V($PRV0010)
+     00A0:           STR  A,3,236
+@@ 00A0:       ST    2,236(13)
+     00A4:           LDA  3,240
+     00A4:           LDA  1,84
+     00A4:           MOV  36
+@@ 00A4:       MVC   240(36,13),84(12)
+     00AA:           LDA  3,276
+     00AA:           LDA  2,116
+     00AA:           MOV  40
+@@ 00AA:       L     1,88(12)
+@@ 00AE:       MVC   276(40,13),116(1)
+     00B4:           LDA  3,316
+     00B4:           LDA  2,156
+     00B4:           MOV  40
+@@ 00B4:       L     1,88(12)
+@@ 00B8:       MVC   316(40,13),156(1)
+     00BE:           LDA  3,356
+     00BE:           LDA  2,196
+     00BE:           MOV  40
+@@ 00BE:       L     1,88(12)
+@@ 00C2:       MVC   356(40,13),196(1)
+     00C8:           LDA  3,396
+     00C8:           LDA  2,236
+     00C8:           MOV  40
+@@ 00C8:       L     1,88(12)
+@@ 00CC:       MVC   396(40,13),236(1)
+-------------------- LOC  53 --------------------------------
+     00D2:           CUP  I,3,$PRV0004,120
+@@ 00D2:       LA    1,120(13)
+@@ 00D6:       L     15,=V($PRV0004)
+@@ 00DA:       BALR  14,15
+@@ 00DC:       L     2,72(1)
+     00E0:           STR  I,3,72
+@@ 00E0:       ST    2,72(13)
+     00E4:           RET  I
+@@ 00E4: *                          -- clear stack frame using MVCs
+@@ 00E4:       MVI   80(13),129
+@@ 00E8:       MVC   81(256,13),80(13)
+@@ 00EE:       MVC   337(103,13),336(13)
+@@ 00F4: *                          -- restore registers
+@@ 00F4:       LM    14,12,12(13)
+@@ 00F8:       L     13,4(13)
+@@ 00FC: *                          -- restore display level 3
+@@ 00FC:       ST    0,92(12)
+@@ 0100: *                          -- clear the save area
+@@ 0100:       MVC   0(72,1),80(1)
+@@ 0106: *                          -- branch to return address
+@@ 0106:       BCR   15,14
+     0108:  L1       DEF  I,440
+-------------------- LOC  57 --------------------------------
+
+     0108:  $PRV0004 ENT  I,2,L1    A                   ,
+     0108:                T,T,F,F,2,4,,
+                     BGN  $PRV0004,A                   
+@@ 0000: $PRV0004 CSECT
+@@ 0000:       BC    15,52(0,15)
+@@ 0004:       DC    AL1(29)
+@@ 0005:       DC    C'$PRV0004 A                   '
+@@ 0022:       DC    CL6'STPASC'    -- Compiler signature
+@@ 0028:       DC    XL2'1803'      -- Compiler version
+@@ 002A:       DC    AL2(0)         -- Stacksize
+@@ 002C:       DC    AL2(2)         -- Debug-Level
+@@ 002E:       DC    AL2(0)         -- Length of Proc
+@@ 0030:       DC    A(0)           -- Static CSECT
+@@ 0034: *                          -- save display level 2
+@@ 0034:       L     0,88(12)
+@@ 0038: *                          -- save registers and chain areas
+@@ 0038:       STM   14,12,12(1)
+@@ 003C:       ST    1,8(13)
+@@ 0040:       ST    13,4(1)
+@@ 0044:       LR    13,1
+@@ 0046: *                          -- update current display
+@@ 0046:       ST    13,88(12)
+@@ 004A: *                          -- setup base registers
+@@ 004A:       LR    10,15
+@@ 004C:       LA    11,4092(10)
+@@ 0050: *                          -- check for enough stack space
+@@ 0050:       LA    1,328(1)
+@@ 0054:       C     1,72(12)
+@@ 0058:       BC    11,224(12)
+-------------------- LOC  57 --------------------------------
+     005C:           VPU  2,320
+     005C:           LOD  I,2,112
+     005C:           LDC  I,0
+     005C:           LEQ  I
+@@ 005C:       L     2,112(13)
+@@ 0060:       LTR   2,2
+     0062:           FJP  L3
+@@ 0062:       BC    2,L3
+-------------------- LOC  58 --------------------------------
+     0066:           MST  2362,328
+     0066:           CUP  I,1,*PFPARM*,368
+@@ 0066:       LR    2,13
+@@ 0068:       MVC   328(40,2),80(12)
+@@ 006E:       MVC   84(36,12),240(13)
+@@ 0074:       L     15,236(13)
+@@ 0078:       LA    1,368(13)
+@@ 007C:       BALR  14,15
+@@ 007E:       MVC   80(40,12),328(2)
+@@ 0084:       L     2,72(1)
+-------------------- LOC  59 --------------------------------
+     0088:           MST  2762,328
+     0088:           CUP  I,1,*PFPARM*,368
+@@ 0088:       LR    3,13
+@@ 008A:       MVC   328(40,3),80(12)
+@@ 0090:       MVC   84(36,12),280(13)
+@@ 0096:       L     15,276(13)
+@@ 009A:       LA    1,368(13)
+@@ 009E:       BALR  14,15
+@@ 00A0:       MVC   80(40,12),328(3)
+@@ 00A6:       L     3,72(1)
+     00AA:           ADI
+@@ 00AA:       AR    2,3
+     00AC:           STR  I,2,72
+@@ 00AC:       ST    2,72(13)
+     00B0:           UJP  L4
+@@ 00B0:       BC    15,L4
+     00B4:  L3       LAB
+@@ 00B4: L3    DS    0H
+-------------------- LOC  61 --------------------------------
+     00B4:           MST  2,0
+     00B4:           CUP  I,1,$PRV0010,328
+@@ 00B4:       LA    1,328(13)
+@@ 00B8:       L     15,=V($PRV0010)
+@@ 00BC:       BALR  14,15
+@@ 00BE:       L     2,72(1)
+     00C2:           STR  I,2,72
+@@ 00C2:       ST    2,72(13)
+     00C6:  L4       LAB
+@@ 00C6: L4    DS    0H
+     00C6:           RET  I
+@@ 00C6: *                          -- clear stack frame using MVCs
+@@ 00C6:       MVI   80(13),129
+@@ 00CA:       MVC   81(247,13),80(13)
+@@ 00D0: *                          -- restore registers
+@@ 00D0:       LM    14,12,12(13)
+@@ 00D4:       L     13,4(13)
+@@ 00D8: *                          -- restore display level 2
+@@ 00D8:       ST    0,88(12)
+@@ 00DC: *                          -- clear the save area
+@@ 00DC:       MVC   0(72,1),80(1)
+@@ 00E2: *                          -- branch to return address
+@@ 00E2:       BCR   15,14
+     00E4:  L1       DEF  I,328
+-------------------- LOC  66 --------------------------------
+     00E4:           BGN MANORBOY             16:53:02 02/11/2018
+
+     00E4:  $PASMAIN ENT  P,1,L3    $PASMAIN            ,
+     00E4:                T,T,F,F,2,0,,
+                     BGN  $PASMAIN,$PASMAIN            ,M
+@@ 0000: $PASMAIN CSECT
+@@ 0000:       BC    15,96(0,15)
+@@ 0004:       DC    AL1(70)
+@@ 0005:       DC    C'$PASMAIN $PASMAIN             MANORBOY             16:53:02 02/11/2018'
+@@ 004E:       DC    CL6'STPASC'    -- Compiler signature
+@@ 0054:       DC    XL2'1803'      -- Compiler version
+@@ 0056:       DC    AL2(0)         -- Stacksize
+@@ 0058:       DC    AL2(2)         -- Debug-Level
+@@ 005A:       DC    AL2(0)         -- Length of Proc
+@@ 005C:       DC    A(0)           -- Static CSECT
+@@ 0060: *                          -- save display level 1
+@@ 0060:       L     0,84(12)
+@@ 0064: *                          -- save registers and chain areas
+@@ 0064:       STM   14,12,12(1)
+@@ 0068:       ST    1,8(13)
+@@ 006C:       ST    13,4(1)
+@@ 0070:       LR    13,1
+@@ 0072: *                          -- update current display
+@@ 0072:       ST    13,84(12)
+@@ 0076: *                          -- setup base registers
+@@ 0076:       LR    10,15
+@@ 0078:       LA    11,4092(10)
+@@ 007C: *                          -- check for enough stack space
+@@ 007C:       LA    1,680(1)
+@@ 0080:       C     1,72(12)
+@@ 0084:       BC    11,224(12)
+@@ 0088:       LD    0,320(12)
+@@ 008C:       L     15,72(12)
+@@ 0090:       LA    1,352(12)
+@@ 0094:       SR    15,1
+@@ 0096:       SRA   15,3
+@@ 009A:       BALR  14,0
+@@ 009C:       STD   0,0(1)
+@@ 00A0:       LA    1,8(1)
+@@ 00A4:       BCTR  15,14
+-------------------- LOC  66 --------------------------------
+     00A6:           VPU  1,352
+     00A6:           LDA  1,260
+     00A6:           CSP  SIO,360
+     00A6:           MST  1,0
+     00A6:           LDC  I,10
+     00A6:           STR  I,1,472
+@@ 00A6:       LA    2,10
+@@ 00AA:       ST    2,472(13)
+     00AE:           LCA  P,$PRV0002
+@@ 00AE:       L     2,=V($PRV0002)
+     00B2:           STR  A,1,476
+@@ 00B2:       ST    2,476(13)
+     00B6:           LDA  1,480
+     00B6:           LDA  1,84
+     00B6:           MOV  36
+@@ 00B6:       MVC   480(36,13),84(13)
+     00BC:           LCA  P,$PRV0003
+@@ 00BC:       L     2,=V($PRV0003)
+     00C0:           STR  A,1,516
+@@ 00C0:       ST    2,516(13)
+     00C4:           LDA  1,520
+     00C4:           LDA  1,84
+     00C4:           MOV  36
+@@ 00C4:       MVC   520(36,13),84(13)
+     00CA:           LCA  P,$PRV0003
+@@ 00CA:       L     2,=V($PRV0003)
+     00CE:           STR  A,1,556
+@@ 00CE:       ST    2,556(13)
+     00D2:           LDA  1,560
+     00D2:           LDA  1,84
+     00D2:           MOV  36
+@@ 00D2:       MVC   560(36,13),84(13)
+     00D8:           LCA  P,$PRV0002
+@@ 00D8:       L     2,=V($PRV0002)
+     00DC:           STR  A,1,596
+@@ 00DC:       ST    2,596(13)
+     00E0:           LDA  1,600
+     00E0:           LDA  1,84
+     00E0:           MOV  36
+@@ 00E0:       MVC   600(36,13),84(13)
+     00E6:           LCA  P,$PRV0001
+@@ 00E6:       L     2,=V($PRV0001)
+     00EA:           STR  A,1,636
+@@ 00EA:       ST    2,636(13)
+     00EE:           LDA  1,640
+     00EE:           LDA  1,84
+     00EE:           MOV  36
+@@ 00EE:       MVC   640(36,13),84(13)
+     00F4:           CUP  I,3,$PRV0004,360
+@@ 00F4:       LA    1,360(13)
+@@ 00F8:       L     15,=V($PRV0004)
+@@ 00FC:       BALR  14,15
+@@ 00FE:       L     2,72(1)
+     0102:           LDC  I,12
+     0102:           CSP  WRI,360
+@@ 0102:       LA    3,12
+@@ 0106:       L     15,=V($PASCSP)
+@@ 010A:       LA    8,360(13)
+@@ 010E:       LA    1,64
+@@ 0112:       LA    9,260(13)
+@@ 0116:       BALR  14,15
+     0118:           CSP  WLN,360
+@@ 0118:       LA    1,128
+@@ 011C:       BALR  14,15
+     011E:           CSP  EIO,360
+-------------------- LOC  67 --------------------------------
+     011E:           RET  P
+@@ 011E: *                          -- restore registers
+@@ 011E:       LM    14,12,12(13)
+@@ 0122:       L     13,4(13)
+@@ 0126: *                          -- restore display level 1
+@@ 0126:       ST    0,84(12)
+@@ 012A: *                          -- branch to return address
+@@ 012A:       BCR   15,14
+     012C:  L3       DEF  I,680
+     012C:           STP
+##             EXTRN $PASENT
+##             END   $PASENT

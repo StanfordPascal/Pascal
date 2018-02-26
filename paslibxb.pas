@@ -2154,17 +2154,17 @@ procedure WINX ( CMD : CHARPTR ; var RETCODE : INTEGER ) ;
 
 
 
-procedure $PASMMM ( FUNCCODE : INTEGER ; X1 : CHARPTR ; X2 : CHARPTR ;
+procedure $PASSTR ( FUNCCODE : INTEGER ; X1 : CHARPTR ; X2 : CHARPTR ;
                   L : INTEGER ) ;
 
 (**************************************)
-(*  Verteiler fuer Memory-Funktionen  *)
+(*  Verteiler fuer String-Funktionen  *)
 (**************************************)
 
 
    var CH : CHAR ;
 
-   begin (* $PASMMM *)
+   begin (* $PASSTR *)
      case FUNCCODE of
 
      /*********************************/
@@ -2194,15 +2194,10 @@ procedure $PASMMM ( FUNCCODE : INTEGER ; X1 : CHARPTR ; X2 : CHARPTR ;
                  X2 := PTRADD ( X2 , 1 )
                end (* while *)
            end (* tag/ca *) ;
-
-     /*********************************/
-     /* unknown subfunction           */
-     /*********************************/
-
        otherwise
          EXIT ( 1120 ) ;
      end (* case *) ;
-   end (* $PASMMM *) ;
+   end (* $PASSTR *) ;
 
 
 

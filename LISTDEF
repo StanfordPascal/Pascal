@@ -156,7 +156,7 @@ I_S_R                auto     1   1656  struct aln = 8
 TYPCDE               auto     1   1664  array 65 90
                              inxtype =  char
                              aeltype =  scalar (2)
-STK                  auto     1   1720  array 0 15
+STK                  auto     1   1720  array 0 100
                              inxtype =  integer (2)
                              aeltype =  struct aln = 8
   RCNST                   field      0  real
@@ -184,24 +184,24 @@ STK                  auto     1   1720  array 0 15
   LVL                     field      4  integer (2)
                                         endstruct level = 2
                                         endstruct
-AVAIL                auto     1   2488  array 0 9
+AVAIL                auto     1   6568  array 0 9
                              inxtype =  integer (2)
                              aeltype =  boolean
-AVAILFP              auto     1   2498  array 0 6
+AVAILFP              auto     1   6578  array 0 6
                              inxtype =  integer (2)
                              aeltype =  boolean
-INVBRM               auto     1   2506  array 17 22
+INVBRM               auto     1   6586  array 17 22
                              inxtype =  scalar (2)
                              aeltype =  scalar (2)
-BRMSK                auto     1   2518  array 17 22
+BRMSK                auto     1   6598  array 17 22
                              inxtype =  scalar (2)
                              aeltype =  integer (2)
-BRCND                auto     1   2530  integer (2)
-TIMER                auto     1   2532  integer (4)
-HEXCHARS             auto     1   2536  array 0 15
+BRCND                auto     1   6610  integer (2)
+TIMER                auto     1   6612  integer (4)
+HEXCHARS             auto     1   6616  array 0 15
                              inxtype =  integer (2)
                              aeltype =  char
-HTBL                 auto     1   2552  array 0 200
+HTBL                 auto     1   6632  array 0 200
                              inxtype =  integer (2)
                              aeltype =  struct aln = 2
   NAME                    field      0  array 1 3
@@ -212,19 +212,19 @@ HTBL                 auto     1   2552  array 0 200
                         variant
   SPCDE                   field      4  scalar (2)
                                         endstruct
-LAST_CC              auto     1   3758  struct aln = 2
+LAST_CC              auto     1   7838  struct aln = 2
   LPC                     field      0  integer (2)
   LOP                     field      2  integer (2)
   LR                      field      4  integer (2)
                                         endstruct
-TXR_CONTENTS         auto     1   3764  struct aln = 4
+TXR_CONTENTS         auto     1   7844  struct aln = 4
   VALID                   field      0  boolean
   LEVEL                   field      2  integer (2)
   OFFSET                  field      4  integer (4)
   DISP                    field      8  integer (4)
   BASE                    field     12  integer (2)
                                         endstruct
-LAST_STR             auto     1   3780  struct aln = 4
+LAST_STR             auto     1   7860  struct aln = 4
   STOPND                  field      0  struct level = 2 aln = 4
   DSPLMT                  field      0  integer
   LVL                     field      4  integer (2)
@@ -233,7 +233,7 @@ LAST_STR             auto     1   3780  struct aln = 4
   LPC                     field      8  integer (2)
   STDT                    field     10  scalar (2)
                                         endstruct
-LAST_FILE            auto     1   3792  struct aln = 4
+LAST_FILE            auto     1   7872  struct aln = 4
   LPC                     field      0  integer (2)
   LFOPND                  field      4  struct level = 2 aln = 4
   DSPLMT                  field      0  integer
@@ -241,61 +241,61 @@ LAST_FILE            auto     1   3792  struct aln = 4
                                         endstruct level = 2
   LFV                     field     10  boolean
                                         endstruct
-LAST_MVC             auto     1   3804  struct aln = 2
+LAST_MVC             auto     1   7884  struct aln = 2
   LPC                     field      0  integer (2)
   LLEN                    field      2  integer (2)
                                         endstruct
-NXTINT               auto     1   3808  integer (2)
-NXTDBL               auto     1   3810  integer (2)
-NXTCH                auto     1   3812  integer (2)
-NXTPRC               auto     1   3814  integer (2)
-NXTEP                auto     1   3816  integer (2)
-HEXPC                auto     1   3818  array 1 4
+NXTINT               auto     1   7888  integer (2)
+NXTDBL               auto     1   7890  integer (2)
+NXTCH                auto     1   7892  integer (2)
+NXTPRC               auto     1   7894  integer (2)
+NXTEP                auto     1   7896  integer (2)
+HEXPC                auto     1   7898  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-PCOUNTER             auto     1   3822  integer (2)
-CPCOUNTER            auto     1   3824  integer (2)
-CSEGSTRT             auto     1   3826  integer (2)
-CSEGLIMIT            auto     1   3828  integer (2)
-MINLBL               auto     1   3830  integer (2)
-CST_CURPNAME         auto     1   3832  array 1 20
+PCOUNTER             auto     1   7902  integer (2)
+CPCOUNTER            auto     1   7904  integer (2)
+CSEGSTRT             auto     1   7906  integer (2)
+CSEGLIMIT            auto     1   7908  integer (2)
+MINLBL               auto     1   7910  integer (2)
+CST_CURPNAME         auto     1   7912  array 1 20
                              inxtype =  integer (2)
                              aeltype =  char
-CST_CURPNO           auto     1   3852  integer
-CST_ASMVERB          auto     1   3856  boolean
-CST_GET_STAT         auto     1   3857  boolean
-MATCH_CURPNO         auto     1   3860  integer
-NXTLIT               auto     1   3864  integer (2)
-HW_GAP               auto     1   3866  integer (2)
-INT_GAP              auto     1   3868  integer (2)
-IHCONF               auto     1   3870  integer (2)
-RICONF               auto     1   3872  integer (2)
-RHCONF               auto     1   3874  integer (2)
-CODE                 auto     1   3880  struct aln = 8
+CST_CURPNO           auto     1   7932  integer
+CST_ASMVERB          auto     1   7936  boolean
+CST_GET_STAT         auto     1   7937  boolean
+MATCH_CURPNO         auto     1   7940  integer
+NXTLIT               auto     1   7944  integer (2)
+HW_GAP               auto     1   7946  integer (2)
+INT_GAP              auto     1   7948  integer (2)
+IHCONF               auto     1   7950  integer (2)
+RICONF               auto     1   7952  integer (2)
+RHCONF               auto     1   7954  integer (2)
+CODE                 auto     1   7960  struct aln = 8
                         variant
-  H                       field      0  array 0 4500
+  C                       field      0  array 0 11199
+                             inxtype =  integer (2)
+                             aeltype =  char
+                        variant
+  H                       field      0  array 0 5599
                              inxtype =  integer (2)
                              aeltype =  integer (2)
                         variant
-  I                       field      0  array 0 1
+  I                       field      0  array 0 2799
                              inxtype =  integer (2)
                              aeltype =  integer
                         variant
-  R                       field      0  array 0 1
+  R                       field      0  array 0 1399
                              inxtype =  integer (2)
                              aeltype =  real
                         variant
-  C                       field      0  array 0 1
-                             inxtype =  integer (2)
-                             aeltype =  char
-                        variant
-  TXTCARD                 field      0  array 0 1
+  TXTCARD                 field      0  array 0 199
                              inxtype =  integer (2)
                              aeltype =  array 1 56
                              inxtype =  integer (2)
                              aeltype =  char
                                         endstruct
-IDP_POOL             auto     1  12888  struct aln = 8
+IDP_POOL             auto     1  19160  struct aln = 8
                         variant
   R                       field      0  array 0 200
                              inxtype =  integer (2)
@@ -318,1279 +318,1288 @@ IDP_POOL             auto     1  12888  struct aln = 8
                              inxtype =  integer (2)
                              aeltype =  char
                                         endstruct
-LITTBL               auto     1  14496  array 1 400
+LITTBL               auto     1  20768  array 1 400
                              inxtype =  integer (2)
                              aeltype =  struct aln = 2
   LNK                     field      0  integer (2)
                                         endstruct
-LBLTBL               auto     1  15296  array 0 500
+LBLTBL               auto     1  21568  array 0 500
                              inxtype =  integer (2)
                              aeltype =  struct aln = 2
   DEFINED                 field      0  boolean
   LNK                     field      2  integer (2)
                                         endstruct
-PRCTBL               auto     1  17300  array 0 200
+PRCTBL               auto     1  23572  array 0 200
                              inxtype =  integer (2)
-                             aeltype =  struct aln = 2
+                             aeltype =  struct aln = 4
   NAME                    field      0  array 1 8
                              inxtype =  integer (2)
                              aeltype =  char
-  LNK                     field      8  integer (2)
-  VPOS                    field     10  integer (2)
+  LNK                     field      8  integer (4)
+  VPOS                    field     12  integer (2)
                                         endstruct
-CALSTK               auto     1  19712  array 1 4
+CALSTK               auto     1  26788  array 1 4
                              inxtype =  integer (2)
                              aeltype =  struct aln = 4
   PFLEV                   field      0  integer
   DISPSAV                 field      4  integer (4)
                                         endstruct
-PROGHDR              auto     1  19744  array 1 40
+PROGHDR              auto     1  26820  array 1 40
                              inxtype =  integer (2)
                              aeltype =  char
-OBJCODE              auto     1  19784  file
+OBJCODE              auto     1  26860  file
                              element =  char
-ASMOUT               auto     1  19796  file
+ASMOUT               auto     1  26872  file
                              element =  char
-TRACEF               auto     1  19808  file
+TRACEF               auto     1  26884  file
                              element =  char
-POSOFPROCLEN         auto     1  19820  integer (2)
+POSOFPROCLEN         auto     1  26896  integer (2)
 
 Stored Constants of Main Program
 ------------------------------------------------------------------------
-HEXTAB               constant     1513  array 0 15
+HEXTAB               constant     1539  array 0 15
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                constant     1513  array 0 255
+XTBLN                constant     1539  array 0 255
                              inxtype =  integer (2)
                              aeltype =  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1513  array 1 4
+XTBLN                static       1539  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1517  array 1 4
+XTBLN                static       1543  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1521  array 1 4
+XTBLN                static       1547  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1525  array 1 4
+XTBLN                static       1551  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1529  array 1 4
+XTBLN                static       1555  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1533  array 1 4
+XTBLN                static       1559  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1537  array 1 4
+XTBLN                static       1563  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1541  array 1 4
+XTBLN                static       1567  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1545  array 1 4
+XTBLN                static       1571  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1549  array 1 4
+XTBLN                static       1575  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1553  array 1 4
+XTBLN                static       1579  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1557  array 1 4
+XTBLN                static       1583  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1561  array 1 4
+XTBLN                static       1587  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1565  array 1 4
+XTBLN                static       1591  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1569  array 1 4
+XTBLN                static       1595  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1573  array 1 4
+XTBLN                static       1599  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1577  array 1 4
+XTBLN                static       1603  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1581  array 1 4
+XTBLN                static       1607  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1585  array 1 4
+XTBLN                static       1611  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1589  array 1 4
+XTBLN                static       1615  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1593  array 1 4
+XTBLN                static       1619  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1597  array 1 4
+XTBLN                static       1623  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1601  array 1 4
+XTBLN                static       1627  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1605  array 1 4
+XTBLN                static       1631  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1609  array 1 4
+XTBLN                static       1635  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1613  array 1 4
+XTBLN                static       1639  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1617  array 1 4
+XTBLN                static       1643  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1621  array 1 4
+XTBLN                static       1647  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1625  array 1 4
+XTBLN                static       1651  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1629  array 1 4
+XTBLN                static       1655  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1633  array 1 4
+XTBLN                static       1659  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1637  array 1 4
+XTBLN                static       1663  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1641  array 1 4
+XTBLN                static       1667  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1645  array 1 4
+XTBLN                static       1671  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1649  array 1 4
+XTBLN                static       1675  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1653  array 1 4
+XTBLN                static       1679  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1657  array 1 4
+XTBLN                static       1683  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1661  array 1 4
+XTBLN                static       1687  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1665  array 1 4
+XTBLN                static       1691  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1669  array 1 4
+XTBLN                static       1695  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1673  array 1 4
+XTBLN                static       1699  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1677  array 1 4
+XTBLN                static       1703  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1681  array 1 4
+XTBLN                static       1707  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1685  array 1 4
+XTBLN                static       1711  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1689  array 1 4
+XTBLN                static       1715  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1693  array 1 4
+XTBLN                static       1719  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1697  array 1 4
+XTBLN                static       1723  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1701  array 1 4
+XTBLN                static       1727  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1705  array 1 4
+XTBLN                static       1731  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1709  array 1 4
+XTBLN                static       1735  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1713  array 1 4
+XTBLN                static       1739  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1717  array 1 4
+XTBLN                static       1743  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1721  array 1 4
+XTBLN                static       1747  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1725  array 1 4
+XTBLN                static       1751  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1729  array 1 4
+XTBLN                static       1755  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1733  array 1 4
+XTBLN                static       1759  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1737  array 1 4
+XTBLN                static       1763  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1741  array 1 4
+XTBLN                static       1767  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1745  array 1 4
+XTBLN                static       1771  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1749  array 1 4
+XTBLN                static       1775  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1753  array 1 4
+XTBLN                static       1779  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1757  array 1 4
+XTBLN                static       1783  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1761  array 1 4
+XTBLN                static       1787  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1765  array 1 4
+XTBLN                static       1791  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1769  array 1 4
+XTBLN                static       1795  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1773  array 1 4
+XTBLN                static       1799  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1777  array 1 4
+XTBLN                static       1803  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1781  array 1 4
+XTBLN                static       1807  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1785  array 1 4
+XTBLN                static       1811  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1789  array 1 4
+XTBLN                static       1815  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1793  array 1 4
+XTBLN                static       1819  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1797  array 1 4
+XTBLN                static       1823  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1801  array 1 4
+XTBLN                static       1827  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1805  array 1 4
+XTBLN                static       1831  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1809  array 1 4
+XTBLN                static       1835  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1813  array 1 4
+XTBLN                static       1839  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1817  array 1 4
+XTBLN                static       1843  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1821  array 1 4
+XTBLN                static       1847  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1825  array 1 4
+XTBLN                static       1851  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1829  array 1 4
+XTBLN                static       1855  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1833  array 1 4
+XTBLN                static       1859  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1837  array 1 4
+XTBLN                static       1863  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1841  array 1 4
+XTBLN                static       1867  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1845  array 1 4
+XTBLN                static       1871  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1849  array 1 4
+XTBLN                static       1875  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1853  array 1 4
+XTBLN                static       1879  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1857  array 1 4
+XTBLN                static       1883  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1861  array 1 4
+XTBLN                static       1887  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1865  array 1 4
+XTBLN                static       1891  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1869  array 1 4
+XTBLN                static       1895  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1873  array 1 4
+XTBLN                static       1899  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1877  array 1 4
+XTBLN                static       1903  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1881  array 1 4
+XTBLN                static       1907  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1885  array 1 4
+XTBLN                static       1911  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1889  array 1 4
+XTBLN                static       1915  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1893  array 1 4
+XTBLN                static       1919  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1897  array 1 4
+XTBLN                static       1923  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1901  array 1 4
+XTBLN                static       1927  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1905  array 1 4
+XTBLN                static       1931  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1909  array 1 4
+XTBLN                static       1935  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1913  array 1 4
+XTBLN                static       1939  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1917  array 1 4
+XTBLN                static       1943  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1921  array 1 4
+XTBLN                static       1947  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1925  array 1 4
+XTBLN                static       1951  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1929  array 1 4
+XTBLN                static       1955  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1933  array 1 4
+XTBLN                static       1959  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1937  array 1 4
+XTBLN                static       1963  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1941  array 1 4
+XTBLN                static       1967  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1945  array 1 4
+XTBLN                static       1971  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1949  array 1 4
+XTBLN                static       1975  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1953  array 1 4
+XTBLN                static       1979  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1957  array 1 4
+XTBLN                static       1983  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1961  array 1 4
+XTBLN                static       1987  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1965  array 1 4
+XTBLN                static       1991  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1969  array 1 4
+XTBLN                static       1995  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1973  array 1 4
+XTBLN                static       1999  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1977  array 1 4
+XTBLN                static       2003  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1981  array 1 4
+XTBLN                static       2007  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1985  array 1 4
+XTBLN                static       2011  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1989  array 1 4
+XTBLN                static       2015  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1993  array 1 4
+XTBLN                static       2019  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       1997  array 1 4
+XTBLN                static       2023  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2001  array 1 4
+XTBLN                static       2027  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2005  array 1 4
+XTBLN                static       2031  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2009  array 1 4
+XTBLN                static       2035  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2013  array 1 4
+XTBLN                static       2039  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2017  array 1 4
+XTBLN                static       2043  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2021  array 1 4
+XTBLN                static       2047  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2025  array 1 4
+XTBLN                static       2051  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2029  array 1 4
+XTBLN                static       2055  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2033  array 1 4
+XTBLN                static       2059  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2037  array 1 4
+XTBLN                static       2063  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2041  array 1 4
+XTBLN                static       2067  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2045  array 1 4
+XTBLN                static       2071  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2049  array 1 4
+XTBLN                static       2075  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2053  array 1 4
+XTBLN                static       2079  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2057  array 1 4
+XTBLN                static       2083  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2061  array 1 4
+XTBLN                static       2087  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2065  array 1 4
+XTBLN                static       2091  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2069  array 1 4
+XTBLN                static       2095  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2073  array 1 4
+XTBLN                static       2099  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2077  array 1 4
+XTBLN                static       2103  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2081  array 1 4
+XTBLN                static       2107  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2085  array 1 4
+XTBLN                static       2111  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2089  array 1 4
+XTBLN                static       2115  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2093  array 1 4
+XTBLN                static       2119  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2097  array 1 4
+XTBLN                static       2123  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2101  array 1 4
+XTBLN                static       2127  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2105  array 1 4
+XTBLN                static       2131  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2109  array 1 4
+XTBLN                static       2135  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2113  array 1 4
+XTBLN                static       2139  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2117  array 1 4
+XTBLN                static       2143  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2121  array 1 4
+XTBLN                static       2147  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2125  array 1 4
+XTBLN                static       2151  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2129  array 1 4
+XTBLN                static       2155  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2133  array 1 4
+XTBLN                static       2159  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2137  array 1 4
+XTBLN                static       2163  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2141  array 1 4
+XTBLN                static       2167  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2145  array 1 4
+XTBLN                static       2171  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2149  array 1 4
+XTBLN                static       2175  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2153  array 1 4
+XTBLN                static       2179  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2157  array 1 4
+XTBLN                static       2183  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2161  array 1 4
+XTBLN                static       2187  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2165  array 1 4
+XTBLN                static       2191  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2169  array 1 4
+XTBLN                static       2195  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2173  array 1 4
+XTBLN                static       2199  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2177  array 1 4
+XTBLN                static       2203  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2181  array 1 4
+XTBLN                static       2207  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2185  array 1 4
+XTBLN                static       2211  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2189  array 1 4
+XTBLN                static       2215  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2193  array 1 4
+XTBLN                static       2219  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2197  array 1 4
+XTBLN                static       2223  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2201  array 1 4
+XTBLN                static       2227  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2205  array 1 4
+XTBLN                static       2231  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2209  array 1 4
+XTBLN                static       2235  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2213  array 1 4
+XTBLN                static       2239  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2217  array 1 4
+XTBLN                static       2243  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2221  array 1 4
+XTBLN                static       2247  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2225  array 1 4
+XTBLN                static       2251  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2229  array 1 4
+XTBLN                static       2255  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2233  array 1 4
+XTBLN                static       2259  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2237  array 1 4
+XTBLN                static       2263  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2241  array 1 4
+XTBLN                static       2267  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2245  array 1 4
+XTBLN                static       2271  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2249  array 1 4
+XTBLN                static       2275  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2253  array 1 4
+XTBLN                static       2279  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2257  array 1 4
+XTBLN                static       2283  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2261  array 1 4
+XTBLN                static       2287  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2265  array 1 4
+XTBLN                static       2291  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2269  array 1 4
+XTBLN                static       2295  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2273  array 1 4
+XTBLN                static       2299  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2277  array 1 4
+XTBLN                static       2303  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2281  array 1 4
+XTBLN                static       2307  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2285  array 1 4
+XTBLN                static       2311  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2289  array 1 4
+XTBLN                static       2315  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2293  array 1 4
+XTBLN                static       2319  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2297  array 1 4
+XTBLN                static       2323  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2301  array 1 4
+XTBLN                static       2327  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2305  array 1 4
+XTBLN                static       2331  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2309  array 1 4
+XTBLN                static       2335  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2313  array 1 4
+XTBLN                static       2339  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2317  array 1 4
+XTBLN                static       2343  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2321  array 1 4
+XTBLN                static       2347  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2325  array 1 4
+XTBLN                static       2351  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2329  array 1 4
+XTBLN                static       2355  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2333  array 1 4
+XTBLN                static       2359  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2337  array 1 4
+XTBLN                static       2363  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2341  array 1 4
+XTBLN                static       2367  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2345  array 1 4
+XTBLN                static       2371  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2349  array 1 4
+XTBLN                static       2375  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2353  array 1 4
+XTBLN                static       2379  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2357  array 1 4
+XTBLN                static       2383  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2361  array 1 4
+XTBLN                static       2387  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2365  array 1 4
+XTBLN                static       2391  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2369  array 1 4
+XTBLN                static       2395  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2373  array 1 4
+XTBLN                static       2399  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2377  array 1 4
+XTBLN                static       2403  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2381  array 1 4
+XTBLN                static       2407  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2385  array 1 4
+XTBLN                static       2411  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2389  array 1 4
+XTBLN                static       2415  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2393  array 1 4
+XTBLN                static       2419  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2397  array 1 4
+XTBLN                static       2423  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2401  array 1 4
+XTBLN                static       2427  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2405  array 1 4
+XTBLN                static       2431  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2409  array 1 4
+XTBLN                static       2435  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2413  array 1 4
+XTBLN                static       2439  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2417  array 1 4
+XTBLN                static       2443  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2421  array 1 4
+XTBLN                static       2447  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2425  array 1 4
+XTBLN                static       2451  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2429  array 1 4
+XTBLN                static       2455  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2433  array 1 4
+XTBLN                static       2459  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2437  array 1 4
+XTBLN                static       2463  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2441  array 1 4
+XTBLN                static       2467  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2445  array 1 4
+XTBLN                static       2471  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2449  array 1 4
+XTBLN                static       2475  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2453  array 1 4
+XTBLN                static       2479  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2457  array 1 4
+XTBLN                static       2483  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2461  array 1 4
+XTBLN                static       2487  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2465  array 1 4
+XTBLN                static       2491  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2469  array 1 4
+XTBLN                static       2495  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2473  array 1 4
+XTBLN                static       2499  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2477  array 1 4
+XTBLN                static       2503  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2481  array 1 4
+XTBLN                static       2507  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2485  array 1 4
+XTBLN                static       2511  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2489  array 1 4
+XTBLN                static       2515  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2493  array 1 4
+XTBLN                static       2519  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2497  array 1 4
+XTBLN                static       2523  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2501  array 1 4
+XTBLN                static       2527  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2505  array 1 4
+XTBLN                static       2531  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2509  array 1 4
+XTBLN                static       2535  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2513  array 1 4
+XTBLN                static       2539  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2517  array 1 4
+XTBLN                static       2543  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2521  array 1 4
+XTBLN                static       2547  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2525  array 1 4
+XTBLN                static       2551  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2529  array 1 4
+XTBLN                static       2555  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-XTBLN                static       2533  array 1 4
+XTBLN                static       2559  array 1 4
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 constant     2537  array 0 94
+PTBL                 constant     2563  array 0 96
                              inxtype =  scalar (2)
                              aeltype =  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2537  array 1 3
+PTBL                 static       2563  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2540  array 1 3
+PTBL                 static       2566  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2543  array 1 3
+PTBL                 static       2569  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2546  array 1 3
+PTBL                 static       2572  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2549  array 1 3
+PTBL                 static       2575  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2552  array 1 3
+PTBL                 static       2578  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2555  array 1 3
+PTBL                 static       2581  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2558  array 1 3
+PTBL                 static       2584  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2561  array 1 3
+PTBL                 static       2587  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2564  array 1 3
+PTBL                 static       2590  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2567  array 1 3
+PTBL                 static       2593  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2570  array 1 3
+PTBL                 static       2596  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2573  array 1 3
+PTBL                 static       2599  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2576  array 1 3
+PTBL                 static       2602  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2579  array 1 3
+PTBL                 static       2605  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2582  array 1 3
+PTBL                 static       2608  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2585  array 1 3
+PTBL                 static       2611  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2588  array 1 3
+PTBL                 static       2614  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2591  array 1 3
+PTBL                 static       2617  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2594  array 1 3
+PTBL                 static       2620  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2597  array 1 3
+PTBL                 static       2623  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2600  array 1 3
+PTBL                 static       2626  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2603  array 1 3
+PTBL                 static       2629  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2606  array 1 3
+PTBL                 static       2632  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2609  array 1 3
+PTBL                 static       2635  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2612  array 1 3
+PTBL                 static       2638  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2615  array 1 3
+PTBL                 static       2641  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2618  array 1 3
+PTBL                 static       2644  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2621  array 1 3
+PTBL                 static       2647  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2624  array 1 3
+PTBL                 static       2650  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2627  array 1 3
+PTBL                 static       2653  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2630  array 1 3
+PTBL                 static       2656  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2633  array 1 3
+PTBL                 static       2659  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2636  array 1 3
+PTBL                 static       2662  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2639  array 1 3
+PTBL                 static       2665  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2642  array 1 3
+PTBL                 static       2668  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2645  array 1 3
+PTBL                 static       2671  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2648  array 1 3
+PTBL                 static       2674  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2651  array 1 3
+PTBL                 static       2677  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2654  array 1 3
+PTBL                 static       2680  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2657  array 1 3
+PTBL                 static       2683  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2660  array 1 3
+PTBL                 static       2686  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2663  array 1 3
+PTBL                 static       2689  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2666  array 1 3
+PTBL                 static       2692  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2669  array 1 3
+PTBL                 static       2695  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2672  array 1 3
+PTBL                 static       2698  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2675  array 1 3
+PTBL                 static       2701  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2678  array 1 3
+PTBL                 static       2704  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2681  array 1 3
+PTBL                 static       2707  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2684  array 1 3
+PTBL                 static       2710  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2687  array 1 3
+PTBL                 static       2713  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2690  array 1 3
+PTBL                 static       2716  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2693  array 1 3
+PTBL                 static       2719  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2696  array 1 3
+PTBL                 static       2722  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2699  array 1 3
+PTBL                 static       2725  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2702  array 1 3
+PTBL                 static       2728  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2705  array 1 3
+PTBL                 static       2731  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2708  array 1 3
+PTBL                 static       2734  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2711  array 1 3
+PTBL                 static       2737  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2714  array 1 3
+PTBL                 static       2740  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2717  array 1 3
+PTBL                 static       2743  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2720  array 1 3
+PTBL                 static       2746  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2723  array 1 3
+PTBL                 static       2749  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2726  array 1 3
+PTBL                 static       2752  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2729  array 1 3
+PTBL                 static       2755  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2732  array 1 3
+PTBL                 static       2758  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2735  array 1 3
+PTBL                 static       2761  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2738  array 1 3
+PTBL                 static       2764  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2741  array 1 3
+PTBL                 static       2767  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2744  array 1 3
+PTBL                 static       2770  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2747  array 1 3
+PTBL                 static       2773  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2750  array 1 3
+PTBL                 static       2776  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2753  array 1 3
+PTBL                 static       2779  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2756  array 1 3
+PTBL                 static       2782  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2759  array 1 3
+PTBL                 static       2785  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2762  array 1 3
+PTBL                 static       2788  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2765  array 1 3
+PTBL                 static       2791  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2768  array 1 3
+PTBL                 static       2794  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2771  array 1 3
+PTBL                 static       2797  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2774  array 1 3
+PTBL                 static       2800  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2777  array 1 3
+PTBL                 static       2803  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2780  array 1 3
+PTBL                 static       2806  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2783  array 1 3
+PTBL                 static       2809  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2786  array 1 3
+PTBL                 static       2812  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2789  array 1 3
+PTBL                 static       2815  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2792  array 1 3
+PTBL                 static       2818  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2795  array 1 3
+PTBL                 static       2821  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2798  array 1 3
+PTBL                 static       2824  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2801  array 1 3
+PTBL                 static       2827  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2804  array 1 3
+PTBL                 static       2830  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2807  array 1 3
+PTBL                 static       2833  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2810  array 1 3
+PTBL                 static       2836  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2813  array 1 3
+PTBL                 static       2839  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2816  array 1 3
+PTBL                 static       2842  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-PTBL                 static       2819  array 1 3
+PTBL                 static       2845  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               constant     2822  array 0 54
+PTBL                 static       2848  array 1 3
+                             inxtype =  integer (2)
+                             aeltype =  char
+PTBL                 static       2851  array 1 3
+                             inxtype =  integer (2)
+                             aeltype =  char
+CSPTBL               constant     2854  array 0 55
                              inxtype =  scalar (2)
                              aeltype =  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               static       2822  array 1 3
+CSPTBL               static       2854  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               static       2825  array 1 3
+CSPTBL               static       2857  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               static       2828  array 1 3
+CSPTBL               static       2860  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               static       2831  array 1 3
+CSPTBL               static       2863  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               static       2834  array 1 3
+CSPTBL               static       2866  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               static       2837  array 1 3
+CSPTBL               static       2869  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               static       2840  array 1 3
+CSPTBL               static       2872  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               static       2843  array 1 3
+CSPTBL               static       2875  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               static       2846  array 1 3
+CSPTBL               static       2878  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               static       2849  array 1 3
+CSPTBL               static       2881  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               static       2852  array 1 3
+CSPTBL               static       2884  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               static       2855  array 1 3
+CSPTBL               static       2887  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               static       2858  array 1 3
+CSPTBL               static       2890  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               static       2861  array 1 3
+CSPTBL               static       2893  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               static       2864  array 1 3
+CSPTBL               static       2896  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               static       2867  array 1 3
+CSPTBL               static       2899  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               static       2870  array 1 3
+CSPTBL               static       2902  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               static       2873  array 1 3
+CSPTBL               static       2905  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               static       2876  array 1 3
+CSPTBL               static       2908  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               static       2879  array 1 3
+CSPTBL               static       2911  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               static       2882  array 1 3
+CSPTBL               static       2914  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               static       2885  array 1 3
+CSPTBL               static       2917  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               static       2888  array 1 3
+CSPTBL               static       2920  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               static       2891  array 1 3
+CSPTBL               static       2923  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               static       2894  array 1 3
+CSPTBL               static       2926  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               static       2897  array 1 3
+CSPTBL               static       2929  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               static       2900  array 1 3
+CSPTBL               static       2932  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               static       2903  array 1 3
+CSPTBL               static       2935  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               static       2906  array 1 3
+CSPTBL               static       2938  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               static       2909  array 1 3
+CSPTBL               static       2941  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               static       2912  array 1 3
+CSPTBL               static       2944  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               static       2915  array 1 3
+CSPTBL               static       2947  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               static       2918  array 1 3
+CSPTBL               static       2950  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               static       2921  array 1 3
+CSPTBL               static       2953  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               static       2924  array 1 3
+CSPTBL               static       2956  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               static       2927  array 1 3
+CSPTBL               static       2959  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               static       2930  array 1 3
+CSPTBL               static       2962  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               static       2933  array 1 3
+CSPTBL               static       2965  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               static       2936  array 1 3
+CSPTBL               static       2968  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               static       2939  array 1 3
+CSPTBL               static       2971  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               static       2942  array 1 3
+CSPTBL               static       2974  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               static       2945  array 1 3
+CSPTBL               static       2977  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               static       2948  array 1 3
+CSPTBL               static       2980  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               static       2951  array 1 3
+CSPTBL               static       2983  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               static       2954  array 1 3
+CSPTBL               static       2986  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               static       2957  array 1 3
+CSPTBL               static       2989  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               static       2960  array 1 3
+CSPTBL               static       2992  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               static       2963  array 1 3
+CSPTBL               static       2995  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               static       2966  array 1 3
+CSPTBL               static       2998  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               static       2969  array 1 3
+CSPTBL               static       3001  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               static       2972  array 1 3
+CSPTBL               static       3004  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               static       2975  array 1 3
+CSPTBL               static       3007  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               static       2978  array 1 3
+CSPTBL               static       3010  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               static       2981  array 1 3
+CSPTBL               static       3013  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
-CSPTBL               static       2984  array 1 3
+CSPTBL               static       3016  array 1 3
+                             inxtype =  integer (2)
+                             aeltype =  char
+CSPTBL               static       3019  array 1 3
                              inxtype =  integer (2)
                              aeltype =  char
 
@@ -1623,9 +1632,9 @@ Heap Data Types of Main Program
   FLOW_TRACE              field     66  boolean
   CALL_HIGHER             field     67  boolean
   LARGE_PROC              field     68  boolean
-  CODE_SIZE               field     70  integer (2)
-  DATA_SIZE               field     72  integer (4)
-  NEXT                    field     76  pointer ->001
+  CODE_SIZE               field     72  integer (4)
+  DATA_SIZE               field     76  integer (4)
+  NEXT                    field     80  pointer ->001
                                         endstruct
 ->002                                   array 1 254
                              inxtype =  integer (2)
@@ -1727,7 +1736,7 @@ I                    auto     2    162  integer (2)
 
 
 
-Procedure ENTERLOOKUP         
+Function TO_HINT             
 ------------------------------------------------------------------------
 external = FALSE
 extlang  =  
@@ -1737,11 +1746,27 @@ level    =            1
 pfname   =            5
 cstname  = $PR#0005
 
+Parameters for TO_HINT             
+------------------------------------------------------------------------
+X                    auto     2    112  integer
+
+
+
+Procedure ENTERLOOKUP         
+------------------------------------------------------------------------
+external = FALSE
+extlang  =  
+extname  =  
+forward  = FALSE
+level    =            1
+pfname   =            6
+cstname  = $PR#0006
+
 No Parameters for ENTERLOOKUP         
 
 Variables of ENTERLOOKUP         
 ------------------------------------------------------------------------
-H                    auto     2    112  integer (2)
+H                    auto     2    112  integer
 
 
 
@@ -1752,8 +1777,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            1
-pfname   =            6
-cstname  = $PR#0006
+pfname   =            7
+cstname  = $PR#0007
 
 Parameters for FLDW                
 ------------------------------------------------------------------------
@@ -1772,8 +1797,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            1
-pfname   =            7
-cstname  = $PR#0007
+pfname   =            8
+cstname  = $PR#0008
 
 Parameters for DUMPSTK             
 ------------------------------------------------------------------------
@@ -1828,8 +1853,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            1
-pfname   =            8
-cstname  = $PR#0008
+pfname   =            9
+cstname  = $PR#0009
 
 Parameters for HEXHW               
 ------------------------------------------------------------------------
@@ -1852,8 +1877,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            1
-pfname   =            9
-cstname  = $PR#0009
+pfname   =           10
+cstname  = $PR#0010
 
 Parameters for READNXTINST         
 ------------------------------------------------------------------------
@@ -1910,8 +1935,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           10
-cstname  = $PR#0010
+pfname   =           11
+cstname  = $PR#0011
 
 Parameters for READLBL             
 ------------------------------------------------------------------------
@@ -1937,8 +1962,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           11
-cstname  = $PR#0011
+pfname   =           12
+cstname  = $PR#0012
 
 Parameters for HEXVALUE            
 ------------------------------------------------------------------------
@@ -1953,8 +1978,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           12
-cstname  = $PR#0012
+pfname   =           13
+cstname  = $PR#0013
 
 No Parameters for READSET             
 
@@ -1976,8 +2001,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           13
-cstname  = $PR#0013
+pfname   =           14
+cstname  = $PR#0014
 
 No Parameters for SKIPBLANKS          
 
@@ -1990,8 +2015,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           14
-cstname  = $PR#0014
+pfname   =           15
+cstname  = $PR#0015
 
 No Parameters for READLOADINSTRUCTIONS
 
@@ -2011,8 +2036,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            1
-pfname   =           15
-cstname  = $PR#0015
+pfname   =           16
+cstname  = $PR#0016
 
 Parameters for TXT2LBL             
 ------------------------------------------------------------------------
@@ -2036,8 +2061,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            1
-pfname   =           16
-cstname  = $PR#0016
+pfname   =           17
+cstname  = $PR#0017
 
 No Parameters for ASMNXTINST          
 
@@ -2076,8 +2101,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           17
-cstname  = $PR#0017
+pfname   =           18
+cstname  = $PR#0018
 
 Parameters for NEXTPC              
 ------------------------------------------------------------------------
@@ -2092,12 +2117,16 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           18
-cstname  = $PR#0018
+pfname   =           19
+cstname  = $PR#0019
 
 Parameters for BASE_DSPLMT         
 ------------------------------------------------------------------------
 PCOUNTER             auto     3    112  integer (2)
+
+Variables of BASE_DSPLMT         
+------------------------------------------------------------------------
+PC                   auto     3    116  integer
 
 
 
@@ -2108,8 +2137,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           19
-cstname  = $PR#0019
+pfname   =           20
+cstname  = $PR#0020
 
 Parameters for UPD_DBLTBL          
 ------------------------------------------------------------------------
@@ -2136,8 +2165,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           20
-cstname  = $PR#0020
+pfname   =           21
+cstname  = $PR#0021
 
 Parameters for UPD_HWTBL           
 ------------------------------------------------------------------------
@@ -2158,8 +2187,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           21
-cstname  = $PR#0021
+pfname   =           22
+cstname  = $PR#0022
 
 Parameters for UPD_INTTBL          
 ------------------------------------------------------------------------
@@ -2180,8 +2209,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           22
-cstname  = $PR#0022
+pfname   =           23
+cstname  = $PR#0023
 
 Parameters for UPD_SETTBL          
 ------------------------------------------------------------------------
@@ -2240,8 +2269,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           23
-cstname  = $PR#0023
+pfname   =           24
+cstname  = $PR#0024
 
 Parameters for INS_PRCTBL          
 ------------------------------------------------------------------------
@@ -2259,8 +2288,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           24
-cstname  = $PR#0024
+pfname   =           25
+cstname  = $PR#0025
 
 Parameters for UPD_PRCTBL          
 ------------------------------------------------------------------------
@@ -2282,8 +2311,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           25
-cstname  = $PR#0025
+pfname   =           26
+cstname  = $PR#0026
 
 Parameters for LBLMAP              
 ------------------------------------------------------------------------
@@ -2305,8 +2334,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           26
-cstname  = $PR#0026
+pfname   =           27
+cstname  = $PR#0027
 
 Parameters for UPD_LBLTBL          
 ------------------------------------------------------------------------
@@ -2330,8 +2359,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           27
-cstname  = $PR#0027
+pfname   =           28
+cstname  = $PR#0028
 
 Parameters for PRINT_SET           
 ------------------------------------------------------------------------
@@ -2367,8 +2396,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           28
-cstname  = $PR#0028
+pfname   =           29
+cstname  = $PR#0029
 
 Parameters for TRACE_SET           
 ------------------------------------------------------------------------
@@ -2404,8 +2433,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           29
-cstname  = $PR#0029
+pfname   =           30
+cstname  = $PR#0030
 
 Parameters for GENRR               
 ------------------------------------------------------------------------
@@ -2422,8 +2451,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           31
-cstname  = $PR#0031
+pfname   =           32
+cstname  = $PR#0032
 
 Parameters for GENRX_2             
 ------------------------------------------------------------------------
@@ -2443,8 +2472,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           32
-cstname  = $PR#0032
+pfname   =           33
+cstname  = $PR#0033
 
 Parameters for GENRX               
 ------------------------------------------------------------------------
@@ -2463,8 +2492,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           30
-cstname  = $PR#0030
+pfname   =           31
+cstname  = $PR#0031
 
 Parameters for GENRXLIT            
 ------------------------------------------------------------------------
@@ -2482,8 +2511,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           33
-cstname  = $PR#0033
+pfname   =           34
+cstname  = $PR#0034
 
 Parameters for GENRXDLIT           
 ------------------------------------------------------------------------
@@ -2504,8 +2533,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           34
-cstname  = $PR#0034
+pfname   =           35
+cstname  = $PR#0035
 
 Parameters for GENRS               
 ------------------------------------------------------------------------
@@ -2524,8 +2553,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           35
-cstname  = $PR#0035
+pfname   =           36
+cstname  = $PR#0036
 
 Parameters for GENRSLIT            
 ------------------------------------------------------------------------
@@ -2558,8 +2587,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           36
-cstname  = $PR#0036
+pfname   =           37
+cstname  = $PR#0037
 
 Parameters for GENSS               
 ------------------------------------------------------------------------
@@ -2579,8 +2608,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           37
-cstname  = $PR#0037
+pfname   =           38
+cstname  = $PR#0038
 
 Parameters for GENSI               
 ------------------------------------------------------------------------
@@ -2598,8 +2627,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           38
-cstname  = $PR#0038
+pfname   =           39
+cstname  = $PR#0039
 
 Parameters for GENSSLIT            
 ------------------------------------------------------------------------
@@ -2628,8 +2657,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           39
-cstname  = $PR#0039
+pfname   =           40
+cstname  = $PR#0040
 
 Parameters for GENAL2              
 ------------------------------------------------------------------------
@@ -2655,8 +2684,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           40
-cstname  = $PR#0040
+pfname   =           41
+cstname  = $PR#0041
 
 Parameters for GENRXLAB            
 ------------------------------------------------------------------------
@@ -2680,8 +2709,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           41
-cstname  = $PR#0041
+pfname   =           42
+cstname  = $PR#0042
 
 Parameters for GENRELRX            
 ------------------------------------------------------------------------
@@ -2702,8 +2731,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           42
-cstname  = $PR#0042
+pfname   =           43
+cstname  = $PR#0043
 
 Parameters for CONS_REGS           
 ------------------------------------------------------------------------
@@ -2719,8 +2748,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           43
-cstname  = $PR#0043
+pfname   =           44
+cstname  = $PR#0044
 
 Parameters for BRANCH_CHAIN        
 ------------------------------------------------------------------------
@@ -2763,8 +2792,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           44
-cstname  = $PR#0044
+pfname   =           45
+cstname  = $PR#0045
 
 No Parameters for DUMP_LITERALS       
 
@@ -2783,8 +2812,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           45
-cstname  = $PR#0045
+pfname   =           46
+cstname  = $PR#0046
 
 No Parameters for FINDRG              
 
@@ -2801,8 +2830,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           46
-cstname  = $PR#0046
+pfname   =           47
+cstname  = $PR#0047
 
 No Parameters for FINDRP              
 
@@ -2819,8 +2848,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           47
-cstname  = $PR#0047
+pfname   =           48
+cstname  = $PR#0048
 
 No Parameters for FINDFP              
 
@@ -2837,8 +2866,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           48
-cstname  = $PR#0048
+pfname   =           49
+cstname  = $PR#0049
 
 Parameters for FREEREG             
 ------------------------------------------------------------------------
@@ -2892,8 +2921,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           49
-cstname  = $PR#0049
+pfname   =           50
+cstname  = $PR#0050
 
 Parameters for ALIGN               
 ------------------------------------------------------------------------
@@ -2913,8 +2942,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           50
-cstname  = $PR#0050
+pfname   =           51
+cstname  = $PR#0051
 
 Parameters for POWER2              
 ------------------------------------------------------------------------
@@ -2933,8 +2962,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           51
-cstname  = $PR#0051
+pfname   =           52
+cstname  = $PR#0052
 
 Parameters for BASE                
 ------------------------------------------------------------------------
@@ -2957,8 +2986,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           52
-cstname  = $PR#0052
+pfname   =           53
+cstname  = $PR#0053
 
 Parameters for CHECKDISP           
 ------------------------------------------------------------------------
@@ -2975,8 +3004,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           54
-cstname  = $PR#0054
+pfname   =           55
+cstname  = $PR#0055
 
 Parameters for LOAD                
 ------------------------------------------------------------------------
@@ -3045,8 +3074,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            3
-pfname   =           55
-cstname  = $PR#0055
+pfname   =           56
+cstname  = $PR#0056
 
 No Parameters for FINDMDRG            
 
@@ -3059,8 +3088,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           53
-cstname  = $PR#0053
+pfname   =           54
+cstname  = $PR#0054
 
 Parameters for GETADR              
 ------------------------------------------------------------------------
@@ -3121,8 +3150,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           56
-cstname  = $PR#0056
+pfname   =           57
+cstname  = $PR#0057
 
 Parameters for GETOP_SIMPLE        
 ------------------------------------------------------------------------
@@ -3181,8 +3210,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           57
-cstname  = $PR#0057
+pfname   =           58
+cstname  = $PR#0058
 
 Parameters for GEN_MOVECHAR        
 ------------------------------------------------------------------------
@@ -3244,8 +3273,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           58
-cstname  = $PR#0058
+pfname   =           59
+cstname  = $PR#0059
 
 Parameters for GETOPERAND          
 ------------------------------------------------------------------------
@@ -3302,8 +3331,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           59
-cstname  = $PR#0059
+pfname   =           60
+cstname  = $PR#0060
 
 Parameters for GETQB               
 ------------------------------------------------------------------------
@@ -3364,8 +3393,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           60
-cstname  = $PR#0060
+pfname   =           61
+cstname  = $PR#0061
 
 Parameters for STORE               
 ------------------------------------------------------------------------
@@ -3386,8 +3415,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           61
-cstname  = $PR#0061
+pfname   =           62
+cstname  = $PR#0062
 
 No Parameters for CALLSUB             
 
@@ -3410,8 +3439,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           62
-cstname  = $PR#0062
+pfname   =           63
+cstname  = $PR#0063
 
 Parameters for LOADFCBADDRESS      
 ------------------------------------------------------------------------
@@ -3430,8 +3459,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           63
-cstname  = $PR#0063
+pfname   =           64
+cstname  = $PR#0064
 
 No Parameters for GOTOCSP             
 
@@ -3444,8 +3473,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           64
-cstname  = $PR#0064
+pfname   =           65
+cstname  = $PR#0065
 
 No Parameters for CALLSTNDRD          
 
@@ -3467,8 +3496,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            3
-pfname   =           65
-cstname  = $PR#0065
+pfname   =           66
+cstname  = $PR#0066
 
 Parameters for FILESETUP           
 ------------------------------------------------------------------------
@@ -3493,8 +3522,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           66
-cstname  = $PR#0066
+pfname   =           67
+cstname  = $PR#0067
 
 No Parameters for CHKOPERATION        
 
@@ -3512,8 +3541,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           67
-cstname  = $PR#0067
+pfname   =           68
+cstname  = $PR#0068
 
 Parameters for FORCESTK            
 ------------------------------------------------------------------------
@@ -3576,8 +3605,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           68
-cstname  = $PR#0068
+pfname   =           69
+cstname  = $PR#0069
 
 No Parameters for BSETOPS             
 
@@ -3676,8 +3705,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            3
-pfname   =           69
-cstname  = $PR#0069
+pfname   =           70
+cstname  = $PR#0070
 
 No Parameters for MINCONSTSET         
 
@@ -3695,8 +3724,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            3
-pfname   =           70
-cstname  = $PR#0070
+pfname   =           71
+cstname  = $PR#0071
 
 Parameters for COMPACT             
 ------------------------------------------------------------------------
@@ -3746,8 +3775,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            3
-pfname   =           71
-cstname  = $PR#0071
+pfname   =           72
+cstname  = $PR#0072
 
 No Parameters for INN_OP              
 
@@ -3768,8 +3797,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            3
-pfname   =           72
-cstname  = $PR#0072
+pfname   =           73
+cstname  = $PR#0073
 
 No Parameters for ASE_OP              
 
@@ -3782,8 +3811,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           73
-cstname  = $PR#0073
+pfname   =           74
+cstname  = $PR#0074
 
 No Parameters for STRINGOPS           
 
@@ -3796,8 +3825,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           74
-cstname  = $PR#0074
+pfname   =           75
+cstname  = $PR#0075
 
 No Parameters for CSETOPS             
 
@@ -3885,8 +3914,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            3
-pfname   =           75
-cstname  = $PR#0075
+pfname   =           76
+cstname  = $PR#0076
 
 Parameters for FORCESET            
 ------------------------------------------------------------------------
@@ -3941,8 +3970,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           76
-cstname  = $PR#0076
+pfname   =           77
+cstname  = $PR#0077
 
 Parameters for SETCOMPARE          
 ------------------------------------------------------------------------
@@ -4036,8 +4065,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            3
-pfname   =           77
-cstname  = $PR#0077
+pfname   =           78
+cstname  = $PR#0078
 
 Parameters for TESTNULL            
 ------------------------------------------------------------------------
@@ -4094,8 +4123,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            3
-pfname   =           78
-cstname  = $PR#0078
+pfname   =           79
+cstname  = $PR#0079
 
 No Parameters for GENBRANCH           
 
@@ -4108,8 +4137,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            3
-pfname   =           79
-cstname  = $PR#0079
+pfname   =           80
+cstname  = $PR#0080
 
 Parameters for SETCONSTBOOL        
 ------------------------------------------------------------------------
@@ -4124,8 +4153,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           80
-cstname  = $PR#0080
+pfname   =           81
+cstname  = $PR#0081
 
 No Parameters for COPERATION          
 
@@ -4147,8 +4176,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            3
-pfname   =           81
-cstname  = $PR#0081
+pfname   =           82
+cstname  = $PR#0082
 
 Parameters for MKLBL               
 ------------------------------------------------------------------------
@@ -4174,8 +4203,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            3
-pfname   =           82
-cstname  = $PR#0082
+pfname   =           83
+cstname  = $PR#0083
 
 Parameters for ADDLNP              
 ------------------------------------------------------------------------
@@ -4190,8 +4219,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            3
-pfname   =           83
-cstname  = $PR#0083
+pfname   =           84
+cstname  = $PR#0084
 
 Parameters for UPDLNTBL            
 ------------------------------------------------------------------------
@@ -4206,8 +4235,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            3
-pfname   =           84
-cstname  = $PR#0084
+pfname   =           85
+cstname  = $PR#0085
 
 No Parameters for INIT_CSECT          
 
@@ -4231,8 +4260,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            3
-pfname   =           85
-cstname  = $PR#0085
+pfname   =           86
+cstname  = $PR#0086
 
 Parameters for GEN_CSECT           
 ------------------------------------------------------------------------
@@ -4305,8 +4334,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            4
-pfname   =           86
-cstname  = $PR#0086
+pfname   =           87
+cstname  = $PR#0087
 
 Parameters for PRINT_CSECT         
 ------------------------------------------------------------------------
@@ -4337,8 +4366,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            3
-pfname   =           87
-cstname  = $PR#0087
+pfname   =           88
+cstname  = $PR#0088
 
 Parameters for DUMPCONSTBLK        
 ------------------------------------------------------------------------
@@ -4361,8 +4390,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            3
-pfname   =           88
-cstname  = $PR#0088
+pfname   =           89
+cstname  = $PR#0089
 
 No Parameters for ENT_RET             
 
@@ -4381,10 +4410,24 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            3
-pfname   =           89
-cstname  = $PR#0089
+pfname   =           90
+cstname  = $PR#0090
 
 No Parameters for DEF_OPERATION       
+
+
+
+Procedure LAB_OPERATION       
+------------------------------------------------------------------------
+external = FALSE
+extlang  =  
+extname  =  
+forward  = FALSE
+level    =            3
+pfname   =           91
+cstname  = $PR#0091
+
+No Parameters for LAB_OPERATION       
 
 
 
@@ -4395,8 +4438,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           90
-cstname  = $PR#0090
+pfname   =           92
+cstname  = $PR#0092
 
 No Parameters for UOPERATION          
 
@@ -4409,8 +4452,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           91
-cstname  = $PR#0091
+pfname   =           93
+cstname  = $PR#0093
 
 Parameters for PACK_UNPACK         
 ------------------------------------------------------------------------
@@ -4494,8 +4537,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           92
-cstname  = $PR#0092
+pfname   =           94
+cstname  = $PR#0094
 
 Parameters for MFIOPERATION        
 ------------------------------------------------------------------------
@@ -4588,8 +4631,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           93
-cstname  = $PR#0093
+pfname   =           95
+cstname  = $PR#0095
 
 Parameters for MZEOPERATION        
 ------------------------------------------------------------------------
@@ -4644,8 +4687,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           94
-cstname  = $PR#0094
+pfname   =           96
+cstname  = $PR#0096
 
 Parameters for MCPOPERATION        
 ------------------------------------------------------------------------
@@ -4764,8 +4807,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           95
-cstname  = $PR#0095
+pfname   =           97
+cstname  = $PR#0097
 
 Parameters for MSEOPERATION        
 ------------------------------------------------------------------------
@@ -4937,8 +4980,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           96
-cstname  = $PR#0096
+pfname   =           98
+cstname  = $PR#0098
 
 Parameters for SOPERATION          
 ------------------------------------------------------------------------
@@ -5028,8 +5071,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            2
-pfname   =           97
-cstname  = $PR#0097
+pfname   =           99
+cstname  = $PR#0099
 
 No Parameters for BOPERATION          
 
@@ -5148,8 +5191,8 @@ extlang  =
 extname  =  
 forward  = FALSE
 level    =            1
-pfname   =           98
-cstname  = $PR#0098
+pfname   =          100
+cstname  = $PR#0100
 
 No Parameters for SETUP               
 

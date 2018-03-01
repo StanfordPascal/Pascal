@@ -949,7 +949,7 @@ const VERSION = '2018.03' ;
       (* LOCATION FOR 'OSPARM' PTR.             *)
       (******************************************)
 
-      FIRSTGVAR = 352 ;
+      FIRSTGVAR = 400 ;
 
       (******************************************)
       (* FIRST USER DEFINED GLOBAL VARIABLE     *)

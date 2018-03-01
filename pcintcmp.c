@@ -1921,7 +1921,7 @@ void translate2 (global_store *gs)
                            "FTN lib function assumed\n",
                            err_opcode, plabel);
                }
-               else
+               else if (memcmp (plabel, "*PFPARM*", 8) != 0)
                {
                   fprintf (stderr, "%s: section label %s not found\n",
                            err_opcode, plabel);

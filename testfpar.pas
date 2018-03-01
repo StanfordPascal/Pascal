@@ -55,7 +55,7 @@ procedure F3 ( X1 : REAL ; X2 : REAL ; function F ( X : REAL ) : REAL )
      while X <= X2 do
        begin
          WRITELN ( 'funktion f: ' , X : 10 : 2 , F ( X ) : 15 : 7 ) ;
-         X := X + 0.1 ;
+         X := ROUNDX ( X + 0.1 , - 1 ) ;
        end (* while *)
    end (* F3 *) ;
 

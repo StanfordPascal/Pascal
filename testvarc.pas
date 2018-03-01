@@ -1,9 +1,10 @@
 program TESTVARC ( OUTPUT ) ;
 
 //**********************************************************************
-// Testprogramm fuer Strings bzw. VARCHARs                              
-//                                                                      
-// Oppolzer - 02.2018                                                   
+// Testprogramm fuer Strings bzw. VARCHARs
+//
+// Oppolzer - 02.2018
+//$A+
 //**********************************************************************
 
 
@@ -216,7 +217,7 @@ procedure TESTSTR ( X : STRING ( 20 ) ; var Y : STRING ; const Z :
      WRITELN ( 'x [4]         = ' , X [ 4 ] ) ;
 
      //************************************************************
-     // y genauer anschauen                                        
+     // y genauer anschauen
      //************************************************************
 
      LF := ADDR ( Y ) ;
@@ -231,7 +232,7 @@ procedure TESTSTR ( X : STRING ( 20 ) ; var Y : STRING ; const Z :
      Y [ 5 ] := 'S' ;
 
      //************************************************************
-     // z genauer anschauen                                        
+     // z genauer anschauen
      //************************************************************
 
      LF := ADDR ( Z ) ;
@@ -244,8 +245,8 @@ procedure TESTSTR ( X : STRING ( 20 ) ; var Y : STRING ; const Z :
      WRITELN ( 'z [4]         = ' , Z [ 4 ] ) ;
 
      //************************************************************
-     // Z := 'Oppolzer' ;                                          
-     // Z [ 5 ] := 'S' ;                                           
+     // Z := 'Oppolzer' ;
+     // Z [ 5 ] := 'S' ;
      //************************************************************
 
    end (* TESTSTR *) ;
@@ -276,7 +277,7 @@ function CHECKF : STRING ;
 function TESTCONST ( const S : STRING ) : STRING ;
 
 //**********************************************************************
-// checkout problem with const strings                                  
+// checkout problem with const strings
 //**********************************************************************
 
 
@@ -310,11 +311,11 @@ begin (* HAUPTPROGRAMM *)
       WRITELN ( '<' , VC20 , '>' ) ;
 
   //******************************************************************
-  // ist nicht zulaessig, muss Konstante sein oder Funktion STR       
+  // ist nicht zulaessig, muss Konstante sein oder Funktion STR
   //******************************************************************
-  // VC20 := C20 ;  /* sollte Fehler sein */                          
+  // VC20 := C20 ;  /* sollte Fehler sein */
   //******************************************************************
-  // so korrekt                                                       
+  // so korrekt
   //******************************************************************
 
       VC20 := STR ( C20 ) ;
@@ -322,7 +323,7 @@ begin (* HAUPTPROGRAMM *)
       WRITELN ( '<' , VC20 , '>' ) ;
 
   //******************************************************************
-  // muss erlaubt sein, mit Blanks auffuellen wie gehabt ...          
+  // muss erlaubt sein, mit Blanks auffuellen wie gehabt ...
   //******************************************************************
 
       VC20 := 'Bernd' ;
@@ -334,7 +335,7 @@ begin (* HAUPTPROGRAMM *)
       WRITELN ( 'C20 nach Zuweisung String Expression .: ' , C20 ) ;
 
   //******************************************************************
-  // Verkettung usw.                                                  
+  // Verkettung usw.
   //******************************************************************
 
       VC200 := VC20 || VC20 ;
@@ -372,7 +373,7 @@ begin (* HAUPTPROGRAMM *)
       WRITELN ( '<' , VC200 , '>' ) ;
 
   //******************************************************************
-  // Zuweisungen einfach oder Expression                              
+  // Zuweisungen einfach oder Expression
   //******************************************************************
 
       VC20 := 'Test-String' ;
@@ -387,7 +388,7 @@ begin (* HAUPTPROGRAMM *)
       VC20 := 'Bernd' ;
 
   //******************************************************************
-  // Vergleiche von Strings                                           
+  // Vergleiche von Strings
   //******************************************************************
 
       X := VC20 = 'Bernd' ;
@@ -432,7 +433,7 @@ begin (* HAUPTPROGRAMM *)
         WRITELN ( 'success !!' ) ;
 
   //******************************************************************
-  // verkettung direkt in Writeln ...                                 
+  // verkettung direkt in Writeln ...
   //******************************************************************
 
       VC200 := VC20 || VC20 ;
@@ -444,7 +445,7 @@ begin (* HAUPTPROGRAMM *)
       WRITELN ( '<' , VC20 || ' ' || C20A , '>' ) ;
 
   //******************************************************************
-  // tests mit prozeduren, call by value und by reference             
+  // tests mit prozeduren, call by value und by reference
   //******************************************************************
 
       WRITELN ( 'Aufruf STRPROC' ) ;
@@ -456,7 +457,7 @@ begin (* HAUPTPROGRAMM *)
       WRITELN ( '<' , P2 , '>' ) ;
 
   //******************************************************************
-  // noch ein Test, unpassende var-Parameter                          
+  // noch ein Test, unpassende var-Parameter
   //******************************************************************
 
       WRITELN ( 'Aufruf STRPROC' ) ;
@@ -468,7 +469,7 @@ begin (* HAUPTPROGRAMM *)
       WRITELN ( '<' , P2 , '>' ) ;
 
   //******************************************************************
-  // length und maxlength ausprobieren                                
+  // length und maxlength ausprobieren
   //******************************************************************
 
       WRITE ( 'maxlength von einfachem char .........: ' ) ;
@@ -497,7 +498,7 @@ begin (* HAUPTPROGRAMM *)
       WRITELN ( LENGTH ( VC20 || ' ' || VC20 ) ) ;
 
   //******************************************************************
-  // Funktion mit string ergebnis ausprobieren                        
+  // Funktion mit string ergebnis ausprobieren
   //******************************************************************
 
       P1 := 'Oppolzer' ;
@@ -517,7 +518,7 @@ begin (* HAUPTPROGRAMM *)
       WRITELN ( '<' , STRFUNC ( 'Bernd ' , ' Oppolzer' ) , '>' ) ;
 
   //******************************************************************
-  // test Funktion mit const String parametern                        
+  // test Funktion mit const String parametern
   //******************************************************************
 
       P1 := 'Oppolzer' ;
@@ -539,7 +540,7 @@ begin (* HAUPTPROGRAMM *)
     end (* then *) ;
 
   //******************************************************************
-  // test SUBSTR1 - einfache Variante                                 
+  // test SUBSTR1 - einfache Variante
   //******************************************************************
 
   P1 := 'Oppolzer' ;
@@ -565,11 +566,11 @@ begin (* HAUPTPROGRAMM *)
   WRITELN ( '<' , P2 , '>' ) ;
 
   //******************************************************************
-  // ... geht nur in Funktion mit String Result !!                    
-  // WRITE ( 'Testausgabe STRRESULT ................: ' ) ;           
-  // WRITELN ( STRRESULT ) ;                                          
-  // WRITE ( 'Testausgabe STRRESULTP ...............: ' ) ;           
-  // WRITELN ( STRRESULTP ) ;                                         
+  // ... geht nur in Funktion mit String Result !!
+  // WRITE ( 'Testausgabe STRRESULT ................: ' ) ;
+  // WRITELN ( STRRESULT ) ;
+  // WRITE ( 'Testausgabe STRRESULTP ...............: ' ) ;
+  // WRITELN ( STRRESULTP ) ;
   //******************************************************************
 
   VC2000 := CHECKF ;
@@ -579,7 +580,7 @@ begin (* HAUPTPROGRAMM *)
   WRITELN ( REPEATSTR ( 'Bernd ' , 5 ) ) ;
 
   //******************************************************************
-  // test SUBSTR2 - korrekte Variante mit STRRESULTP usw.             
+  // test SUBSTR2 - korrekte Variante mit STRRESULTP usw.
   //******************************************************************
 
   P1 := 'Oppolzer' ;
@@ -594,7 +595,7 @@ begin (* HAUPTPROGRAMM *)
   WRITELN ( '<' , P2 , '>' ) ;
 
   //******************************************************************
-  // test SUBSTR                                                      
+  // test SUBSTR
   //******************************************************************
 
   P1 := 'Oppolzer' ;
@@ -611,7 +612,7 @@ begin (* HAUPTPROGRAMM *)
   WRITELN ( '<' , P2 , '>' ) ;
 
   //******************************************************************
-  // test DELETE                                                      
+  // test DELETE
   //******************************************************************
 
   P1 := 'Oppolzer' ;
@@ -628,7 +629,7 @@ begin (* HAUPTPROGRAMM *)
   WRITELN ( '<' , P2 , '>' ) ;
 
   //******************************************************************
-  // test RTRIM und LTRIM, TRIM und COMPRESS                          
+  // test RTRIM und LTRIM, TRIM und COMPRESS
   //******************************************************************
 
   P1 := '  Bernd Oppolzer    ' ;
@@ -663,7 +664,7 @@ begin (* HAUPTPROGRAMM *)
   WRITELN ( '<' , TRIM ( '    ' ) , '>' ) ;
 
   //******************************************************************
-  // XP := RESULTP ;  ... not allowed here                            
+  // XP := RESULTP ;  ... not allowed here
   //******************************************************************
 
   P1 := '  Bernd Oppolzer    ' ;
@@ -678,7 +679,7 @@ begin (* HAUPTPROGRAMM *)
   WRITELN ( '<' , COMPRESS ( '    ' ) , '>' ) ;
 
   //******************************************************************
-  // test INDEX                                                       
+  // test INDEX
   //******************************************************************
 
   P1 := '  Bernd Oppolzer    ' ;
@@ -705,7 +706,7 @@ begin (* HAUPTPROGRAMM *)
   WRITELN ( INDEX ( 'Oppolzer' , 'zer' ) : 5 ) ;
 
   //******************************************************************
-  // test VERIFY                                                      
+  // test VERIFY
   //******************************************************************
 
   P1 := '  Bernd Oppolzer    ' ;
@@ -730,7 +731,7 @@ begin (* HAUPTPROGRAMM *)
   WRITELN ( I : 5 ) ;
 
   //******************************************************************
-  // test TRANSLATE                                                   
+  // test TRANSLATE
   //******************************************************************
 
   if TRUE then
@@ -776,7 +777,7 @@ begin (* HAUPTPROGRAMM *)
   WRITELN ( '<' , P1 , '>' ) ;
 
   //******************************************************************
-  // Ende aller Tests                                                 
+  // Ende aller Tests
   //******************************************************************
 
 end (* HAUPTPROGRAMM *) .

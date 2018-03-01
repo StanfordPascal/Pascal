@@ -282,7 +282,7 @@ typedef struct cup_sect
    int oldstaticdisp;             // save display elem. of same level
    int newdisp;                   // new displacement of CUPS
    int is_procparm;               // 1 if called proc/func is parm
-   int displayoffset;             // offset of saved display vector
+   int displayaddr;               // addr of saved display vector
    int returnaddr;                // return address
    int calladdr;                  // call address
 }
@@ -375,7 +375,6 @@ typedef struct
    int ip;                        /* Instruktion-Pointer            */
    int sp;                        /* Stack-Pointer                  */
    int hp;                        /* Heap-Pointer                   */
-   // int display [16];           /* Display Vector                 */
    int *display;                  /* Display Vector                 */
                                   /* - points to store (offs 80)    */
                                   /* - must be this way due to      */

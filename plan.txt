@@ -19,7 +19,7 @@
 * DECIMAL (n,m) als Funktionsergebnis - siehe TESTDEC
 * Konstanten mit digitsof und precisionof Attributen - siehe TESTDEC
 
-- Logik fr VARCHARs implementieren
+* Logik fr VARCHARs implementieren
 * a) VSTs haben teilweise falsche Parameter
 * b) Syntaxfehler rausmachen
 * c) VST mit 0 fr conformant strings
@@ -35,8 +35,14 @@
 * m) Compiler zun„chst mal in dieser Form nach Mainframe
 * n) einige Freigaben fr Strings fehlen noch ...
 * o) CONST-Parameter (zumindest fr Strings)
-  p) String-Funktionen lt. Pascal/VS
+* p) String-Funktionen lt. Pascal/VS
   q) PASCAL2, d.h. Code-Generierung fr Mainframe
+
+- Umbau PASMONN, andere Offsets / als Folge davon
+- andere Initialisierung bei PASMAIN
+- Variablen starten sp„ter (400 statt 352) Compiler „ndern
+- FL1 bis FL4 an anderen Offsets
+- weicher šbergang !!
 
 - weitere Doku auf Homepage
 - Fehler bei Funktionsaufruf mit CHAR auf VM (??)

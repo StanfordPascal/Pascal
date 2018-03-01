@@ -3315,7 +3315,6 @@ static void int1 (global_store *gs)
    int res;
    int addr;
    int addr1;
-   int addr2;
    int disp;
    int entry_point;
    int return_addr;
@@ -3335,6 +3334,7 @@ static void int1 (global_store *gs)
    int offs;
    int kuerzer;
    int copy_string;
+   int addr_displaysave;
 
    char setbuffer [SETLENMAX];
 
@@ -3716,7 +3716,7 @@ static void int1 (global_store *gs)
             // must be saved and replaced by that passed
             // together with the procedure/function entry
             //*************************************************
-            // addr1 and level is the address of a
+            // mst_addr1 and mst_level is the address of a
             // 40 byte area containing the entry
             // point of the function/procedure and
             // the 9 element display vector at the
@@ -3725,36 +3725,36 @@ static void int1 (global_store *gs)
             // display vector at func/proc call.
             // The actual display vector can be
             // saved and restored to a 40 byte area
-            // which is defined by addr2 ... at the
+            // which is defined by mst_addr2 ... at the
             // current level. All this has to be
             // carried out at CUP time ... if the
             // procedure to be called has the name
             // *PFPARM*
             //*************************************************
 
-            gs -> mst_addr1 = pcode -> p / 10;
-            gs -> mst_level = pcode -> p % 10;
-            gs -> mst_addr2 = pcode -> q;
-
             disp = gs -> display [gs -> mst_level];
             addr = disp + gs -> mst_addr1;
             disp = gs -> display [gs -> level];
-            addr2 = disp + gs -> mst_addr2;
+            addr_displaysave = disp + gs -> mst_addr2;
 
+            //*************************************************
             // save actual display vector
+            //*************************************************
 
             charp = ADDRSTOR (80);
-            charp2 = ADDRSTOR (addr2);
+            charp2 = ADDRSTOR (addr_displaysave);
             memcpy (charp2, charp, 40);
 
+            //*************************************************
             // set new display vector and entry point
             // from parameter
+            //*************************************************
 
             intp = ADDRSTOR (addr);
             entry_point = *intp;
 
             charp2 = (char *) intp;
-            memcpy (charp + 4, charp + 4, 36);
+            memcpy (charp + 4, charp2 + 4, 36);
          }
          else
          {
@@ -3796,13 +3796,14 @@ static void int1 (global_store *gs)
                runtime_error (gs, EXTLANGNSUP, extlang);
             }
 
-            /************************************************/
-            /*   special CUP call                           */
-            /*   to be implemented by interpreter           */
-            /************************************************/
 
             if (pcode -> q < 0)
             {
+               //*************************************************
+               // special CUP call
+               // to be implemented by interpreter
+               //*************************************************
+
                errmsg = cup_special (gs, pcode);
 
                if (errmsg != NULL)
@@ -3814,6 +3815,7 @@ static void int1 (global_store *gs)
             }
 
             entry_point = pcode -> q;
+            addr_displaysave = 0;
          }
 
 
@@ -3840,7 +3842,7 @@ static void int1 (global_store *gs)
          pcup -> backchain = gs -> pcups;
          pcup -> level_caller = gs -> level;
          pcup -> is_procparm = gs -> mst_pfparm;
-         pcup -> displayoffset = gs -> mst_addr2;
+         pcup -> displayaddr = addr_displaysave;
 
          /************************************************/
          /*   pruefen auf Stack/Heap Collision           */
@@ -3869,11 +3871,8 @@ static void int1 (global_store *gs)
          /*   newdisp = position of new cups record      */
          /************************************************/
 
-         pcup -> level_called = pcode_ent -> p;
          pcup -> olddisp = gs -> pcups;
-         pcup -> oldstaticdisp = gs -> display [pcup -> level_called];
          pcup -> newdisp = newcups;
-
          gs -> pcups = newcups;
 
          /************************************************/
@@ -3882,33 +3881,6 @@ static void int1 (global_store *gs)
 
          pcup -> calladdr = entry_point;
          pcup -> returnaddr = gs -> ip + 1;
-
-         /************************************************/
-         /*   set new display value                      */
-         /************************************************/
-
-         gs -> level = pcup -> level_called;
-         gs -> display [gs -> level] = pcup -> newdisp;
-
-         /************************************************/
-         /*   trace output                               */
-         /************************************************/
-
-#if 0
-
-         fprintf (stderr, "CUP: ------------------------"
-                          "---------------------------\n");
-         fprintf (stderr, "CUP: newcups = %d\n", newcups);
-         fprintf (stderr, "CUP: newlevel = %d\n", gs -> level);
-
-         for (i = 1; i <= gs -> level; i ++)
-            fprintf (stderr, "CUP: Level = %d Display = %d\n",
-                     i, gs -> display [i]);
-
-         fprintf (stderr, "CUP: Backchain = %d\n",
-                  pcup -> backchain);
-
-#endif
 
          /************************************************/
          /*   branch to procedure entry                  */
@@ -4032,17 +4004,55 @@ static void int1 (global_store *gs)
 
          /**********************************************************/
          /*   was muss passieren?                                  */
-         /*   beim Rufer wird angegeben, wo im eigenen Bereich     */
-         /*   der Bereich des neuen Blocks beginnen soll (x),      */
-         /*   diese Zahl steht bei CUP.                            */
-         /*   Wir koennen ja den SP entsprechen setzen bei CUP.    */
-         /*   Demnach kann man auch das neue DISPLAY davon         */
-         /*   ableiten; allerdings muss sichergestellt sein,       */
-         /*   dass der alte DISPLAY-Vektor bei Rueckkehr wieder    */
-         /*   hergestellt werden kann.                             */
+         /*   erst hier kann level_called und display neu          */
+         /*   gesetzt werden (altes display des entsprechenden     */
+         /*   statischen levels sichern). Grund dafuer:            */
+         /*   das bei CUP angegebene statische Level fuehrt zu     */
+         /*   nichts, jedenfalls nicht bei Prozedur-Parametern;    */
+         /*   da ist das statische Level der gerufenen Prozedur    */
+         /*   leider nichtssagen (stellt sich erst beim            */
+         /*   Aufruf der aktuellen Prozedur heraus).               */
          /**********************************************************/
 
-         gs -> level = pcode -> p;
+         if (gs -> pcups > 0)
+         {
+            pcup = ADDRSTOR (gs -> pcups);
+
+            pcup -> level_called = pcode -> p;
+            pcup -> oldstaticdisp = gs -> display [pcup -> level_called];
+            gs -> level = pcup -> level_called;
+            gs -> display [gs -> level] = pcup -> newdisp;
+         }
+         else
+         {
+            gs -> level = 1;
+            gs -> display [gs -> level] = 0;
+         }
+
+         /************************************************/
+         /*   trace output                               */
+         /************************************************/
+
+#if 0
+
+         if (gs -> level > 1 && pcup -> is_procparm)
+         {
+            int i;
+
+            fprintf (stderr, "ENT: ------------------------"
+                             "---------------------------\n");
+            fprintf (stderr, "ENT: newcups = %d\n", gs -> pcups);
+            fprintf (stderr, "ENT: newlevel = %d\n", gs -> level);
+
+            for (i = 1; i <= gs -> level; i ++)
+               fprintf (stderr, "ENT: Level = %d Display = %d\n",
+                        i, gs -> display [i]);
+
+            fprintf (stderr, "ENT: Backchain = %d\n",
+                     pcup -> backchain);
+         }
+
+#endif
 
          break;
 
@@ -5680,17 +5690,21 @@ static void int1 (global_store *gs)
 
          if (pcode -> q != 0)
          {
-            printf ("MST: pcode -> p = %d\n", pcode -> p);
-            printf ("MST: pcode -> q = %d\n", pcode -> q);
-
             gs -> mst_pfparm = 1;
             gs -> mst_addr1 = pcode -> p / 10;
             gs -> mst_level = pcode -> p % 10;
             gs -> mst_addr2 = pcode -> q;
 
+#if 0
+
+            printf ("MST: pcode -> p = %d\n", pcode -> p);
+            printf ("MST: pcode -> q = %d\n", pcode -> q);
             printf ("MST: addr1      = %d\n", gs -> mst_addr1);
             printf ("MST: level      = %d\n", gs -> mst_level);
             printf ("MST: addr2      = %d\n", gs -> mst_addr2);
+
+#endif
+
          }
          else
          {
@@ -6098,15 +6112,18 @@ static void int1 (global_store *gs)
 
 #if 0
 
-         fprintf (stderr, "RET: ------------------------"
-                          "---------------------------\n");
+         if (pcup -> is_procparm)
+         {
+            fprintf (stderr, "RET: ------------------------"
+                             "---------------------------\n");
 
-         fprintf (stderr, "RET: gs -> pcups = %d\n", gs -> pcups);
-         fprintf (stderr, "RET: gs -> level = %d\n", gs -> level);
-         fprintf (stderr, "RET: level_caller = %d\n",
-                  pcup -> level_caller);
-         fprintf (stderr, "RET: pcup -> backchain = %d\n",
-                  pcup -> backchain);
+            fprintf (stderr, "RET: gs -> pcups = %d\n", gs -> pcups);
+            fprintf (stderr, "RET: gs -> level = %d\n", gs -> level);
+            fprintf (stderr, "RET: level_caller = %d\n",
+                     pcup -> level_caller);
+            fprintf (stderr, "RET: pcup -> backchain = %d\n",
+                     pcup -> backchain);
+         }
 
 #endif
 
@@ -6124,13 +6141,12 @@ static void int1 (global_store *gs)
 
          if (pcup -> is_procparm)
          {
-            disp = gs -> display [gs -> level];
-            addr2 = disp + pcup -> displayoffset;
+            addr_displaysave = pcup -> displayaddr;
 
             // restore actual display vector
 
             charp = ADDRSTOR (80);
-            charp2 = ADDRSTOR (addr2);
+            charp2 = ADDRSTOR (addr_displaysave);
             memcpy (charp, charp2, 40);
          }
 
@@ -6140,9 +6156,14 @@ static void int1 (global_store *gs)
 
 #if 0
 
-         for (i = 1; i <= gs -> level; i ++)
-            fprintf (stderr, "RET: Level = %d Display = %d\n",
-                     i, gs -> display [i]);
+         if (pcup -> is_procparm)
+         {
+            int i;
+
+            for (i = 1; i <= gs -> level; i ++)
+               fprintf (stderr, "RET: Level = %d Display = %d\n",
+                        i, gs -> display [i]);
+         }
 
 #endif
 

@@ -1104,8 +1104,7 @@ static void load (void *vgs,
             /*   werden ...                                */
             /***********************************************/
 
-            if (strcmp (pcode -> plabel, "$PASSYS ") == 0 ||
-                strcmp (pcode -> plabel, "DSQRT   ") == 0)
+            if (strcmp (pcode -> plabel, "$PASSYS ") == 0)
             {
                pcode -> q = -1;
             }
@@ -1876,8 +1875,25 @@ void translate2 (global_store *gs)
             }
             if (pcst == NULL)
             {
-               fprintf (stderr, "%s: section label %s not found\n",
-                        err_opcode, plabel);
+               for (pent = gs -> pent_first;
+                    pent != NULL;
+                    pent = pent -> next)
+               {
+                  SETL (comp_label2, pent -> name_short, 8);
+
+                  if (memcmp (comp_label, comp_label2, 8) == 0)
+                     break;
+               }
+               if (pent == NULL)
+               {
+                  fprintf (stderr, "%s: section label %s not found\n",
+                          err_opcode, plabel);
+               }
+               else
+               {
+                  pcode -> q = pent -> pcodenr;
+                  pcode -> plabel = NULL;
+               }
             }
             else
             {
@@ -1898,8 +1914,18 @@ void translate2 (global_store *gs)
             }
             if (pent == NULL)
             {
-               fprintf (stderr, "%s: section label %s not found\n",
-                        err_opcode, plabel);
+               if (memcmp (plabel, "DSIN    ", 8) == 0 ||
+                   memcmp (plabel, "DSQRT   ", 8) == 0)
+               {
+                  fprintf (stderr, "%s: section label %s not found; "
+                           "FTN lib function assumed\n",
+                           err_opcode, plabel);
+               }
+               else
+               {
+                  fprintf (stderr, "%s: section label %s not found\n",
+                           err_opcode, plabel);
+               }
             }
             else
             {

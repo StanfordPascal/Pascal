@@ -33,14 +33,17 @@ rem **********************************************************
 rem +++ Version 2018.03 +++
 rem **********************************************************
 
-    call topas pascal1
+rem call topas pascal1
 rem call topas pascal1a
 rem call topas pascal1b
-    call topas pascal2
+rem call topas pascal2
 rem call topas pascal2a
 rem call topas pascal2b
 rem call topas paslibx
 rem call topas passcan
+
+    call topas paslibxa
+    call topas paslibxb
 
 rem call topas testx
 rem call topas splitmvs

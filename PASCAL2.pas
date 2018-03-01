@@ -467,13 +467,21 @@ const VERSION = '2018.03' ;        // Version for display message
       (* LENGTH OF FPR SAVE AREA                          *)
       (****************************************************)
 
-      FL1 = 120 ;
-      FL2 = 128 ;
-      FL3 = 136 ;
-      FL4 = 144 ;
+      FL1 = 352 ;
+      FL2 = 360 ;
+      FL3 = 368 ;
+      FL4 = 376 ;
 
       (****************************************************)
-      (*GLOBAL LOCATIONS USED FOR FIX-FLOAT CONVERSIONS   *)
+      (* GLOBAL LOCATIONS USED FOR FIX-FLOAT CONVERSIONS  *)
+      (****************************************************)
+
+STRFIRST = 384; // PTR TO BEGIN OF STR WORKAREA
+STRCURR  =  388; // ACTUAL PTR TO STR WORKAREA
+STRSIZE  =  392; // STR WORKAREA SIZE
+
+      (****************************************************)
+      (* addresses for string workarea management         *)
       (****************************************************)
 
       INXCHK = 152 ;
@@ -4558,8 +4566,6 @@ procedure ASMNXTINST ;
    (*******************************************************)
 
 
-      label 10 ;
-
       const MAXDISP = 4088 ;
             SHRTINT2 = 8183 ;
 
@@ -4574,7 +4580,7 @@ procedure ASMNXTINST ;
       begin (* BASE *)
         B := 0 ;
         if P < 0 then
-          goto 10 ;
+          return ;
 
         (*******************)
         (* STRING CONSTANT *)
@@ -4594,7 +4600,7 @@ procedure ASMNXTINST ;
                         Q := T ;
                         P := TRG14 ;
                         B := BASE ;
-                        goto 10
+                        return
                       end (* then *) ;
                   end (* then *) ;
         if P > 0 then
@@ -4643,8 +4649,6 @@ procedure ASMNXTINST ;
               DISP := Q ;
               BASE := B ;
             end (* with *) ;
-        10 :
-
       end (* BASE *) ;
 
 
@@ -7693,6 +7697,9 @@ procedure ASMNXTINST ;
 
    procedure STRINGOPS ;
 
+var p2 : lvlrng ;
+    b : lvlrng ;
+
       begin (* STRINGOPS *)
         if TRUE then
           begin
@@ -7700,8 +7707,34 @@ procedure ASMNXTINST ;
             DUMPSTK ( 1 , TOP ) ;
           end (* then *) ;
         case OPC of
-          PVPU , PVPO :
-            ;
+          PVPU :
+          begin
+// save strcurr ptr into given location
+
+                          FINDRG ;
+                          P2 := p;
+                          BASE ( Q , P2 , B ) ;
+           GENRX ( XL, NXTRG , STRCURR , 12 , 0 ) ;
+           GENRX ( XST , NXTRG , Q , B , P2 ) ;
+           AVAIL [ nxtrg ] := TRUE
+
+
+          end ;
+
+          PVPO :
+          begin
+// restore strcurr ptr from given location
+
+           FINDRG ;
+           P2 := p;
+           BASE ( Q , P2 , B ) ;
+           GENRX ( XL , NXTRG , Q , B , P2 ) ;
+           GENRX ( XST, NXTRG , STRCURR , 12 , 0 ) ;
+           AVAIL [ nxtrg ] := TRUE
+
+
+          end ;
+
           PVLD , PVST :
             ;
           PVC1 , PVCC , PVLM , PVIX , PVRP :

@@ -1,5 +1,6 @@
-//PASCALNI JOB (PASCAL),'CL SPLITMVS',CLASS=A,MSGCLASS=X,
-//             TIME=1440,REGION=0M,MSGLEVEL=(1,1)
+//PASCALNI JOB (PASCAL),'PASCAL INST1',CLASS=A,MSGCLASS=X,
+//             TIME=1440,REGION=0M,MSGLEVEL=(1,1),
+//             USER=PASCALN,PASSWORD=PAS
 //*
 //********************************************************************
 //* link SPLITMVS utility

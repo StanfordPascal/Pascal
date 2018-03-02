@@ -1,0 +1,115 @@
+//PASCALNC JOB (PASCAL),'INSTALL PASCAL',CLASS=A,MSGCLASS=X,
+//             TIME=1440,REGION=0M,MSGLEVEL=(1,1)
+//*
+//**********************************************************
+//* CREATE DATASETS FOR NEW STANFORD PASCAL COMPILER
+//**********************************************************
+//* DATASETS SHOULD BE DELETED BY JOB PASDEL
+//* IF THEY EXIST ALREADY
+//**********************************************************
+//* IF YOU WANT ANOTHER HIGH LEVEL QUALIFER THAN
+//* PASCALN, FEEL FREE TO CHANGE IT
+//**********************************************************
+//*
+//CREATE  EXEC PGM=IEFBR14
+//*
+//FILE001  DD  DISP=(,CATLG),DSN=PASCALN.COMPILER.CNTL,
+//             UNIT=TSO,
+//             SPACE=(CYL,(1,1,20)),
+//             DCB=(RECFM=FB,LRECL=80,BLKSIZE=19040)
+//*
+//FILE002  DD  DISP=(,CATLG),DSN=PASCALN.COMPILER.LOAD,
+//             UNIT=TSO,
+//             SPACE=(CYL,(2,2,20)),
+//             DCB=(RECFM=U,BLKSIZE=19069)
+//*
+//FILE003  DD  DISP=(,CATLG),DSN=PASCALN.COMPILER.MESSAGES,
+//             UNIT=TSO,
+//             SPACE=(CYL,(1,1,20)),
+//             DCB=(RECFM=FB,LRECL=80,BLKSIZE=19040)
+//*
+//FILE004  DD  DISP=(,CATLG),DSN=PASCALN.COMPILER.PAS,
+//             UNIT=TSO,
+//             SPACE=(CYL,(10,10,20)),
+//             DCB=(RECFM=FB,LRECL=80,BLKSIZE=19040)
+//*
+//FILE005  DD  DISP=(,CATLG),DSN=PASCALN.COMPILER.PROCLIB,
+//             UNIT=TSO,
+//             SPACE=(CYL,(1,1,20)),
+//             DCB=(RECFM=FB,LRECL=80,BLKSIZE=19040)
+//*
+//FILE006  DD  DISP=(,CATLG),DSN=PASCALN.COMPILER.TEXT,
+//             UNIT=TSO,
+//             SPACE=(CYL,(2,2,20)),
+//             DCB=(RECFM=FB,LRECL=80,BLKSIZE=19040)
+//*
+//FILE007  DD  DISP=(,CATLG),DSN=PASCALN.DBGINFO,
+//             UNIT=TSO,
+//             SPACE=(CYL,(2,2,20)),
+//             DCB=(RECFM=FB,LRECL=80,BLKSIZE=19040)
+//*
+//FILE008  DD  DISP=(,CATLG),DSN=PASCALN.RUNTIME.ASM,
+//             UNIT=TSO,
+//             SPACE=(CYL,(1,1,20)),
+//             DCB=(RECFM=FB,LRECL=80,BLKSIZE=19040)
+//*
+//FILE009  DD  DISP=(,CATLG),DSN=PASCALN.RUNTIME.LOAD,
+//             UNIT=TSO,
+//             SPACE=(CYL,(2,2,20)),
+//             DCB=(RECFM=U,BLKSIZE=19069)
+//*
+//FILE010  DD  DISP=(,CATLG),DSN=PASCALN.RUNTIME.TEXT,
+//             UNIT=TSO,
+//             SPACE=(CYL,(2,2,20)),
+//             DCB=(RECFM=FB,LRECL=80,BLKSIZE=19040)
+//*
+//FILE011  DD  DISP=(,CATLG),DSN=PASCALN.RUNTIME.MATHTEXT,
+//             UNIT=TSO,
+//             SPACE=(CYL,(2,2,20)),
+//             DCB=(RECFM=FB,LRECL=80,BLKSIZE=19040)
+//*
+//FILE012  DD  DISP=(,CATLG),DSN=PASCALN.RUNTIME.MATHLIB,
+//             UNIT=TSO,
+//             SPACE=(CYL,(2,2,20)),
+//             DCB=(RECFM=U,BLKSIZE=19069)
+//*
+//FILE013  DD  DISP=(,CATLG),DSN=PASCALN.TESTPGM.ASM,
+//             UNIT=TSO,
+//             SPACE=(CYL,(5,5,20)),
+//             DCB=(RECFM=FB,LRECL=80,BLKSIZE=19040)
+//*
+//FILE014  DD  DISP=(,CATLG),DSN=PASCALN.TESTPGM.CNTL,
+//             UNIT=TSO,
+//             SPACE=(CYL,(5,5,20)),
+//             DCB=(RECFM=FB,LRECL=80,BLKSIZE=19040)
+//*
+//FILE015  DD  DISP=(,CATLG),DSN=PASCALN.TESTPGM.LOAD,
+//             UNIT=TSO,
+//             SPACE=(CYL,(5,5,20)),
+//             DCB=(RECFM=U,BLKSIZE=19069)
+//*
+//FILE016  DD  DISP=(,CATLG),DSN=PASCALN.TESTPGM.PAS,
+//             UNIT=TSO,
+//             SPACE=(CYL,(5,5,20)),
+//             DCB=(RECFM=FB,LRECL=80,BLKSIZE=19040)
+//*
+//FILE017  DD  DISP=(,CATLG),DSN=PASCALN.TESTPGM.TEXT,
+//             UNIT=TSO,
+//             SPACE=(CYL,(5,5,20)),
+//             DCB=(RECFM=FB,LRECL=80,BLKSIZE=19040)
+//*
+//FILE018  DD  DISP=(,CATLG),DSN=PASCALN.OLDCOMP.CNTL,
+//             UNIT=TSO,
+//             SPACE=(CYL,(5,5,20)),
+//             DCB=(RECFM=FB,LRECL=80,BLKSIZE=19040)
+//*
+//FILE019  DD  DISP=(,CATLG),DSN=PASCALN.OLDCOMP.SAMPLE,
+//             UNIT=TSO,
+//             SPACE=(CYL,(5,5,20)),
+//             DCB=(RECFM=FB,LRECL=80,BLKSIZE=19040)
+//*
+//FILE020  DD  DISP=(,CATLG),DSN=PASCALN.OLDCOMP.SOURCE,
+//             UNIT=TSO,
+//             SPACE=(CYL,(5,5,20)),
+//             DCB=(RECFM=FB,LRECL=80,BLKSIZE=19040)
+//*

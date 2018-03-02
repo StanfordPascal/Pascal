@@ -1,16 +1,7 @@
 
-*******************************************
-*** Stanford Pascal List of Definitions ***
-*******************************************
 
 
-Variables of Main Program
-------------------------------------------------------------------------
-I                    auto     1    400  integer
-
-
-
-Function ZERO                
+Function F1                  
 ------------------------------------------------------------------------
 external = FALSE
 extlang  =  
@@ -20,11 +11,13 @@ level    =            1
 pfname   =            1
 cstname  = $PR#0001
 
-No Parameters for ZERO                
+Parameters for F1                  
+------------------------------------------------------------------------
+X                    auto     2    112  real
 
 
 
-Function ONE                 
+Function F2                  
 ------------------------------------------------------------------------
 external = FALSE
 extlang  =  
@@ -34,11 +27,13 @@ level    =            1
 pfname   =            2
 cstname  = $PR#0002
 
-No Parameters for ONE                 
+Parameters for F2                  
+------------------------------------------------------------------------
+X                    auto     2    112  real
 
 
 
-Function NEGONE              
+Function F2FALSCH            
 ------------------------------------------------------------------------
 external = FALSE
 extlang  =  
@@ -48,11 +43,13 @@ level    =            1
 pfname   =            3
 cstname  = $PR#0003
 
-No Parameters for NEGONE              
+Parameters for F2FALSCH            
+------------------------------------------------------------------------
+X                    auto     2    112  real
 
 
 
-Function A                   
+Procedure F3                  
 ------------------------------------------------------------------------
 external = FALSE
 extlang  =  
@@ -62,23 +59,14 @@ level    =            1
 pfname   =            4
 cstname  = $PR#0004
 
-Parameters for A                   
+Parameters for F3                  
 ------------------------------------------------------------------------
-K                    auto     2    112  integer
+X1                   auto     2    112  real
+X2                   auto     2    120  real
 
-
-
-Function B                   
+Variables of F3                  
 ------------------------------------------------------------------------
-external = FALSE
-extlang  =  
-extname  =  
-forward  = FALSE
-level    =            2
-pfname   =           10
-cstname  = $PR#0010
-
-No Parameters for B                   
+X                    auto     2    168  real
 
 **********************************
 *** End of List of Definitions ***

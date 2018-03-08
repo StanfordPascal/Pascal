@@ -1,72 +1,25 @@
 
+*******************************************
+*** Stanford Pascal List of Definitions ***
+*******************************************
 
 
-Function F1                  
+Variables of Main Program
 ------------------------------------------------------------------------
-external = FALSE
-extlang  =  
-extname  =  
-forward  = FALSE
-level    =            1
-pfname   =            1
-cstname  = $PR#0001
-
-Parameters for F1                  
-------------------------------------------------------------------------
-X                    auto     2    112  real
-
-
-
-Function F2                  
-------------------------------------------------------------------------
-external = FALSE
-extlang  =  
-extname  =  
-forward  = FALSE
-level    =            1
-pfname   =            2
-cstname  = $PR#0002
-
-Parameters for F2                  
-------------------------------------------------------------------------
-X                    auto     2    112  real
-
-
-
-Function F2FALSCH            
-------------------------------------------------------------------------
-external = FALSE
-extlang  =  
-extname  =  
-forward  = FALSE
-level    =            1
-pfname   =            3
-cstname  = $PR#0003
-
-Parameters for F2FALSCH            
-------------------------------------------------------------------------
-X                    auto     2    112  real
-
-
-
-Procedure F3                  
-------------------------------------------------------------------------
-external = FALSE
-extlang  =  
-extname  =  
-forward  = FALSE
-level    =            1
-pfname   =            4
-cstname  = $PR#0004
-
-Parameters for F3                  
-------------------------------------------------------------------------
-X1                   auto     2    112  real
-X2                   auto     2    120  real
-
-Variables of F3                  
-------------------------------------------------------------------------
-X                    auto     2    168  real
+S                    auto     1    400 
+C                    auto     1    424  array 1 20
+                             inxtype =  integer (2)
+                             aeltype =  char
+I                    auto     1    444  integer
+C1                   auto     1    448  char
+C2                   auto     1    449  char
+C20                  auto     1    450  array 1 20
+                             inxtype =  integer (2)
+                             aeltype =  char
+C20A                 auto     1    470  array 1 20
+                             inxtype =  integer (2)
+                             aeltype =  char
+VC20                 auto     1    490 
 
 **********************************
 *** End of List of Definitions ***

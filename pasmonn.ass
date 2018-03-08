@@ -617,10 +617,21 @@ $PASENT  CSECT ,
 **********************************************************************
 *
          GETMAIN VU,LA=REQSTORE,A=ALOSTORE
+*
+**********************************************************************
+*        GET SPACE FOR STRING WORKAREA
+*        AND INITIALIZE GLOBAL STRING WORKAREA POINTERS
+**********************************************************************
+*
+         L     R3,STRWSTOR
+         GETMAIN R,LV=(R3)
+         ST    R1,STRWTEMP
+*
          B     P0100
 *
 TRGETM1  DC    CL80'TRACE: STACK1 = XXXXXXXXX'
 TRGETM2  DC    CL80'TRACE: STACK2 = XXXXXXXXX'
+TRGETM3  DC    CL80'TRACE: STRWA  = XXXXXXXXX'
 *
 P0100    DS    0H
 *
@@ -628,21 +639,29 @@ P0100    DS    0H
 *        print amount of acquired storage
 **********************************************************************
 *
-*        L     R0,REQSTORE
-*        CVD   R0,DOWO1
-*        UNPK  TRGETM1+16(9),DOWO1+3(5)
-*        OI    TRGETM1+24,X'F0'
-*        LA    R3,TRGETM1
-*        L     R15,=A(PTRACE)
-*        BALR  R14,R15
+         L     R0,REQSTORE
+         CVD   R0,DOWO1
+         UNPK  TRGETM1+16(9),DOWO1+3(5)
+         OI    TRGETM1+24,X'F0'
+         LA    R3,TRGETM1
+         L     R15,=A(PTRACE)
+         BALR  R14,R15
 *
-*        L     R0,REQSTORE+4
-*        CVD   R0,DOWO1
-*        UNPK  TRGETM2+16(9),DOWO1+3(5)
-*        OI    TRGETM2+24,X'F0'
-*        LA    R3,TRGETM2
-*        L     R15,=A(PTRACE)
-*        BALR  R14,R15
+         L     R0,REQSTORE+4
+         CVD   R0,DOWO1
+         UNPK  TRGETM2+16(9),DOWO1+3(5)
+         OI    TRGETM2+24,X'F0'
+         LA    R3,TRGETM2
+         L     R15,=A(PTRACE)
+         BALR  R14,R15
+*
+         L     R0,STRWSTOR
+         CVD   R0,DOWO1
+         UNPK  TRGETM3+16(9),DOWO1+3(5)
+         OI    TRGETM3+24,X'F0'
+         LA    R3,TRGETM3
+         L     R15,=A(PTRACE)
+         BALR  R14,R15
 *
 **********************************************************************
 *        new base
@@ -657,6 +676,13 @@ P0100    DS    0H
          S     R1,BUFSTORE         BEGINNING (ENDING !) OF THE HEAP
          S     R1,=A(8)            NAME FIELD OF THE HEAP
          USING DYNSTORE,R12
+*
+         L     R2,STRWSTOR
+         ST    R2,STRSIZE
+         L     R2,STRWTEMP
+         ST    R2,STRFIRST
+         ST    R2,STRCURR
+*
          AIF   (&SYSTEM).SYS32
 *
          LR    R2,R1
@@ -745,9 +771,9 @@ FILLP2   DS    0H
 *
 *        CVD   R0,DOWO1
 *        ST    R1,WORKR1
-*        UNPK  TRGETM3+16(9),DOWO1+3(5)
-*        OI    TRGETM3+24,X'F0'
-*        LA    R3,TRGETM3
+*        UNPK  TRGETM4+16(9),DOWO1+3(5)
+*        OI    TRGETM4+24,X'F0'
+*        LA    R3,TRGETM4
 *        L     R15,=A(PTRACE)
 *        BALR  R14,R15
 *        CVB   R0,DOWO1
@@ -872,9 +898,10 @@ QUIT1    LA    R1,PXIT             CLOSE OPEN FILES / RETURN TO OS
 *
 *
 *
+STRWTEMP DS    A
 SAVETEMP DS    18F
 SAVEPRM  DS    2A
-TRGETM3  DC    CL80'TRACE:   free = XXXXXXXXX'
+TRGETM4  DC    CL80'TRACE:   free = XXXXXXXXX'
 DOWO1    DS    D
 WORKR1   DS    F
 *
@@ -1018,6 +1045,7 @@ FIXDNOK  DS    0H
 *
 *
 BUFSTORE DC    A(IOBUFSZE)
+STRWSTOR DC    A(STRWSIZE)
 REQSTORE DC    A(MINSTORE,MAXSTORE)
 ALOSTORE DS    2A
 OSPARMS  DS    A                   ADDRESS OF O.S. PARAMETERS
@@ -2824,7 +2852,7 @@ SUBTBL2  DS    0A
          DC    A(RDY,EOL,EOT,RDD,WRD,CLK,WLN,RLN)
          DC    A(RDI,EOF,ELN,RDS,TRP,XIT,FDF,SIO)
          DC    A(EIO,MSG,SKP,LIM,TRA,WRP,CLS,DAT)
-         DC    A(TIM,FLR,TRC,RND)
+         DC    A(TIM,FLR,TRC,RND,WRV)
          DC    A(0,0,0,0,0,0,0,0,0)
 SUBTBLZ2 DS    0A
 *
@@ -4056,6 +4084,22 @@ WRB      LTR   R2,R2
 WRB1     LA    R2,=C'FALSE'
          LA    R4,5
          B     WRS
+*
+*
+*
+*
+*****************************************************************
+*        WRV (WRITE VARCHAR):  ADR(FILE),VARCHAR,FIELD_WIDTH
+*****************************************************************
+*
+         DC    CL4'WRV'
+WRV      DS    0H
+         LH    R4,2(R2)            load varchar length
+         LA    R2,4(R2)            set ptr to varchar content
+         LTR   R3,R3               if field width nonzero
+         BNZ   WRS                 continue with WRS
+         LR    R3,R4               else set field width to length
+         B     WRS                 continue with WRS
 *
 *
 *
@@ -6023,6 +6067,13 @@ KWRDIOB  DS    0H
          ST    R4,BUFSTORE         SET I/O BUFFER AMOUNT
          B     NXTPARM
 *
+KWRDSTRW DS    0H
+         LTR   R0,R0               TEST "NO" OPTION
+         BNZ   NXTPARM             IF SO, IGNORE
+         SLA   R4,10               CONVERT TO K
+         ST    R4,STRWSTOR         SET STRING WORKAREA SIZE
+         B     NXTPARM
+*
 KWRDDUMP DS    0H
          STC   R0,DUMPFLAG         SET THE DUMP FLAG
          XI    DUMPFLAG,X'FF'      BUT R0 WAS REVERSED
@@ -6110,6 +6161,7 @@ CHKPRMZ  DS    0H
 *
 KWRDTAB  DC    AL1(KWRDSTAK-KWRDBASE,1,4),C'STACK'
          DC    AL1(KWRDIOB-KWRDBASE,1,4),C'IOBUF'
+         DC    AL1(KWRDSTRW-KWRDBASE,1,4),C'STRWA'
          DC    AL1(KWRDDUMP-KWRDBASE,0,3),C'DUMP'
          DC    AL1(KWRDTIME-KWRDBASE,1,3),C'TIME'
          DC    AL1(KWRDCC-KWRDBASE,0,1),C'CC'
@@ -6838,6 +6890,7 @@ FPR4     EQU   4
 FPR6     EQU   6
 K        EQU   1024
 IOBUFSZE EQU   36*K                SIZE OF AREA RETURNED TO OS FOR I/O
+STRWSIZE EQU   256*K               DEFAULT SIZE OF STRING WORKAREA
 MINSTORE EQU   8*K                 MIN ACCEPTABLE DYNAMIC STORAGE SIZE
 MAXSTORE EQU   4000*K              MAX REQUESTABLE DYNAMIC STORAGE
 LCAFTMST EQU   80                  LOCAL VARIABLE AREA (PASCAL PROCS)

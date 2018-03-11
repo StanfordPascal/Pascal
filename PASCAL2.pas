@@ -606,13 +606,13 @@ const VERSION = '2018.03' ;        // Version for display message
       SIZE_TXTCHUNK = 56 ;
 
       //**********************************************************
-      // definitions for code vector
-      // code_bytes = size of code vector in bytes (minus 1)
-      // code_hints = size of code vector in hints (minus 1)
-      // code_ints = size of code vector in ints (minus 1)
-      // code_reals = size of code vector in reals (minus 1)
+      // definitions for code vector                              
+      // code_bytes = size of code vector in bytes (minus 1)      
+      // code_hints = size of code vector in hints (minus 1)      
+      // code_ints = size of code vector in ints (minus 1)        
+      // code_reals = size of code vector in reals (minus 1)      
       // code_chunks = size of code vector in txt chunks (minus 1)
-      // size_txtchunk = size of a txt chunk
+      // size_txtchunk = size of a txt chunk                      
       (* MAX. BYTES PER TXT CARD IN 360 OBJECT DECK             *)
       (**********************************************************)
 
@@ -835,10 +835,10 @@ type OPTYPE = ( PCTS , PCTI , PLOD , PSTR , PLDA , PLOC , PSTO , PLDC ,
               end ;
 
      //************************************************************
-     // datatype and datum are types to define
-     // the structure of the stack (stk)
-     // used by pascal2 during optimization
-     // bank is where the stack object resides
+     // datatype and datum are types to define                     
+     // the structure of the stack (stk)                           
+     // used by pascal2 during optimization                        
+     // bank is where the stack object resides                     
      //************************************************************
 
      BANK = ( RGS , MEM , ONSTK , NEITHER ) ;
@@ -862,7 +862,7 @@ type OPTYPE = ( PCTS , PCTI , PLOD , PSTR , PLDA , PLOC , PSTO , PLDC ,
              end ;
 
      //****************************************************************
-     //* this new structure records the global state of processing
+     //* this new structure records the global state of processing     
      //****************************************************************
 
      GLOBAL_STATE = record
@@ -873,33 +873,33 @@ type OPTYPE = ( PCTS , PCTI , PLOD , PSTR , PLDA , PLOC , PSTO , PLDC ,
                     end ;
 
      //****************************************************************
-     // chain of procedure definitions
-     // built from pcode file in first pass
-     // before actual pcode processing
+     // chain of procedure definitions                                 
+     // built from pcode file in first pass                            
+     // before actual pcode processing                                 
      //****************************************************************
-     // PRE-PASS (PRD FILE) INFORMATION - now DBGINFO
-     // opp - 2018.03:
-     // pcode summary file contains informations for
-     // procedures that are available at the end of the
-     // parsing of the procedure, but they are needed at
-     // the beginning of the code generation already. to
-     // keep the one pass paradigm of PASCAL1 and PASCAL2,
-     // this informtion is written to a separate file and
-     // read when a new procedure begins (tagged with the
-     // procedure name in the leading column)
-     // - proc size = code size of the procedure
-     // - data size = data size of the procedure
-     // - call higher = other procedure calls, that is,
-     // the display position at the static level has to
-     // be saved and restored
+     // PRE-PASS (PRD FILE) INFORMATION - now DBGINFO                  
+     // opp - 2018.03:                                                 
+     // pcode summary file contains informations for                   
+     // procedures that are available at the end of the                
+     // parsing of the procedure, but they are needed at               
+     // the beginning of the code generation already. to               
+     // keep the one pass paradigm of PASCAL1 and PASCAL2,             
+     // this informtion is written to a separate file and              
+     // read when a new procedure begins (tagged with the              
+     // procedure name in the leading column)                          
+     // - proc size = code size of the procedure                       
+     // - data size = data size of the procedure                       
+     // - call higher = other procedure calls, that is,                
+     // the display position at the static level has to                
+     // be saved and restored                                          
      //****************************************************************
-     // later: this information is written into the normal
-     // pcode file, via def constants, after every procedure.
-     // because it is needed before code generation, but it
-     // is located after the procedure (the compiler does not
-     // know it before processing the procedure), the p-code
-     // translator (this program) reads the input twice.
-     // see the main program ... two processing loops
+     // later: this information is written into the normal             
+     // pcode file, via def constants, after every procedure.          
+     // because it is needed before code generation, but it            
+     // is located after the procedure (the compiler does not          
+     // know it before processing the procedure), the p-code           
+     // translator (this program) reads the input twice.               
+     // see the main program ... two processing loops                  
      //****************************************************************
 
      PPI = -> PROCEDURE_INFO ;
@@ -925,19 +925,20 @@ type OPTYPE = ( PCTS , PCTI , PLOD , PSTR , PLDA , PLOC , PSTO , PLDC ,
 
 
 var GS : GLOBAL_STATE ;
+    LINECNT : INTEGER ;
 
     //**************************************************************
-    // anchor for procedure information chain
-    // built during first p-code reading
+    // anchor for procedure information chain                       
+    // built during first p-code reading                            
     //**************************************************************
 
     PIANKER : PPI ;
     PIAKT : PPI ;
 
     //**************************************************************
-    // CURRENT/OLD INST. OPCODE
-    // CURRENT STND. PROC. CODE
-    // CURRENT (SYMBOLIC) PCODE /CSP NAME
+    // CURRENT/OLD INST. OPCODE                                     
+    // CURRENT STND. PROC. CODE                                     
+    // CURRENT (SYMBOLIC) PCODE /CSP NAME                           
     //**************************************************************
 
     PCODE , OLDPCODE : OPTYPE ;
@@ -1724,11 +1725,44 @@ function FLDW ( NUM : INTEGER ) : INTEGER ;
 
 
 
-procedure DUMPSTK ( STP1 , STP2 : STKPTR ) ;
+procedure DUMPSTKELEM ( STK : DATUM ) ;
 
    const TYPNAME : array [ BOOL .. VARC ] of array [ 1 .. 4 ] of CHAR =
          ( 'BOOL' , 'CHR ' , 'ADR ' , 'HINT' , 'INT ' , 'SET ' , 'REAL'
            , 'PROC' , 'CARR' , 'VARC' ) ;
+
+   begin (* DUMPSTKELEM *)
+     with STK do
+       begin
+         WRITE ( TRACEF , ' STKADR=' , STKADR : 5 , ' PLEN=' , PLEN : 3
+                 , ' SCNSTNO=' , SCNSTNO : 3 , ' FPA=' , FPA . LVL : 3
+                 , FPA . DSPLMT : 6 ) ;
+         if VRBL then
+           begin
+             WRITELN ( TRACEF ) ;
+             WRITE ( TRACEF , '    ' ) ;
+             if VPA = RGS then
+               WRITE ( TRACEF , ' VPA-REG =' , RGADR : 3 )
+             else
+               WRITE ( TRACEF , ' VPA-MEM =' , MEMADR . LVL : 3 ,
+                       MEMADR . DSPLMT : 6 ) ;
+             if DRCT then
+               WRITE ( TRACEF , ' DIRECT' )
+             else
+               WRITE ( TRACEF , ' INDIR.' ) ;
+           end (* then *) ;
+         if DTYPE <= VARC then
+           WRITE ( TRACEF , '(' : 2 , TYPNAME [ DTYPE ] , ')' )
+         else
+           WRITE ( TRACEF , '(ETC.)' : 8 ) ;
+         WRITE ( TRACEF , ' ' , PROCNAME ) ;
+         WRITELN ( TRACEF ) ;
+       end (* with *) ;
+   end (* DUMPSTKELEM *) ;
+
+
+
+procedure DUMPSTK ( STP1 , STP2 : STKPTR ) ;
 
    var I : STKPTR ;
 
@@ -1739,32 +1773,10 @@ procedure DUMPSTK ( STP1 , STP2 : STKPTR ) ;
          WRITE ( TRACEF , I : 3 ) ;
      WRITELN ( TRACEF ) ;
      for I := STP1 to STP2 do
-       with STK [ I ] do
-         begin
-           WRITE ( TRACEF , ' +++ DEPTH=' , I : 2 , ' STKADR=' , STKADR
-                   : 5 , ' PLEN=' , PLEN : 3 , ' SCNSTNO=' , SCNSTNO :
-                   3 , ' FPA=' , FPA . LVL : 3 , FPA . DSPLMT : 6 ) ;
-           if VRBL then
-             begin
-               WRITELN ( TRACEF ) ;
-               WRITE ( TRACEF , '    ' ) ;
-               if VPA = RGS then
-                 WRITE ( TRACEF , ' VPA-REG =' , RGADR : 3 )
-               else
-                 WRITE ( TRACEF , ' VPA-MEM =' , MEMADR . LVL : 3 ,
-                         MEMADR . DSPLMT : 6 ) ;
-               if DRCT then
-                 WRITE ( TRACEF , ' DIRECT' )
-               else
-                 WRITE ( TRACEF , ' INDIR.' ) ;
-             end (* then *) ;
-           if DTYPE <= VARC then
-             WRITE ( TRACEF , '(' : 2 , TYPNAME [ DTYPE ] , ')' )
-           else
-             WRITE ( TRACEF , '(ETC.)' : 8 ) ;
-           WRITE ( TRACEF , ' ' , PROCNAME ) ;
-           WRITELN ( TRACEF ) ;
-         end (* with *) ;
+       begin
+         WRITE ( TRACEF , ' +++ DEPTH=' , I : 2 ) ;
+         DUMPSTKELEM ( STK [ I ] ) ;
+       end (* for *)
    end (* DUMPSTK *) ;
 
 
@@ -2330,15 +2342,15 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
          end (* then *) ;
 
      //************************************************************
-     // achtung, nur uebergangsweise, bis V-Befehle
-     // korrekt implementiert sind
+     // achtung, nur uebergangsweise, bis V-Befehle                
+     // korrekt implementiert sind                                 
      //************************************************************
 
      ENTERLOOKUP ;
 
      //************************************************************
-     // achtung, nur uebergangsweise, bis V-Befehle
-     // korrekt implementiert sind
+     // achtung, nur uebergangsweise, bis V-Befehle                
+     // korrekt implementiert sind                                 
      //************************************************************
 
      if PCODE = PENT then
@@ -2351,10 +2363,10 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
        end (* then *) ;
 
      //************************************************************
-     // achtung, nur uebergangsweise, bis V-Befehle
-     // korrekt implementiert sind
-     // achtung, nur uebergangsweise, bis V-Befehle
-     // korrekt implementiert sind
+     // achtung, nur uebergangsweise, bis V-Befehle                
+     // korrekt implementiert sind                                 
+     // achtung, nur uebergangsweise, bis V-Befehle                
+     // korrekt implementiert sind                                 
      //************************************************************
 
      case PCODE of
@@ -2475,6 +2487,7 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
                 if ASM then
                   WRITELN ( ASMOUT , '-------------------- LOC  ' , Q :
                             1 , ' --------------------------------' ) ;
+                LINECNT := Q
               end (* tag/ca *) ;
        PAND , PIOR , PXOR , PNOT :
          begin
@@ -2854,14 +2867,14 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
               end (* tag/ca *) ;
 
      //************************************************************
-     // vstring instructions
+     // vstring instructions                                       
      //************************************************************
 
        PVPU , PVPO :
          begin
 
      //************************************************************
-     // TWO INTEGER OPERANDS
+     // TWO INTEGER OPERANDS                                       
      //************************************************************
 
            READLN ( P , CH , Q ) ;
@@ -2872,8 +2885,8 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
          begin
 
      //************************************************************
-     // TWO INTEGER OPERANDS
-     // the first one is a mode indicator
+     // TWO INTEGER OPERANDS                                       
+     // the first one is a mode indicator                          
      //************************************************************
 
            READLN ( P , CH , Q ) ;
@@ -2884,7 +2897,7 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
          begin
 
      //************************************************************
-     // no operands
+     // no operands                                                
      //************************************************************
 
            READLN ( INPUT ) ;
@@ -2895,7 +2908,7 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
          begin
 
      //************************************************************
-     // one integer operand
+     // one integer operand                                        
      //************************************************************
 
            READLN ( Q ) ;
@@ -3625,7 +3638,7 @@ procedure ASMNXTINST ;
                       XSDR , XAD , XSD ] then
                         return
                       else
-
+                        
                     else
 
         (*************)
@@ -4338,7 +4351,7 @@ procedure ASMNXTINST ;
                   CNT := CNT + 1 ;
                 until CNT > MAXCNT ;
                 10 :
-
+                
               end (* then *) ;
           if TI . I < 0 then
             TI . I := TI . I + 65536 ;
@@ -4871,7 +4884,7 @@ procedure ASMNXTINST ;
               else
 
         //******************************************************
-        // if not drct
+        // if not drct                                          
         //******************************************************
 
                 begin
@@ -4936,7 +4949,7 @@ procedure ASMNXTINST ;
             else
 
         //******************************************************
-        // IF NOT VRBL, I.E. LOAD CONSTANT
+        // IF NOT VRBL, I.E. LOAD CONSTANT                      
         //******************************************************
 
               begin
@@ -5002,7 +5015,7 @@ procedure ASMNXTINST ;
                              else
 
         //******************************************************
-        // PLEN = 0
+        // PLEN = 0                                             
         //******************************************************
 
                                begin
@@ -5061,7 +5074,7 @@ procedure ASMNXTINST ;
         R := 0 ;
         with STE do
           begin
-            if DRCT and not ( DTYPE in [ ADR , VARC ] ) then
+            if DRCT and not ( DTYPE in [ ADR ] ) then
               ERROR ( 602 ) ;
             if VRBL then
               if VPA = RGS then
@@ -5120,18 +5133,108 @@ procedure ASMNXTINST ;
       end (* GETADR *) ;
 
 
+   procedure GETADR2 ( STE : DATUM ; var Q : ADRRNG ; var P , B : RGRNG
+                     ) ;
+
+   (***************************************************)
+   (* IF PASSED THE ADR. OF AN ITEM,                  *)
+   (* THIS ROUTINE RETURNS A <Q,B,P> ADR.             *)
+   (* INDIRECTIONS ARE NOT DEREFERENCED HERE.         *)
+   (* ----------------------------------------------- *)
+   (***************************************************)
+
+
+      var R : RGRNG ;
+
+      begin (* GETADR2 *)
+        R := 0 ;
+        with STE do
+          begin
+            if DRCT and not ( DTYPE in [ ADR , CHRC , CARR , VARC ] )
+            then
+              begin
+                ERROR ( 602 ) ;
+                WRITELN ( TRACEF , 'error 602 inside getadr2: dtype = '
+                          , DTYPE ) ;
+              end (* then *) ;
+            if VRBL then
+              if VPA = RGS then
+                R := RGADR
+              else
+
+        (***************************)
+        (*VPA = MEM OR VPA = ONSTK *)
+        (***************************)
+
+                begin
+                  if VPA = MEM then
+                    begin
+                      P := MEMADR . LVL ;
+                      Q := MEMADR . DSPLMT
+                    end (* then *)
+                  else
+                    ERROR ( 616 ) ;
+                  BASE ( Q , P , B ) ;
+                  WRITELN ( TRACEF , 'base/vrbl inside getadr2: q = ' ,
+                            Q ) ;
+                  WRITELN ( TRACEF , 'base/vrbl inside getadr2: p = ' ,
+                            P ) ;
+                  WRITELN ( TRACEF , 'base/vrbl inside getadr2: b = ' ,
+                            B ) ;
+                  GENRX ( XL , TXRG , Q , B , P ) ;
+                  R := TXRG
+                end (* else *) ;
+
+        (************************************************************)
+        (* NOW THE VARIABLE PORTION OF THE ADR., IF ANY, IS IN TXRG *)
+        (************************************************************)
+
+            Q := FPA . DSPLMT ;
+            P := FPA . LVL ;
+            if R > 0 then
+              begin
+                if ( Q < 0 ) or ( Q > SHRTINT ) then
+                  begin
+                    GENRXLIT ( XA , R , Q , 0 ) ;
+                    Q := 0
+                  end (* then *) ;
+                B := 0 ;
+                if P = CURLVL then
+                  B := LBR
+                else
+                  if P = 1 then
+                    B := GBR
+                  else
+                    if P > 0 then
+                      GENRX ( XA , R , DISPLAY + 4 * P , GBR , 0 ) ;
+                P := R ;
+              end (* then *)
+            else
+
+        (*******************)
+        (* NO INDEX OR VPA *)
+        (*******************)
+
+              BASE ( Q , P , B ) ;
+          end (* with *) ;
+        WRITELN ( TRACEF , 'base inside getadr2: q = ' , Q ) ;
+        WRITELN ( TRACEF , 'base inside getadr2: p = ' , P ) ;
+        WRITELN ( TRACEF , 'base inside getadr2: b = ' , B ) ;
+      end (* GETADR2 *) ;
+
+
    procedure GETOP_SIMPLE ( var STE : DATUM ; var Q1 : ADRRNG ; var P1
                           , B1 : RGRNG ; TXRG : RGRNG ; INIT_ON_CHAR :
                           BOOLEAN ) ;
 
    //****************************************************************
-   // get operands when target register is already fixed
-   // target register is txrg
-   // for example for code generation of new p-codes mcp, mse etc.;
-   // see procedures mcpoperation, mseoperation
-   // init_on_char: if false, then there is no need to clear the
-   // register before IC, because the garbage bits are shifted
-   // out later anyway.
+   // get operands when target register is already fixed             
+   // target register is txrg                                        
+   // for example for code generation of new p-codes mcp, mse etc.;  
+   // see procedures mcpoperation, mseoperation                      
+   // init_on_char: if false, then there is no need to clear the     
+   // register before IC, because the garbage bits are shifted       
+   // out later anyway.                                              
    //****************************************************************
 
 
@@ -5140,10 +5243,10 @@ procedure ASMNXTINST ;
           begin
 
         //******************************************************
-        // if reg, simple copy register
-        // if mem, load register from storage
-        // if mem and char type, use XR and IC
-        // if neither, source was constant, use LA
+        // if reg, simple copy register                         
+        // if mem, load register from storage                   
+        // if mem and char type, use XR and IC                  
+        // if neither, source was constant, use LA              
         //******************************************************
 
             case VPA of
@@ -5166,7 +5269,7 @@ procedure ASMNXTINST ;
               NEITHER :
                 GENRX ( XLA , TXRG , FPA . DSPLMT , 0 , 0 ) ;
               otherwise
-
+                
             end (* case *) ;
           end (* with *) ;
       end (* GETOP_SIMPLE *) ;
@@ -5193,7 +5296,7 @@ procedure ASMNXTINST ;
               NEITHER :
                 GENSI ( XMVI , Q1 , B1 , FPA . DSPLMT ) ;
               otherwise
-
+                
             end (* case *) ;
           end (* with *) ;
       end (* GEN_MOVECHAR *) ;
@@ -5466,11 +5569,11 @@ procedure ASMNXTINST ;
           end (* else *) ;
 
         //******************************************************
-        // generate different call sequences depending on
-        // external language; for fortran all parameters
-        // are call by reference, so dummy arguments are
-        // created for every by-value parameter ... this has
-        // been done elsewhere
+        // generate different call sequences depending on       
+        // external language; for fortran all parameters        
+        // are call by reference, so dummy arguments are        
+        // created for every by-value parameter ... this has    
+        // been done elsewhere                                  
         //******************************************************
 
         case EXTLANG of
@@ -5478,7 +5581,7 @@ procedure ASMNXTINST ;
                   K := P * 2 ;
 
         //******************************************************
-        // K = LENGTH OF PARM LIST
+        // K = LENGTH OF PARM LIST                              
         //******************************************************
 
                   if K > 0 then
@@ -5487,8 +5590,8 @@ procedure ASMNXTINST ;
                   GENRX ( XST , TRG13 , K + 4 , TRG1 , 0 ) ;
 
         //******************************************************
-        // S/A CHAINING
-        // provide r13 as usable sa base addr
+        // S/A CHAINING                                         
+        // provide r13 as usable sa base addr                   
         //******************************************************
 
                   GENRR ( XLR , TRG14 , TRG13 ) ;
@@ -5498,8 +5601,8 @@ procedure ASMNXTINST ;
           'A' : begin
 
         //******************************************************
-        // S/A CHAINING
-        // provide r13 as usable sa base addr
+        // S/A CHAINING                                         
+        // provide r13 as usable sa base addr                   
         //******************************************************
 
                   GENRX ( XST , TRG1 , 8 , TRG13 , 0 ) ;
@@ -5508,7 +5611,7 @@ procedure ASMNXTINST ;
                   GENRX ( XLA , TRG1 , 112 , TRG1 , 0 ) ;
                 end (* tag/ca *) ;
           otherwise
-
+            
         end (* case *) ;
         if not FLOW_TRACE then
           begin
@@ -5575,7 +5678,7 @@ procedure ASMNXTINST ;
         CALDPTH := CALDPTH - 1 ;
 
         //******************************************************
-        // on return: different call seq. depending on extlang
+        // on return: different call seq. depending on extlang  
         //******************************************************
 
         case EXTLANG of
@@ -5587,7 +5690,7 @@ procedure ASMNXTINST ;
                   GENRX ( XL , TRG13 , 4 , TRG13 , 0 ) ;
                 end (* tag/ca *) ;
           otherwise
-
+            
         end (* case *) ;
         if SAVEFPRS then
           begin
@@ -6802,7 +6905,7 @@ procedure ASMNXTINST ;
                            LN := FALSE ;
                          end (* then *)
                        else
-
+                         
                      else
                        if not LN then
                          begin
@@ -7992,7 +8095,7 @@ procedure ASMNXTINST ;
         (* NOTHING *)
         (***********)
 
-
+                           
                        else
 
         (******************)
@@ -9285,7 +9388,7 @@ procedure ASMNXTINST ;
              end (* then *) ;
            TOTALBYTES := TOTALBYTES + QPC ;
            10 :
-
+           
          end (* GEN_CSECT *) ;
 
 
@@ -9388,10 +9491,10 @@ procedure ASMNXTINST ;
                STATIC_ADDR := PCOUNTER * 2 - 4 ;
 
            //***********************************************************
-           // if there are local calls, the display value at the
-           // current static level has to saved and restored at
-           // the end ... load it to R0, it will be saved by the
-           // following stm 14,12,...
+           // if there are local calls, the display value at the        
+           // current static level has to saved and restored at         
+           // the end ... load it to R0, it will be saved by the        
+           // following stm 14,12,...                                   
            //***********************************************************
 
                if PIAKT -> . CALL_HIGHER then
@@ -9486,9 +9589,9 @@ procedure ASMNXTINST ;
                  begin
 
            //************************************************
-           // GENRR ( XLR , RTREG , JREG ) ;
-           // old comment:
-           // SAVE CURR. LOC. FOR ERROR ROUTINE
+           // GENRR ( XLR , RTREG , JREG ) ;                 
+           // old comment:                                   
+           // SAVE CURR. LOC. FOR ERROR ROUTINE              
            //************************************************
 
                    if ASM then
@@ -9507,13 +9610,13 @@ procedure ASMNXTINST ;
                    GENRX ( XC , TRG1 , NEWPTR , GBR , 0 ) ;
 
            //************************************************
-           // COMPARE 'SP' AND 'NP'
+           // COMPARE 'SP' AND 'NP'                          
            //************************************************
 
                    GENRX ( XBC , GEQCND , STKCHK , GBR , 0 ) ;
 
            //************************************************
-           // BRANCH TO ERROR ?
+           // BRANCH TO ERROR ?                              
            //************************************************
 
                    if DEBUG then
@@ -9521,7 +9624,7 @@ procedure ASMNXTINST ;
                        begin
 
            //********************************************************
-           // ENTERING PASMAIN, CLEAR STACK/HEAP AREA
+           // ENTERING PASMAIN, CLEAR STACK/HEAP AREA                
            //********************************************************
 
                          if ASM then
@@ -9534,13 +9637,13 @@ procedure ASMNXTINST ;
                            end (* then *) ;
 
            //********************************************************
-           // L     15,72(12)    end of stack area
-           // LA    14,400(12)   first global variable address
-           // SR    15,14        length to initialize in R15
-           // XR    0,0          source adr zero
-           // LA    1,129        source len zero
-           // SLL   1,24         pattern x'81' in leftmost 8 bytes
-           // MVCL  14,0         move init pattern
+           // L     15,72(12)    end of stack area                   
+           // LA    14,400(12)   first global variable address       
+           // SR    15,14        length to initialize in R15         
+           // XR    0,0          source adr zero                     
+           // LA    1,129        source len zero                     
+           // SLL   1,24         pattern x'81' in leftmost 8 bytes   
+           // MVCL  14,0         move init pattern                   
            //********************************************************
 
                          GENRX ( XL , TRG15 , NEWPTR , GBR , 0 ) ;
@@ -9581,9 +9684,9 @@ procedure ASMNXTINST ;
                        end (* then *) ;
 
            //************************************************
-           // optimizing: generate MVC instead of MVCL
-           // MVI 80(13),X'81'
-           // MVC 81(256,13),80(13) ...
+           // optimizing: generate MVC instead of MVCL       
+           // MVI 80(13),X'81'                               
+           // MVC 81(256,13),80(13) ...                      
            //************************************************
 
                      GENSI ( XMVI , LCAFTMST , LBR , 0x81 ) ;
@@ -9611,14 +9714,14 @@ procedure ASMNXTINST ;
                        end (* then *) ;
 
            //******************************
-           // clear the stack frame
-           // that is:
-           // LA    0,80(13)
-           // length into R1
-           // XR    R14,R14
-           // LA    R15,X'81'
-           // SLL   R15,24
-           // MVCL  R0,R14
+           // clear the stack frame        
+           // that is:                     
+           // LA    0,80(13)               
+           // length into R1               
+           // XR    R14,R14                
+           // LA    R15,X'81'              
+           // SLL   R15,24                 
+           // MVCL  R0,R14                 
            //******************************
 
                      GENRX ( XLA , TRG0 , LCAFTMST , LBR , 0 ) ;
@@ -9639,7 +9742,7 @@ procedure ASMNXTINST ;
                    end (* else *) ;
 
            //************************************************
-           // restore the general registers
+           // restore the general registers                  
            //************************************************
 
                if ASM then
@@ -9654,10 +9757,10 @@ procedure ASMNXTINST ;
                GENRX ( XL , LBR , 4 , LBR , 0 ) ;
 
            //************************************************
-           // restore the display value at the
+           // restore the display value at the               
            // current static level; it has been reloaded from
-           // the
-           // save area to R0 ...
+           // the                                            
+           // save area to R0 ...                            
            //************************************************
 
                if PIAKT -> . CALL_HIGHER then
@@ -10385,8 +10488,8 @@ procedure ASMNXTINST ;
                          VPA := RGS ;
 
         //******************************************************
-        // extlang = fortran:
-        // COPY RESULT FROM REGISTER ZERO
+        // extlang = fortran:                                   
+        // COPY RESULT FROM REGISTER ZERO                       
         //******************************************************
 
                          case EXTLANG of
@@ -10406,8 +10509,8 @@ procedure ASMNXTINST ;
                                  end (* case *) ;
 
         //******************************************************
-        // extlang = assembler:
-        // COPY RESULT FROM REGISTER ZERO
+        // extlang = assembler:                                 
+        // COPY RESULT FROM REGISTER ZERO                       
         //******************************************************
 
                            'A' : case OPNDTYPE of
@@ -10433,8 +10536,8 @@ procedure ASMNXTINST ;
                                  end (* case *) ;
 
         //******************************************************
-        // extlang = pascal:
-        // COPY RESULT FROM 72 (R1)
+        // extlang = pascal:                                    
+        // COPY RESULT FROM 72 (R1)                             
         //******************************************************
 
                            otherwise
@@ -11020,8 +11123,8 @@ procedure ASMNXTINST ;
    procedure MFIOPERATION ( var LEFT , PAT : DATUM ; LEN : INTEGER ) ;
 
    //****************************************************************
-   // generate overlapping MVC for short MFI
-   // and MVCL for long MFI
+   // generate overlapping MVC for short MFI                         
+   // and MVCL for long MFI                                          
    //****************************************************************
 
 
@@ -11032,17 +11135,17 @@ procedure ASMNXTINST ;
         if LEN > 0 then
 
         //******************************************************
-        // if length <= 256 generate overlapping MVC
+        // if length <= 256 generate overlapping MVC            
         //******************************************************
 
           if LEN <= 256 then
             begin
 
         //******************************************************
-        // get address of left operand
+        // get address of left operand                          
         //******************************************************
 
-              GETADR ( LEFT , Q1 , P1 , B1 ) ;
+              GETADR2 ( LEFT , Q1 , P1 , B1 ) ;
               if not LEFT . DRCT then
                 begin
                   GENRX ( XL , TXRG , Q1 , B1 , P1 ) ;
@@ -11052,19 +11155,19 @@ procedure ASMNXTINST ;
                 end (* then *) ;
 
         //******************************************************
-        // consolidate index and base reg to base reg b1
+        // consolidate index and base reg to base reg b1        
         //******************************************************
 
               CONS_REGS ( B1 , P1 ) ;
 
         //******************************************************
-        // move pattern to byte 1
+        // move pattern to byte 1                               
         //******************************************************
 
               GEN_MOVECHAR ( Q1 , B1 , PAT ) ;
 
         //******************************************************
-        // operlapping MVC
+        // operlapping MVC                                      
         //******************************************************
 
               if LEN > 1 then
@@ -11074,10 +11177,10 @@ procedure ASMNXTINST ;
             begin
 
         //******************************************************
-        // get address of left operand
+        // get address of left operand                          
         //******************************************************
 
-              GETADR ( LEFT , Q1 , P1 , B1 ) ;
+              GETADR2 ( LEFT , Q1 , P1 , B1 ) ;
               if not LEFT . DRCT then
                 begin
                   GENRX ( XL , TXRG , Q1 , B1 , P1 ) ;
@@ -11087,7 +11190,7 @@ procedure ASMNXTINST ;
                 end (* then *) ;
 
         //******************************************************
-        // get init pattern
+        // get init pattern                                     
         //******************************************************
 
               if FALSE then
@@ -11100,7 +11203,7 @@ procedure ASMNXTINST ;
                 end (* then *) ;
 
         //******************************************************
-        // RESTORE THE OLD MIDLEVEL BASE REG
+        // RESTORE THE OLD MIDLEVEL BASE REG                    
         //******************************************************
 
               if P1 < 0 then
@@ -11110,16 +11213,16 @@ procedure ASMNXTINST ;
                 end (* then *) ;
 
         //**************************************************
-        // THIS IS ONLY VALID FOR THE 370,
-        // FOR THE 360 THE 'MVCL' INSTRUNCTION SHOULD BE
-        // REPLACED BY A subroutine or a loop or MVC;
-        // because the length of the operands is not
-        // known at compile time in this case, a fix list
-        // of MVCs is not sufficient
+        // THIS IS ONLY VALID FOR THE 370,                  
+        // FOR THE 360 THE 'MVCL' INSTRUNCTION SHOULD BE    
+        // REPLACED BY A subroutine or a loop or MVC;       
+        // because the length of the operands is not        
+        // known at compile time in this case, a fix list   
+        // of MVCs is not sufficient                        
         //**************************************************
 
               if B1 < 0 then
-                ERROR ( 202 ) ;
+                ERROR ( 702 ) ;
               FINDRP ;
               GENRX ( XLA , NXTRG , Q1 , B1 , P1 ) ;
               P1 := NXTRG ;
@@ -11129,28 +11232,28 @@ procedure ASMNXTINST ;
               B2 := NXTRG + 1 ;
 
         //******************************************************
-        // const length operand
-        // generate LA
+        // const length operand                                 
+        // generate LA                                          
         //******************************************************
 
               GENRX ( XLA , B1 , LEN , 0 , 0 ) ;
 
         //******************************************************
-        // source address is zero
+        // source address is zero                               
         //******************************************************
 
               GENRR ( XXR , P2 , P2 ) ;
 
         //******************************************************
-        // pattern operand
-        // generate L or LR
+        // pattern operand                                      
+        // generate L or LR                                     
         //******************************************************
 
               GETOP_SIMPLE ( PAT , QX , PX , BX , B2 , FALSE ) ;
               GENRX ( XSLL , B2 , 24 , 0 , 0 ) ;
 
         //******************************************************
-        // generate MVCL instruction
+        // generate MVCL instruction                            
         //******************************************************
 
               GENRR ( XMVCL , P1 , P2 ) ;
@@ -11168,8 +11271,8 @@ procedure ASMNXTINST ;
    procedure MZEOPERATION ( var L : DATUM ; LEN : INTEGER ) ;
 
    //****************************************************************
-   // generate XC for short MZE
-   // and MVCL for long MZE
+   // generate XC for short MZE                                      
+   // and MVCL for long MZE                                          
    //****************************************************************
 
 
@@ -11177,14 +11280,14 @@ procedure ASMNXTINST ;
         if LEN > 0 then
 
         //******************************************************
-        // if length <= 256 generate XC
+        // if length <= 256 generate XC                         
         //******************************************************
 
           if LEN <= 256 then
             begin
 
         //******************************************************
-        // get address of left operand
+        // get address of left operand                          
         //******************************************************
 
               GETADR ( L , Q1 , P1 , B1 ) ;
@@ -11197,13 +11300,13 @@ procedure ASMNXTINST ;
                 end (* then *) ;
 
         //******************************************************
-        // consolidate index and base reg to base reg b1
+        // consolidate index and base reg to base reg b1        
         //******************************************************
 
               CONS_REGS ( B1 , P1 ) ;
 
         //******************************************************
-        // XC is used to zero the area
+        // XC is used to zero the area                          
         //******************************************************
 
               GENSS ( XXC , LEN , Q1 , B1 , Q1 , B1 ) ;
@@ -11212,7 +11315,7 @@ procedure ASMNXTINST ;
             begin
 
         //******************************************************
-        // get address of left operand
+        // get address of left operand                          
         //******************************************************
 
               GETADR ( L , Q1 , P1 , B1 ) ;
@@ -11225,7 +11328,7 @@ procedure ASMNXTINST ;
                 end (* then *) ;
 
         //******************************************************
-        // RESTORE THE OLD MIDLEVEL BASE REG
+        // RESTORE THE OLD MIDLEVEL BASE REG                    
         //******************************************************
 
               if P1 < 0 then
@@ -11235,16 +11338,16 @@ procedure ASMNXTINST ;
                 end (* then *) ;
 
         //**************************************************
-        // THIS IS ONLY VALID FOR THE 370,
-        // FOR THE 360 THE 'MVCL' INSTRUNCTION SHOULD BE
-        // REPLACED BY A subroutine or a loop or MVC;
-        // because the length of the operands is not
-        // known at compile time in this case, a fix list
-        // of MVCs is not sufficient
+        // THIS IS ONLY VALID FOR THE 370,                  
+        // FOR THE 360 THE 'MVCL' INSTRUNCTION SHOULD BE    
+        // REPLACED BY A subroutine or a loop or MVC;       
+        // because the length of the operands is not        
+        // known at compile time in this case, a fix list   
+        // of MVCs is not sufficient                        
         //**************************************************
 
               if B1 < 0 then
-                ERROR ( 202 ) ;
+                ERROR ( 703 ) ;
               FINDRP ;
               GENRX ( XLA , NXTRG , Q1 , B1 , P1 ) ;
               P1 := NXTRG ;
@@ -11254,26 +11357,26 @@ procedure ASMNXTINST ;
               B2 := NXTRG + 1 ;
 
         //******************************************************
-        // const length operand
-        // generate LA
+        // const length operand                                 
+        // generate LA                                          
         //******************************************************
 
               GENRX ( XLA , B1 , LEN , 0 , 0 ) ;
 
         //******************************************************
-        // source address is zero
+        // source address is zero                               
         //******************************************************
 
               GENRR ( XXR , P2 , P2 ) ;
 
         //******************************************************
-        // pattern is zero
+        // pattern is zero                                      
         //******************************************************
 
               GENRR ( XXR , B2 , B2 ) ;
 
         //******************************************************
-        // generate MVCL instruction
+        // generate MVCL instruction                            
         //******************************************************
 
               GENRR ( XMVCL , P1 , P2 ) ;
@@ -11290,9 +11393,9 @@ procedure ASMNXTINST ;
    procedure MCPOPERATION ( var L , R , LEN : DATUM ) ;
 
    //****************************************************************
-   // generate MVCL instruction for MEMCPY
-   // no other possibility, since length it not known
-   // at compile time
+   // generate MVCL instruction for MEMCPY                           
+   // no other possibility, since length it not known                
+   // at compile time                                                
    //****************************************************************
 
 
@@ -11303,10 +11406,10 @@ procedure ASMNXTINST ;
       begin (* MCPOPERATION *)
 
         //******************************************************
-        // get address of left operand
+        // get address of left operand                          
         //******************************************************
 
-        GETADR ( L , Q1 , P1 , B1 ) ;
+        GETADR2 ( L , Q1 , P1 , B1 ) ;
         if not L . DRCT then
           begin
             GENRX ( XL , TXRG , Q1 , B1 , P1 ) ;
@@ -11317,16 +11420,16 @@ procedure ASMNXTINST ;
         TXRG := TRG1 ;
 
         //******************************************************
-        // TO AVOID REASSIGNM. OF THE SAME BASE REG
+        // TO AVOID REASSIGNM. OF THE SAME BASE REG             
         //******************************************************
 
         OLDCSP := PSIO ;  // INDICATES LOSS OF TRG1
 
         //******************************************************
-        // get address of right operand
+        // get address of right operand                         
         //******************************************************
 
-        GETADR ( R , Q2 , P2 , B2 ) ;
+        GETADR2 ( R , Q2 , P2 , B2 ) ;
         if not R . DRCT then
           begin
             GENRX ( XL , TXRG , Q2 , B2 , P2 ) ;
@@ -11337,7 +11440,7 @@ procedure ASMNXTINST ;
         TXRG := TRG14 ;
 
         //******************************************************
-        // get length
+        // get length                                           
         //******************************************************
 
         if FALSE then
@@ -11350,7 +11453,7 @@ procedure ASMNXTINST ;
           end (* then *) ;
 
         //******************************************************
-        // RESTORE THE OLD MIDLEVEL BASE REG
+        // RESTORE THE OLD MIDLEVEL BASE REG                    
         //******************************************************
 
         if P1 < 0 then
@@ -11365,16 +11468,16 @@ procedure ASMNXTINST ;
           end (* then *) ;
 
         //**************************************************
-        // THIS IS ONLY VALID FOR THE 370,
-        // FOR THE 360 THE 'MVCL' INSTRUNCTION SHOULD BE
-        // REPLACED BY A subroutine or a loop or MVC;
-        // because the length of the operands is not
-        // known at compile time in this case, a fix list
-        // of MVCs is not sufficient
+        // THIS IS ONLY VALID FOR THE 370,                  
+        // FOR THE 360 THE 'MVCL' INSTRUNCTION SHOULD BE    
+        // REPLACED BY A subroutine or a loop or MVC;       
+        // because the length of the operands is not        
+        // known at compile time in this case, a fix list   
+        // of MVCs is not sufficient                        
         //**************************************************
 
         if ( B1 < 0 ) or ( B2 < 0 ) then
-          ERROR ( 202 ) ;
+          ERROR ( 704 ) ;
         FINDRP ;
         GENRX ( XLA , NXTRG , Q1 , B1 , P1 ) ;
         P1 := NXTRG ;
@@ -11385,22 +11488,22 @@ procedure ASMNXTINST ;
         B2 := NXTRG + 1 ;
 
         //******************************************************
-        // length operand
-        // generate L or LR
+        // length operand                                       
+        // generate L or LR                                     
         //******************************************************
 
         GETOP_SIMPLE ( LEN , QX , PX , BX , B1 , TRUE ) ;
 
         //******************************************************
-        // copy length in register b1 to register b2
-        // and test
+        // copy length in register b1 to register b2            
+        // and test                                             
         //******************************************************
 
         GENRR ( XLTR , B2 , B1 ) ;
 
         //******************************************************
-        // check length for positive
-        // address of branch will be filled in later
+        // check length for positive                            
+        // address of branch will be filled in later            
         //******************************************************
 
         GENRX ( XBC , LEQCND , 0 , 0 , 0 ) ;
@@ -11410,13 +11513,13 @@ procedure ASMNXTINST ;
                     ;
 
         //******************************************************
-        // generate MVCL instruction
+        // generate MVCL instruction                            
         //******************************************************
 
         GENRR ( XMVCL , P1 , P2 ) ;
 
         //******************************************************
-        // generate label after MVCL
+        // generate label after MVCL                            
         //******************************************************
 
         CODE . H [ BPC - 1 ] := TO_HINT ( BASE_DSPLMT ( PCOUNTER ) ) ;
@@ -11438,9 +11541,9 @@ procedure ASMNXTINST ;
                           INTEGER ) ;
 
    //****************************************************************
-   // generate MVCL instruction for MEMSET
-   // no other possibility, since length it not known
-   // at compile time
+   // generate MVCL instruction for MEMSET                           
+   // no other possibility, since length it not known                
+   // at compile time                                                
    //****************************************************************
 
 
@@ -11452,7 +11555,7 @@ procedure ASMNXTINST ;
       begin (* MSEOPERATION *)
 
         //******************************************************
-        // get address of left operand
+        // get address of left operand                          
         //******************************************************
 
         if REVERSE > 0 then
@@ -11467,7 +11570,7 @@ procedure ASMNXTINST ;
           end (* else *) ;
 
         //******************************************************
-        // get address of left operand
+        // get address of left operand                          
         //******************************************************
 
         GETADR ( L , Q1 , P1 , B1 ) ;
@@ -11480,7 +11583,7 @@ procedure ASMNXTINST ;
           end (* then *) ;
 
         //******************************************************
-        // get init pattern
+        // get init pattern                                     
         //******************************************************
 
         if FALSE then
@@ -11493,7 +11596,7 @@ procedure ASMNXTINST ;
           end (* then *) ;
 
         //******************************************************
-        // get length
+        // get length                                           
         //******************************************************
 
         if FALSE then
@@ -11506,7 +11609,7 @@ procedure ASMNXTINST ;
           end (* then *) ;
 
         //******************************************************
-        // RESTORE THE OLD MIDLEVEL BASE REG
+        // RESTORE THE OLD MIDLEVEL BASE REG                    
         //******************************************************
 
         if P1 < 0 then
@@ -11516,16 +11619,16 @@ procedure ASMNXTINST ;
           end (* then *) ;
 
         //**************************************************
-        // THIS IS ONLY VALID FOR THE 370,
-        // FOR THE 360 THE 'MVCL' INSTRUNCTION SHOULD BE
-        // REPLACED BY A subroutine or a loop or MVC;
-        // because the length of the operands is not
-        // known at compile time in this case, a fix list
-        // of MVCs is not sufficient
+        // THIS IS ONLY VALID FOR THE 370,                  
+        // FOR THE 360 THE 'MVCL' INSTRUNCTION SHOULD BE    
+        // REPLACED BY A subroutine or a loop or MVC;       
+        // because the length of the operands is not        
+        // known at compile time in this case, a fix list   
+        // of MVCs is not sufficient                        
         //**************************************************
 
         if B1 < 0 then
-          ERROR ( 202 ) ;
+          ERROR ( 705 ) ;
         FINDRP ;
         GENRX ( XLA , NXTRG , Q1 , B1 , P1 ) ;
         P1 := NXTRG ;
@@ -11535,15 +11638,15 @@ procedure ASMNXTINST ;
         B2 := NXTRG + 1 ;
 
         //******************************************************
-        // length operand
-        // generate L or LR
+        // length operand                                       
+        // generate L or LR                                     
         //******************************************************
 
         GETOP_SIMPLE ( XLEN , QX , PX , BX , B1 , TRUE ) ;
 
         //******************************************************
-        // check length for positive
-        // address of branch will be filled in later *)
+        // check length for positive                            
+        // address of branch will be filled in later *)         
         //******************************************************
 
         GENRR ( XLTR , B1 , B1 ) ;
@@ -11554,27 +11657,27 @@ procedure ASMNXTINST ;
                     ;
 
         //******************************************************
-        // source address is zero
+        // source address is zero                               
         //******************************************************
 
         GENRR ( XXR , P2 , P2 ) ;
 
         //******************************************************
-        // pattern operand
-        // generate L or LR
+        // pattern operand                                      
+        // generate L or LR                                     
         //******************************************************
 
         GETOP_SIMPLE ( XPAT , QX , PX , BX , B2 , FALSE ) ;
         GENRX ( XSLL , B2 , 24 , 0 , 0 ) ;
 
         //******************************************************
-        // generate MVCL instruction
+        // generate MVCL instruction                            
         //******************************************************
 
         GENRR ( XMVCL , P1 , P2 ) ;
 
         //******************************************************
-        // generate label after MVCL
+        // generate label after MVCL                            
         //******************************************************
 
         CODE . H [ BPC - 1 ] := TO_HINT ( BASE_DSPLMT ( PCOUNTER ) ) ;
@@ -11595,7 +11698,7 @@ procedure ASMNXTINST ;
    procedure SOPERATION_MVI ( var LEFT : DATUM ; CCONST : CHAR ) ;
 
    //****************************************************************
-   // MVI to string target / implement VST after VC1
+   // MVI to string target / implement VST after VC1                 
    //****************************************************************
 
 
@@ -11606,11 +11709,10 @@ procedure ASMNXTINST ;
       begin (* SOPERATION_MVI *)
 
         //******************************************************
-        // get address of left operand
-        //******************************************************
+        // get address of left operand                          
         //******************************************************
 
-        GETADR ( LEFT , Q1 , P1 , B1 ) ;
+        GETADR2 ( LEFT , Q1 , P1 , B1 ) ;
         if not LEFT . DRCT then
           begin
             GENRX ( XL , TXRG , Q1 , B1 , P1 ) ;
@@ -11623,11 +11725,41 @@ procedure ASMNXTINST ;
       end (* SOPERATION_MVI *) ;
 
 
+   procedure SOPERATION_MVC1 ( var LEFT : DATUM ; var RIGHT : DATUM ) ;
+
+   //****************************************************************
+   // MVC to string target / implement VST after VC1                 
+   //****************************************************************
+
+
+      var P1 , B1 : LVLRNG ;
+          Q1 : ADRRNG ;
+          XOPC : BYTE ;
+
+      begin (* SOPERATION_MVC1 *)
+
+        //******************************************************
+        // get address of left operand                          
+        //******************************************************
+
+        GETADR2 ( LEFT , Q1 , P1 , B1 ) ;
+        if not LEFT . DRCT then
+          begin
+            GENRX ( XL , TXRG , Q1 , B1 , P1 ) ;
+            Q1 := 0 ;
+            B1 := 0 ;
+            P1 := TXRG ;
+          end (* then *) ;
+        CONS_REGS ( B1 , P1 ) ;
+        GEN_MOVECHAR ( Q1 , B1 , RIGHT ) ;
+      end (* SOPERATION_MVC1 *) ;
+
+
    procedure SOPERATION ( var LEFT , RIGHT : DATUM ; PCODEPARM : OPTYPE
                         ; LENPARM : INTEGER ) ;
 
    //****************************************************************
-   // SET UP FOR STRING MOVE/COMPARE OPERATIONS
+   // SET UP FOR STRING MOVE/COMPARE OPERATIONS                      
    //****************************************************************
 
 
@@ -11638,10 +11770,10 @@ procedure ASMNXTINST ;
       begin (* SOPERATION *)
 
         //******************************************************
-        // get address of left operand
+        // get address of left operand                          
         //******************************************************
 
-        GETADR ( LEFT , Q1 , P1 , B1 ) ;
+        GETADR2 ( LEFT , Q1 , P1 , B1 ) ;
         if not LEFT . DRCT then
           begin
             GENRX ( XL , TXRG , Q1 , B1 , P1 ) ;
@@ -11652,16 +11784,16 @@ procedure ASMNXTINST ;
         TXRG := TRG1 ;
 
         //******************************************************
-        // TO AVOID REASSIGNM. OF THE SAME BASE REG
+        // TO AVOID REASSIGNM. OF THE SAME BASE REG             
         //******************************************************
 
         OLDCSP := PSIO ;  // INDICATES LOSS OF TRG1
 
         //******************************************************
-        // get address of right operand
+        // get address of right operand                         
         //******************************************************
 
-        GETADR ( RIGHT , Q2 , P2 , B2 ) ;
+        GETADR2 ( RIGHT , Q2 , P2 , B2 ) ;
         if not RIGHT . DRCT then
           begin
             GENRX ( XL , TXRG , Q2 , B2 , P2 ) ;
@@ -11672,7 +11804,7 @@ procedure ASMNXTINST ;
         TXRG := TRG14 ;
 
         //******************************************************
-        // RESTORE THE OLD MIDLEVEL BASE REG
+        // RESTORE THE OLD MIDLEVEL BASE REG                    
         //******************************************************
 
         if P1 < 0 then
@@ -11687,10 +11819,10 @@ procedure ASMNXTINST ;
           end (* then *) ;
 
         //******************************************************
-        // SHORT MOVE = length (q) <= 256
+        // SHORT MOVE = length (q) <= 256                       
         //******************************************************
 
-        if LENPARM <= 256 then
+        if ( LENPARM > 0 ) and ( LENPARM <= 256 ) then
           begin
             if B1 > 0 then
               if P1 > 0 then
@@ -11725,7 +11857,7 @@ procedure ASMNXTINST ;
                     if PCOUNTER = ( LPC + 3 ) then
 
         //******************************************************
-        // CONSECUTIVE MVC INSTS
+        // CONSECUTIVE MVC INSTS                                
         //******************************************************
 
                       if ( CODE . H [ LPC - 2 ] + LLEN ) = CODE . H [
@@ -11752,15 +11884,15 @@ procedure ASMNXTINST ;
           end (* then *)
 
         //**************************************************
-        // THIS IS ONLY VALID FOR THE 370,
-        // FOR THE 360 THE 'CLCL' INSTRUCTION SHOULD BE
-        // REPLACED BY AN APPROPRIATE NUMBER OF 'CLC'S
+        // THIS IS ONLY VALID FOR THE 370,                  
+        // FOR THE 360 THE 'CLCL' INSTRUCTION SHOULD BE     
+        // REPLACED BY AN APPROPRIATE NUMBER OF 'CLC'S      
         //**************************************************
 
         else
           begin
             if ( B1 < 0 ) or ( B2 < 0 ) then
-              ERROR ( 202 ) ;
+              ERROR ( 706 ) ;
             FINDRP ;
             GENRX ( XLA , NXTRG , Q1 , B1 , P1 ) ;
             P1 := NXTRG ;
@@ -11786,10 +11918,99 @@ procedure ASMNXTINST ;
       end (* SOPERATION *) ;
 
 
+   procedure SOPERATION_LEN ( var LEFT , RIGHT : DATUM ; PCODEPARM :
+                            OPTYPE ; LEN_REG : RGRNG ; LEN_OFFS :
+                            ADRRNG ) ;
+
+   //****************************************************************
+   // SET UP FOR STRING MOVE/COMPARE OPERATIONS                      
+   //****************************************************************
+
+
+      var P1 , B1 , P2 , B2 : LVLRNG ;
+          Q1 , Q2 : ADRRNG ;
+          XOPC : BYTE ;
+
+      begin (* SOPERATION_LEN *)
+
+        //******************************************************
+        // get address of left operand                          
+        //******************************************************
+
+        GETADR2 ( LEFT , Q1 , P1 , B1 ) ;
+        if not LEFT . DRCT then
+          begin
+            GENRX ( XL , TXRG , Q1 , B1 , P1 ) ;
+            Q1 := 0 ;
+            B1 := 0 ;
+            P1 := TXRG ;
+          end (* then *) ;
+        TXRG := TRG1 ;
+
+        //******************************************************
+        // TO AVOID REASSIGNM. OF THE SAME BASE REG             
+        //******************************************************
+
+        OLDCSP := PSIO ;  // INDICATES LOSS OF TRG1
+
+        //******************************************************
+        // get address of right operand                         
+        //******************************************************
+
+        GETADR2 ( RIGHT , Q2 , P2 , B2 ) ;
+        if not RIGHT . DRCT then
+          begin
+            GENRX ( XL , TXRG , Q2 , B2 , P2 ) ;
+            Q2 := 0 ;
+            B2 := 0 ;
+            P2 := TXRG ;
+          end (* then *) ;
+        TXRG := TRG14 ;
+
+        //******************************************************
+        // RESTORE THE OLD MIDLEVEL BASE REG                    
+        //******************************************************
+
+        if P1 < 0 then
+          begin
+            B1 := P1 ;
+            P1 := 0 ;
+          end (* then *) ;
+        if P2 < 0 then
+          begin
+            B2 := P2 ;
+            P2 := 0 ;
+          end (* then *) ;
+        if ( B1 < 0 ) or ( B2 < 0 ) then
+          ERROR ( 707 ) ;
+        FINDRP ;
+        GENRX ( XLA , NXTRG , Q1 , B1 , P1 ) ;
+        P1 := NXTRG ;
+        B1 := NXTRG + 1 ;
+        FINDRP ;
+        GENRX ( XLA , NXTRG , Q2 , B2 , P2 ) ;
+        P2 := NXTRG ;
+        B2 := NXTRG + 1 ;
+        GENRX ( XLH , B1 , LEN_OFFS , LEN_REG , 0 ) ;
+        GENRR ( XLR , B2 , B1 ) ;
+        XOPC := XMVCL ;
+        if PCODEPARM <> PMOV then
+          XOPC := XCLCL ;
+        GENRR ( XOPC , P1 , P2 ) ;
+        AVAIL [ P1 ] := TRUE ;
+        AVAIL [ B1 ] := TRUE ;
+        AVAIL [ P2 ] := TRUE ;
+        AVAIL [ B2 ] := TRUE ;
+        S370CNT := S370CNT + 1 ;
+        FREEREG ( LEFT ) ;
+        FREEREG ( RIGHT ) ;
+      end (* SOPERATION_LEN *) ;
+
+
    procedure BOPERATION ;
 
    //****************************************************************
-   // BINARY OPERATIONS
+   // BINARY OPERATIONS                                              
    //****************************************************************
 
 
@@ -11959,8 +12180,8 @@ procedure ASMNXTINST ;
           PADA : begin
 
         //******************************************************
-        // if type of right operand = adr
-        // exchange operands
+        // if type of right operand = adr                       
+        // exchange operands                                    
         //******************************************************
 
                    if R . DTYPE = ADR then
@@ -11998,8 +12219,8 @@ procedure ASMNXTINST ;
                      begin
 
         //******************************************************
-        // Q := L . FPA . DSPLMT ;
-        // L . FPA . DSPLMT := 0 ;
+        // Q := L . FPA . DSPLMT ;                              
+        // L . FPA . DSPLMT := 0 ;                              
         //******************************************************
 
                        LOAD ( L ) ;
@@ -12149,7 +12370,7 @@ procedure ASMNXTINST ;
                      AVAIL [ L . RGADR ] := TRUE ;
                    L . RGADR := L . RGADR + 1 ;
                    30 :
-
+                   
                  end (* tag/ca *) ;
           PDVI , PMOD :
             if not L . VRBL and not R . VRBL then
@@ -12269,17 +12490,17 @@ procedure ASMNXTINST ;
                                 begin
 
         //******************************************************
-        // CONSTANT OF TYPE ADR = NIL !
-        // FOLLOWING VALID ONLY IF $D- IS USED
+        // CONSTANT OF TYPE ADR = NIL !                         
+        // FOLLOWING VALID ONLY IF $D- IS USED                  
         //******************************************************
 
                                   GENRR ( XLTR , L . RGADR , L . RGADR
                                           ) ;
 
         //******************************************************
-        // opc is pequ or pneq
-        // this logic applies imo
-        // because nil = -1
+        // opc is pequ or pneq                                  
+        // this logic applies imo                               
+        // because nil = -1                                     
         //******************************************************
 
                                   if PCODE = PEQU then
@@ -12493,6 +12714,65 @@ procedure ASMNXTINST ;
       end (* BOPERATION *) ;
 
 
+   procedure ASSIGN_STRING ( TARGET , SOURCE : DATUM ; LEN_REG : RGRNG
+                           ; LEN_OFFS : ADRRNG ) ;
+
+      begin (* ASSIGN_STRING *)
+        WRITELN ( TRACEF , 'start assign_string, linecnt = ' , LINECNT
+                  : 1 ) ;
+        WRITE ( TRACEF , 'target: ' ) ;
+        DUMPSTKELEM ( TARGET ) ;
+        WRITE ( TRACEF , 'source: ' ) ;
+        DUMPSTKELEM ( SOURCE ) ;
+        if TARGET . DTYPE = VARC then
+          TARGET . FPA . DSPLMT := TARGET . FPA . DSPLMT + 4 ;
+        if SOURCE . DTYPE = VARC then
+          SOURCE . FPA . DSPLMT := SOURCE . FPA . DSPLMT + 4 ;
+
+        //******************************************************
+        // target addr for string content                       
+        //******************************************************
+
+        if SOURCE . VRBL then
+          begin
+
+        //*********************************************
+        // source is variable                          
+        //*********************************************
+
+            if SOURCE . DTYPE = CHRC then
+              begin
+                SOPERATION_MVC1 ( TARGET , SOURCE )
+              end (* then *)
+            else
+              begin
+                SOPERATION_LEN ( TARGET , SOURCE , PMOV , LEN_REG ,
+                                 LEN_OFFS )
+              end (* else *)
+          end (* then *)
+        else
+          begin
+
+        //*********************************************
+        // move string content - if chrc, use mvi      
+        // otherwise call soperation                   
+        // (will generate mvcl, if needed)             
+        //*********************************************
+
+            if SOURCE . DTYPE = CHRC then
+              SOPERATION_MVI ( TARGET , CHR ( SOURCE . FPA . DSPLMT ) )
+            else
+              if LEN_REG = 0 then
+                SOPERATION ( TARGET , SOURCE , PMOV , SOURCE . PLEN )
+              else
+                SOPERATION_LEN ( TARGET , SOURCE , PMOV , LEN_REG ,
+                                 LEN_OFFS )
+          end (* else *) ;
+        WRITELN ( TRACEF , 'end assign_string, linecnt = ' , LINECNT :
+                  1 ) ;
+      end (* ASSIGN_STRING *) ;
+
+
    procedure STRINGOPS ;
 
       var P1 , B1 , P2 , B2 : LVLRNG ;
@@ -12505,6 +12785,11 @@ procedure ASMNXTINST ;
           PATBLANK : DATUM ;
           DATLEN : DATUM ;
           LITVALUE : INTEGER ;
+          DATWORKAREA : DATUM ;
+          LEN1 , LEN2 : INTEGER ;
+          LEN_NEW : INTEGER ;
+          LEN_REG : RGRNG ;
+          LEN_OFFS : ADRRNG ;
 
       begin (* STRINGOPS *)
         if TRUE then
@@ -12516,15 +12801,15 @@ procedure ASMNXTINST ;
           end (* then *) ;
         case PCODE of
 
-        //******************************************************
-        // varchar push: save string workarea address
-        //******************************************************
+        //*******************************************************
+        // varchar push: save string workarea address            
+        //*******************************************************
 
           PVPU : begin
 
-        //******************************************************
-        // save strcurr ptr into given location
-        //******************************************************
+        //*********************************************
+        // save strcurr ptr into given location        
+        //*********************************************
 
                    FINDRG ;
                    P2 := P ;
@@ -12534,15 +12819,15 @@ procedure ASMNXTINST ;
                    AVAIL [ NXTRG ] := TRUE
                  end (* tag/ca *) ;
 
-        //******************************************************
-        // varchar pop: restore string workarea address
-        //******************************************************
+        //*******************************************************
+        // varchar pop: restore string workarea address          
+        //*******************************************************
 
           PVPO : begin
 
-        //******************************************************
-        // restore strcurr ptr from given location
-        //******************************************************
+        //*********************************************
+        // restore strcurr ptr from given location     
+        //*********************************************
 
                    FINDRG ;
                    P2 := P ;
@@ -12552,110 +12837,141 @@ procedure ASMNXTINST ;
                    AVAIL [ NXTRG ] := TRUE
                  end (* tag/ca *) ;
 
-        //******************************************************
-        // varchar convert 1: convert single char to string
-        //******************************************************
+        //*******************************************************
+        // varchar convert 1: convert single char to string      
+        //*******************************************************
 
           PVC1 : with STK [ TOP - 1 ] do
                    begin
 
-        //******************************************************
-        // address of char array is on stack
-        // VC1 converts single char to string of length 1
-        // set plen of stack item to 1
-        // datatype to varc
-        //******************************************************
+        //*********************************************
+        // address of char array is on stack           
+        // VC1 converts single char to string          
+        // of length 1                                 
+        // set plen of stack item to 1                 
+        // datatype to varc                            
+        //*********************************************
 
                      PLEN := 1 ;
                      DTYPE := CHRC ;
                    end (* with *) ;
 
-        //******************************************************
-        // varchar convert 2: convert char array to string
-        //******************************************************
+        //*******************************************************
+        // varchar convert 2: convert char array to string       
+        //*******************************************************
 
           PVC2 : with STK [ TOP - 1 ] do
                    begin
 
-        //******************************************************
-        // address of char array is on stack
-        // VC2 converts char array to string of length q
-        // q = instruction operand
-        // set plen of stack item to q
-        // datatype to varc
-        //******************************************************
+        //*********************************************
+        // address of char array is on stack           
+        // VC2 converts char array to string           
+        // of length q                                 
+        // q = instruction operand                     
+        // set plen of stack item to q                 
+        // datatype to varc                            
+        //*********************************************
 
                      PLEN := Q ;
-                     DTYPE := VARC ;
+                     DTYPE := CARR ;
                    end (* with *) ;
 
-        //******************************************************
-        // varchar store: store string to memory
-        //******************************************************
+        //*******************************************************
+        // varchar store: store string to memory                 
+        //*******************************************************
 
           PVST : begin
 
-        //******************************************************
-        // p = mode (0 or 1)
-        // q = maxLength of Target
-        //******************************************************
+        //*********************************************
+        // p = mode (0 or 1)                           
+        // q = maxLength of Target                     
+        //*********************************************
 
                    if P = 0 then
                      if Q > 0 then
                        begin
 
-        //******************************************************
-        // move constant string to target string variable
-        //******************************************************
+        //*********************************************
+        // fetch length from stack                     
+        // element and store length and maxlength      
+        // in string                                   
+        // target - literal consisting of two halfwords
+        //*********************************************
 
                          MAXL := Q ;
                          LEN := STK [ TOP - 1 ] . PLEN ;
-                         GETADR ( STK [ TOP - 2 ] , Q1 , P1 , B1 ) ;
+                         LEN_REG := 0 ;
+                         LEN_OFFS := 0 ;
+                         GETADR2 ( STK [ TOP - 2 ] , Q1 , P1 , B1 ) ;
                          FINDRG ;
-                         LITVALUE := MAXL * 65536 + LEN ;
-                         GENRXLIT ( XL , NXTRG , LITVALUE , 1 ) ;
+                         if LEN > 0 then
+                           begin
+                             LITVALUE := MAXL * 65536 + LEN ;
+                             GENRXLIT ( XL , NXTRG , LITVALUE , 1 ) ;
+                           end (* then *)
+                         else
+                           begin
+                             LITVALUE := MAXL * 65536 ;
+                             GENRXLIT ( XL , NXTRG , LITVALUE , 1 ) ;
+                             with STK [ TOP - 1 ] do
+                               begin
+                                 if VPA = RGS then
+                                   begin
+                                     LEN_REG := RGADR ;
+                                     LEN_OFFS := 2 ;
+                                     GENRX ( XAH , NXTRG , 2 , RGADR ,
+                                             0 ) ;
+                                   end (* then *)
+                                 else
+                                   begin
+                                     P2 := FPA . LVL ;
+                                     Q2 := FPA . DSPLMT + 2 ;
+                                     BASE ( Q2 , P2 , B2 ) ;
+                                     GENRX ( XAH , NXTRG , Q2 , B2 , P2
+                                             ) ;
+                                   end (* else *) ;
+                               end (* with *)
+                           end (* else *) ;
                          GENRX ( XST , NXTRG , Q1 , B1 , P1 ) ;
                          AVAIL [ NXTRG ] := TRUE ;
-                         STK [ TOP - 2 ] . FPA . DSPLMT := STK [ TOP -
-                                                   2 ] . FPA . DSPLMT +
-                                                   4 ;
-                         if STK [ TOP - 1 ] . DTYPE = CHRC then
-                           SOPERATION_MVI ( STK [ TOP - 2 ] , CHR ( STK
-                                            [ TOP - 1 ] . FPA . DSPLMT
-                                            ) )
-                         else
-                           SOPERATION ( STK [ TOP - 2 ] , STK [ TOP - 1
-                                        ] , PMOV , LEN ) ;
+
+        //*********************************************
+        // assign string to stk [top - 2 ]             
+        //*********************************************
+
+                         STK [ TOP - 2 ] . DTYPE := VARC ;
+                         ASSIGN_STRING ( STK [ TOP - 2 ] , STK [ TOP -
+                                         1 ] , LEN_REG , LEN_OFFS ) ;
                          TOP := TOP - 2
                        end (* then *)
                      else
                        if Q = 0 then
                          begin
-
+                           
                          end (* then *)
                        else
                          begin
-
+                           
                          end (* else *)
                    else
                      if Q > 0 then
                        begin
-
+                         
                        end (* then *)
                      else
                        if Q = 0 then
                          begin
-
+                           
                          end (* then *)
                        else
                          begin
-
+                           
                          end (* else *)
                  end (* tag/ca *) ;
 
-        //******************************************************
-        // varchar load: load string from memory to stack
-        //******************************************************
+        //*******************************************************
+        // varchar load: load string from memory to stack        
+        //*******************************************************
 
           PVLD : begin
                    COPYSTRING := ( P <> 0 ) ;
@@ -12663,56 +12979,56 @@ procedure ASMNXTINST ;
                    if not COPYSTRING then
                      with STK [ TOP - 1 ] do
                        begin
-                         PLEN := Q ;
+                         PLEN := - 1 ;
                          DTYPE := VARC ;
                        end (* with *)
                  end (* tag/ca *) ;
 
-        //******************************************************
-        // varchar move: move string to char array
-        //******************************************************
+        //*******************************************************
+        // varchar move: move string to char array               
+        //*******************************************************
 
           PVMV : begin
 
-        //******************************************************
-        // patblank = blank pattern for mfioperation
-        //******************************************************
+        //*********************************************
+        // patblank = blank pattern for mfioperation   
+        //*********************************************
 
                    with STK [ TOP - 1 ] do
                      begin
 
-        //******************************************************
-        // set target to blanks
-        //******************************************************
+        //*********************************************
+        // set target to blanks                        
+        //*********************************************
 
                        PATBLANK := DATNULL ;
                        PATBLANK . FPA . DSPLMT := ORD ( ' ' ) ;
-                       MFIOPERATION ( STK [ TOP - 2 ] , PATBLANK , PLEN
-                                      ) ;
+                       MFIOPERATION ( STK [ TOP - 2 ] , PATBLANK , Q )
+                                      ;
 
-        //******************************************************
-        // fetch actual length (halfword)
-        // compare with maximum possible length
-        //******************************************************
+        //*********************************************
+        // fetch actual length (halfword)              
+        // compare with maximum possible length        
+        //*********************************************
 
                        FINDRG ;
                        RGWORK := NXTRG ;
                        FPA . DSPLMT := FPA . DSPLMT + 2 ;
-                       GETADR ( STK [ TOP - 1 ] , Q1 , P1 , B1 ) ;
+                       GETADR2 ( STK [ TOP - 1 ] , Q1 , P1 , B1 ) ;
                        FINDRG ;
                        GENRX ( XLH , RGWORK , Q1 , B1 , P1 ) ;
-                       if PLEN < 4096 then
-                         GENRX ( XLA , NXTRG , PLEN , 0 , 0 )
+                       if Q < 4096 then
+                         GENRX ( XLA , NXTRG , Q , 0 , 0 )
                        else
-                         GENRXLIT ( XLH , NXTRG , PLEN , - 1 ) ;
+                         GENRXLIT ( XLH , NXTRG , Q , - 1 ) ;
                        GENRR ( XCR , RGWORK , NXTRG ) ;
                        AVAIL [ NXTRG ] := TRUE ;
                        AVAIL [ RGWORK ] := TRUE ;
 
-        //******************************************************
-        // do variable length move - use mcpoperation
-        // length value comes from register rgwork
-        //******************************************************
+        //*********************************************
+        // do variable length move - use mcpoperation  
+        // length value comes from register rgwork     
+        //*********************************************
 
                        DATLEN := DATNULL ;
                        DATLEN . VRBL := TRUE ;
@@ -12725,43 +13041,44 @@ procedure ASMNXTINST ;
                    TOP := TOP - 2
                  end (* tag/ca *) ;
 
-        //******************************************************
-        // varchar index: retrieve single string char via index
-        //******************************************************
+        //*******************************************************
+        // varchar index: retrieve single string char via index  
+        //*******************************************************
 
           PVIX : begin
                    with STK [ TOP - 2 ] do
                      begin
 
-        //******************************************************
-        // load maxlength field
-        // later: decide where string addr is
-        //******************************************************
+        //*********************************************
+        // load maxlength field                        
+        // later: decide where string addr is          
+        //*********************************************
 
-                       GETADR ( STK [ TOP - 2 ] , Q1 , P1 , B1 ) ;
+                       GETADR2 ( STK [ TOP - 2 ] , Q1 , P1 , B1 ) ;
                        FINDRG ;
                        GENRX ( XLH , NXTRG , Q1 , B1 , P1 ) ;
                        GENRR ( XLTR , NXTRG , NXTRG ) ;
                        AVAIL [ NXTRG ] := TRUE ;
 
-        //******************************************************
-        // load length field
-        // later: to check for index inside bounds
-        //******************************************************
+        //*********************************************
+        // load length field                           
+        // later: to check for index inside bounds     
+        //*********************************************
 
                        FPA . DSPLMT := FPA . DSPLMT + 2 ;
-                       GETADR ( STK [ TOP - 2 ] , Q1 , P1 , B1 ) ;
+                       GETADR2 ( STK [ TOP - 2 ] , Q1 , P1 , B1 ) ;
                        GENRX ( XLH , NXTRG , Q1 , B1 , P1 ) ;
 
-        //******************************************************
-        // load string address minus one (virtual origin)
-        // load index value from Top - 1
-        // add index value to virtual origin
-        //******************************************************
+        //*********************************************
+        // load string address minus one               
+        // (virtual origin)                            
+        // load index value from Top - 1               
+        // add index value to virtual origin           
+        //*********************************************
 
                        FINDRG ;
                        FPA . DSPLMT := FPA . DSPLMT + 1 ;
-                       GETADR ( STK [ TOP - 2 ] , Q1 , P1 , B1 ) ;
+                       GETADR2 ( STK [ TOP - 2 ] , Q1 , P1 , B1 ) ;
                        GENRX ( XLA , NXTRG , Q1 , B1 , P1 ) ;
                        RGWORK := NXTRG ;
                        LOAD ( STK [ TOP - 1 ] ) ;
@@ -12770,10 +13087,10 @@ procedure ASMNXTINST ;
                        AVAIL [ RGWORK ] := TRUE ;
                      end (* with *) ;
 
-        //******************************************************
-        // set top stack element (= string)
-        // to register address
-        //******************************************************
+        //*********************************************
+        // set top stack element (= string)            
+        // to register address                         
+        //*********************************************
 
                    TOP := TOP - 1 ;
                    with STK [ TOP - 1 ] do
@@ -12785,7 +13102,205 @@ procedure ASMNXTINST ;
                        RGADR := NXTRG ;
                      end (* with *) ;
                  end (* tag/ca *) ;
-          PVCC , PVLM , PVRP :
+
+        //*******************************************************
+        // varchar concat: concatenate varchars in workarea      
+        //*******************************************************
+
+          PVCC : begin
+
+        //*********************************************
+        // get lengths of both strings on stack        
+        //*********************************************
+
+                   DATWORKAREA := DATNULL ;
+                   with DATWORKAREA do
+                     begin
+                       DTYPE := VARC ;
+                       VRBL := TRUE ;
+                       DRCT := TRUE ;
+                       VPA := RGS ;
+                       RGADR := TXRG ;
+                     end (* with *) ;
+                   LEN1 := STK [ TOP - 1 ] . PLEN ;
+                   LEN2 := STK [ TOP - 2 ] . PLEN ;
+                   if ( LEN1 > 0 ) and ( LEN2 > 0 ) then
+                     begin
+
+        //*********************************************
+        // if both lengths are known at compile time   
+        // build string descriptor element in          
+        // workarea - load strcurr pointer first       
+        //*********************************************
+
+                       LEN_NEW := LEN1 + LEN2 ;
+                       FINDRG ;
+                       RGWORK := NXTRG ;
+                       P1 := 1 ;
+                       Q1 := STRCURR ;
+                       BASE ( Q1 , P1 , B1 ) ;
+                       GENRX ( XL , RGWORK , Q1 , B1 , P1 ) ;
+                       LITVALUE := LEN_NEW * 65536 + LEN_NEW ;
+                       GENRXLIT ( XL , TXRG , LITVALUE , 1 ) ;
+                       GENRX ( XST , TXRG , 0 , RGWORK , 0 ) ;
+                       GENRR ( XLR , TXRG , RGWORK ) ;
+
+        //*********************************************
+        // concatenate strings in workarea and         
+        // store new strcurr pointer                   
+        //*********************************************
+
+                       ASSIGN_STRING ( DATWORKAREA , STK [ TOP - 2 ] ,
+                                       0 , 0 ) ;
+                       GENRX ( XLA , TXRG , LEN2 , TXRG , 0 ) ;
+                       ASSIGN_STRING ( DATWORKAREA , STK [ TOP - 1 ] ,
+                                       0 , 0 ) ;
+                       GENRX ( XLA , TXRG , LEN1 + 4 , TXRG , 0 ) ;
+                       GENRX ( XST , TXRG , Q1 , B1 , P1 ) ;
+                     end (* then *)
+                   else
+                     begin
+
+        //*********************************************
+        // if one of the lengths is not known          
+        // at compile time                             
+        // build string descriptor element in          
+        // workarea from existent string descriptors   
+        //*********************************************
+
+                       LEN_NEW := - 1 ;
+                       FINDRG ;
+                       RGWORK := NXTRG ;
+                       P1 := 1 ;
+                       Q1 := STRCURR ;
+                       BASE ( Q1 , P1 , B1 ) ;
+                       GENRX ( XL , RGWORK , Q1 , B1 , P1 ) ;
+                       if LEN1 > 0 then
+                         begin
+
+        //*********************************************
+        // length 1 ist known, that is                 
+        // the length of the second operand            
+        //*********************************************
+
+                           with STK [ TOP - 2 ] do
+                             begin
+                               P2 := FPA . LVL ;
+                               Q2 := FPA . DSPLMT + 2 ;
+                               BASE ( Q2 , P2 , B2 ) ;
+                               GENRX ( XLH , TXRG , Q2 , B2 , P2 ) ;
+                             end (* with *) ;
+                           GENRS ( XSLL , TXRG , 0 , 16 , 0 ) ;
+                           LITVALUE := LEN1 ;
+                           GENRXLIT ( XA , TXRG , LITVALUE , 1 ) ;
+                           GENRX ( XST , TXRG , 0 , RGWORK , 0 ) ;
+                           GENRR ( XLR , TXRG , RGWORK ) ;
+
+        //*********************************************
+        // concatenate strings in workarea and         
+        // store new strcurr pointer                   
+        //*********************************************
+
+                           ASSIGN_STRING ( DATWORKAREA , STK [ TOP - 2
+                                           ] , RGWORK , 0 ) ;
+                           GENRX ( XAH , TXRG , 0 , RGWORK , 0 ) ;
+                           ASSIGN_STRING ( DATWORKAREA , STK [ TOP - 1
+                                           ] , 0 , 0 ) ;
+                         end (* then *)
+                       else
+                         if LEN2 > 0 then
+                           begin
+
+        //*********************************************
+        // length 2 ist known, that is                 
+        // the length of the first operand             
+        //*********************************************
+
+                             LITVALUE := LEN2 * 65536 ;
+                             GENRXLIT ( XL , TXRG , LITVALUE , 1 ) ;
+                             GENRS ( XSLL , TXRG , 0 , 16 , 0 ) ;
+                             with STK [ TOP - 1 ] do
+                               begin
+                                 P2 := FPA . LVL ;
+                                 Q2 := FPA . DSPLMT + 2 ;
+                                 BASE ( Q2 , P2 , B2 ) ;
+                                 GENRX ( XAH , TXRG , Q2 , B2 , P2 ) ;
+                               end (* with *) ;
+                             GENRX ( XST , TXRG , 0 , RGWORK , 0 ) ;
+                             GENRR ( XLR , TXRG , RGWORK ) ;
+
+        //*********************************************
+        // concatenate strings in workarea and         
+        // store new strcurr pointer                   
+        //*********************************************
+
+                             ASSIGN_STRING ( DATWORKAREA , STK [ TOP -
+                                             2 ] , 0 , 0 ) ;
+                             GENRX ( XAH , TXRG , 0 , RGWORK , 0 ) ;
+                             ASSIGN_STRING ( DATWORKAREA , STK [ TOP -
+                                             1 ] , RGWORK , 2 ) ;
+                           end (* then *)
+                         else
+                           begin
+                             with STK [ TOP - 2 ] do
+                               begin
+                                 P2 := FPA . LVL ;
+                                 Q2 := FPA . DSPLMT + 2 ;
+                                 BASE ( Q2 , P2 , B2 ) ;
+                                 GENRX ( XLH , TXRG , Q2 , B2 , P2 ) ;
+                               end (* with *) ;
+                             GENRS ( XSLL , TXRG , 0 , 16 , 0 ) ;
+                             with STK [ TOP - 1 ] do
+                               begin
+                                 P2 := FPA . LVL ;
+                                 Q2 := FPA . DSPLMT + 2 ;
+                                 BASE ( Q2 , P2 , B2 ) ;
+                                 GENRX ( XAH , TXRG , Q2 , B2 , P2 ) ;
+                               end (* with *) ;
+                             GENRX ( XST , TXRG , 0 , RGWORK , 0 ) ;
+                             GENRR ( XLR , TXRG , RGWORK ) ;
+
+        //*********************************************
+        // concatenate strings in workarea and         
+        // store new strcurr pointer                   
+        //*********************************************
+
+                             ASSIGN_STRING ( DATWORKAREA , STK [ TOP -
+                                             2 ] , RGWORK , 0 ) ;
+                             GENRX ( XAH , TXRG , 0 , RGWORK , 0 ) ;
+                             ASSIGN_STRING ( DATWORKAREA , STK [ TOP -
+                                             1 ] , RGWORK , 2 ) ;
+                           end (* else *) ;
+                       GENRX ( XAH , TXRG , 2 , RGWORK , 0 ) ;
+                       GENRX ( XLA , TXRG , 4 , TXRG , 0 ) ;
+                       GENRX ( XST , TXRG , Q1 , B1 , P1 ) ;
+                       GENRX ( XLH , TXRG , 0 , RGWORK , 0 ) ;
+                       GENRX ( XAH , TXRG , 2 , RGWORK , 0 ) ;
+                       GENRX ( XSTH , TXRG , 0 , RGWORK , 0 ) ;
+                       GENRX ( XSTH , TXRG , 2 , RGWORK , 0 ) ;
+                     end (* else *) ;
+
+        //*********************************************
+        // new string is addressed by register         
+        // in workarea - points to string descriptor   
+        //*********************************************
+
+                   TOP := TOP - 1 ;
+                   with STK [ TOP - 1 ] do
+                     begin
+                       DTYPE := VARC ;
+                       PLEN := LEN_NEW ;
+                       VRBL := TRUE ;
+                       DRCT := TRUE ;
+                       VPA := RGS ;
+                       RGADR := RGWORK ;
+                       FPA . LVL := 0 ;
+                       FPA . DSPLMT := 0 ;
+                       MEMADR . LVL := 0 ;
+                       MEMADR . DSPLMT := 0 ;
+                     end (* with *)
+                 end (* tag/ca *) ;
+          PVLM , PVRP :
             ;
           PVSM : ;
         end (* case *)
@@ -13419,7 +13934,7 @@ procedure ASMNXTINST ;
          CSETOPS ;
 
      //************************************************************
-     // vstring instructions
+     // vstring instructions                                       
      //************************************************************
 
        PVPU , PVPO :
@@ -13510,10 +14025,10 @@ procedure SETUP ;
      TYPCDE [ 'V' ] := VARC ;
 
      //************************************************************
-     // TYPCDE [ 'F' ] := FORT ;
-     // TYPCDE [ 'X' ] := FBOOL ;
-     // TYPCDE [ 'Y' ] := FINT ;
-     // TYPCDE [ 'Z' ] := FREAL ;
+     // TYPCDE [ 'F' ] := FORT ;                                   
+     // TYPCDE [ 'X' ] := FBOOL ;                                  
+     // TYPCDE [ 'Y' ] := FINT ;                                   
+     // TYPCDE [ 'Z' ] := FREAL ;                                  
      //************************************************************
 
      TOP := 1 ;
@@ -13593,7 +14108,7 @@ begin (* HAUPTPROGRAMM *)
     WRITELN ( OUTPUT ) ;
 
   //******************************************************************
-  // read input first time to gather procedure information
+  // read input first time to gather procedure information            
   //******************************************************************
 
   PIANKER := NIL ;
@@ -13634,10 +14149,10 @@ begin (* HAUPTPROGRAMM *)
   PIAKT := NIL ;
 
   //******************************************************************
-  // read input second time to process p-codes
-  // curpno must be set to minus 1 again,
-  // otherwise the first LOC instruction will go wild ...
-  // mark (heapmark) must be delayed after the first read loop :-)
+  // read input second time to process p-codes                        
+  // curpno must be set to minus 1 again,                             
+  // otherwise the first LOC instruction will go wild ...             
+  // mark (heapmark) must be delayed after the first read loop :-)    
   //******************************************************************
 
   MARK ( HEAPMARK ) ;
@@ -13650,7 +14165,7 @@ begin (* HAUPTPROGRAMM *)
   until PCODE = PSTP ;
 
   //******************************************************************
-  // check timer
+  // check timer                                                      
   //******************************************************************
 
   TIMER := CLOCK ( 0 ) - TIMER ;

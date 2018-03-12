@@ -43,6 +43,8 @@ base inside getadr2: b =           13
 start assign_string, linecnt = 23
 target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   400 (VARC)         
 source:  STKADR=    0 PLEN=  8 SCNSTNO=  3 FPA= -1    32 (CARR)         
+len_reg  =            0
+len_offs =            0
 base inside getadr2: q =          404
 base inside getadr2: p =            0
 base inside getadr2: b =           13
@@ -128,13 +130,15 @@ Available Regs:   1  2  3  4  5  6  7
 base inside getadr2: q =          490
 base inside getadr2: p =            0
 base inside getadr2: b =           13
-start assign_string, linecnt = 41
+start assign_string, linecnt = 39
 target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   490 (VARC)         
 source:  STKADR=    0 PLEN=  1 SCNSTNO=  0 FPA=  0    65 (CHR )         
+len_reg  =            0
+len_offs =            0
 base inside getadr2: q =          494
 base inside getadr2: p =            0
 base inside getadr2: b =           13
-end assign_string, linecnt = 41
+end assign_string, linecnt = 39
 start stringops - pcode = PVPO
 start stringops - p =            1
 start stringops - q =          720
@@ -159,14 +163,16 @@ Available Regs:   1  2  3  4  5  6  7
 base inside getadr2: q =          490
 base inside getadr2: p =            0
 base inside getadr2: b =           13
-start assign_string, linecnt = 44
+start assign_string, linecnt = 42
 target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   490 (VARC)         
 source:  STKADR=    0 PLEN=  1 SCNSTNO=  0 FPA=  0     0
      VPA-MEM =  1   448 DIRECT (CHR )         
+len_reg  =            0
+len_offs =            0
 base inside getadr2: q =          494
 base inside getadr2: p =            0
 base inside getadr2: b =           13
-end assign_string, linecnt = 44
+end assign_string, linecnt = 42
 start stringops - pcode = PVPO
 start stringops - p =            1
 start stringops - q =          720
@@ -189,13 +195,15 @@ Available Regs:   1  2  3  4  5  6  7
 base inside getadr2: q =          490
 base inside getadr2: p =            0
 base inside getadr2: b =           13
-start assign_string, linecnt = 47
+start assign_string, linecnt = 45
 target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   490 (VARC)         
 source:  STKADR=    0 PLEN=  1 SCNSTNO=  0 FPA=  0    65 (CHR )         
+len_reg  =            0
+len_offs =            0
 base inside getadr2: q =          494
 base inside getadr2: p =            0
 base inside getadr2: b =           13
-end assign_string, linecnt = 47
+end assign_string, linecnt = 45
 start stringops - pcode = PVPO
 start stringops - p =            1
 start stringops - q =          720
@@ -221,16 +229,18 @@ Available Regs:   1  2  3  4  5  6  7
 base inside getadr2: q =          490
 base inside getadr2: p =            0
 base inside getadr2: b =           13
-start assign_string, linecnt = 50
+start assign_string, linecnt = 48
 target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   490 (VARC)         
 source:  STKADR=    0 PLEN= 12 SCNSTNO= 18 FPA= -1   236 (CARR)         
+len_reg  =            0
+len_offs =            0
 base inside getadr2: q =          494
 base inside getadr2: p =            0
 base inside getadr2: b =           13
 base inside getadr2: q =          236
 base inside getadr2: p =           -1
 base inside getadr2: b =            0
-end assign_string, linecnt = 50
+end assign_string, linecnt = 48
 start stringops - pcode = PVPO
 start stringops - p =            1
 start stringops - q =          720
@@ -253,16 +263,18 @@ Available Regs:   1  2  3  4  5  6  7
 base inside getadr2: q =          490
 base inside getadr2: p =            0
 base inside getadr2: b =           13
-start assign_string, linecnt = 62
+start assign_string, linecnt = 60
 target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   490 (VARC)         
 source:  STKADR=    0 PLEN= 20 SCNSTNO=  0 FPA=  1   450 (CARR)         
+len_reg  =            0
+len_offs =            0
 base inside getadr2: q =          494
 base inside getadr2: p =            0
 base inside getadr2: b =           13
 base inside getadr2: q =          450
 base inside getadr2: p =            0
 base inside getadr2: b =           13
-end assign_string, linecnt = 62
+end assign_string, linecnt = 60
 start stringops - pcode = PVPO
 start stringops - p =            1
 start stringops - q =          720
@@ -288,16 +300,18 @@ Available Regs:   1  2  3  4  5  6  7
 base inside getadr2: q =          490
 base inside getadr2: p =            0
 base inside getadr2: b =           13
-start assign_string, linecnt = 70
+start assign_string, linecnt = 68
 target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   490 (VARC)         
 source:  STKADR=    0 PLEN=  5 SCNSTNO= 23 FPA= -1   336 (CARR)         
+len_reg  =            0
+len_offs =            0
 base inside getadr2: q =          494
 base inside getadr2: p =            0
 base inside getadr2: b =           13
 base inside getadr2: q =          336
 base inside getadr2: p =           -1
 base inside getadr2: b =            0
-end assign_string, linecnt = 70
+end assign_string, linecnt = 68
 start stringops - pcode = PVPO
 start stringops - p =            1
 start stringops - q =          720
@@ -358,28 +372,32 @@ Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   450 (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN=  6 SCNSTNO= 27 FPA= -1   428 (CARR)         
  +++ DEPTH= 3 STKADR=    0 PLEN=  8 SCNSTNO= 28 FPA= -1   434 (CARR)         
-start assign_string, linecnt = 75
+start assign_string, linecnt = 73
 target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0
      VPA-REG = 14 DIRECT (VARC)         
 source:  STKADR=    0 PLEN=  6 SCNSTNO= 27 FPA= -1   428 (CARR)         
+len_reg  =            0
+len_offs =            0
 base inside getadr2: q =            4
 base inside getadr2: p =           14
 base inside getadr2: b =            0
 base inside getadr2: q =          428
 base inside getadr2: p =           -1
 base inside getadr2: b =            0
-end assign_string, linecnt = 75
-start assign_string, linecnt = 75
+end assign_string, linecnt = 73
+start assign_string, linecnt = 73
 target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0
      VPA-REG = 14 DIRECT (VARC)         
 source:  STKADR=    0 PLEN=  8 SCNSTNO= 28 FPA= -1   434 (CARR)         
+len_reg  =            0
+len_offs =            0
 base inside getadr2: q =            4
 base inside getadr2: p =           14
 base inside getadr2: b =            0
 base inside getadr2: q =          434
 base inside getadr2: p =           -1
 base inside getadr2: b =            0
-end assign_string, linecnt = 75
+end assign_string, linecnt = 73
 start stringops - pcode = PVMV
 start stringops - p =            0
 start stringops - q =           20
@@ -426,28 +444,32 @@ Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  1   490 (VARC)         
  +++ DEPTH= 3 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  1   490 (VARC)         
-start assign_string, linecnt = 77
+start assign_string, linecnt = 80
 target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0
      VPA-REG = 14 DIRECT (VARC)         
 source:  STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  1   490 (VARC)         
+len_reg  =            2
+len_offs =            0
 base inside getadr2: q =            4
 base inside getadr2: p =           14
 base inside getadr2: b =            0
 base inside getadr2: q =          494
 base inside getadr2: p =            0
 base inside getadr2: b =           13
-end assign_string, linecnt = 77
-start assign_string, linecnt = 77
+end assign_string, linecnt = 80
+start assign_string, linecnt = 80
 target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0
      VPA-REG = 14 DIRECT (VARC)         
 source:  STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  1   490 (VARC)         
+len_reg  =            2
+len_offs =            2
 base inside getadr2: q =            4
 base inside getadr2: p =           14
 base inside getadr2: b =            0
 base inside getadr2: q =          494
 base inside getadr2: p =            0
 base inside getadr2: b =           13
-end assign_string, linecnt = 77
+end assign_string, linecnt = 80
 start stringops - pcode = PVST
 start stringops - p =            0
 start stringops - q =          200
@@ -458,17 +480,19 @@ Available Regs:   1  3  4  5  6  7
 base inside getadr2: q =          514
 base inside getadr2: p =            0
 base inside getadr2: b =           13
-start assign_string, linecnt = 77
+start assign_string, linecnt = 80
 target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (VARC)         
 source:  STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0
      VPA-REG =  2 DIRECT (VARC)         
+len_reg  =            2
+len_offs =            2
 base inside getadr2: q =          518
 base inside getadr2: p =            0
 base inside getadr2: b =           13
 base inside getadr2: q =            4
 base inside getadr2: p =            2
 base inside getadr2: b =            0
-end assign_string, linecnt = 77
+end assign_string, linecnt = 80
 start stringops - pcode = PVPO
 start stringops - p =            1
 start stringops - q =          720
@@ -499,28 +523,32 @@ Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  1   490 (VARC)         
  +++ DEPTH= 3 STKADR=    0 PLEN=  9 SCNSTNO= 33 FPA= -1   532 (CARR)         
-start assign_string, linecnt = 80
+start assign_string, linecnt = 83
 target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0
      VPA-REG = 14 DIRECT (VARC)         
 source:  STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  1   490 (VARC)         
+len_reg  =            2
+len_offs =            0
 base inside getadr2: q =            4
 base inside getadr2: p =           14
 base inside getadr2: b =            0
 base inside getadr2: q =          494
 base inside getadr2: p =            0
 base inside getadr2: b =           13
-end assign_string, linecnt = 80
-start assign_string, linecnt = 80
+end assign_string, linecnt = 83
+start assign_string, linecnt = 83
 target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0
      VPA-REG = 14 DIRECT (VARC)         
 source:  STKADR=    0 PLEN=  9 SCNSTNO= 33 FPA= -1   532 (CARR)         
+len_reg  =            0
+len_offs =            0
 base inside getadr2: q =            4
 base inside getadr2: p =           14
 base inside getadr2: b =            0
 base inside getadr2: q =          532
 base inside getadr2: p =           -1
 base inside getadr2: b =            0
-end assign_string, linecnt = 80
+end assign_string, linecnt = 83
 start stringops - pcode = PVST
 start stringops - p =            0
 start stringops - q =          200
@@ -531,17 +559,19 @@ Available Regs:   1  3  4  5  6  7
 base inside getadr2: q =          514
 base inside getadr2: p =            0
 base inside getadr2: b =           13
-start assign_string, linecnt = 80
+start assign_string, linecnt = 83
 target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (VARC)         
 source:  STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0
      VPA-REG =  2 DIRECT (VARC)         
+len_reg  =            2
+len_offs =            2
 base inside getadr2: q =          518
 base inside getadr2: p =            0
 base inside getadr2: b =           13
 base inside getadr2: q =            4
 base inside getadr2: p =            2
 base inside getadr2: b =            0
-end assign_string, linecnt = 80
+end assign_string, linecnt = 83
 start stringops - pcode = PVPO
 start stringops - p =            1
 start stringops - q =          720
@@ -549,3 +579,1291 @@ Available Regs:   1  2  3  4  5  6  7
 DUMPSTK nach LCA x
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO= 36 FPA= -1   541 (ADR )         
+start stringops - pcode = PVLD
+start stringops - p =            0
+start stringops - q =           20
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   490 (ADR )         
+DUMPSTK nach LCA x
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO= 37 FPA= -1   581 (ADR )         
+start stringops - pcode = PVC2
+start stringops - p =            0
+start stringops - q =            9
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  1   490 (VARC)         
+ +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO= 37 FPA= -1   581 (ADR )         
+start stringops - pcode = PVCC
+start stringops - p =            0
+start stringops - q =            0
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  1   490 (VARC)         
+ +++ DEPTH= 3 STKADR=    0 PLEN=  9 SCNSTNO= 37 FPA= -1   581 (CARR)         
+start assign_string, linecnt = 86
+target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0
+     VPA-REG = 14 DIRECT (VARC)         
+source:  STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  1   490 (VARC)         
+len_reg  =            2
+len_offs =            0
+base inside getadr2: q =            4
+base inside getadr2: p =           14
+base inside getadr2: b =            0
+base inside getadr2: q =          494
+base inside getadr2: p =            0
+base inside getadr2: b =           13
+end assign_string, linecnt = 86
+start assign_string, linecnt = 86
+target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0
+     VPA-REG = 14 DIRECT (VARC)         
+source:  STKADR=    0 PLEN=  9 SCNSTNO= 37 FPA= -1   581 (CARR)         
+len_reg  =            0
+len_offs =            0
+base inside getadr2: q =            4
+base inside getadr2: p =           14
+base inside getadr2: b =            0
+base inside getadr2: q =          581
+base inside getadr2: p =           -1
+base inside getadr2: b =            0
+end assign_string, linecnt = 86
+DUMPSTK nach LCA x
+Available Regs:   1  3  4  5  6  7
+ +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO= 39 FPA= -1   590 (ADR )         
+start stringops - pcode = PVC2
+start stringops - p =            0
+start stringops - q =           11
+Available Regs:   1  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0
+     VPA-REG =  2 DIRECT (VARC)         
+ +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO= 39 FPA= -1   590 (ADR )         
+start stringops - pcode = PVCC
+start stringops - p =            0
+start stringops - q =            0
+Available Regs:   1  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0
+     VPA-REG =  2 DIRECT (VARC)         
+ +++ DEPTH= 3 STKADR=    0 PLEN= 11 SCNSTNO= 39 FPA= -1   590 (CARR)         
+start assign_string, linecnt = 86
+target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0
+     VPA-REG = 14 DIRECT (VARC)         
+source:  STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0
+     VPA-REG =  2 DIRECT (VARC)         
+len_reg  =            3
+len_offs =            0
+base inside getadr2: q =            4
+base inside getadr2: p =           14
+base inside getadr2: b =            0
+base inside getadr2: q =            4
+base inside getadr2: p =            2
+base inside getadr2: b =            0
+end assign_string, linecnt = 86
+start assign_string, linecnt = 86
+target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0
+     VPA-REG = 14 DIRECT (VARC)         
+source:  STKADR=    0 PLEN= 11 SCNSTNO= 39 FPA= -1   590 (CARR)         
+len_reg  =            0
+len_offs =            0
+base inside getadr2: q =            4
+base inside getadr2: p =           14
+base inside getadr2: b =            0
+base inside getadr2: q =          590
+base inside getadr2: p =           -1
+base inside getadr2: b =            0
+end assign_string, linecnt = 86
+start stringops - pcode = PVST
+start stringops - p =            0
+start stringops - q =          200
+Available Regs:   1  2  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0
+     VPA-REG =  3 DIRECT (VARC)         
+base inside getadr2: q =          514
+base inside getadr2: p =            0
+base inside getadr2: b =           13
+start assign_string, linecnt = 86
+target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (VARC)         
+source:  STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0
+     VPA-REG =  3 DIRECT (VARC)         
+len_reg  =            3
+len_offs =            2
+base inside getadr2: q =          518
+base inside getadr2: p =            0
+base inside getadr2: b =           13
+base inside getadr2: q =            4
+base inside getadr2: p =            3
+base inside getadr2: b =            0
+end assign_string, linecnt = 86
+start stringops - pcode = PVPO
+start stringops - p =            1
+start stringops - q =          720
+Available Regs:   1  2  3  4  5  6  7
+DUMPSTK nach LCA x
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO= 42 FPA= -1   604 (ADR )         
+start stringops - pcode = PVLD
+start stringops - p =            0
+start stringops - q =           20
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   490 (ADR )         
+DUMPSTK nach LCA x
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO= 43 FPA= -1   644 (ADR )         
+start stringops - pcode = PVC2
+start stringops - p =            0
+start stringops - q =            9
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  1   490 (VARC)         
+ +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO= 43 FPA= -1   644 (ADR )         
+DUMPSTK nach LCA x
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 4 STKADR=    0 PLEN=  0 SCNSTNO= 44 FPA= -1   653 (ADR )         
+start stringops - pcode = PVC2
+start stringops - p =            0
+start stringops - q =           11
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  1   490 (VARC)         
+ +++ DEPTH= 3 STKADR=    0 PLEN=  9 SCNSTNO= 43 FPA= -1   644 (CARR)         
+ +++ DEPTH= 4 STKADR=    0 PLEN=  0 SCNSTNO= 44 FPA= -1   653 (ADR )         
+start stringops - pcode = PVCC
+start stringops - p =            0
+start stringops - q =            0
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  1   490 (VARC)         
+ +++ DEPTH= 3 STKADR=    0 PLEN=  9 SCNSTNO= 43 FPA= -1   644 (CARR)         
+ +++ DEPTH= 4 STKADR=    0 PLEN= 11 SCNSTNO= 44 FPA= -1   653 (CARR)         
+start assign_string, linecnt = 89
+target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0
+     VPA-REG = 14 DIRECT (VARC)         
+source:  STKADR=    0 PLEN=  9 SCNSTNO= 43 FPA= -1   644 (CARR)         
+len_reg  =            0
+len_offs =            0
+base inside getadr2: q =            4
+base inside getadr2: p =           14
+base inside getadr2: b =            0
+base inside getadr2: q =          644
+base inside getadr2: p =           -1
+base inside getadr2: b =            0
+end assign_string, linecnt = 89
+start assign_string, linecnt = 89
+target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0
+     VPA-REG = 14 DIRECT (VARC)         
+source:  STKADR=    0 PLEN= 11 SCNSTNO= 44 FPA= -1   653 (CARR)         
+len_reg  =            0
+len_offs =            0
+base inside getadr2: q =            4
+base inside getadr2: p =           14
+base inside getadr2: b =            0
+base inside getadr2: q =          653
+base inside getadr2: p =           -1
+base inside getadr2: b =            0
+end assign_string, linecnt = 89
+start stringops - pcode = PVCC
+start stringops - p =            0
+start stringops - q =            0
+Available Regs:   1  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  1   490 (VARC)         
+ +++ DEPTH= 3 STKADR=    0 PLEN= 20 SCNSTNO= 43 FPA=  0     0
+     VPA-REG =  2 DIRECT (VARC)         
+start assign_string, linecnt = 89
+target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0
+     VPA-REG = 14 DIRECT (VARC)         
+source:  STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  1   490 (VARC)         
+len_reg  =            3
+len_offs =            0
+base inside getadr2: q =            4
+base inside getadr2: p =           14
+base inside getadr2: b =            0
+base inside getadr2: q =          494
+base inside getadr2: p =            0
+base inside getadr2: b =           13
+end assign_string, linecnt = 89
+start assign_string, linecnt = 89
+target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0
+     VPA-REG = 14 DIRECT (VARC)         
+source:  STKADR=    0 PLEN= 20 SCNSTNO= 43 FPA=  0     0
+     VPA-REG =  2 DIRECT (VARC)         
+len_reg  =            0
+len_offs =            0
+base inside getadr2: q =            4
+base inside getadr2: p =           14
+base inside getadr2: b =            0
+base inside getadr2: q =            4
+base inside getadr2: p =            2
+base inside getadr2: b =            0
+end assign_string, linecnt = 89
+start stringops - pcode = PVST
+start stringops - p =            0
+start stringops - q =          200
+Available Regs:   1  2  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0
+     VPA-REG =  3 DIRECT (VARC)         
+base inside getadr2: q =          514
+base inside getadr2: p =            0
+base inside getadr2: b =           13
+start assign_string, linecnt = 89
+target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (VARC)         
+source:  STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0
+     VPA-REG =  3 DIRECT (VARC)         
+len_reg  =            3
+len_offs =            2
+base inside getadr2: q =          518
+base inside getadr2: p =            0
+base inside getadr2: b =           13
+base inside getadr2: q =            4
+base inside getadr2: p =            3
+base inside getadr2: b =            0
+end assign_string, linecnt = 89
+start stringops - pcode = PVPO
+start stringops - p =            1
+start stringops - q =          720
+Available Regs:   1  2  3  4  5  6  7
+DUMPSTK nach LCA x
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO= 48 FPA= -1   664 (ADR )         
+start stringops - pcode = PVLD
+start stringops - p =            0
+start stringops - q =           20
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   490 (ADR )         
+DUMPSTK nach LCA x
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO= 49 FPA= -1   704 (ADR )         
+start stringops - pcode = PVC2
+start stringops - p =            0
+start stringops - q =            9
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  1   490 (VARC)         
+ +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO= 49 FPA= -1   704 (ADR )         
+start stringops - pcode = PVCC
+start stringops - p =            0
+start stringops - q =            0
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  1   490 (VARC)         
+ +++ DEPTH= 3 STKADR=    0 PLEN=  9 SCNSTNO= 49 FPA= -1   704 (CARR)         
+start assign_string, linecnt = 92
+target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0
+     VPA-REG = 14 DIRECT (VARC)         
+source:  STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  1   490 (VARC)         
+len_reg  =            2
+len_offs =            0
+base inside getadr2: q =            4
+base inside getadr2: p =           14
+base inside getadr2: b =            0
+base inside getadr2: q =          494
+base inside getadr2: p =            0
+base inside getadr2: b =           13
+end assign_string, linecnt = 92
+start assign_string, linecnt = 92
+target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0
+     VPA-REG = 14 DIRECT (VARC)         
+source:  STKADR=    0 PLEN=  9 SCNSTNO= 49 FPA= -1   704 (CARR)         
+len_reg  =            0
+len_offs =            0
+base inside getadr2: q =            4
+base inside getadr2: p =           14
+base inside getadr2: b =            0
+base inside getadr2: q =          704
+base inside getadr2: p =           -1
+base inside getadr2: b =            0
+end assign_string, linecnt = 92
+DUMPSTK nach LCA x
+Available Regs:   1  3  4  5  6  7
+ +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO= 51 FPA= -1   713 (ADR )         
+start stringops - pcode = PVC2
+start stringops - p =            0
+start stringops - q =           11
+Available Regs:   1  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0
+     VPA-REG =  2 DIRECT (VARC)         
+ +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO= 51 FPA= -1   713 (ADR )         
+start stringops - pcode = PVCC
+start stringops - p =            0
+start stringops - q =            0
+Available Regs:   1  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0
+     VPA-REG =  2 DIRECT (VARC)         
+ +++ DEPTH= 3 STKADR=    0 PLEN= 11 SCNSTNO= 51 FPA= -1   713 (CARR)         
+start assign_string, linecnt = 92
+target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0
+     VPA-REG = 14 DIRECT (VARC)         
+source:  STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0
+     VPA-REG =  2 DIRECT (VARC)         
+len_reg  =            3
+len_offs =            0
+base inside getadr2: q =            4
+base inside getadr2: p =           14
+base inside getadr2: b =            0
+base inside getadr2: q =            4
+base inside getadr2: p =            2
+base inside getadr2: b =            0
+end assign_string, linecnt = 92
+start assign_string, linecnt = 92
+target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0
+     VPA-REG = 14 DIRECT (VARC)         
+source:  STKADR=    0 PLEN= 11 SCNSTNO= 51 FPA= -1   713 (CARR)         
+len_reg  =            0
+len_offs =            0
+base inside getadr2: q =            4
+base inside getadr2: p =           14
+base inside getadr2: b =            0
+base inside getadr2: q =          713
+base inside getadr2: p =           -1
+base inside getadr2: b =            0
+end assign_string, linecnt = 92
+start stringops - pcode = PVST
+start stringops - p =            0
+start stringops - q =          200
+Available Regs:   1  2  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0
+     VPA-REG =  3 DIRECT (VARC)         
+base inside getadr2: q =          514
+base inside getadr2: p =            0
+base inside getadr2: b =           13
+start assign_string, linecnt = 92
+target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (VARC)         
+source:  STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0
+     VPA-REG =  3 DIRECT (VARC)         
+len_reg  =            3
+len_offs =            2
+base inside getadr2: q =          518
+base inside getadr2: p =            0
+base inside getadr2: b =           13
+base inside getadr2: q =            4
+base inside getadr2: p =            3
+base inside getadr2: b =            0
+end assign_string, linecnt = 92
+start stringops - pcode = PVPO
+start stringops - p =            1
+start stringops - q =          720
+Available Regs:   1  2  3  4  5  6  7
+DUMPSTK nach LCA x
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO= 54 FPA= -1   724 (ADR )         
+start stringops - pcode = PVLD
+start stringops - p =            0
+start stringops - q =           20
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   490 (ADR )         
+DUMPSTK nach LCA x
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO= 55 FPA= -1   764 (ADR )         
+start stringops - pcode = PVC2
+start stringops - p =            0
+start stringops - q =            9
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  1   490 (VARC)         
+ +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO= 55 FPA= -1   764 (ADR )         
+start stringops - pcode = PVCC
+start stringops - p =            0
+start stringops - q =            0
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  1   490 (VARC)         
+ +++ DEPTH= 3 STKADR=    0 PLEN=  9 SCNSTNO= 55 FPA= -1   764 (CARR)         
+start assign_string, linecnt = 95
+target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0
+     VPA-REG = 14 DIRECT (VARC)         
+source:  STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  1   490 (VARC)         
+len_reg  =            2
+len_offs =            0
+base inside getadr2: q =            4
+base inside getadr2: p =           14
+base inside getadr2: b =            0
+base inside getadr2: q =          494
+base inside getadr2: p =            0
+base inside getadr2: b =           13
+end assign_string, linecnt = 95
+start assign_string, linecnt = 95
+target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0
+     VPA-REG = 14 DIRECT (VARC)         
+source:  STKADR=    0 PLEN=  9 SCNSTNO= 55 FPA= -1   764 (CARR)         
+len_reg  =            0
+len_offs =            0
+base inside getadr2: q =            4
+base inside getadr2: p =           14
+base inside getadr2: b =            0
+base inside getadr2: q =          764
+base inside getadr2: p =           -1
+base inside getadr2: b =            0
+end assign_string, linecnt = 95
+DUMPSTK nach LCA x
+Available Regs:   1  3  4  5  6  7
+ +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO= 57 FPA= -1   773 (ADR )         
+start stringops - pcode = PVC2
+start stringops - p =            0
+start stringops - q =           11
+Available Regs:   1  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0
+     VPA-REG =  2 DIRECT (VARC)         
+ +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO= 57 FPA= -1   773 (ADR )         
+start stringops - pcode = PVCC
+start stringops - p =            0
+start stringops - q =            0
+Available Regs:   1  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0
+     VPA-REG =  2 DIRECT (VARC)         
+ +++ DEPTH= 3 STKADR=    0 PLEN= 11 SCNSTNO= 57 FPA= -1   773 (CARR)         
+start assign_string, linecnt = 95
+target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0
+     VPA-REG = 14 DIRECT (VARC)         
+source:  STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0
+     VPA-REG =  2 DIRECT (VARC)         
+len_reg  =            3
+len_offs =            0
+base inside getadr2: q =            4
+base inside getadr2: p =           14
+base inside getadr2: b =            0
+base inside getadr2: q =            4
+base inside getadr2: p =            2
+base inside getadr2: b =            0
+end assign_string, linecnt = 95
+start assign_string, linecnt = 95
+target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0
+     VPA-REG = 14 DIRECT (VARC)         
+source:  STKADR=    0 PLEN= 11 SCNSTNO= 57 FPA= -1   773 (CARR)         
+len_reg  =            0
+len_offs =            0
+base inside getadr2: q =            4
+base inside getadr2: p =           14
+base inside getadr2: b =            0
+base inside getadr2: q =          773
+base inside getadr2: p =           -1
+base inside getadr2: b =            0
+end assign_string, linecnt = 95
+start stringops - pcode = PVST
+start stringops - p =            0
+start stringops - q =          200
+Available Regs:   1  2  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0
+     VPA-REG =  3 DIRECT (VARC)         
+base inside getadr2: q =          514
+base inside getadr2: p =            0
+base inside getadr2: b =           13
+start assign_string, linecnt = 95
+target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (VARC)         
+source:  STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0
+     VPA-REG =  3 DIRECT (VARC)         
+len_reg  =            3
+len_offs =            2
+base inside getadr2: q =          518
+base inside getadr2: p =            0
+base inside getadr2: b =           13
+base inside getadr2: q =            4
+base inside getadr2: p =            3
+base inside getadr2: b =            0
+end assign_string, linecnt = 95
+start stringops - pcode = PVPO
+start stringops - p =            1
+start stringops - q =          720
+Available Regs:   1  2  3  4  5  6  7
+DUMPSTK nach LCA x
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO= 60 FPA= -1   784 (ADR )         
+start stringops - pcode = PVLD
+start stringops - p =            0
+start stringops - q =           20
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   490 (ADR )         
+DUMPSTK nach LCA x
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO= 61 FPA= -1   824 (ADR )         
+start stringops - pcode = PVC2
+start stringops - p =            0
+start stringops - q =            9
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  1   490 (VARC)         
+ +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO= 61 FPA= -1   824 (ADR )         
+start stringops - pcode = PVCC
+start stringops - p =            0
+start stringops - q =            0
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  1   490 (VARC)         
+ +++ DEPTH= 3 STKADR=    0 PLEN=  9 SCNSTNO= 61 FPA= -1   824 (CARR)         
+start assign_string, linecnt = 98
+target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0
+     VPA-REG = 14 DIRECT (VARC)         
+source:  STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  1   490 (VARC)         
+len_reg  =            2
+len_offs =            0
+base inside getadr2: q =            4
+base inside getadr2: p =           14
+base inside getadr2: b =            0
+base inside getadr2: q =          494
+base inside getadr2: p =            0
+base inside getadr2: b =           13
+end assign_string, linecnt = 98
+start assign_string, linecnt = 98
+target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0
+     VPA-REG = 14 DIRECT (VARC)         
+source:  STKADR=    0 PLEN=  9 SCNSTNO= 61 FPA= -1   824 (CARR)         
+len_reg  =            0
+len_offs =            0
+base inside getadr2: q =            4
+base inside getadr2: p =           14
+base inside getadr2: b =            0
+base inside getadr2: q =          824
+base inside getadr2: p =           -1
+base inside getadr2: b =            0
+end assign_string, linecnt = 98
+DUMPSTK nach LCA x
+Available Regs:   1  3  4  5  6  7
+ +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO= 63 FPA= -1   833 (ADR )         
+start stringops - pcode = PVC2
+start stringops - p =            0
+start stringops - q =           11
+Available Regs:   1  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0
+     VPA-REG =  2 DIRECT (VARC)         
+ +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO= 63 FPA= -1   833 (ADR )         
+start stringops - pcode = PVCC
+start stringops - p =            0
+start stringops - q =            0
+Available Regs:   1  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0
+     VPA-REG =  2 DIRECT (VARC)         
+ +++ DEPTH= 3 STKADR=    0 PLEN= 11 SCNSTNO= 63 FPA= -1   833 (CARR)         
+start assign_string, linecnt = 98
+target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0
+     VPA-REG = 14 DIRECT (VARC)         
+source:  STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0
+     VPA-REG =  2 DIRECT (VARC)         
+len_reg  =            3
+len_offs =            0
+base inside getadr2: q =            4
+base inside getadr2: p =           14
+base inside getadr2: b =            0
+base inside getadr2: q =            4
+base inside getadr2: p =            2
+base inside getadr2: b =            0
+end assign_string, linecnt = 98
+start assign_string, linecnt = 98
+target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0
+     VPA-REG = 14 DIRECT (VARC)         
+source:  STKADR=    0 PLEN= 11 SCNSTNO= 63 FPA= -1   833 (CARR)         
+len_reg  =            0
+len_offs =            0
+base inside getadr2: q =            4
+base inside getadr2: p =           14
+base inside getadr2: b =            0
+base inside getadr2: q =          833
+base inside getadr2: p =           -1
+base inside getadr2: b =            0
+end assign_string, linecnt = 98
+start stringops - pcode = PVST
+start stringops - p =            0
+start stringops - q =          200
+Available Regs:   1  2  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0
+     VPA-REG =  3 DIRECT (VARC)         
+base inside getadr2: q =          514
+base inside getadr2: p =            0
+base inside getadr2: b =           13
+start assign_string, linecnt = 98
+target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (VARC)         
+source:  STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0
+     VPA-REG =  3 DIRECT (VARC)         
+len_reg  =            3
+len_offs =            2
+base inside getadr2: q =          518
+base inside getadr2: p =            0
+base inside getadr2: b =           13
+base inside getadr2: q =            4
+base inside getadr2: p =            3
+base inside getadr2: b =            0
+end assign_string, linecnt = 98
+start stringops - pcode = PVPO
+start stringops - p =            1
+start stringops - q =          720
+Available Regs:   1  2  3  4  5  6  7
+DUMPSTK nach LCA x
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO= 66 FPA= -1   844 (ADR )         
+start stringops - pcode = PVLD
+start stringops - p =            0
+start stringops - q =           20
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   490 (ADR )         
+start stringops - pcode = PVC1
+start stringops - p =            0
+start stringops - q =            0
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  1   490 (VARC)         
+ +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0    32 (CHR )         
+start stringops - pcode = PVCC
+start stringops - p =            0
+start stringops - q =            0
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  1   490 (VARC)         
+ +++ DEPTH= 3 STKADR=    0 PLEN=  1 SCNSTNO=  0 FPA=  0    32 (CHR )         
+start assign_string, linecnt = 101
+target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0
+     VPA-REG = 14 DIRECT (VARC)         
+source:  STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  1   490 (VARC)         
+len_reg  =            2
+len_offs =            0
+base inside getadr2: q =            4
+base inside getadr2: p =           14
+base inside getadr2: b =            0
+base inside getadr2: q =          494
+base inside getadr2: p =            0
+base inside getadr2: b =           13
+end assign_string, linecnt = 101
+start assign_string, linecnt = 101
+target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0
+     VPA-REG = 14 DIRECT (VARC)         
+source:  STKADR=    0 PLEN=  1 SCNSTNO=  0 FPA=  0    32 (CHR )         
+len_reg  =            0
+len_offs =            0
+base inside getadr2: q =            4
+base inside getadr2: p =           14
+base inside getadr2: b =            0
+end assign_string, linecnt = 101
+start stringops - pcode = PVLD
+start stringops - p =            0
+start stringops - q =           20
+Available Regs:   1  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0
+     VPA-REG =  2 DIRECT (VARC)         
+ +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   490 (ADR )         
+start stringops - pcode = PVCC
+start stringops - p =            0
+start stringops - q =            0
+Available Regs:   1  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0
+     VPA-REG =  2 DIRECT (VARC)         
+ +++ DEPTH= 3 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  1   490 (VARC)         
+start assign_string, linecnt = 101
+target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0
+     VPA-REG = 14 DIRECT (VARC)         
+source:  STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0
+     VPA-REG =  2 DIRECT (VARC)         
+len_reg  =            3
+len_offs =            0
+base inside getadr2: q =            4
+base inside getadr2: p =           14
+base inside getadr2: b =            0
+base inside getadr2: q =            4
+base inside getadr2: p =            2
+base inside getadr2: b =            0
+end assign_string, linecnt = 101
+start assign_string, linecnt = 101
+target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0
+     VPA-REG = 14 DIRECT (VARC)         
+source:  STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  1   490 (VARC)         
+len_reg  =            3
+len_offs =            2
+base inside getadr2: q =            4
+base inside getadr2: p =           14
+base inside getadr2: b =            0
+base inside getadr2: q =          494
+base inside getadr2: p =            0
+base inside getadr2: b =           13
+end assign_string, linecnt = 101
+start stringops - pcode = PVST
+start stringops - p =            0
+start stringops - q =          200
+Available Regs:   1  2  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0
+     VPA-REG =  3 DIRECT (VARC)         
+base inside getadr2: q =          514
+base inside getadr2: p =            0
+base inside getadr2: b =           13
+start assign_string, linecnt = 101
+target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (VARC)         
+source:  STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0
+     VPA-REG =  3 DIRECT (VARC)         
+len_reg  =            3
+len_offs =            2
+base inside getadr2: q =          518
+base inside getadr2: p =            0
+base inside getadr2: b =           13
+base inside getadr2: q =            4
+base inside getadr2: p =            3
+base inside getadr2: b =            0
+end assign_string, linecnt = 101
+start stringops - pcode = PVPO
+start stringops - p =            1
+start stringops - q =          720
+Available Regs:   1  2  3  4  5  6  7
+DUMPSTK nach LCA x
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO= 69 FPA= -1   884 (ADR )         
+start stringops - pcode = PVLD
+start stringops - p =            0
+start stringops - q =           20
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   490 (ADR )         
+DUMPSTK nach LCA x
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO= 70 FPA= -1   924 (ADR )         
+start stringops - pcode = PVC2
+start stringops - p =            0
+start stringops - q =           12
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  1   490 (VARC)         
+ +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO= 70 FPA= -1   924 (ADR )         
+start stringops - pcode = PVCC
+start stringops - p =            0
+start stringops - q =            0
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  1   490 (VARC)         
+ +++ DEPTH= 3 STKADR=    0 PLEN= 12 SCNSTNO= 70 FPA= -1   924 (CARR)         
+start assign_string, linecnt = 104
+target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0
+     VPA-REG = 14 DIRECT (VARC)         
+source:  STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  1   490 (VARC)         
+len_reg  =            2
+len_offs =            0
+base inside getadr2: q =            4
+base inside getadr2: p =           14
+base inside getadr2: b =            0
+base inside getadr2: q =          494
+base inside getadr2: p =            0
+base inside getadr2: b =           13
+end assign_string, linecnt = 104
+start assign_string, linecnt = 104
+target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0
+     VPA-REG = 14 DIRECT (VARC)         
+source:  STKADR=    0 PLEN= 12 SCNSTNO= 70 FPA= -1   924 (CARR)         
+len_reg  =            0
+len_offs =            0
+base inside getadr2: q =            4
+base inside getadr2: p =           14
+base inside getadr2: b =            0
+base inside getadr2: q =          924
+base inside getadr2: p =           -1
+base inside getadr2: b =            0
+end assign_string, linecnt = 104
+start stringops - pcode = PVLD
+start stringops - p =            0
+start stringops - q =           20
+Available Regs:   1  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0
+     VPA-REG =  2 DIRECT (VARC)         
+ +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   490 (ADR )         
+start stringops - pcode = PVCC
+start stringops - p =            0
+start stringops - q =            0
+Available Regs:   1  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0
+     VPA-REG =  2 DIRECT (VARC)         
+ +++ DEPTH= 3 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  1   490 (VARC)         
+start assign_string, linecnt = 104
+target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0
+     VPA-REG = 14 DIRECT (VARC)         
+source:  STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0
+     VPA-REG =  2 DIRECT (VARC)         
+len_reg  =            3
+len_offs =            0
+base inside getadr2: q =            4
+base inside getadr2: p =           14
+base inside getadr2: b =            0
+base inside getadr2: q =            4
+base inside getadr2: p =            2
+base inside getadr2: b =            0
+end assign_string, linecnt = 104
+start assign_string, linecnt = 104
+target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0
+     VPA-REG = 14 DIRECT (VARC)         
+source:  STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  1   490 (VARC)         
+len_reg  =            3
+len_offs =            2
+base inside getadr2: q =            4
+base inside getadr2: p =           14
+base inside getadr2: b =            0
+base inside getadr2: q =          494
+base inside getadr2: p =            0
+base inside getadr2: b =           13
+end assign_string, linecnt = 104
+start stringops - pcode = PVST
+start stringops - p =            0
+start stringops - q =          200
+Available Regs:   1  2  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0
+     VPA-REG =  3 DIRECT (VARC)         
+base inside getadr2: q =          514
+base inside getadr2: p =            0
+base inside getadr2: b =           13
+start assign_string, linecnt = 104
+target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (VARC)         
+source:  STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0
+     VPA-REG =  3 DIRECT (VARC)         
+len_reg  =            3
+len_offs =            2
+base inside getadr2: q =          518
+base inside getadr2: p =            0
+base inside getadr2: b =           13
+base inside getadr2: q =            4
+base inside getadr2: p =            3
+base inside getadr2: b =            0
+end assign_string, linecnt = 104
+start stringops - pcode = PVPO
+start stringops - p =            1
+start stringops - q =          720
+Available Regs:   1  2  3  4  5  6  7
+DUMPSTK nach LCA x
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO= 73 FPA= -1   936 (ADR )         
+start stringops - pcode = PVLD
+start stringops - p =            0
+start stringops - q =           20
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   490 (ADR )         
+DUMPSTK nach LCA x
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO= 74 FPA= -1   976 (ADR )         
+start stringops - pcode = PVC2
+start stringops - p =            0
+start stringops - q =           12
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  1   490 (VARC)         
+ +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO= 74 FPA= -1   976 (ADR )         
+start stringops - pcode = PVCC
+start stringops - p =            0
+start stringops - q =            0
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  1   490 (VARC)         
+ +++ DEPTH= 3 STKADR=    0 PLEN= 12 SCNSTNO= 74 FPA= -1   976 (CARR)         
+start assign_string, linecnt = 107
+target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0
+     VPA-REG = 14 DIRECT (VARC)         
+source:  STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  1   490 (VARC)         
+len_reg  =            2
+len_offs =            0
+base inside getadr2: q =            4
+base inside getadr2: p =           14
+base inside getadr2: b =            0
+base inside getadr2: q =          494
+base inside getadr2: p =            0
+base inside getadr2: b =           13
+end assign_string, linecnt = 107
+start assign_string, linecnt = 107
+target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0
+     VPA-REG = 14 DIRECT (VARC)         
+source:  STKADR=    0 PLEN= 12 SCNSTNO= 74 FPA= -1   976 (CARR)         
+len_reg  =            0
+len_offs =            0
+base inside getadr2: q =            4
+base inside getadr2: p =           14
+base inside getadr2: b =            0
+base inside getadr2: q =          976
+base inside getadr2: p =           -1
+base inside getadr2: b =            0
+end assign_string, linecnt = 107
+start stringops - pcode = PVC2
+start stringops - p =            0
+start stringops - q =           20
+Available Regs:   1  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0
+     VPA-REG =  2 DIRECT (VARC)         
+ +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   450 (ADR )         
+start stringops - pcode = PVCC
+start stringops - p =            0
+start stringops - q =            0
+Available Regs:   1  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0
+     VPA-REG =  2 DIRECT (VARC)         
+ +++ DEPTH= 3 STKADR=    0 PLEN= 20 SCNSTNO=  0 FPA=  1   450 (CARR)         
+start assign_string, linecnt = 107
+target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0
+     VPA-REG = 14 DIRECT (VARC)         
+source:  STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0
+     VPA-REG =  2 DIRECT (VARC)         
+len_reg  =            3
+len_offs =            0
+base inside getadr2: q =            4
+base inside getadr2: p =           14
+base inside getadr2: b =            0
+base inside getadr2: q =            4
+base inside getadr2: p =            2
+base inside getadr2: b =            0
+end assign_string, linecnt = 107
+start assign_string, linecnt = 107
+target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0
+     VPA-REG = 14 DIRECT (VARC)         
+source:  STKADR=    0 PLEN= 20 SCNSTNO=  0 FPA=  1   450 (CARR)         
+len_reg  =            0
+len_offs =            0
+base inside getadr2: q =            4
+base inside getadr2: p =           14
+base inside getadr2: b =            0
+base inside getadr2: q =          450
+base inside getadr2: p =            0
+base inside getadr2: b =           13
+end assign_string, linecnt = 107
+start stringops - pcode = PVST
+start stringops - p =            0
+start stringops - q =          200
+Available Regs:   1  2  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0
+     VPA-REG =  3 DIRECT (VARC)         
+base inside getadr2: q =          514
+base inside getadr2: p =            0
+base inside getadr2: b =           13
+start assign_string, linecnt = 107
+target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (VARC)         
+source:  STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0
+     VPA-REG =  3 DIRECT (VARC)         
+len_reg  =            3
+len_offs =            2
+base inside getadr2: q =          518
+base inside getadr2: p =            0
+base inside getadr2: b =           13
+base inside getadr2: q =            4
+base inside getadr2: p =            3
+base inside getadr2: b =            0
+end assign_string, linecnt = 107
+start stringops - pcode = PVPO
+start stringops - p =            1
+start stringops - q =          720
+Available Regs:   1  2  3  4  5  6  7
+DUMPSTK nach LCA x
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO= 78 FPA= -1   988 (ADR )         
+start stringops - pcode = PVC2
+start stringops - p =            0
+start stringops - q =           20
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   450 (ADR )         
+DUMPSTK nach LCA x
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO= 79 FPA= -1  1028 (ADR )         
+start stringops - pcode = PVC2
+start stringops - p =            0
+start stringops - q =           12
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN= 20 SCNSTNO=  0 FPA=  1   450 (CARR)         
+ +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO= 79 FPA= -1  1028 (ADR )         
+start stringops - pcode = PVCC
+start stringops - p =            0
+start stringops - q =            0
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN= 20 SCNSTNO=  0 FPA=  1   450 (CARR)         
+ +++ DEPTH= 3 STKADR=    0 PLEN= 12 SCNSTNO= 79 FPA= -1  1028 (CARR)         
+start assign_string, linecnt = 110
+target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0
+     VPA-REG = 14 DIRECT (VARC)         
+source:  STKADR=    0 PLEN= 20 SCNSTNO=  0 FPA=  1   450 (CARR)         
+len_reg  =            0
+len_offs =            0
+base inside getadr2: q =            4
+base inside getadr2: p =           14
+base inside getadr2: b =            0
+base inside getadr2: q =          450
+base inside getadr2: p =            0
+base inside getadr2: b =           13
+end assign_string, linecnt = 110
+start assign_string, linecnt = 110
+target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0
+     VPA-REG = 14 DIRECT (VARC)         
+source:  STKADR=    0 PLEN= 12 SCNSTNO= 79 FPA= -1  1028 (CARR)         
+len_reg  =            0
+len_offs =            0
+base inside getadr2: q =            4
+base inside getadr2: p =           14
+base inside getadr2: b =            0
+base inside getadr2: q =         1028
+base inside getadr2: p =           -1
+base inside getadr2: b =            0
+end assign_string, linecnt = 110
+start stringops - pcode = PVLD
+start stringops - p =            0
+start stringops - q =           20
+Available Regs:   1  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN= 32 SCNSTNO=  0 FPA=  0     0
+     VPA-REG =  2 DIRECT (VARC)         
+ +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   490 (ADR )         
+start stringops - pcode = PVCC
+start stringops - p =            0
+start stringops - q =            0
+Available Regs:   1  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN= 32 SCNSTNO=  0 FPA=  0     0
+     VPA-REG =  2 DIRECT (VARC)         
+ +++ DEPTH= 3 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  1   490 (VARC)         
+start assign_string, linecnt = 110
+target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0
+     VPA-REG = 14 DIRECT (VARC)         
+source:  STKADR=    0 PLEN= 32 SCNSTNO=  0 FPA=  0     0
+     VPA-REG =  2 DIRECT (VARC)         
+len_reg  =            0
+len_offs =            0
+base inside getadr2: q =            4
+base inside getadr2: p =           14
+base inside getadr2: b =            0
+base inside getadr2: q =            4
+base inside getadr2: p =            2
+base inside getadr2: b =            0
+end assign_string, linecnt = 110
+start assign_string, linecnt = 110
+target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0
+     VPA-REG = 14 DIRECT (VARC)         
+source:  STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  1   490 (VARC)         
+len_reg  =            3
+len_offs =            2
+base inside getadr2: q =            4
+base inside getadr2: p =           14
+base inside getadr2: b =            0
+base inside getadr2: q =          494
+base inside getadr2: p =            0
+base inside getadr2: b =           13
+end assign_string, linecnt = 110
+start stringops - pcode = PVST
+start stringops - p =            0
+start stringops - q =          200
+Available Regs:   1  2  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0
+     VPA-REG =  3 DIRECT (VARC)         
+base inside getadr2: q =          514
+base inside getadr2: p =            0
+base inside getadr2: b =           13
+start assign_string, linecnt = 110
+target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (VARC)         
+source:  STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0
+     VPA-REG =  3 DIRECT (VARC)         
+len_reg  =            3
+len_offs =            2
+base inside getadr2: q =          518
+base inside getadr2: p =            0
+base inside getadr2: b =           13
+base inside getadr2: q =            4
+base inside getadr2: p =            3
+base inside getadr2: b =            0
+end assign_string, linecnt = 110
+start stringops - pcode = PVPO
+start stringops - p =            1
+start stringops - q =          720
+Available Regs:   1  2  3  4  5  6  7
+DUMPSTK nach LCA x
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO= 83 FPA= -1  1048 (ADR )         
+DUMPSTK nach LCA x
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO= 84 FPA= -1  1088 (ADR )         
+start stringops - pcode = PVC2
+start stringops - p =            0
+start stringops - q =           11
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   490 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO= 84 FPA= -1  1088 (ADR )         
+start stringops - pcode = PVST
+start stringops - p =            0
+start stringops - q =           20
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   490 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN= 11 SCNSTNO= 84 FPA= -1  1088 (CARR)         
+base inside getadr2: q =          490
+base inside getadr2: p =            0
+base inside getadr2: b =           13
+start assign_string, linecnt = 118
+target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   490 (VARC)         
+source:  STKADR=    0 PLEN= 11 SCNSTNO= 84 FPA= -1  1088 (CARR)         
+len_reg  =            0
+len_offs =            0
+base inside getadr2: q =          494
+base inside getadr2: p =            0
+base inside getadr2: b =           13
+base inside getadr2: q =         1088
+base inside getadr2: p =           -1
+base inside getadr2: b =            0
+end assign_string, linecnt = 118
+start stringops - pcode = PVPO
+start stringops - p =            1
+start stringops - q =          720
+Available Regs:   1  2  3  4  5  6  7
+DUMPSTK nach LCA x
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO= 86 FPA= -1  1104 (ADR )         
+start stringops - pcode = PVLD
+start stringops - p =            0
+start stringops - q =           20
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   490 (ADR )         
+start stringops - pcode = PVST
+start stringops - p =            0
+start stringops - q =          200
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  1   490 (VARC)         
+base inside getadr2: q =          514
+base inside getadr2: p =            0
+base inside getadr2: b =           13
+start assign_string, linecnt = 121
+target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (VARC)         
+source:  STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  1   490 (VARC)         
+len_reg  =           13
+len_offs =          516
+base inside getadr2: q =          518
+base inside getadr2: p =            0
+base inside getadr2: b =           13
+base inside getadr2: q =          494
+base inside getadr2: p =            0
+base inside getadr2: b =           13
+end assign_string, linecnt = 121
+DUMPSTK nach LCA x
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO= 88 FPA= -1  1144 (ADR )         
+start stringops - pcode = PVLD
+start stringops - p =            0
+start stringops - q =           20
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   490 (ADR )         
+DUMPSTK nach LCA x
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO= 89 FPA= -1  1184 (ADR )         
+start stringops - pcode = PVC2
+start stringops - p =            0
+start stringops - q =           15
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  1   490 (VARC)         
+ +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO= 89 FPA= -1  1184 (ADR )         
+start stringops - pcode = PVCC
+start stringops - p =            0
+start stringops - q =            0
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  1   490 (VARC)         
+ +++ DEPTH= 3 STKADR=    0 PLEN= 15 SCNSTNO= 89 FPA= -1  1184 (CARR)         
+start assign_string, linecnt = 124
+target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0
+     VPA-REG = 14 DIRECT (VARC)         
+source:  STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  1   490 (VARC)         
+len_reg  =            2
+len_offs =            0
+base inside getadr2: q =            4
+base inside getadr2: p =           14
+base inside getadr2: b =            0
+base inside getadr2: q =          494
+base inside getadr2: p =            0
+base inside getadr2: b =           13
+end assign_string, linecnt = 124
+start assign_string, linecnt = 124
+target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0
+     VPA-REG = 14 DIRECT (VARC)         
+source:  STKADR=    0 PLEN= 15 SCNSTNO= 89 FPA= -1  1184 (CARR)         
+len_reg  =            0
+len_offs =            0
+base inside getadr2: q =            4
+base inside getadr2: p =           14
+base inside getadr2: b =            0
+base inside getadr2: q =         1184
+base inside getadr2: p =           -1
+base inside getadr2: b =            0
+end assign_string, linecnt = 124
+start stringops - pcode = PVST
+start stringops - p =            0
+start stringops - q =          200
+Available Regs:   1  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0
+     VPA-REG =  2 DIRECT (VARC)         
+base inside getadr2: q =          514
+base inside getadr2: p =            0
+base inside getadr2: b =           13
+start assign_string, linecnt = 124
+target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   514 (VARC)         
+source:  STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0
+     VPA-REG =  2 DIRECT (VARC)         
+len_reg  =            2
+len_offs =            2
+base inside getadr2: q =          518
+base inside getadr2: p =            0
+base inside getadr2: b =           13
+base inside getadr2: q =            4
+base inside getadr2: p =            2
+base inside getadr2: b =            0
+end assign_string, linecnt = 124
+start stringops - pcode = PVPO
+start stringops - p =            1
+start stringops - q =          720
+Available Regs:   1  2  3  4  5  6  7
+DUMPSTK nach LCA x
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO= 92 FPA= -1  1202 (ADR )         
+DUMPSTK nach LCA x
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO= 93 FPA= -1  1242 (ADR )         
+start stringops - pcode = PVC2
+start stringops - p =            0
+start stringops - q =            5
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   490 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO= 93 FPA= -1  1242 (ADR )         
+start stringops - pcode = PVST
+start stringops - p =            0
+start stringops - q =           20
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   490 (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN=  5 SCNSTNO= 93 FPA= -1  1242 (CARR)         
+base inside getadr2: q =          490
+base inside getadr2: p =            0
+base inside getadr2: b =           13
+start assign_string, linecnt = 127
+target:  STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   490 (VARC)         
+source:  STKADR=    0 PLEN=  5 SCNSTNO= 93 FPA= -1  1242 (CARR)         
+len_reg  =            0
+len_offs =            0
+base inside getadr2: q =          494
+base inside getadr2: p =            0
+base inside getadr2: b =           13
+base inside getadr2: q =         1242
+base inside getadr2: p =           -1
+base inside getadr2: b =            0
+end assign_string, linecnt = 127
+start stringops - pcode = PVPO
+start stringops - p =            1
+start stringops - q =          720
+Available Regs:   1  2  3  4  5  6  7

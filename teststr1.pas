@@ -1,7 +1,7 @@
 program TESTSTR1 ( OUTPUT ) ;
 
 //**********************************************************************
-//$A+                                                                   
+//$A+
 //**********************************************************************
 
 
@@ -30,105 +30,99 @@ begin (* HAUPTPROGRAMM *)
   WRITELN ;
 
   //******************************************************************
-  // tests aus testvarc                                               
+  // tests aus testvarc
   //******************************************************************
 
-  if TRUE then
-    begin
-      C1 := 'A' ;
-      C2 := C1 ;
-      C20 := 'Test' ;
-      VC20 := STR ( 'A' ) ;
-      WRITE ( 'VC20 nach Zuweisung STR (''A'') ........: ' ) ;
-      WRITELN ( '<' , VC20 , '>' ) ;
-      VC20 := STR ( C1 ) ;
-      WRITE ( 'VC20 nach Zuweisung STR (C1) .........: ' ) ;
-      WRITELN ( '<' , VC20 , '>' ) ;
-      VC20 := 'A' ;
-      WRITE ( 'VC20 nach Zuweisung ''A'' ..............: ' ) ;
-      WRITELN ( '<' , VC20 , '>' ) ;
-      VC20 := 'Test Varchar' ;
-      WRITE ( 'VC20 nach Zuweisung const char array .: ' ) ;
-      WRITELN ( '<' , VC20 , '>' ) ;
+  C1 := 'A' ;
+  C2 := C1 ;
+  C20 := 'Test' ;
+  VC20 := STR ( 'A' ) ;
+  WRITE ( 'VC20 nach Zuweisung STR (''A'') ........: ' ) ;
+  WRITELN ( '<' , VC20 , '>' ) ;
+  VC20 := STR ( C1 ) ;
+  WRITE ( 'VC20 nach Zuweisung STR (C1) .........: ' ) ;
+  WRITELN ( '<' , VC20 , '>' ) ;
+  VC20 := 'A' ;
+  WRITE ( 'VC20 nach Zuweisung ''A'' ..............: ' ) ;
+  WRITELN ( '<' , VC20 , '>' ) ;
+  VC20 := 'Test Varchar' ;
+  WRITE ( 'VC20 nach Zuweisung const char array .: ' ) ;
+  WRITELN ( '<' , VC20 , '>' ) ;
 
   //******************************************************************
-  // ist nicht zulaessig, muss Konstante sein oder Funktion STR       
+  // ist nicht zulaessig, muss Konstante sein oder Funktion STR
   //******************************************************************
-  // VC20 := C20 ;  /* sollte Fehler sein */                          
+  // VC20 := C20 ;  /* sollte Fehler sein */
   //******************************************************************
-  // so korrekt                                                       
-  //******************************************************************
-
-      VC20 := STR ( C20 ) ;
-      WRITE ( 'VC20 nach Zuweisung STR (C20) ........: ' ) ;
-      WRITELN ( '<' , VC20 , '>' ) ;
-
-  //******************************************************************
-  // muss erlaubt sein, mit Blanks auffuellen wie gehabt ...          
+  // so korrekt
   //******************************************************************
 
-      VC20 := 'Bernd' ;
-      WRITE ( 'VC20 nach Zuweisung Bernd ............: ' ) ;
-      WRITELN ( '<' , VC20 , '>' ) ;
-      C20 := VC20 ;
-      WRITELN ( 'C20 nach Zuweisung VC20 ..............: ' , C20 ) ;
-      C20 := 'Bernd ' || 'Oppolzer' ;
-      WRITELN ( 'C20 nach Zuweisung String Expression .: ' , C20 ) ;
-      VC200 := VC20 || VC20 ;
-      WRITE ( 'VC200 nach Verkettung ................: ' ) ;
-      WRITELN ( '<' , VC200 , '>' ) ;
-      VC200 := VC20 || ' Oppolzer' ;
-      WRITE ( 'VC200 nach Verkettung ................: ' ) ;
-      WRITELN ( '<' , VC200 , '>' ) ;
-    end (* then *) ;
+  VC20 := STR ( C20 ) ;
+  WRITE ( 'VC20 nach Zuweisung STR (C20) ........: ' ) ;
+  WRITELN ( '<' , VC20 , '>' ) ;
 
   //******************************************************************
-  // Verkettung usw.                                                  
+  // muss erlaubt sein, mit Blanks auffuellen wie gehabt ...
   //******************************************************************
 
-  if FALSE then
-    begin
-      VC200 := VC20 || ' Oppolzer' || ' Leinfelden' ;
-      WRITE ( 'VC200 nach Verkettung ................: ' ) ;
-      WRITELN ( '<' , VC200 , '>' ) ;
-      VC200 := VC20 || ( ' Oppolzer' || ' Leinfelden' ) ;
-      WRITE ( 'VC200 nach Verkettung ................: ' ) ;
-      WRITELN ( '<' , VC200 , '>' ) ;
-      VC200 := ( VC20 || ' Oppolzer' ) || ' Leinfelden' ;
-      WRITE ( 'VC200 nach Verkettung ................: ' ) ;
-      WRITELN ( '<' , VC200 , '>' ) ;
-      VC200 := ( ( VC20 || ' Oppolzer' ) || ' Leinfelden' ) ;
-      WRITE ( 'VC200 nach Verkettung ................: ' ) ;
-      WRITELN ( '<' , VC200 , '>' ) ;
-      VC200 := VC20 || STR ( ' Oppolzer' ) || STR ( ' Leinfelden' ) ;
-      WRITE ( 'VC200 nach Verkettung ................: ' ) ;
-      WRITELN ( '<' , VC200 , '>' ) ;
-      VC200 := VC20 || ' ' || VC20 ;
-      WRITE ( 'VC200 nach Verkettung ................: ' ) ;
-      WRITELN ( '<' , VC200 , '>' ) ;
-      VC200 := VC20 || ' dazwischen ' || VC20 ;
-      WRITE ( 'VC200 nach Verkettung ................: ' ) ;
-      WRITELN ( '<' , VC200 , '>' ) ;
-      VC200 := VC20 || ' dazwischen ' || STR ( C20 ) ;
-      WRITE ( 'VC200 nach Verkettung ................: ' ) ;
-      WRITELN ( '<' , VC200 , '>' ) ;
-      VC200 := STR ( C20 ) || ' dazwischen ' || VC20 ;
-      WRITE ( 'VC200 nach Verkettung ................: ' ) ;
-      WRITELN ( '<' , VC200 , '>' ) ;
+  VC20 := 'Bernd' ;
+  WRITE ( 'VC20 nach Zuweisung Bernd ............: ' ) ;
+  WRITELN ( '<' , VC20 , '>' ) ;
+  C20 := VC20 ;
+  WRITELN ( 'C20 nach Zuweisung VC20 ..............: ' , C20 ) ;
+  C20 := 'Bernd ' || 'Oppolzer' ;
+  WRITELN ( 'C20 nach Zuweisung String Expression .: ' , C20 ) ;
 
   //******************************************************************
-  // Zuweisungen einfach oder Expression                              
+  // Verkettung usw.
   //******************************************************************
 
-      VC20 := 'Test-String' ;
-      WRITE ( 'VC20 nach Zuweisung Konstante ........: ' ) ;
-      WRITELN ( '<' , VC20 , '>' ) ;
-      VC200 := VC20 ;
-      WRITE ( 'VC200 nach Zuweisung VC20 ............: ' ) ;
-      WRITELN ( '<' , VC200 , '>' ) ;
-      VC200 := VC20 || ' mit Verkettung' ;
-      WRITE ( 'VC200 nach Zuweisung Expression ......: ' ) ;
-      WRITELN ( '<' , VC200 , '>' ) ;
-      VC20 := 'Bernd' ;
-    end (* then *) ;
+  VC200 := VC20 || VC20 ;
+  WRITE ( 'VC200 nach Verkettung ................: ' ) ;
+  WRITELN ( '<' , VC200 , '>' ) ;
+  VC200 := VC20 || ' Oppolzer' ;
+  WRITE ( 'VC200 nach Verkettung ................: ' ) ;
+  WRITELN ( '<' , VC200 , '>' ) ;
+  VC200 := VC20 || ' Oppolzer' || ' Leinfelden' ;
+  WRITE ( 'VC200 nach Verkettung ................: ' ) ;
+  WRITELN ( '<' , VC200 , '>' ) ;
+  VC200 := VC20 || ( ' Oppolzer' || ' Leinfelden' ) ;
+  WRITE ( 'VC200 nach Verkettung (Klammer hinten): ' ) ;
+  WRITELN ( '<' , VC200 , '>' ) ;
+  VC200 := ( VC20 || ' Oppolzer' ) || ' Leinfelden' ;
+  WRITE ( 'VC200 nach Verkettung ................: ' ) ;
+  WRITELN ( '<' , VC200 , '>' ) ;
+  VC200 := ( ( VC20 || ' Oppolzer' ) || ' Leinfelden' ) ;
+  WRITE ( 'VC200 nach Verkettung ................: ' ) ;
+  WRITELN ( '<' , VC200 , '>' ) ;
+  VC200 := VC20 || STR ( ' Oppolzer' ) || STR ( ' Leinfelden' ) ;
+  WRITE ( 'VC200 nach Verkettung (mit STR Funk.).: ' ) ;
+  WRITELN ( '<' , VC200 , '>' ) ;
+  VC200 := VC20 || ' ' || VC20 ;
+  WRITE ( 'VC200 nach Verkettung (mit Blank) ....: ' ) ;
+  WRITELN ( '<' , VC200 , '>' ) ;
+  VC200 := VC20 || ' dazwischen ' || VC20 ;
+  WRITE ( 'VC200 nach Verkettung ................: ' ) ;
+  WRITELN ( '<' , VC200 , '>' ) ;
+  VC200 := VC20 || ' dazwischen ' || STR ( C20 ) ;
+  WRITE ( 'VC200 nach Verkettung ................: ' ) ;
+  WRITELN ( '<' , VC200 , '>' ) ;
+  VC200 := STR ( C20 ) || ' dazwischen ' || VC20 ;
+  WRITE ( 'VC200 nach Verkettung ................: ' ) ;
+  WRITELN ( '<' , VC200 , '>' ) ;
+
+  //******************************************************************
+  // Zuweisungen einfach oder Expression
+  //******************************************************************
+
+  VC20 := 'Test-String' ;
+  WRITE ( 'VC20 nach Zuweisung Konstante ........: ' ) ;
+  WRITELN ( '<' , VC20 , '>' ) ;
+  VC200 := VC20 ;
+  WRITE ( 'VC200 nach Zuweisung VC20 ............: ' ) ;
+  WRITELN ( '<' , VC200 , '>' ) ;
+  VC200 := VC20 || ' mit Verkettung' ;
+  WRITE ( 'VC200 nach Zuweisung Expression ......: ' ) ;
+  WRITELN ( '<' , VC200 , '>' ) ;
+  VC20 := 'Bernd' ;
 end (* HAUPTPROGRAMM *) .

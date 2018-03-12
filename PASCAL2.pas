@@ -11222,7 +11222,7 @@ procedure ASMNXTINST ;
         //**************************************************
 
               if B1 < 0 then
-                ERROR ( 702 ) ;
+                ERROR ( 202 ) ;
               FINDRP ;
               GENRX ( XLA , NXTRG , Q1 , B1 , P1 ) ;
               P1 := NXTRG ;
@@ -11347,7 +11347,7 @@ procedure ASMNXTINST ;
         //**************************************************
 
               if B1 < 0 then
-                ERROR ( 703 ) ;
+                ERROR ( 202 ) ;
               FINDRP ;
               GENRX ( XLA , NXTRG , Q1 , B1 , P1 ) ;
               P1 := NXTRG ;
@@ -11477,7 +11477,7 @@ procedure ASMNXTINST ;
         //**************************************************
 
         if ( B1 < 0 ) or ( B2 < 0 ) then
-          ERROR ( 704 ) ;
+          ERROR ( 202 ) ;
         FINDRP ;
         GENRX ( XLA , NXTRG , Q1 , B1 , P1 ) ;
         P1 := NXTRG ;
@@ -11628,7 +11628,7 @@ procedure ASMNXTINST ;
         //**************************************************
 
         if B1 < 0 then
-          ERROR ( 705 ) ;
+          ERROR ( 202 ) ;
         FINDRP ;
         GENRX ( XLA , NXTRG , Q1 , B1 , P1 ) ;
         P1 := NXTRG ;
@@ -11720,7 +11720,7 @@ procedure ASMNXTINST ;
             B1 := 0 ;
             P1 := TXRG ;
           end (* then *) ;
-        TXRG := TRG1 ;
+        CONS_REGS ( B1 , P1 ) ;
         GENSI ( XMVI , Q1 , B1 , ORD ( CCONST ) ) ;
       end (* SOPERATION_MVI *) ;
 
@@ -11892,7 +11892,7 @@ procedure ASMNXTINST ;
         else
           begin
             if ( B1 < 0 ) or ( B2 < 0 ) then
-              ERROR ( 706 ) ;
+              ERROR ( 202 ) ;
             FINDRP ;
             GENRX ( XLA , NXTRG , Q1 , B1 , P1 ) ;
             P1 := NXTRG ;
@@ -11982,7 +11982,7 @@ procedure ASMNXTINST ;
             P2 := 0 ;
           end (* then *) ;
         if ( B1 < 0 ) or ( B2 < 0 ) then
-          ERROR ( 707 ) ;
+          ERROR ( 202 ) ;
         FINDRP ;
         GENRX ( XLA , NXTRG , Q1 , B1 , P1 ) ;
         P1 := NXTRG ;
@@ -12724,6 +12724,8 @@ procedure ASMNXTINST ;
         DUMPSTKELEM ( TARGET ) ;
         WRITE ( TRACEF , 'source: ' ) ;
         DUMPSTKELEM ( SOURCE ) ;
+        WRITELN ( TRACEF , 'len_reg  = ' , LEN_REG ) ;
+        WRITELN ( TRACEF , 'len_offs = ' , LEN_OFFS ) ;
         if TARGET . DTYPE = VARC then
           TARGET . FPA . DSPLMT := TARGET . FPA . DSPLMT + 4 ;
         if SOURCE . DTYPE = VARC then
@@ -12745,10 +12747,11 @@ procedure ASMNXTINST ;
                 SOPERATION_MVC1 ( TARGET , SOURCE )
               end (* then *)
             else
-              begin
+              if LEN_REG = 0 then
+                SOPERATION ( TARGET , SOURCE , PMOV , SOURCE . PLEN )
+              else
                 SOPERATION_LEN ( TARGET , SOURCE , PMOV , LEN_REG ,
                                  LEN_OFFS )
-              end (* else *)
           end (* then *)
         else
           begin
@@ -12903,9 +12906,17 @@ procedure ASMNXTINST ;
                          LEN_REG := 0 ;
                          LEN_OFFS := 0 ;
                          GETADR2 ( STK [ TOP - 2 ] , Q1 , P1 , B1 ) ;
+                         CONS_REGS ( B1 , P1 ) ;
                          FINDRG ;
                          if LEN > 0 then
                            begin
+
+        //******************************************************
+        // in this case len_reg remains at zero,                
+        // so assign_string uses the compile time               
+        // len to control the transport                         
+        //******************************************************
+
                              LITVALUE := MAXL * 65536 + LEN ;
                              GENRXLIT ( XL , NXTRG , LITVALUE , 1 ) ;
                            end (* then *)
@@ -12917,6 +12928,13 @@ procedure ASMNXTINST ;
                                begin
                                  if VPA = RGS then
                                    begin
+
+        //******************************************************
+        // this is done to make assign_string                   
+        // fetch the length from the source                     
+        // string descriptor                                    
+        //******************************************************
+
                                      LEN_REG := RGADR ;
                                      LEN_OFFS := 2 ;
                                      GENRX ( XAH , NXTRG , 2 , RGADR ,
@@ -12929,6 +12947,15 @@ procedure ASMNXTINST ;
                                      BASE ( Q2 , P2 , B2 ) ;
                                      GENRX ( XAH , NXTRG , Q2 , B2 , P2
                                              ) ;
+
+        //******************************************************
+        // this is done to make assign_string                   
+        // fetch the length from the target                     
+        // string descriptor                                    
+        //******************************************************
+
+                                     LEN_REG := B1 ;
+                                     LEN_OFFS := Q1 + 2 ;
                                    end (* else *) ;
                                end (* with *)
                            end (* else *) ;
@@ -13184,12 +13211,17 @@ procedure ASMNXTINST ;
         //*********************************************
 
                            with STK [ TOP - 2 ] do
-                             begin
-                               P2 := FPA . LVL ;
-                               Q2 := FPA . DSPLMT + 2 ;
-                               BASE ( Q2 , P2 , B2 ) ;
-                               GENRX ( XLH , TXRG , Q2 , B2 , P2 ) ;
-                             end (* with *) ;
+                             if VPA = RGS then
+                               begin
+                                 GENRX ( XLH , TXRG , 2 , RGADR , 0 )
+                               end (* then *)
+                             else
+                               begin
+                                 P2 := FPA . LVL ;
+                                 Q2 := FPA . DSPLMT + 2 ;
+                                 BASE ( Q2 , P2 , B2 ) ;
+                                 GENRX ( XLH , TXRG , Q2 , B2 , P2 ) ;
+                               end (* else *) ;
                            GENRS ( XSLL , TXRG , 0 , 16 , 0 ) ;
                            LITVALUE := LEN1 ;
                            GENRXLIT ( XA , TXRG , LITVALUE , 1 ) ;
@@ -13218,14 +13250,19 @@ procedure ASMNXTINST ;
 
                              LITVALUE := LEN2 * 65536 ;
                              GENRXLIT ( XL , TXRG , LITVALUE , 1 ) ;
-                             GENRS ( XSLL , TXRG , 0 , 16 , 0 ) ;
                              with STK [ TOP - 1 ] do
-                               begin
-                                 P2 := FPA . LVL ;
-                                 Q2 := FPA . DSPLMT + 2 ;
-                                 BASE ( Q2 , P2 , B2 ) ;
-                                 GENRX ( XAH , TXRG , Q2 , B2 , P2 ) ;
-                               end (* with *) ;
+                               if VPA = RGS then
+                                 begin
+                                   GENRX ( XAH , TXRG , 2 , RGADR , 0 )
+                                 end (* then *)
+                               else
+                                 begin
+                                   P2 := FPA . LVL ;
+                                   Q2 := FPA . DSPLMT + 2 ;
+                                   BASE ( Q2 , P2 , B2 ) ;
+                                   GENRX ( XAH , TXRG , Q2 , B2 , P2 )
+                                           ;
+                                 end (* else *) ;
                              GENRX ( XST , TXRG , 0 , RGWORK , 0 ) ;
                              GENRR ( XLR , TXRG , RGWORK ) ;
 
@@ -13243,20 +13280,32 @@ procedure ASMNXTINST ;
                          else
                            begin
                              with STK [ TOP - 2 ] do
-                               begin
-                                 P2 := FPA . LVL ;
-                                 Q2 := FPA . DSPLMT + 2 ;
-                                 BASE ( Q2 , P2 , B2 ) ;
-                                 GENRX ( XLH , TXRG , Q2 , B2 , P2 ) ;
-                               end (* with *) ;
+                               if VPA = RGS then
+                                 begin
+                                   GENRX ( XLH , TXRG , 2 , RGADR , 0 )
+                                 end (* then *)
+                               else
+                                 begin
+                                   P2 := FPA . LVL ;
+                                   Q2 := FPA . DSPLMT + 2 ;
+                                   BASE ( Q2 , P2 , B2 ) ;
+                                   GENRX ( XLH , TXRG , Q2 , B2 , P2 )
+                                           ;
+                                 end (* else *) ;
                              GENRS ( XSLL , TXRG , 0 , 16 , 0 ) ;
                              with STK [ TOP - 1 ] do
-                               begin
-                                 P2 := FPA . LVL ;
-                                 Q2 := FPA . DSPLMT + 2 ;
-                                 BASE ( Q2 , P2 , B2 ) ;
-                                 GENRX ( XAH , TXRG , Q2 , B2 , P2 ) ;
-                               end (* with *) ;
+                               if VPA = RGS then
+                                 begin
+                                   GENRX ( XAH , TXRG , 2 , RGADR , 0 )
+                                 end (* then *)
+                               else
+                                 begin
+                                   P2 := FPA . LVL ;
+                                   Q2 := FPA . DSPLMT + 2 ;
+                                   BASE ( Q2 , P2 , B2 ) ;
+                                   GENRX ( XAH , TXRG , Q2 , B2 , P2 )
+                                           ;
+                                 end (* else *) ;
                              GENRX ( XST , TXRG , 0 , RGWORK , 0 ) ;
                              GENRR ( XLR , TXRG , RGWORK ) ;
 

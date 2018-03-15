@@ -572,7 +572,9 @@ DYN2LEN  EQU   *-DYN2STOR
 *
 $PASENT  CSECT ,
 *
-         ENTRY $PASENT,$PASINT,$PASTRC,$PASSYS,$PASCSP,$PASCSP2
+         ENTRY $PASENT,$PASINT,$PASTRC
+         ENTRY $PASSYS,$PASCSP,$PASCSP2
+         ENTRY $PASSCMP
 *
          USING $PASENT,R15
          STM   R14,R12,12(R13)
@@ -2139,9 +2141,80 @@ IHOERRE  BR    R14                 THIS SHOULD NOT BE CALLED
 *
 *****************************************************************
 *
+*        $PASSCMP (String aka VARCHAR compare)
+*
+*        Unterfunktion zum String-Vergleich in PASMONN
+*        die Adressen der beiden String-Deskriptoren
+*        stehen bei STRCURR
+*
+*****************************************************************
+*
+$PASSCMP DS    0H
+         STM   R14,R12,12(R1)    Registersicherung in String Workarea
+         USING $PASSCMP,15
+         LR    R2,R1
+         AH    R1,=H'72'
+*
+         L     R3,0(R2)      first string descriptor
+         L     R4,4(R2)      second string descriptor
+         LH    R5,2(R3)      length of first string
+         CH    R5,2(R4)      compare with length of second string
+         LA    R8,0          indicate equal length
+         BE    P1
+         LA    R8,1          indicate first string shorter
+         BL    P1
+         LA    R8,2          indicate second string shorter
+         LH    R5,2(R4)      use shorter length of second string
+P1       DS    0H
+         LR    R7,R5         copy length to r7
+         LA    R6,4(R4)      address of second string content
+         LA    R4,4(R3)      address of first string content
+         CLCL  R4,R6         compare strings
+         BNE   READY         if neq, result found
+*
+         LTR   R8,R8         if shorter = 0, both strings
+         BZ    READY         have equal length
+*
+         CH    R8,=H'2'
+         BE    SHORT2
+*
+SHORT1   DS    0H
+         L     R3,0(R2)      first string descriptor
+         L     R4,4(R2)      second string descriptor
+         B     COMPREST
+*
+SHORT2   DS    0H
+         L     R4,0(R2)      first string descriptor
+         L     R3,4(R2)      second string descriptor
+*
+COMPREST DS    0H
+         LH    R5,2(R4)      length of longer string
+         SH    R5,2(R3)      subtract length of shorter string
+         LR    R8,R1         pointer to free area to R8
+         LR    R9,R5         remaining length to R9
+         XR    R6,R6
+         LA    R7,C' '
+         SLL   R7,24
+         MVCL  R8,R6         create blank buffer
+         LR    R8,R1         restore blank buffer addr in r8
+         LR    R9,R5         length in R9
+         LA    R4,4(R4)      r4 points to longer string content
+         AH    R4,2(R3)      add shorter string length = rest
+         CLCL  R4,R8         compare rest with blanks
+         B     READY
+*
+READY    DS    0H
+         SH    R1,=H'72'
+         LM    R14,R12,12(R1)
+         DROP  R15
+         BR    14
+*
+*
+*
+*
+*****************************************************************
 *
 *        $PASSYS (System Basisfunktionen)
-*
 *
 *****************************************************************
 *

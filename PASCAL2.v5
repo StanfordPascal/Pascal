@@ -328,32 +328,6 @@ program PCODE_TRANSLATOR ( INPUT , OUTPUT , OBJCODE , ASMOUT , TRACEF )
 (*   - PCODE_DBG = 83 ;  // one parameter, ignored at the moment    *)
 (*                                                                  *)
 (********************************************************************)
-(*                                                                  *)
-(*  Mar.2018 - Extensions to the Compiler by Bernd Oppolzer         *)
-(*             (berndoppolzer@yahoo.com)                            *)
-(*                                                                  *)
-(*  Implementing the new P-Code instructions to support             *)
-(*  Strings aka VarChars ... the new P-Codes all start with         *)
-(*  the letter V and are described elsewhere.                       *)
-(*                                                                  *)
-(*  The handling and administration of the literal pool             *)
-(*  has been improved, see type literal_pool_control;               *)
-(*  character string literals are stored only once, if              *)
-(*  they appear more than once in a procedure or function;          *)
-(*  this is also true if one string is the beginning or ending      *)
-(*  part of another string (the longer string must have             *)
-(*  appeared first in the source).                                  *)
-(*                                                                  *)
-(*  Many minor improvements to PASCAL2 to make the String           *)
-(*  implementation possible :-)                                     *)
-(*                                                                  *)
-(*  The new P-Codes:                                                *)
-(*                                                                  *)
-(*  'VC1' , 'VC2' , 'VCC' , 'VLD'                                   *)
-(*  'VST' , 'VMV' , 'VSM' , 'VLM'                                   *)
-(*  'VPU' , 'VPO' , 'VIX' , 'VRP'                                   *)
-(*                                                                  *)
-(********************************************************************)
 
 
 
@@ -909,21 +883,12 @@ type OPTYPE = ( PCTS , PCTI , PLOD , PSTR , PLDA , PLOC , PSTO , PLDC ,
      // rhconf = index of double containing halfword gap               
      // (if double match, gap must not be used !)                      
      //****************************************************************
-     // if a double entry is used by a new halfword,                   
-     // two gaps are inserted: a halfword gap and an integer gap       
-     // later the halfword gap or the integer gap may be used;         
-     // the integer gap may be used by a halfword, leaving another     
-     // halfword gap, and so on. if an entry containing a gap          
-     // is used otherwise, the gaps have to be invalidated etc.        
-     // at a certain point in time, we have always at most one         
-     // halfword gap and one integer gap                               
-     //****************************************************************
 
      LITERAL_POOL_CONTROL = record
                               NXTDBL : 0 .. DBLCNT ;    // next double
                               NXTCH : 0 .. CHCNT ;      // next char
-                              HW_GAP : - 1 .. HWCNT ;
-                              INT_GAP : - 1 .. INTCNT ;
+                              HW_GAP : - 1 .. HWCNT ;   // halfw. gap
+                              INT_GAP : - 1 .. INTCNT ; // int gap
                               IHCONF : - 1 .. INTCNT ;
                               RICONF : - 1 .. DBLCNT ;
                               RHCONF : - 1 .. DBLCNT ;
@@ -1411,9 +1376,9 @@ var GS : GLOBAL_STATE ;
     NXTLIT : - 1 .. LITCNT ;
 
     //**************************************************************
-    // this structure contains all the fields                       
-    // which are used to control the literal pool                   
-    // see type definition above                                    
+    // SPARE HALFWORD SLOT IN TABLE                                 
+    // SPARE INTEGER SLOT, CONFLICT                                 
+    // CONFLICTS WITH REAL TABLE                                    
     //**************************************************************
 
     LX : LITERAL_POOL_CONTROL ;
@@ -3083,7 +3048,6 @@ procedure ASMNXTINST ;
        LITOK : INTEGER ;
        TAG : array [ 1 .. 3 ] of CHAR ;
        NXTINT : 0 .. INTCNT ;
-       XOFFS : INTEGER ;
 
        (***************************************************)
        (* THE FOLLOWING PROCEDURES ARE FOR OBJECT CODE    *)
@@ -3318,45 +3282,43 @@ procedure ASMNXTINST ;
 
    procedure UPD_INTTBL ( PCOUNTER : ICRNG ; D : INTEGER ) ;
 
-      var I , NXTINT : 0 .. INTCNT ;
+      var I , NI : 0 .. INTCNT ;
 
       begin (* UPD_INTTBL *)
         if LX . INT_GAP >= 0 then
 
-        //******************************************************
-        // if there is an integer gap                           
-        // PREVENT MATCH WITH EMPTY SLOT                        
-        //******************************************************
+        (*********************************)
+        (* PREVENT MATCH WITH EMPTY SLOT *)
+        (*********************************)
 
           if D = 0 then
             IDP_POOL . I [ LX . INT_GAP ] := - 1
           else
             IDP_POOL . I [ LX . INT_GAP ] := 0 ;
-        NXTINT := LX . NXTDBL * 2 ;
-        IDP_POOL . I [ NXTINT ] := D ;
+        NI := LX . NXTDBL * 2 ;
+        IDP_POOL . I [ NI ] := D ;
         I := 0 ;
         while IDP_POOL . I [ I ] <> D do
           I := I + 1 ;
-
-        //******************************************************
-        // if the matching entry contains the halfword gaps     
-        // don't use the halfword gaps !                        
-        //******************************************************
-
         if I = LX . IHCONF then
+
+        (***************************)
+        (* CHECK FOR A COINCIDENCE *)
+        (***************************)
+
           begin
             LX . HW_GAP := - 1 ;
             LX . IHCONF := - 1 ;
             LX . RHCONF := - 1
           end (* then *) ;
-        if I = NXTINT then
+        if I = NI then
           if LX . INT_GAP >= 0 then
+
+        (**************************)
+        (* USE EMPTY SLOT INSTEAD *)
+        (**************************)
+
             begin
-
-        //******************************************************
-        // NOW USE EMPTY SLOT                                   
-        //******************************************************
-
               I := LX . INT_GAP ;
               LX . INT_GAP := - 1 ;
               LX . RICONF := - 1 ;
@@ -3364,13 +3326,7 @@ procedure ASMNXTINST ;
             end (* then *)
           else
             begin
-
-        //******************************************************
-        // use new double entry,                                
-        // generate integer gap                                 
-        //******************************************************
-
-              LX . INT_GAP := NXTINT + 1 ;
+              LX . INT_GAP := NI + 1 ;
               LX . RICONF := LX . INT_GAP DIV 2 ;
               LX . NXTDBL := LX . NXTDBL + 1 ;
               IDP_POOL . I [ LX . INT_GAP ] := 0 ;
@@ -3381,15 +3337,15 @@ procedure ASMNXTINST ;
           LX . NXTCH := I + 4 ;
         NXTLIT := NXTLIT + 1 ;
         LITTBL [ NXTLIT ] . LNK := PCOUNTER ;
+        LITTBL [ NXTLIT ] . LTYPE := 'I' ;
+        LITTBL [ NXTLIT ] . LENGTH := 0 ;
+        LITTBL [ NXTLIT ] . XIDP := 0 ;
         if FALSE then
           begin
             WRITELN ( TRACEF , 'upd_inttbl: nxtlit = ' , NXTLIT ) ;
             WRITELN ( TRACEF , 'upd_inttbl: pcounter = ' , PCOUNTER ) ;
             WRITELN ( TRACEF , 'upd_inttbl: d = ' , D ) ;
-          end (* then *) ;
-        LITTBL [ NXTLIT ] . LTYPE := 'I' ;
-        LITTBL [ NXTLIT ] . LENGTH := 4 ;
-        LITTBL [ NXTLIT ] . XIDP := I ;
+          end (* then *)
       end (* UPD_INTTBL *) ;
 
 
@@ -3452,11 +3408,6 @@ procedure ASMNXTINST ;
           L := L + 1 ;
         LD4 := L DIV 4 ;
         I := 2 * LX . NXTDBL ;
-
-        //******************************************************
-        // if int_gap preceeding free area, use int_gap, too    
-        //******************************************************
-
         if LX . INT_GAP >= 0 then
           if LX . INT_GAP = I - 1 then
             begin
@@ -3464,39 +3415,22 @@ procedure ASMNXTINST ;
               LX . INT_GAP := - 1 ;
               LX . RICONF := - 1
             end (* then *) ;
-
-        //******************************************************
-        // set literal starts at this position (I * 4)          
-        // integer bound                                        
-        //******************************************************
-
         CODE . H [ PCOUNTER ] := TO_HINT ( I * 4 ) ;
         NXTLIT := NXTLIT + 1 ;
         LITTBL [ NXTLIT ] . LNK := PCOUNTER ;
         LITTBL [ NXTLIT ] . LTYPE := 'S' ;
-        LITTBL [ NXTLIT ] . LENGTH := L ;
-        LITTBL [ NXTLIT ] . XIDP := I * 4 ;
+        LITTBL [ NXTLIT ] . LENGTH := 0 ;
+        LITTBL [ NXTLIT ] . XIDP := 0 ;
         if FALSE then
           begin
             WRITELN ( TRACEF , 'upd_settbl: nxtlit = ' , NXTLIT ) ;
             WRITELN ( TRACEF , 'upd_settbl: pcounter = ' , PCOUNTER ) ;
           end (* then *) ;
-
-        //******************************************************
-        // copy set literal to literal pool                     
-        //******************************************************
-
         for J := 1 to LD4 do
           begin
             IDP_POOL . I [ I ] := S_I . I [ J ] ;
             I := I + 1 ;
           end (* for *) ;
-
-        //******************************************************
-        // adjust nxtch and nxtdbl                              
-        // and set new integer gap, if needed                   
-        //******************************************************
-
         if I * 4 > LX . NXTCH then
           LX . NXTCH := I * 4 ;
         if I > LX . NXTDBL * 2 then
@@ -8427,8 +8361,6 @@ procedure ASMNXTINST ;
               Q2 := FPA . DSPLMT ;
               BASE ( Q2 , P2 , B2 ) ;
               GENRX ( XLA , 14 , Q2 , B2 , P2 ) ;
-              if P2 < 0 then
-                LITTBL [ SCNSTNO ] . LNK := PCOUNTER - 1 ;
               RGWORK := 14 ;
             end (* else *) ;
         GENRX ( XST , RGWORK , 0 , TRG1 , 0 ) ;
@@ -8443,8 +8375,6 @@ procedure ASMNXTINST ;
               Q2 := FPA . DSPLMT ;
               BASE ( Q2 , P2 , B2 ) ;
               GENRX ( XLA , 14 , Q2 , B2 , P2 ) ;
-              if P2 < 0 then
-                LITTBL [ SCNSTNO ] . LNK := PCOUNTER - 1 ;
               RGWORK := 14 ;
             end (* else *) ;
         GENRX ( XST , RGWORK , 4 , TRG1 , 0 ) ;
@@ -13956,49 +13886,40 @@ procedure ASMNXTINST ;
      //************************************************************
 
                     CARR : begin
+                             if LX . NXTCH <= LX . HW_GAP * 2 then
+                               begin
+                                 LX . HW_GAP := - 1 ;
+                                 LX . RHCONF := - 1 ;
+                                 LX . IHCONF := - 1
+                               end (* then *) ;
+                             if LX . NXTCH <= LX . INT_GAP * 4 then
+                               begin
+                                 LX . INT_GAP := - 1 ;
+                                 LX . RICONF := - 1
+                               end (* then *) ;
 
-     //*****************************************************
-     // look if literal is already in pool                  
-     // a literal qualifies, if                             
-     // 1) it has type C                                    
-     // 2) it has a length >= the length of the new one     
-     // 3) it starts or ends with the same characters       
-     //    as the new one                                   
-     //*****************************************************
+     //************************************************************
+     // look if literal is already in pool                         
+     //************************************************************
 
                              LITOK := 0 ;
                              for I := 1 to NXTLIT do
                                with LITTBL [ I ] do
                                  if LTYPE = 'C' then
-                                   if LENGTH >= SLNGTH then
-                                     begin
-                                       if MEMCMPX ( ADDR ( SVAL ) ,
-                                       ADDR ( IDP_POOL . C [ XIDP ] ) ,
-                                       SLNGTH ) = 0 then
-                                         begin
-                                           XOFFS := 0 ;
-                                           LITOK := I ;
-                                           break
-                                         end (* then *) ;
-                                       if LENGTH > SLNGTH then
-                                         begin
-                                           XOFFS := LENGTH - SLNGTH ;
-                                           if MEMCMPX ( ADDR ( SVAL ) ,
-                                           ADDR ( IDP_POOL . C [ XIDP +
-                                           XOFFS ] ) , SLNGTH ) = 0
-                                           then
-                                             begin
-                                               LITOK := I ;
-                                               break
-                                             end (* then *) ;
-                                         end (* then *)
-                                     end (* then *) ;
+                                   if LENGTH = SLNGTH then
+                                     if MEMCMPX ( ADDR ( SVAL ) , ADDR
+                                     ( IDP_POOL . C [ XIDP ] ) , LENGTH
+                                     ) = 0 then
+                                       begin
+                                         LITOK := I ;
+                                         break
+                                       end (* then *) ;
 
-     //*****************************************************
-     // if so, reuse; if not, add                           
-     // reuse means: add entry in littbl, but don't add     
-     // literal to literal pool (reuse literal there)       
-     //*****************************************************
+     //************************************************************
+     // if so, reuse; if not, add                                  
+     // reuse means: add entry in littbl, but don't add            
+     // literal to literal pool (reuse literal there)              
+     //************************************************************
 
                              if LITOK > 0 then
                                begin
@@ -14008,30 +13929,11 @@ procedure ASMNXTINST ;
                                  LITTBL [ NXTLIT ] . LTYPE := 'C' ;
                                  LITTBL [ NXTLIT ] . LENGTH := SLNGTH ;
                                  LITTBL [ NXTLIT ] . XIDP := LITTBL [
-                                                   LITOK ] . XIDP +
-                                                   XOFFS ;
+                                                   LITOK ] . XIDP ;
                                  LITOK := NXTLIT ;
                                end (* then *)
                              else
                                begin
-
-     //*****************************************************
-     // if new literal is stored                            
-     // and nxtch lower than gaps                           
-     // invalidate gaps                                     
-     //*****************************************************
-
-                                 if LX . NXTCH <= LX . HW_GAP * 2 then
-                                   begin
-                                     LX . HW_GAP := - 1 ;
-                                     LX . RHCONF := - 1 ;
-                                     LX . IHCONF := - 1
-                                   end (* then *) ;
-                                 if LX . NXTCH <= LX . INT_GAP * 4 then
-                                   begin
-                                     LX . INT_GAP := - 1 ;
-                                     LX . RICONF := - 1
-                                   end (* then *) ;
                                  TAG := 'add' ;
                                  NXTLIT := NXTLIT + 1 ;
                                  LITOK := NXTLIT ;
@@ -14043,21 +13945,13 @@ procedure ASMNXTINST ;
                                  MEMCPY ( ADDR ( IDP_POOL . C [ LX .
                                           NXTCH ] ) , ADDR ( SVAL [ 1 ]
                                           ) , SLNGTH ) ;
-
-     //*****************************************************
-     // increment lx.nxtch                                  
-     // and adjust lx.nxtdbl                                
-     // and set new gaps, if possible                       
-     //*****************************************************
-
                                  LX . NXTCH := LX . NXTCH + SLNGTH ;
-                                 LX . NXTDBL := LX . NXTCH DIV 8 ;
                                  I := LX . NXTDBL * 8 - LX . NXTCH ;
-                                 if I < 0 then
+                                 while I < 0 do
                                    begin
                                      LX . NXTDBL := LX . NXTDBL + 1 ;
                                      I := I + 8 ;
-                                   end (* then *) ;
+                                   end (* while *) ;
                                  NXTINT := LX . NXTDBL * 2 ;
                                  if I >= 4 then
                                    begin
@@ -14079,9 +13973,9 @@ procedure ASMNXTINST ;
                                      end (* then *) ;
                                end (* else *) ;
 
-     //*****************************************************
-     // show entry info in literal pool                     
-     //*****************************************************
+     //************************************************************
+     // show entry info in literal pool                            
+     //************************************************************
 
                              WRITELN ( TRACEF , TAG , ' literal nr. ' ,
                                        LITOK : 1 , ' lnk = ' , LITTBL [
@@ -14096,9 +13990,9 @@ procedure ASMNXTINST ;
                                        LITOK : 1 , ' sval   = ' , SVAL
                                        : SLNGTH ) ;
 
-     //*****************************************************
-     // REF. TO EXP. STACK                                  
-     //*****************************************************
+     //************************************************************
+     // REF. TO EXP. STACK                                         
+     //************************************************************
 
                              SCNSTNO := LITOK ;
                              FPA . LVL := - 1 ;

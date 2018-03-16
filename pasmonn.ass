@@ -314,6 +314,16 @@
 *
 ***********************************************************************
 *
+*    Some more modifications in 2018 by Bernd Oppolzer
+*    (berndoppolzer@yahoo.com)
+*
+*    - added $PASSCMP to support comparison of VARCHAR strings
+*      (it was just too complicated to do it inline). The
+*      function is called without full save area linking
+*      directly from compiler generated code. Special interface.
+*
+***********************************************************************
+*
 *
 *
 *
@@ -2150,26 +2160,91 @@ IHOERRE  BR    R14                 THIS SHOULD NOT BE CALLED
 *****************************************************************
 *
 $PASSCMP DS    0H
-         STM   R14,R12,12(R1)    Registersicherung in String Workarea
+         STM   R14,R12,32(R1)    Registersicherung in String Workarea
          USING $PASSCMP,15
          LR    R2,R1
-         AH    R1,=H'72'
+         LA    R1,100(R1)
 *
-         L     R3,0(R2)      first string descriptor
-         L     R4,4(R2)      second string descriptor
-         LH    R5,2(R3)      length of first string
-         CH    R5,2(R4)      compare with length of second string
+         L     R7,0(R2)      r7 = carr / varc indicator first str
+         L     R6,4(R2)      r6 = addr of first string or desc
+         L     R5,8(R2)      r5 = carr / varc indicator second str
+         L     R4,12(R2)     r4 = addr of second string or desc
+*
+         LTR   R7,R7         if length positive (that is: CARR)
+         BNM   PR            use length in R7 and addr in R6
+         LH    R7,2(R6)      length of first string
+         LA    R6,4(R6)      address of first string content
+*
+PR       DS    0H
+         LTR   R5,R5         if length positive (that is: CARR)
+         BNM   POK           use length in R5 and addr in R4
+         LH    R5,2(R4)      length of second string
+         LA    R4,4(R4)      address of second string content
+*
+POK      DS    0H
+*
+*        CVD   R4,DOWOCMP
+*        UNPK  TRCMP1+24(9),DOWOCMP+3(5)
+*        OI    TRCMP1+32,X'F0'
+*        LA    R3,TRCMP1
+*        LR    R10,R15
+*        L     R15,=A(PTRACE)
+*        BALR  R14,R15
+*
+*        LR    R15,R10
+*        MVC   TRCMPINH+24(8),0(R4)
+*        LA    R3,TRCMPINH
+*        LR    R10,R15
+*        L     R15,=A(PTRACE)
+*        BALR  R14,R15
+*        LR    R15,R10
+*
+*        CVD   R5,DOWOCMP
+*        UNPK  TRCMP2+24(9),DOWOCMP+3(5)
+*        OI    TRCMP2+32,X'F0'
+*        LA    R3,TRCMP2
+*        LR    R10,R15
+*        L     R15,=A(PTRACE)
+*        BALR  R14,R15
+*        LR    R15,R10
+*
+*        CVD   R6,DOWOCMP
+*        UNPK  TRCMP3+24(9),DOWOCMP+3(5)
+*        OI    TRCMP3+32,X'F0'
+*        LA    R3,TRCMP3
+*        LR    R10,R15
+*        L     R15,=A(PTRACE)
+*        BALR  R14,R15
+*        LR    R15,R10
+*
+*        LR    R15,R10
+*        MVC   TRCMPINH+24(8),0(R6)
+*        LA    R3,TRCMPINH
+*        LR    R10,R15
+*        L     R15,=A(PTRACE)
+*        BALR  R14,R15
+*        LR    R15,R10
+*
+*        CVD   R7,DOWOCMP
+*        UNPK  TRCMP4+24(9),DOWOCMP+3(5)
+*        OI    TRCMP4+32,X'F0'
+*        LA    R3,TRCMP4
+*        LR    R10,R15
+*        L     R15,=A(PTRACE)
+*        BALR  R14,R15
+*        LR    R15,R10
+*
+         STM   R4,R7,16(R2)
+         CR    R7,R5
          LA    R8,0          indicate equal length
          BE    P1
          LA    R8,1          indicate first string shorter
          BL    P1
          LA    R8,2          indicate second string shorter
-         LH    R5,2(R4)      use shorter length of second string
+         LR    R7,R5         use shorter length of second operand
 P1       DS    0H
-         LR    R7,R5         copy length to r7
-         LA    R6,4(R4)      address of second string content
-         LA    R4,4(R3)      address of first string content
-         CLCL  R4,R6         compare strings
+         LR    R5,R7         copy length to r5
+         CLCL  R6,R4         compare strings
          BNE   READY         if neq, result found
 *
          LTR   R8,R8         if shorter = 0, both strings
@@ -2179,36 +2254,42 @@ P1       DS    0H
          BE    SHORT2
 *
 SHORT1   DS    0H
-         L     R3,0(R2)      first string descriptor
-         L     R4,4(R2)      second string descriptor
+         LM    R4,R7,16(R2)
          B     COMPREST
 *
 SHORT2   DS    0H
-         L     R4,0(R2)      first string descriptor
-         L     R3,4(R2)      second string descriptor
+         LM    R6,R7,16(R2)
+         LM    R4,R5,24(R2)
 *
 COMPREST DS    0H
-         LH    R5,2(R4)      length of longer string
-         SH    R5,2(R3)      subtract length of shorter string
+         LR    R3,R7         save shorter string length in R3
          LR    R8,R1         pointer to free area to R8
-         LR    R9,R5         remaining length to R9
+         LR    R9,R5
+         SR    R9,R7         remaining length in R9
+         LR    R5,R9         save in R5
          XR    R6,R6
          LA    R7,C' '
          SLL   R7,24
          MVCL  R8,R6         create blank buffer
          LR    R8,R1         restore blank buffer addr in r8
-         LR    R9,R5         length in R9
-         LA    R4,4(R4)      r4 points to longer string content
-         AH    R4,2(R3)      add shorter string length = rest
+         LR    R9,R5         restore length
+*                            r4 points to longer string content
+         AR    R4,R3         add shorter string length = rest
          CLCL  R4,R8         compare rest with blanks
          B     READY
 *
 READY    DS    0H
-         SH    R1,=H'72'
-         LM    R14,R12,12(R1)
+         LR    R1,R2
+         LM    R14,R12,32(R1)
          DROP  R15
          BR    14
 *
+DOWOCMP  DS    D
+TRCMP1   DC    CL80'TRACE: $PASSCMP REG 4 = XXXXXXXXX'
+TRCMP2   DC    CL80'TRACE: $PASSCMP REG 5 = XXXXXXXXX'
+TRCMP3   DC    CL80'TRACE: $PASSCMP REG 6 = XXXXXXXXX'
+TRCMP4   DC    CL80'TRACE: $PASSCMP REG 7 = XXXXXXXXX'
+TRCMPINH DC    CL80'TRACE: $PASSCMP INH.  = XXXXXXXXX'
 *
 *
 *

@@ -4569,6 +4569,7 @@ procedure ASMNXTINST ;
       var I : INTEGER ;
           QPC : ICRNG ;
           TPC : ICRNG_EXT ;
+          L : INTEGER ;
 
       begin (* DUMP_LITERALS *)
         if OPT_FLG then
@@ -4601,29 +4602,6 @@ procedure ASMNXTINST ;
                     end (* then *)
                   else
                     ERROR ( 257 ) ;
-
-        //******************************************************
-        // vermutlich fehler ...                                
-        // dieses coding macht keinen sinn                      
-        //******************************************************
-
-                  if FALSE then
-                    if TPC < 0 then
-                      with STK [ - TPC - 1 ] do
-                        begin
-                          QPC := FPA . DSPLMT ;
-                          FPA . LVL := - 2 ;
-                          FPA . DSPLMT := BASE_DSPLMT ( QPC DIV 2 +
-                                          PCOUNTER ) ;
-                          if ODD ( QPC ) then
-                            FPA . DSPLMT := FPA . DSPLMT + 1 ;
-                        end (* with *) ;
-
-        //******************************************************
-        // vermutlich fehler ...                                
-        // dieses coding macht keinen sinn                      
-        //******************************************************
-
                 end (* for *) ;
 
         //******************************************************
@@ -4636,33 +4614,11 @@ procedure ASMNXTINST ;
               POOL_SIZE := POOL_SIZE + TPC * 2 ;
               NUMLITS := NUMLITS + NXTLIT ;
               QPC := PCOUNTER DIV 2 ;
-              for I := 0 to TPC do
-                begin
-                  CODE . I [ QPC ] := IDP_POOL . I [ I ] ;
-                  QPC := QPC + 1 ;
-                end (* for *) ;
+              L := TPC + 1 ;
+              MEMCPY ( ADDR ( CODE . I [ QPC ] ) , ADDR ( IDP_POOL . I
+                       [ 0 ] ) , L * 4 ) ;
+              QPC := QPC + L ;
               PCOUNTER := QPC * 2 ;
-              if FALSE then
-                begin
-
-        //******************************************************
-        //  QPC := PCOUNTER DIV 2 ;                             
-        //******************************************************
-
-                  MEMCPY ( ADDR ( CODE . H [ PCOUNTER ] ) , ADDR (
-                           IDP_POOL . I [ 0 ] ) , ( TPC + 1 ) * 4 ) ;
-
-        //******************************************************
-        //  for I := 0 to TPC do                                
-        //    begin                                             
-        //      CODE . I [ QPC ] := IDP_POOL . I [ I ] ;        
-        //      QPC := QPC + 1 ;                                
-        //    end (* for *) ;                                   
-        //  PCOUNTER := QPC * 2 ;                               
-        //******************************************************
-
-                  PCOUNTER := PCOUNTER + ( TPC + 1 ) * 2
-                end (* then *)
             end (* then *)
           else
             ERROR ( 255 ) ;
@@ -5362,8 +5318,10 @@ procedure ASMNXTINST ;
             then
               begin
                 ERROR ( 602 ) ;
-                WRITELN ( TRACEF , 'error 602 inside getadr2: dtype = '
-                          , DTYPE ) ;
+                if FALSE then
+                  WRITELN ( TRACEF ,
+                            'error 602 inside getadr2: dtype = ' ,
+                            DTYPE ) ;
               end (* then *) ;
             if VRBL then
               if VPA = RGS then
@@ -5383,12 +5341,17 @@ procedure ASMNXTINST ;
                   else
                     ERROR ( 616 ) ;
                   BASE ( Q , P , B ) ;
-                  WRITELN ( TRACEF , 'base/vrbl inside getadr2: q = ' ,
-                            Q ) ;
-                  WRITELN ( TRACEF , 'base/vrbl inside getadr2: p = ' ,
-                            P ) ;
-                  WRITELN ( TRACEF , 'base/vrbl inside getadr2: b = ' ,
-                            B ) ;
+                  if FALSE then
+                    begin
+                      WRITELN ( TRACEF ,
+                                'base/vrbl inside getadr2: q = ' , Q )
+                                ;
+                      WRITELN ( TRACEF ,
+                                'base/vrbl inside getadr2: p = ' , P )
+                                ;
+                      WRITELN ( TRACEF ,
+                                'base/vrbl inside getadr2: b = ' , B )
+                    end (* then *) ;
                   GENRX ( XL , TXRG , Q , B , P ) ;
                   R := TXRG
                 end (* else *) ;
@@ -5425,9 +5388,12 @@ procedure ASMNXTINST ;
 
               BASE ( Q , P , B ) ;
           end (* with *) ;
-        WRITELN ( TRACEF , 'base inside getadr2: q = ' , Q ) ;
-        WRITELN ( TRACEF , 'base inside getadr2: p = ' , P ) ;
-        WRITELN ( TRACEF , 'base inside getadr2: b = ' , B ) ;
+        if FALSE then
+          begin
+            WRITELN ( TRACEF , 'base inside getadr2: q = ' , Q ) ;
+            WRITELN ( TRACEF , 'base inside getadr2: p = ' , P ) ;
+            WRITELN ( TRACEF , 'base inside getadr2: b = ' , B )
+          end (* then *) ;
       end (* GETADR2 *) ;
 
 
@@ -8413,41 +8379,73 @@ procedure ASMNXTINST ;
 
       var LBL : PLABEL ;
           RGWORK : RGRNG ;
+          LITVALUE : INTEGER ;
 
       begin (* STRINGCOMPARE *)
+        if TRUE then
+          begin
+            WRITELN ( TRACEF , 'start stringcompare, linecnt = ' ,
+                      LINECNT : 1 ) ;
+            WRITE ( TRACEF , 'left  ' ) ;
+            DUMPSTKELEM ( LEFT ) ;
+            WRITE ( TRACEF , 'right ' ) ;
+            DUMPSTKELEM ( RIGHT ) ;
+          end (* then *) ;
         GENRX ( XL , TRG1 , STRCURR , 12 , 0 ) ;
         with LEFT do
-          if VPA = RGS then
-            begin
-              RGWORK := RGADR
-            end (* then *)
-          else
-            begin
-              P2 := FPA . LVL ;
-              Q2 := FPA . DSPLMT ;
-              BASE ( Q2 , P2 , B2 ) ;
-              GENRX ( XLA , 14 , Q2 , B2 , P2 ) ;
-              if P2 < 0 then
-                LITTBL [ SCNSTNO ] . LNK := PCOUNTER - 1 ;
-              RGWORK := 14 ;
-            end (* else *) ;
-        GENRX ( XST , RGWORK , 0 , TRG1 , 0 ) ;
+          begin
+            if DTYPE = CARR then
+              LITVALUE := PLEN
+            else
+              LITVALUE := - 1 ;
+            GENRXLIT ( XL , 14 , LITVALUE , 0 ) ;
+            GENRX ( XST , 14 , 0 , TRG1 , 0 ) ;
+            if VPA = RGS then
+              begin
+                RGWORK := RGADR
+              end (* then *)
+            else
+              begin
+                P2 := FPA . LVL ;
+                Q2 := FPA . DSPLMT ;
+                BASE ( Q2 , P2 , B2 ) ;
+                if P2 < 0 then
+                  begin
+                    LITTBL [ SCNSTNO ] . LNK := PCOUNTER + 1 ;
+                    P2 := 0 ;
+                  end (* then *) ;
+                GENRX ( XLA , 14 , Q2 , B2 , P2 ) ;
+                RGWORK := 14 ;
+              end (* else *) ;
+            GENRX ( XST , RGWORK , 4 , TRG1 , 0 ) ;
+          end (* with *) ;
         with RIGHT do
-          if VPA = RGS then
-            begin
-              RGWORK := RGADR
-            end (* then *)
-          else
-            begin
-              P2 := FPA . LVL ;
-              Q2 := FPA . DSPLMT ;
-              BASE ( Q2 , P2 , B2 ) ;
-              GENRX ( XLA , 14 , Q2 , B2 , P2 ) ;
-              if P2 < 0 then
-                LITTBL [ SCNSTNO ] . LNK := PCOUNTER - 1 ;
-              RGWORK := 14 ;
-            end (* else *) ;
-        GENRX ( XST , RGWORK , 4 , TRG1 , 0 ) ;
+          begin
+            if DTYPE = CARR then
+              LITVALUE := PLEN
+            else
+              LITVALUE := - 1 ;
+            GENRXLIT ( XL , 14 , LITVALUE , 0 ) ;
+            GENRX ( XST , 14 , 8 , TRG1 , 0 ) ;
+            if VPA = RGS then
+              begin
+                RGWORK := RGADR
+              end (* then *)
+            else
+              begin
+                P2 := FPA . LVL ;
+                Q2 := FPA . DSPLMT ;
+                BASE ( Q2 , P2 , B2 ) ;
+                if P2 < 0 then
+                  begin
+                    LITTBL [ SCNSTNO ] . LNK := PCOUNTER + 1 ;
+                    P2 := 0 ;
+                  end (* then *) ;
+                GENRX ( XLA , 14 , Q2 , B2 , P2 ) ;
+                RGWORK := 14 ;
+              end (* else *) ;
+            GENRX ( XST , RGWORK , 12 , TRG1 , 0 ) ;
+          end (* with *) ;
         FREEREG ( LEFT ) ;
         FREEREG ( RIGHT ) ;
         LBL . NAM := '$PASSCMP' ;
@@ -12994,14 +12992,17 @@ procedure ASMNXTINST ;
                            ; LEN_OFFS : ADRRNG ) ;
 
       begin (* ASSIGN_STRING *)
-        WRITELN ( TRACEF , 'start assign_string, linecnt = ' , LINECNT
-                  : 1 ) ;
-        WRITE ( TRACEF , 'target: ' ) ;
-        DUMPSTKELEM ( TARGET ) ;
-        WRITE ( TRACEF , 'source: ' ) ;
-        DUMPSTKELEM ( SOURCE ) ;
-        WRITELN ( TRACEF , 'len_reg  = ' , LEN_REG ) ;
-        WRITELN ( TRACEF , 'len_offs = ' , LEN_OFFS ) ;
+        if FALSE then
+          begin
+            WRITELN ( TRACEF , 'start assign_string, linecnt = ' ,
+                      LINECNT : 1 ) ;
+            WRITE ( TRACEF , 'target: ' ) ;
+            DUMPSTKELEM ( TARGET ) ;
+            WRITE ( TRACEF , 'source: ' ) ;
+            DUMPSTKELEM ( SOURCE ) ;
+            WRITELN ( TRACEF , 'len_reg  = ' , LEN_REG ) ;
+            WRITELN ( TRACEF , 'len_offs = ' , LEN_OFFS ) ;
+          end (* then *) ;
         if TARGET . DTYPE = VARC then
           TARGET . FPA . DSPLMT := TARGET . FPA . DSPLMT + 4 ;
         if SOURCE . DTYPE = VARC then
@@ -14083,18 +14084,25 @@ procedure ASMNXTINST ;
      // show entry info in literal pool                     
      //*****************************************************
 
-                             WRITELN ( TRACEF , TAG , ' literal nr. ' ,
-                                       LITOK : 1 , ' lnk = ' , LITTBL [
-                                       LITOK ] . LNK ) ;
-                             WRITELN ( TRACEF , TAG , ' literal nr. ' ,
-                                       LITOK : 1 , ' dsplmt = ' ,
-                                       LITTBL [ LITOK ] . XIDP ) ;
-                             WRITELN ( TRACEF , TAG , ' literal nr. ' ,
-                                       LITOK : 1 , ' length = ' ,
-                                       LITTBL [ LITOK ] . LENGTH ) ;
-                             WRITELN ( TRACEF , TAG , ' literal nr. ' ,
-                                       LITOK : 1 , ' sval   = ' , SVAL
-                                       : SLNGTH ) ;
+                             if FALSE then
+                               begin
+                                 WRITELN ( TRACEF , TAG ,
+                                           ' literal nr. ' , LITOK : 1
+                                           , ' lnk = ' , LITTBL [ LITOK
+                                           ] . LNK ) ;
+                                 WRITELN ( TRACEF , TAG ,
+                                           ' literal nr. ' , LITOK : 1
+                                           , ' dsplmt = ' , LITTBL [
+                                           LITOK ] . XIDP ) ;
+                                 WRITELN ( TRACEF , TAG ,
+                                           ' literal nr. ' , LITOK : 1
+                                           , ' length = ' , LITTBL [
+                                           LITOK ] . LENGTH ) ;
+                                 WRITELN ( TRACEF , TAG ,
+                                           ' literal nr. ' , LITOK : 1
+                                           , ' sval   = ' , SVAL :
+                                           SLNGTH ) ;
+                               end (* then *) ;
 
      //*****************************************************
      // REF. TO EXP. STACK                                  

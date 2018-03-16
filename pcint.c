@@ -1968,11 +1968,11 @@ static void *cspf_wrb (void *vgs,
    if (parm2 == 0)
       strcpy (buf, "FALSE");
    else if (parm2 == 1)
-      strcpy (buf, "TRUE ");
+      strcpy (buf, "TRUE");
    else
       strcpy (buf, "WRB:?");
 
-   fprintf (fcb -> fhandle, "%-*.*s", parm3, parm3, buf);
+   fprintf (fcb -> fhandle, "%*.*s", parm3, parm3, buf);
 
    return NULL;
 }

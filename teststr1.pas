@@ -171,6 +171,8 @@ procedure TEIL1 ;
 
 procedure TEIL2 ;
 
+   var ZZ : STRING ( 20 ) ;
+
    begin (* TEIL2 *)
 
      //************************************************************
@@ -183,6 +185,16 @@ procedure TEIL2 ;
      WRITELN ( 'c20 = ''Bernd'' ........................: ' , X ) ;
      X := C20 = 'Bernd      ' ;
      WRITELN ( 'c20 = ''Bernd      '' ..................: ' , X ) ;
+     ZZ := 'Bernd' ;
+     WRITELN ( 'vc20 = <' , VC20 , '>' ) ;
+     WRITELN ( 'zz   = <' , ZZ , '>' ) ;
+     X := VC20 = ZZ ;
+     WRITELN ( 'vc20 = zz ............................: ' , X ) ;
+     ZZ := 'Bornd' ;
+     WRITELN ( 'vc20 = <' , VC20 , '>' ) ;
+     WRITELN ( 'zz   = <' , ZZ , '>' ) ;
+     X := VC20 = ZZ ;
+     WRITELN ( 'vc20 = zz ............................: ' , X ) ;
      X := VC20 = 'Bernd' ;
      WRITELN ( 'vc20 = ''Bernd'' .......................: ' , X ) ;
      X := VC20 = 'Berndx' ;

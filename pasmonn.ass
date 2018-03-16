@@ -2253,15 +2253,39 @@ P1       DS    0H
          CH    R8,=H'2'
          BE    SHORT2
 *
+*******************************************************
+*        short1 coding is for first string shorter case
+*******************************************************
+*
 SHORT1   DS    0H
          LM    R4,R7,16(R2)
-         B     COMPREST
+         LR    R3,R7         save shorter string length in R3
+         LR    R8,R1         pointer to free area to R8
+         LR    R9,R5
+         SR    R9,R7         remaining length in R9
+         LR    R5,R9         save in R5
+         XR    R6,R6
+         LA    R7,C' '
+         SLL   R7,24
+         MVCL  R8,R6         create blank buffer
+         LR    R8,R1         restore blank buffer addr in r8
+         LR    R9,R5         restore length
+*                            r4 points to longer string content
+         AR    R4,R3         add shorter string length = rest
+         CLCL  R8,R4         compare rest with blanks
+         B     READY
+*
+*******************************************************
+*        short2 coding is for second string shorter case
+*        the registers at the beginning are loaded from
+*        different places, and the CLCL is coded in the
+*        reverse direction ... the rest of the code
+*        is the same !!
+*******************************************************
 *
 SHORT2   DS    0H
          LM    R6,R7,16(R2)
          LM    R4,R5,24(R2)
-*
-COMPREST DS    0H
          LR    R3,R7         save shorter string length in R3
          LR    R8,R1         pointer to free area to R8
          LR    R9,R5

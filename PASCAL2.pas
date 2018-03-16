@@ -8377,12 +8377,24 @@ procedure ASMNXTINST ;
 
    procedure STRINGCOMPARE ( var LEFT , RIGHT : DATUM ) ;
 
+   //****************************************************************
+   // implement string (varchar) comparisons                         
+   // by calling the routine $PASSCMP                                
+   // which is part of PASMONN (runtime)                             
+   //****************************************************************
+
+
       var LBL : PLABEL ;
           RGWORK : RGRNG ;
           LITVALUE : INTEGER ;
 
       begin (* STRINGCOMPARE *)
-        if TRUE then
+
+        //******************************************************
+        // show stack elements before compare                   
+        //******************************************************
+
+        if FALSE then
           begin
             WRITELN ( TRACEF , 'start stringcompare, linecnt = ' ,
                       LINECNT : 1 ) ;
@@ -8391,6 +8403,12 @@ procedure ASMNXTINST ;
             WRITE ( TRACEF , 'right ' ) ;
             DUMPSTKELEM ( RIGHT ) ;
           end (* then *) ;
+
+        //******************************************************
+        // load strcurr pointer -                               
+        // stringcompare uses string workarea                   
+        //******************************************************
+
         GENRX ( XL , TRG1 , STRCURR , 12 , 0 ) ;
         with LEFT do
           begin
@@ -8398,8 +8416,20 @@ procedure ASMNXTINST ;
               LITVALUE := PLEN
             else
               LITVALUE := - 1 ;
+
+        //******************************************************
+        // store plen, if char array                            
+        // or minus one, if varchar                             
+        //******************************************************
+
             GENRXLIT ( XL , 14 , LITVALUE , 0 ) ;
             GENRX ( XST , 14 , 0 , TRG1 , 0 ) ;
+
+        //******************************************************
+        // store address of left operand                        
+        // take care, if literal (carr constant)                
+        //******************************************************
+
             if VPA = RGS then
               begin
                 RGWORK := RGADR
@@ -8419,6 +8449,12 @@ procedure ASMNXTINST ;
               end (* else *) ;
             GENRX ( XST , RGWORK , 4 , TRG1 , 0 ) ;
           end (* with *) ;
+
+        //******************************************************
+        // do the same for the right operand                    
+        // at offsets 8 and 12 from R1                          
+        //******************************************************
+
         with RIGHT do
           begin
             if DTYPE = CARR then
@@ -8446,8 +8482,19 @@ procedure ASMNXTINST ;
               end (* else *) ;
             GENRX ( XST , RGWORK , 12 , TRG1 , 0 ) ;
           end (* with *) ;
+
+        //******************************************************
+        // free the registers possibly in use                   
+        // in the left and right operands                       
+        //******************************************************
+
         FREEREG ( LEFT ) ;
         FREEREG ( RIGHT ) ;
+
+        //******************************************************
+        // call the $PASSCMP routine (in PASMONN)               
+        //******************************************************
+
         LBL . NAM := '$PASSCMP' ;
         LBL . LEN := 8 ;
         GENRXLAB ( XL , TRG15 , LBL , - 3 ) ;
@@ -8459,6 +8506,13 @@ procedure ASMNXTINST ;
 
         CSPREGACTIVE := FALSE ;
         OLDCSP := PSIO ;
+
+        //******************************************************
+        // set the condition mask for the following branch      
+        // depending on the PCODE which started the string      
+        // comparison                                           
+        //******************************************************
+
         BRCND := BRMSK [ PCODE ] ;
       end (* STRINGCOMPARE *) ;
 

@@ -322,10 +322,6 @@
 *      function is called without full save area linking
 *      directly from compiler generated code. Special interface.
 *
-*    - added $PASSVCC to support concatenation of VARCHAR strings
-*      (in cases where inline code generation does not work
-*      due to number of available register constraints)
-*
 ***********************************************************************
 *
 *
@@ -588,7 +584,7 @@ $PASENT  CSECT ,
 *
          ENTRY $PASENT,$PASINT,$PASTRC
          ENTRY $PASSYS,$PASCSP,$PASCSP2
-         ENTRY $PASSCMP,$PASSVCC
+         ENTRY $PASSCMP
 *
          USING $PASENT,R15
          STM   R14,R12,12(R13)
@@ -2149,68 +2145,6 @@ IHOERRE  BR    R14                 THIS SHOULD NOT BE CALLED
          LTORG
 *
 .SYS38   ANOP
-*
-*
-*
-*
-*****************************************************************
-*
-*        $PASSVCC (String aka VARCHAR concat)
-*
-*        Unterfunktion zum Verketten von Strings
-*        (wenn Inline nicht geht)
-*        Parameter bei R1 = STRCURR:
-*        0(R1) - Adresse erster String
-*        4(R1) - Adresse zweiter String
-*        8(R1) - Adresse des Ergebnisses
-*
-*****************************************************************
-*
-$PASSVCC DS    0H
-         STM   R14,R12,32(R1)    Registersicherung in String Workarea
-         USING $PASSVCC,15
-         LR    R2,R1
-         LA    R1,100(R1)
-*
-         L     R4,0(R2)          r4 = addr of first string desc
-         L     R5,4(R2)          r5 = addr of second string desc
-         LR    R6,R1             r6 = addr of target string desc
-         ST    R6,8(R2)          store into result addr
-         LH    R7,2(R4)          length of first string
-         AH    R7,2(R5)          add length of second string
-         STH   R7,0(R6)          maxlength of target
-         STH   R7,2(R6)          length of target
-*
-         LA    R6,4(R6)          addr of target string content
-         LH    R7,2(R4)          length of first string
-         LH    R5,0(R4)          load maxlength
-         LA    R4,4(R4)          set r4 to content addr
-         LTR   R5,R5             if maxlength < 0
-         BNM   P01
-         L     R4,0(R4)          load content addr indirect
-P01      LR    R5,R7             length in r5 := r7
-         MVCL  R6,R4             copy first string
-*
-*        R6 has been advanced by MVCL :-)
-*
-         L     R4,4(R2)          r4 = now addr of second string desc
-         LH    R7,2(R4)          length of second string
-         LH    R5,0(R4)          load maxlength
-         LA    R4,4(R4)          set r4 to content addr
-         LTR   R5,R5             if maxlength < 0
-         BNM   P02
-         L     R4,0(R4)          load content addr indirect
-P02      LR    R5,R7             length in r5 := r7
-         MVCL  R6,R4             copy second string
-*
-*        R6 has been advanced by MVCL :-)
-*
-         ST    R6,12(R2)         new value for STRCURR
-*
-         LR    R1,R2
-         LM    R14,R12,32(R1)
-         DROP  R15
-         BR    14
 *
 *
 *

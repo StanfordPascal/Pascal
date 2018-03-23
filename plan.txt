@@ -1,4 +1,8 @@
 
+- Wenn LA und Offset/Register = 0, dann LR: besser zentral
+- VST 0,-1 Implementierung fehlt
+- bei VCC Abfrage auf MAXLENGTH = -1
+
 * Andere Installations-Prozedur fÅr MVS
 * Dokument fÅr MVS-Installation
 * Dokument fÅr Aufruf externer Module (FORTRAN, ASSEMBLER)
@@ -38,11 +42,11 @@
 * p) String-Funktionen lt. Pascal/VS
   q) PASCAL2, d.h. Code-Generierung fÅr Mainframe
 
-- Umbau PASMONN, andere Offsets / als Folge davon
-- andere Initialisierung bei PASMAIN
-- Variablen starten spÑter (400 statt 352) Compiler Ñndern
-- FL1 bis FL4 an anderen Offsets
-- weicher öbergang !!
+* Umbau PASMONN, andere Offsets / als Folge davon
+* andere Initialisierung bei PASMAIN
+* Variablen starten spÑter (400 statt 352) Compiler Ñndern
+* FL1 bis FL4 an anderen Offsets
+* weicher öbergang !!
 
 - weitere Doku auf Homepage
 - Fehler bei Funktionsaufruf mit CHAR auf VM (??)

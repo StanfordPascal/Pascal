@@ -22,6 +22,8 @@ C20A                 auto     1    470  array 1 20
 VC20                 auto     1    490 
 VC200                auto     1    514 
 X                    auto     1    718  boolean
+P1                   auto     1    720 
+P2                   auto     1    744 
 
 
 
@@ -83,6 +85,114 @@ No Parameters for TEIL2
 Variables of TEIL2               
 ------------------------------------------------------------------------
 ZZ                   auto     2    112 
+
+
+
+Procedure STRPROC             
+------------------------------------------------------------------------
+external = FALSE
+extlang  =  
+extname  =  
+forward  = FALSE
+level    =            1
+pfname   =            4
+cstname  = $PR#0004
+
+Parameters for STRPROC             
+------------------------------------------------------------------------
+X                    auto     2    112 
+Y                    varparm  2    136 
+A                    auto     2    140 
+B                    varparm  2    344 
+
+
+
+Function STRFUNC             
+------------------------------------------------------------------------
+external = FALSE
+extlang  =  
+extname  =  
+forward  = FALSE
+level    =            1
+pfname   =            5
+cstname  = $PR#0005
+
+Parameters for STRFUNC             
+------------------------------------------------------------------------
+X                    auto     2    112 
+Y                    auto     2    136 
+
+
+
+Function IFUNC               
+------------------------------------------------------------------------
+external = FALSE
+extlang  =  
+extname  =  
+forward  = FALSE
+level    =            1
+pfname   =            6
+cstname  = $PR#0006
+
+Parameters for IFUNC               
+------------------------------------------------------------------------
+X                    auto     2    112 
+Y                    auto     2    136 
+
+
+
+Function STRFUNC2            
+------------------------------------------------------------------------
+external = FALSE
+extlang  =  
+extname  =  
+forward  = FALSE
+level    =            1
+pfname   =            7
+cstname  = $PR#0007
+
+Parameters for STRFUNC2            
+------------------------------------------------------------------------
+X                    auto     2    112 
+Y                    auto     2    116 
+
+
+
+Function STRFUNC3            
+------------------------------------------------------------------------
+external = FALSE
+extlang  =  
+extname  =  
+forward  = FALSE
+level    =            1
+pfname   =            8
+cstname  = $PR#0008
+
+Parameters for STRFUNC3            
+------------------------------------------------------------------------
+X                    varparm  2    112 
+Y                    varparm  2    116 
+
+Variables of STRFUNC3            
+------------------------------------------------------------------------
+ERG                  auto     2    120 
+
+
+
+Function STRFUNC5            
+------------------------------------------------------------------------
+external = FALSE
+extlang  =  
+extname  =  
+forward  = FALSE
+level    =            1
+pfname   =            9
+cstname  = $PR#0009
+
+Parameters for STRFUNC5            
+------------------------------------------------------------------------
+X                    varparm  2    112 
+Y                    varparm  2    116 
 
 **********************************
 *** End of List of Definitions ***

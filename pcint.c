@@ -2602,20 +2602,23 @@ static void *cspf_rdr (void *vgs,
    {
       ch = file_getch (gs, fcb);
       minusexp = 0;
-      wertexp = 0.0;
+      wertexp = 0;
 
-      if (chnext == '-')
+      ch = file_getch (gs, fcb);
+      if (ch == '-')
       {
          minusexp = 1;
          ch = file_getch (gs, fcb);
       }
-      else if (chnext == '+')
+      else if (ch == '+')
       {
          ch = file_getch (gs, fcb);
       }
 
-      if (chnext < '0' || chnext > '9')
+      if (ch < '0' || ch > '9')
          runtime_error (gs, BADIO, fcb -> ddname);
+
+      wertexp = ch - '0';
 
       do
       {
@@ -2623,6 +2626,7 @@ static void *cspf_rdr (void *vgs,
          chnext = *charp;
          if (chnext < '0' || chnext > '9')
             break;
+
          ch = file_getch (gs, fcb);
          wertexp *= 10;
          wertexp += (ch - '0');
@@ -4234,7 +4238,7 @@ static void int1 (global_store *gs)
             res = wert2 - wert1;
          }
          else
-            BREMSE ("+++ value of T not supported !!\n");
+            BREMSE ("+++ value of T not supported (1) !!\n");
 
          /************************************************/
          /*   boolean value replaces stack position      */
@@ -4502,7 +4506,7 @@ static void int1 (global_store *gs)
             res = wert2 - wert1;
          }
          else
-            BREMSE ("+++ value of T not supported !!\n");
+            BREMSE ("+++ value of T not supported (2) !!\n");
 
          /************************************************/
          /*   boolean value replaces stack position      */
@@ -4668,7 +4672,7 @@ static void int1 (global_store *gs)
             res = wert2 - wert1;
          }
          else
-            BREMSE ("+++ value of T not supported !!\n");
+            BREMSE ("+++ value of T not supported (3) !!\n");
 
          /************************************************/
          /*   boolean value replaces stack position      */
@@ -5190,7 +5194,10 @@ static void int1 (global_store *gs)
             res = wert2 - wert1;
          }
          else
-            BREMSE ("+++ value of T not supported !!\n");
+         {
+            printf ("value of t = %c\n", pcode -> t);
+            BREMSE ("+++ value of T not supported (4) !!\n");
+         }
 
          /************************************************/
          /*   boolean value replaces stack position      */
@@ -5356,7 +5363,7 @@ static void int1 (global_store *gs)
             res = wert2 - wert1;
          }
          else
-            BREMSE ("+++ value of T not supported !!\n");
+            BREMSE ("+++ value of T not supported (5) !!\n");
 
          /************************************************/
          /*   boolean value replaces stack position      */
@@ -5907,7 +5914,7 @@ static void int1 (global_store *gs)
             res = wert2 - wert1;
          }
          else
-            BREMSE ("+++ value of T not supported !!\n");
+            BREMSE ("+++ value of T not supported (6) !!\n");
 
          /************************************************/
          /*   boolean value replaces stack position      */

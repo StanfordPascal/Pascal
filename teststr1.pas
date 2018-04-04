@@ -19,6 +19,7 @@ var S : STRING ( 20 ) ;
     X : BOOLEAN ;
     P1 : STRING ( 20 ) ;
     P2 : STRING ( 200 ) ;
+    COUNT : INTEGER ;
 
 
 
@@ -625,8 +626,18 @@ procedure TEIL3 ;
 function CHECKF : STRING ;
 
    var X : ANYPTR ;
+       CH : CHAR ;
+       COUNT : INTEGER ;
+       S : STRING ( 20 ) ;
 
    begin (* CHECKF *)
+     CH := '*' ;
+     S := REPEATSTR ( CH , 10 ) ;
+     WRITELN ( 'test repeatstr  = <' , S , '>' ) ;
+     CH := '*' ;
+     COUNT := 15 ;
+     S := REPEATSTR ( CH , COUNT ) ;
+     WRITELN ( 'test repeatstr  = <' , S , '>' ) ;
      X := NIL ;
      WRITELN ( 'strresultp      = ' , X ) ;
      X := STRRESULTP ;
@@ -694,6 +705,14 @@ begin (* HAUPTPROGRAMM *)
   WRITELN ( LENGTH ( VC2000 ) ) ;
   WRITE ( 'Test REPEATSTR .......................: ' ) ;
   WRITELN ( REPEATSTR ( 'Bernd ' , 5 ) ) ;
+  P1 := 'Oppolzer ' ;
+  WRITE ( 'Test REPEATSTR .......................: ' ) ;
+  WRITELN ( REPEATSTR ( P1 , 5 ) ) ;
+  COUNT := 6 ;
+  WRITE ( 'Test REPEATSTR .......................: ' ) ;
+  WRITELN ( REPEATSTR ( 'Bernd ' , COUNT ) ) ;
+  WRITE ( 'Test REPEATSTR .......................: ' ) ;
+  WRITELN ( REPEATSTR ( P1 , COUNT ) ) ;
 
   //******************************************************************
   // test SUBSTR2 - korrekte Variante mit STRRESULTP usw.             
@@ -708,5 +727,39 @@ begin (* HAUPTPROGRAMM *)
   WRITELN ( '<' , P2 , '>' ) ;
   P2 := SUBSTR2 ( 'Bernd ' || 'Oppolzer' , 5 , - 1 ) ;
   WRITE ( 'p2 = Ergebnis von SUBSTR2 ............: ' ) ;
+  WRITELN ( '<' , P2 , '>' ) ;
+
+  //******************************************************************
+  // test SUBSTR                                                      
+  //******************************************************************
+
+  P1 := 'Oppolzer' ;
+  P2 := SUBSTR ( P1 , 3 , 4 ) ;
+  WRITE ( 'p2 = Ergebnis von SUBSTR .............: ' ) ;
+  WRITELN ( '<' , P2 , '>' ) ;
+  WRITE ( 'P1 nach SUBSTR (should not change) ...: ' ) ;
+  WRITELN ( '<' , P1 , '>' ) ;
+  P2 := SUBSTR ( 'Bernd ' || 'Oppolzer' , 5 , 7 ) ;
+  WRITE ( 'p2 = Ergebnis von SUBSTR .............: ' ) ;
+  WRITELN ( '<' , P2 , '>' ) ;
+  P2 := SUBSTR ( 'Bernd ' || 'Oppolzer' , 5 ) ;
+  WRITE ( 'p2 = Ergebnis von SUBSTR .............: ' ) ;
+  WRITELN ( '<' , P2 , '>' ) ;
+
+  //******************************************************************
+  // test DELETE                                                      
+  //******************************************************************
+
+  P1 := 'Oppolzer' ;
+  P2 := DELETE ( P1 , 3 , 4 ) ;
+  WRITE ( 'p2 = Ergebnis von DELETE .............: ' ) ;
+  WRITELN ( '<' , P2 , '>' ) ;
+  WRITE ( 'P1 nach DELETE (should not change) ...: ' ) ;
+  WRITELN ( '<' , P1 , '>' ) ;
+  P2 := DELETE ( 'Bernd ' || 'Oppolzer' , 5 , 7 ) ;
+  WRITE ( 'p2 = Ergebnis von DELETE .............: ' ) ;
+  WRITELN ( '<' , P2 , '>' ) ;
+  P2 := DELETE ( 'Bernd ' || 'Oppolzer' , 5 ) ;
+  WRITE ( 'p2 = Ergebnis von DELETE .............: ' ) ;
   WRITELN ( '<' , P2 , '>' ) ;
 end (* HAUPTPROGRAMM *) .

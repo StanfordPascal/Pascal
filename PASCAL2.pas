@@ -1827,7 +1827,7 @@ function FLDW ( NUM : INTEGER ) : INTEGER ;
 procedure DUMPSTKELEM ( STK : DATUM ) ;
 
    const TYPNAME : array [ BOOL .. VARC ] of array [ 1 .. 4 ] of CHAR =
-         ( 'BOOL' , 'CHR ' , 'ADR ' , 'HINT' , 'INT ' , 'SET ' , 'REAL'
+         ( 'BOOL' , 'CHRC' , 'ADR ' , 'HINT' , 'INT ' , 'PSET' , 'REEL'
            , 'PROC' , 'CARR' , 'VARC' ) ;
 
    begin (* DUMPSTKELEM *)
@@ -13115,6 +13115,8 @@ procedure ASMNXTINST ;
 
       var P1 , B1 , P2 , B2 : LVLRNG ;
           Q1 , Q2 : ADRRNG ;
+          PX , BX : LVLRNG ;
+          QX : ADRRNG ;
           B : LVLRNG ;
           MAXL : INTEGER ;
           LEN : INTEGER ;
@@ -13129,6 +13131,8 @@ procedure ASMNXTINST ;
           LEN_NEW : INTEGER ;
           LEN_REG : RGRNG ;
           LEN_OFFS : ADRRNG ;
+          COUNT : INTEGER ;
+          NEWLEN : INTEGER ;
 
 
       procedure WORK_VCC ;
@@ -14256,12 +14260,15 @@ procedure ASMNXTINST ;
         // is requested (which is equal to the length            
         // in this case)                                         
         //*******************************************************
+        // PCINT checks for the maxlength field being -1         
+        // and throws a UNDEFSTRING error, if not                
+        //*******************************************************
 
           PVLM : with STK [ TOP - 1 ] do
                    begin
                      if VPA = RGS then
                        begin
-                         GENRX ( XLH , RGADR , 0 , RGADR , 0 ) ;
+                         GENRX ( XLH , RGADR , 2 , RGADR , 0 ) ;
                          RGWORK := RGADR
                        end (* then *)
                      else
@@ -14269,7 +14276,7 @@ procedure ASMNXTINST ;
                          GETADR2 ( STK [ TOP - 1 ] , Q1 , P1 , B1 ) ;
                          GENLA_LR ( 14 , Q1 , B1 , P1 ) ;
                          FREEREG ( STK [ TOP - 1 ] ) ;
-                         GENRX ( XLH , 14 , 0 , 14 , 0 ) ;
+                         GENRX ( XLH , 14 , 2 , 14 , 0 ) ;
                          RGWORK := 14 ;
                        end (* else *) ;
                      DTYPE := INT ;
@@ -14292,7 +14299,259 @@ procedure ASMNXTINST ;
         //*******************************************************
 
           PVRP : begin
-                   
+
+        //******************************************************
+        // get constant length of top stack element             
+        // or load length into rgwork                           
+        //******************************************************
+
+                   with STK [ TOP - 1 ] do
+                     if not VRBL then
+                       COUNT := FPA . DSPLMT
+                     else
+                       begin
+                         LOAD ( STK [ TOP - 1 ] ) ;
+                         RGWORK := NXTRG ;
+                         COUNT := - 1 ;
+                       end (* else *) ;
+
+        //******************************************************
+        // now pop stack to get string parameter                
+        // length of result depends heavily on                  
+        // type of string parameter                             
+        //******************************************************
+
+                   TOP := TOP - 1 ;
+                   with STK [ TOP - 1 ] do
+                     if DTYPE = CHRC then
+                       begin
+                         if COUNT >= 0 then
+                           NEWLEN := COUNT
+                         else
+                           NEWLEN := - 1 ;
+                       end (* then *)
+                     else
+                       if DTYPE = CARR then
+                         begin
+                           if COUNT >= 0 then
+                             NEWLEN := COUNT * PLEN
+                           else
+                             begin
+                               NEWLEN := - 1 ;
+                             end (* else *)
+                         end (* then *)
+                       else
+                         NEWLEN := - 1 ;
+
+        //******************************************************
+        // result string will be in string workarea             
+        // rgwork1 will point to result string                  
+        //******************************************************
+
+                   FINDRG ;
+                   RGWORK1 := NXTRG ;
+                   GENRX ( XL , RGWORK1 , STRCURR , 12 , 0 ) ;
+                   with STK [ TOP - 1 ] do
+                     if DTYPE = CHRC then
+                       begin
+
+        //******************************************************
+        // generate code for single character case              
+        //******************************************************
+
+                         FINDRP ;
+                         P1 := NXTRG ;
+                         B1 := NXTRG + 1 ;
+                         GENRR ( XLR , P1 , RGWORK1 ) ;
+                         if NEWLEN >= 0 then
+                           begin
+                             LITVALUE := NEWLEN * 65536 + NEWLEN ;
+                             GENRXLIT ( XL , 14 , LITVALUE , 1 ) ;
+                           end (* then *)
+                         else
+                           begin
+                             GENRR ( XLR , 14 , RGWORK ) ;
+                             GENRS ( XSLL , 14 , 0 , 16 , 0 ) ;
+                             GENRR ( XAR , 14 , RGWORK ) ;
+                           end (* else *) ;
+                         GENRX ( XST , 14 , 0 , P1 , 0 ) ;
+                         GENRX ( XLA , P1 , 4 , P1 , 0 ) ;
+                         if NEWLEN < 0 then
+                           GENRR ( XLR , B1 , RGWORK )
+                         else
+                           begin
+                             LITVALUE := NEWLEN ;
+                             GENRXLIT ( XL , B1 , LITVALUE , 1 ) ;
+                           end (* else *) ;
+                         FINDRP ;
+                         P2 := NXTRG ;
+                         B2 := NXTRG + 1 ;
+                         GENRR ( XXR , P2 , P2 ) ;
+                         if VRBL then
+                           begin
+                             FPA := MEMADR ;
+                             MEMADR := ZEROBL ;
+                             VRBL := FALSE ;
+                             GETADR2 ( STK [ TOP - 1 ] , QX , PX , BX )
+                                       ;
+                             GENRX ( XIC , B2 , QX , PX , BX ) ;
+                           end (* then *)
+                         else
+                           GENRX ( XLA , B2 , FPA . DSPLMT , 0 , 0 ) ;
+                         GENRS ( XSLL , B2 , 0 , 24 , 0 ) ;
+                         GENRR ( XMVCL , P1 , P2 ) ;
+                         GENRX ( XST , P1 , STRCURR , 12 , 0 ) ;
+                         AVAIL [ P1 ] := TRUE ;
+                         AVAIL [ B1 ] := TRUE ;
+                         AVAIL [ P2 ] := TRUE ;
+                         AVAIL [ B2 ] := TRUE ;
+                         AVAIL [ RGWORK ] := TRUE ;
+                       end (* then *)
+                     else
+                       if DTYPE = CARR then
+                         begin
+
+        //******************************************************
+        // generate code for character array case               
+        // p1 = source address of char array                    
+        // p2 = target address                                  
+        // q2 = count                                           
+        //******************************************************
+
+                           FINDRG ;
+                           P1 := NXTRG ;
+                           if VPA = RGS then
+                             begin
+                               GENRR ( XLR , P1 , RGADR ) ;
+                             end (* then *)
+                           else
+                             begin
+                               GETADR2 ( STK [ TOP - 1 ] , QX , PX , BX
+                                         ) ;
+                               GENRX ( XLA , P1 , QX , 0 , 0 ) ;
+                               LITTBL [ SCNSTNO ] . LNK := PCOUNTER - 1
+                                                   ;
+                               CODE . H [ PCOUNTER - 1 ] := TO_HINT (
+                                                   QX ) ;
+                             end (* else *) ;
+                           FINDRG ;
+                           P2 := NXTRG ;
+                           GENRR ( XLR , P2 , RGWORK1 ) ;
+                           FINDRG ;
+                           Q2 := NXTRG ;
+                           if COUNT < 0 then
+                             GENRR ( XLR , Q2 , RGWORK )
+                           else
+                             begin
+                               LITVALUE := COUNT ;
+                               GENRXLIT ( XL , Q2 , LITVALUE , 0 ) ;
+                             end (* else *) ;
+                           GENRR ( XLR , 14 , Q2 ) ;
+                           GENRXLIT ( XMH , 14 , PLEN , - 1 ) ;
+                           GENRX ( XSTH , 14 , 0 , P2 , 0 ) ;
+                           GENRX ( XSTH , 14 , 2 , P2 , 0 ) ;
+                           GENRX ( XLA , P2 , 4 , P2 , 0 ) ;
+                           GENSS ( XMVC , PLEN , 0 , P2 , 0 , P1 ) ;
+                           GENRX ( XLA , P2 , PLEN , P2 , 0 ) ;
+                           GENRELRX ( XBCT , Q2 , - 5 ) ;
+                           GENRX ( XST , P2 , STRCURR , 12 , 0 ) ;
+                           AVAIL [ P1 ] := TRUE ;
+                           AVAIL [ P2 ] := TRUE ;
+                           AVAIL [ Q2 ] := TRUE ;
+                           AVAIL [ RGWORK ] := TRUE ;
+                         end (* then *)
+                       else
+                         begin
+
+        //******************************************************
+        // generate code for varchar case                       
+        // p1 = source address of varchar                       
+        // q1 = length of source = length of target             
+        // p2 = target address                                  
+        // q2 = length of target                                
+        //******************************************************
+
+                           FINDRP ;
+                           P1 := NXTRG ;
+                           Q1 := NXTRG + 1 ;
+                           if VPA = RGS then
+                             begin
+                               GENRR ( XLR , P1 , RGADR ) ;
+                             end (* then *)
+                           else
+                             begin
+                               GETADR2 ( STK [ TOP - 1 ] , QX , PX , BX
+                                         ) ;
+                               GENLA_LR ( P1 , QX , BX , PX ) ;
+                             end (* else *) ;
+                           FINDRP ;
+                           P2 := NXTRG ;
+                           Q2 := NXTRG + 1 ;
+                           GENRR ( XLR , P2 , RGWORK1 ) ;
+                           if COUNT >= 0 then
+                             begin
+                               FINDRG ;
+                               RGWORK := NXTRG ;
+                               LITVALUE := COUNT ;
+                               GENRXLIT ( XL , RGWORK , LITVALUE , 0 )
+                                          ;
+                             end (* then *) ;
+                           GENRR ( XLR , 14 , RGWORK ) ;
+                           GENRX ( XLH , Q2 , 2 , P1 , 0 ) ;
+                           GENRR ( XLR , Q1 , Q2 ) ;
+                           GENRX ( XMH , 14 , 2 , P1 , 0 ) ;
+                           GENRX ( XSTH , 14 , 0 , P2 , 0 ) ;
+                           GENRX ( XSTH , 14 , 2 , P2 , 0 ) ;
+                           GENRX ( XLA , P2 , 4 , P2 , 0 ) ;
+                           GENRX ( XLH , 14 , 0 , P1 , 0 ) ;
+                           GENRX ( XLA , P1 , 4 , P1 , 0 ) ;
+                           GENRR ( XLTR , 14 , 14 ) ;
+                           GENRELRX ( XBC , GEQCND , 4 ) ;
+                           GENRX ( XL , P1 , 0 , P1 , 0 ) ;
+
+        //******************************************************
+        // length fields are set correctly                      
+        // p1 = source of char string                           
+        // p2 = target of char string                           
+        // q1 = length of char string                           
+        // q2 = length of char string                           
+        // rgwork = count                                       
+        // CSPREGACTIVE ... indicate loss of reg 15             
+        //******************************************************
+
+                           CSPREGACTIVE := FALSE ;
+                           GENRR ( XLR , 14 , Q1 ) ;
+                           GENRR ( XLR , 15 , P1 ) ;
+                           GENRR ( XMVCL , P2 , P1 ) ;
+                           GENRR ( XLR , Q1 , 14 ) ;
+                           GENRR ( XLR , Q2 , 14 ) ;
+                           GENRR ( XLR , P1 , 15 ) ;
+                           GENRELRX ( XBCT , RGWORK , - 4 ) ;
+                           GENRX ( XST , P2 , STRCURR , 12 , 0 ) ;
+                           AVAIL [ P1 ] := TRUE ;
+                           AVAIL [ P2 ] := TRUE ;
+                           AVAIL [ Q1 ] := TRUE ;
+                           AVAIL [ Q2 ] := TRUE ;
+                           AVAIL [ RGWORK ] := TRUE ;
+                         end (* else *) ;
+
+        //******************************************************
+        // setup topmost stack element for result string        
+        //******************************************************
+
+                   with STK [ TOP - 1 ] do
+                     begin
+                       DTYPE := VARC ;
+                       PLEN := - 1 ;
+                       VRBL := TRUE ;
+                       DRCT := TRUE ;
+                       VPA := RGS ;
+                       RGADR := RGWORK1 ;
+                       FPA . LVL := 0 ;
+                       FPA . DSPLMT := 0 ;
+                       MEMADR . LVL := 0 ;
+                       MEMADR . DSPLMT := 0 ;
+                     end (* with *) ;
                  end (* tag/ca *) ;
         end (* case *)
       end (* STRINGOPS *) ;

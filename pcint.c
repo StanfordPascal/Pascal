@@ -3340,7 +3340,7 @@ static void int1 (global_store *gs)
    int copy_string;
    int addr_displaysave;
 
-   char setbuffer [SETLENMAX];
+   unsigned char setbuffer [SETLENMAX];
 
    funtab *pft;
    int parm1;
@@ -4395,6 +4395,41 @@ static void int1 (global_store *gs)
             else
                res = -1;
          }
+         else if (pcode -> t == 'S')
+         {
+            /************************************************/
+            /*   compare 2 set values                       */
+            /************************************************/
+
+            addr = STACK_I (gs -> sp);
+            setp1 = ADDRSTOR (SET_ADDR (addr));
+            len1 = SET_LEN (addr);
+
+            STACKTYPE (gs -> sp) = ' ';
+            (gs -> sp) -= 4;
+
+            addr = STACK_I (gs -> sp);
+            setp2 = ADDRSTOR (SET_ADDR (addr));
+            len2 = SET_LEN (addr);
+
+            STACKTYPE (gs -> sp) = 'B';
+
+            if (len1 != len2)
+               runtime_error (gs, SETLERROR, NULL);
+
+            memcpy (setbuffer, setp1, len1);
+            for (cpu1 = setbuffer, cpu2 = setp2, len = len1;
+                 len > 0;
+                 cpu1 += 1, cpu2 += 1, len -= 1)
+            {
+               *cpu1 |= *cpu2;
+            }
+
+            if (memcmp (setbuffer, setp2, len1) == 0)
+               res = 0;
+            else
+               res = -1;
+         }
          else if (pcode -> t == 'V')
          {
             /************************************************/
@@ -5083,6 +5118,41 @@ static void int1 (global_store *gs)
             else
                res = 1;
          }
+         else if (pcode -> t == 'S')
+         {
+            /************************************************/
+            /*   compare 2 set values                       */
+            /************************************************/
+
+            addr = STACK_I (gs -> sp);
+            setp1 = ADDRSTOR (SET_ADDR (addr));
+            len1 = SET_LEN (addr);
+
+            STACKTYPE (gs -> sp) = ' ';
+            (gs -> sp) -= 4;
+
+            addr = STACK_I (gs -> sp);
+            setp2 = ADDRSTOR (SET_ADDR (addr));
+            len2 = SET_LEN (addr);
+
+            STACKTYPE (gs -> sp) = 'B';
+
+            if (len1 != len2)
+               runtime_error (gs, SETLERROR, NULL);
+
+            memcpy (setbuffer, setp1, len1);
+            for (cpu1 = setbuffer, cpu2 = setp2, len = len1;
+                 len > 0;
+                 cpu1 += 1, cpu2 += 1, len -= 1)
+            {
+               *cpu1 |= *cpu2;
+            }
+
+            if (memcmp (setbuffer, setp1, len1) == 0)
+               res = 0;
+            else
+               res = 1;
+         }
          else if (pcode -> t == 'V')
          {
             /************************************************/
@@ -5195,7 +5265,7 @@ static void int1 (global_store *gs)
          }
          else
          {
-            printf ("value of t = %c\n", pcode -> t);
+            // printf ("value of t = %c\n", pcode -> t);
             BREMSE ("+++ value of T not supported (4) !!\n");
          }
 

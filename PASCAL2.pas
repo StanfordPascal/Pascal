@@ -13123,6 +13123,7 @@ procedure ASMNXTINST ;
           COPYSTRING : BOOLEAN ;
           RGWORK : RGRNG ;
           RGWORK1 : RGRNG ;
+          RGWORK2 : RGRNG ;
           PATBLANK : DATUM ;
           DATLEN : DATUM ;
           LITVALUE : INTEGER ;
@@ -13926,9 +13927,21 @@ procedure ASMNXTINST ;
                          end (* else *)
                      end (* with *) ;
                    AVAIL [ NXTRG ] := TRUE ;
-                   FREEREG ( STK [ TOP - 2 ] ) ;
+                   FREEREG_COND ( STK [ TOP - 2 ] , - 1 ) ;
                    STK [ TOP - 2 ] := STK [ TOP - 1 ] ;
-                   TOP := TOP - 1
+                   TOP := TOP - 1 ;
+                   with STK [ TOP - 1 ] do
+                     begin
+                       DTYPE := VARC ;
+                       VRBL := TRUE ;
+                       DRCT := TRUE ;
+                       VPA := RGS ;
+                       RGADR := NXTRG ;
+                       FPA . LVL := 0 ;
+                       FPA . DSPLMT := 0 ;
+                       MEMADR . LVL := 0 ;
+                       MEMADR . DSPLMT := 0 ;
+                     end (* with *)
                  end (* else *)
          end (* WORK_VST *) ;
 
@@ -14095,6 +14108,55 @@ procedure ASMNXTINST ;
                              RGADR := NXTRG ;
                            end (* then *)
                        end (* with *)
+                   else
+                     with STK [ TOP - 1 ] do
+                       begin
+                         FINDRG ;
+                         RGWORK1 := NXTRG ;
+                         GENRX ( XL , RGWORK1 , STRCURR , 12 , 0 ) ;
+                         FINDRP ;
+                         P1 := NXTRG ;
+                         B1 := NXTRG + 1 ;
+                         if VRBL then
+                           begin
+                             P2 := MEMADR . LVL ;
+                             Q2 := MEMADR . DSPLMT ;
+                             BASE ( Q2 , P2 , B2 ) ;
+                             GENRX ( XL , P1 , Q2 , B2 , P2 ) ;
+                           end (* then *)
+                         else
+                           begin
+                             P2 := FPA . LVL ;
+                             Q2 := FPA . DSPLMT ;
+                             BASE ( Q2 , P2 , B2 ) ;
+                             GENRX ( XLA , P1 , Q2 , B2 , P2 ) ;
+                           end (* else *) ;
+                         GENRX ( XLH , B1 , 2 , P1 , 0 ) ;
+                         GENRX ( XST , B1 , 0 , RGWORK1 , 0 ) ;
+                         GENRX ( XST , B1 , 2 , RGWORK1 , 0 ) ;
+                         FINDRP ;
+                         P2 := NXTRG ;
+                         B2 := NXTRG + 1 ;
+                         GENRX ( XLA , P2 , 4 , RGWORK1 , 0 ) ;
+                         GENRR ( XLR , B2 , B1 ) ;
+                         GENRX ( XLH , 14 , 0 , P1 , 0 ) ;
+                         GENRX ( XLA , P1 , 4 , P1 , 0 ) ;
+                         GENRR ( XLTR , 14 , 14 ) ;
+                         GENRELRX ( XBC , GEQCND , 4 ) ;
+                         GENRX ( XL , P1 , 0 , P1 , 0 ) ;
+                         GENRR ( XMVCL , P2 , P1 ) ;
+                         GENRX ( XST , P2 , STRCURR , 12 , 0 ) ;
+                         AVAIL [ P1 ] := TRUE ;
+                         AVAIL [ B1 ] := TRUE ;
+                         AVAIL [ P2 ] := TRUE ;
+                         AVAIL [ B2 ] := TRUE ;
+                         PLEN := - 1 ;
+                         DTYPE := VARC ;
+                         FPA := ZEROBL ;
+                         VPA := RGS ;
+                         MEMADR := ZEROBL ;
+                         RGADR := RGWORK1 ;
+                       end (* with *)
                  end (* tag/ca *) ;
 
         //*******************************************************
@@ -14159,6 +14221,21 @@ procedure ASMNXTINST ;
         //*******************************************************
 
           PVIX : begin
+
+        //******************************************************
+        // load index value from Top - 1                        
+        //******************************************************
+
+                   with STK [ TOP - 1 ] do
+                     begin
+                       if VPA = RGS then
+                         RGWORK2 := RGADR
+                       else
+                         begin
+                           LOAD ( STK [ TOP - 1 ] ) ;
+                           RGWORK2 := NXTRG ;
+                         end (* else *)
+                     end (* with *) ;
                    with STK [ TOP - 2 ] do
                      begin
 
@@ -14190,14 +14267,11 @@ procedure ASMNXTINST ;
         //*********************************************
         // string address minus one is in rgwork       
         // (virtual origin)                            
-        // load index value from Top - 1               
         // add index value to virtual origin           
         //*********************************************
 
-                       LOAD ( STK [ TOP - 1 ] ) ;
-                       GENRR ( XCR , NXTRG , RGWORK1 ) ;
-                       GENRR ( XAR , NXTRG , RGWORK ) ;
-                       AVAIL [ NXTRG ] := TRUE ;
+                       GENRR ( XCR , RGWORK2 , RGWORK1 ) ;
+                       GENRR ( XAR , RGWORK2 , RGWORK ) ;
                        AVAIL [ RGWORK ] := TRUE ;
                        AVAIL [ RGWORK1 ] := TRUE ;
                      end (* with *) ;
@@ -14214,7 +14288,7 @@ procedure ASMNXTINST ;
                        DRCT := TRUE ;
                        VRBL := TRUE ;
                        VPA := RGS ;
-                       RGADR := NXTRG ;
+                       RGADR := RGWORK2 ;
                      end (* with *) ;
                  end (* tag/ca *) ;
 
@@ -14348,9 +14422,6 @@ procedure ASMNXTINST ;
         // rgwork1 will point to result string                  
         //******************************************************
 
-                   FINDRG ;
-                   RGWORK1 := NXTRG ;
-                   GENRX ( XL , RGWORK1 , STRCURR , 12 , 0 ) ;
                    with STK [ TOP - 1 ] do
                      if DTYPE = CHRC then
                        begin
@@ -14362,7 +14433,7 @@ procedure ASMNXTINST ;
                          FINDRP ;
                          P1 := NXTRG ;
                          B1 := NXTRG + 1 ;
-                         GENRR ( XLR , P1 , RGWORK1 ) ;
+                         GENRX ( XL , P1 , STRCURR , 12 , 0 ) ;
                          if NEWLEN >= 0 then
                            begin
                              LITVALUE := NEWLEN * 65536 + NEWLEN ;
@@ -14400,12 +14471,15 @@ procedure ASMNXTINST ;
                            GENRX ( XLA , B2 , FPA . DSPLMT , 0 , 0 ) ;
                          GENRS ( XSLL , B2 , 0 , 24 , 0 ) ;
                          GENRR ( XMVCL , P1 , P2 ) ;
-                         GENRX ( XST , P1 , STRCURR , 12 , 0 ) ;
-                         AVAIL [ P1 ] := TRUE ;
                          AVAIL [ B1 ] := TRUE ;
                          AVAIL [ P2 ] := TRUE ;
                          AVAIL [ B2 ] := TRUE ;
                          AVAIL [ RGWORK ] := TRUE ;
+                         FINDRG ;
+                         RGWORK1 := NXTRG ;
+                         GENRX ( XL , RGWORK1 , STRCURR , 12 , 0 ) ;
+                         GENRX ( XST , P1 , STRCURR , 12 , 0 ) ;
+                         AVAIL [ P1 ] := TRUE ;
                        end (* then *)
                      else
                        if DTYPE = CARR then
@@ -14423,6 +14497,7 @@ procedure ASMNXTINST ;
                            if VPA = RGS then
                              begin
                                GENRR ( XLR , P1 , RGADR ) ;
+                               AVAIL [ RGADR ] := TRUE ;
                              end (* then *)
                            else
                              begin
@@ -14436,7 +14511,7 @@ procedure ASMNXTINST ;
                              end (* else *) ;
                            FINDRG ;
                            P2 := NXTRG ;
-                           GENRR ( XLR , P2 , RGWORK1 ) ;
+                           GENRX ( XL , P2 , STRCURR , 12 , 0 ) ;
                            FINDRG ;
                            Q2 := NXTRG ;
                            if COUNT < 0 then
@@ -14454,11 +14529,14 @@ procedure ASMNXTINST ;
                            GENSS ( XMVC , PLEN , 0 , P2 , 0 , P1 ) ;
                            GENRX ( XLA , P2 , PLEN , P2 , 0 ) ;
                            GENRELRX ( XBCT , Q2 , - 5 ) ;
-                           GENRX ( XST , P2 , STRCURR , 12 , 0 ) ;
                            AVAIL [ P1 ] := TRUE ;
-                           AVAIL [ P2 ] := TRUE ;
                            AVAIL [ Q2 ] := TRUE ;
                            AVAIL [ RGWORK ] := TRUE ;
+                           FINDRG ;
+                           RGWORK1 := NXTRG ;
+                           GENRX ( XL , RGWORK1 , STRCURR , 12 , 0 ) ;
+                           GENRX ( XST , P2 , STRCURR , 12 , 0 ) ;
+                           AVAIL [ P2 ] := TRUE ;
                          end (* then *)
                        else
                          begin
@@ -14477,6 +14555,7 @@ procedure ASMNXTINST ;
                            if VPA = RGS then
                              begin
                                GENRR ( XLR , P1 , RGADR ) ;
+                               AVAIL [ RGADR ] := TRUE ;
                              end (* then *)
                            else
                              begin
@@ -14487,7 +14566,7 @@ procedure ASMNXTINST ;
                            FINDRP ;
                            P2 := NXTRG ;
                            Q2 := NXTRG + 1 ;
-                           GENRR ( XLR , P2 , RGWORK1 ) ;
+                           GENRX ( XL , P2 , STRCURR , 12 , 0 ) ;
                            if COUNT >= 0 then
                              begin
                                FINDRG ;
@@ -14527,12 +14606,15 @@ procedure ASMNXTINST ;
                            GENRR ( XLR , Q2 , 14 ) ;
                            GENRR ( XLR , P1 , 15 ) ;
                            GENRELRX ( XBCT , RGWORK , - 4 ) ;
-                           GENRX ( XST , P2 , STRCURR , 12 , 0 ) ;
                            AVAIL [ P1 ] := TRUE ;
-                           AVAIL [ P2 ] := TRUE ;
                            AVAIL [ Q1 ] := TRUE ;
                            AVAIL [ Q2 ] := TRUE ;
                            AVAIL [ RGWORK ] := TRUE ;
+                           FINDRG ;
+                           RGWORK1 := NXTRG ;
+                           GENRX ( XL , RGWORK1 , STRCURR , 12 , 0 ) ;
+                           GENRX ( XST , P2 , STRCURR , 12 , 0 ) ;
+                           AVAIL [ P2 ] := TRUE ;
                          end (* else *) ;
 
         //******************************************************

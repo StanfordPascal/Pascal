@@ -1,0 +1,6 @@
+program TESTUML ( OUTPUT ) ;
+
+
+begin (* HAUPTPROGRAMM *)
+  WRITELN ( 'ÑîÅéôö· ![]|' ) ;
+end (* HAUPTPROGRAMM *) .

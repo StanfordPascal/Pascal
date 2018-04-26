@@ -223,6 +223,10 @@ length is parameter of VC2 instruction
 VC2 pops addr of char array
 and builds String on stack
 
+if length on VC2 instruction is zero, no char array addr
+is popped from stack (the stack is unchanged in this case).
+VC2 0 simply builds a zero length string on the stack.
+
 SP - 1 := -1 / length = L
 SP     := addr des Strings (alloc aus StringArea) / aus char array
 

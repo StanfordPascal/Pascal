@@ -13493,7 +13493,7 @@ procedure ASMNXTINST ;
                  GETADR2 ( STK [ TOP - 2 ] , Q1 , P1 , B1 ) ;
                  CONS_REGS ( B1 , P1 ) ;
                  FINDRG ;
-                 if LEN > 0 then
+                 if LEN >= 0 then
                    begin
 
            //******************************************************
@@ -13550,8 +13550,9 @@ procedure ASMNXTINST ;
            //*********************************************
 
                  STK [ TOP - 2 ] . DTYPE := VARC ;
-                 ASSIGN_STRING ( STK [ TOP - 2 ] , STK [ TOP - 1 ] ,
-                                 LEN_REG , LEN_OFFS ) ;
+                 if LEN <> 0 then
+                   ASSIGN_STRING ( STK [ TOP - 2 ] , STK [ TOP - 1 ] ,
+                                   LEN_REG , LEN_OFFS ) ;
                  FREEREG ( STK [ TOP - 1 ] ) ;
                  FREEREG ( STK [ TOP - 2 ] ) ;
                  TOP := TOP - 2
@@ -13784,7 +13785,7 @@ procedure ASMNXTINST ;
                  GETADR2 ( STK [ TOP - 1 ] , Q1 , P1 , B1 ) ;
                  CONS_REGS ( B1 , P1 ) ;
                  FINDRG ;
-                 if LEN > 0 then
+                 if LEN >= 0 then
                    begin
 
            //******************************************************
@@ -13841,8 +13842,9 @@ procedure ASMNXTINST ;
            //*********************************************
 
                  STK [ TOP - 1 ] . DTYPE := VARC ;
-                 ASSIGN_STRING ( STK [ TOP - 1 ] , STK [ TOP - 2 ] ,
-                                 LEN_REG , LEN_OFFS ) ;
+                 if LEN <> 0 then
+                   ASSIGN_STRING ( STK [ TOP - 1 ] , STK [ TOP - 2 ] ,
+                                   LEN_REG , LEN_OFFS ) ;
                  FREEREG ( STK [ TOP - 1 ] ) ;
                  FREEREG ( STK [ TOP - 2 ] ) ;
                  TOP := TOP - 2
@@ -13865,68 +13867,92 @@ procedure ASMNXTINST ;
            // two items popped, the target is pushed      
            //*********************************************
 
-                   GETADR2 ( STK [ TOP - 1 ] , Q1 , P1 , B1 ) ;
-                   LITVALUE := - 65536 ;
-                   GENRXLIT ( XL , 14 , LITVALUE , 1 ) ;
                    with STK [ TOP - 2 ] do
                      begin
-                       if PLEN > 0 then
+                       if PLEN = 1 then
                          begin
-                           LITVALUE := PLEN ;
-                           GENRXLIT ( XA , 14 , LITVALUE , 1 ) ;
+                           GETADR2 ( STK [ TOP - 1 ] , Q1 , P1 , B1 ) ;
+                           LITVALUE := PLEN * 65536 + PLEN ;
+                           GENRXLIT ( XL , 14 , LITVALUE , 1 ) ;
                            FINDRG ;
                            GENRX ( XLA , NXTRG , Q1 , B1 , P1 ) ;
                            GENRX ( XST , 14 , 0 , NXTRG , 0 ) ;
-                           if VPA = RGS then
-                             begin
-                               GENRX ( XLA , 14 , 4 , RGADR , 0 ) ;
-                             end (* then *)
-                           else
-                             begin
-                               GETADR2 ( STK [ TOP - 2 ] , Q2 , P2 , B2
-                                         ) ;
-                               GENRX ( XLA , 14 , Q2 , 0 , 0 ) ;
-                               LITTBL [ SCNSTNO ] . LNK := PCOUNTER - 1
-                                                   ;
-                               CODE . H [ PCOUNTER - 1 ] := TO_HINT (
-                                                   Q2 ) ;
-                             end (* else *) ;
-                           GENRX ( XST , 14 , 4 , NXTRG , 0 ) ;
+                           GETADR2 ( STK [ TOP - 2 ] , Q2 , P2 , B2 ) ;
+                           GENRX ( XLA , 14 , Q2 , 0 , 0 ) ;
+                           GENRX ( XSTC , 14 , 4 , NXTRG , 0 ) ;
                          end (* then *)
                        else
-                         begin
-                           if VPA = RGS then
-                             begin
-                               LEN_REG := RGADR ;
-                               LEN_OFFS := 2 ;
-                               GENRX ( XAH , 14 , 2 , RGADR , 0 ) ;
-                             end (* then *)
-                           else
-                             begin
-                               P2 := FPA . LVL ;
-                               Q2 := FPA . DSPLMT + 2 ;
-                               BASE ( Q2 , P2 , B2 ) ;
-                               CONS_REGS ( B2 , P2 ) ;
-                               LEN_REG := B2 ;
-                               LEN_OFFS := Q2 ;
-                               GENRX ( XAH , 14 , Q2 , B2 , 0 ) ;
-                             end (* else *) ;
-                           FINDRG ;
-                           GENRX ( XLA , NXTRG , Q1 , B1 , P1 ) ;
-                           GENRX ( XST , 14 , 0 , NXTRG , 0 ) ;
-                           GENRX ( XLH , 14 , LEN_OFFS - 2 , LEN_REG ,
-                                   0 ) ;
-                           GENRR ( XLTR , 14 , 14 ) ;
-                           GENRELRX ( XBC , GEQCND , 6 ) ;
-                           GENRX ( XL , 14 , LEN_OFFS + 2 , LEN_REG , 0
-                                   ) ;
-                           GENRELRX ( XBC , ANYCND , 4 ) ;
-                           GENRX ( XLA , 14 , LEN_OFFS + 2 , LEN_REG ,
-                                   0 ) ;
-                           GENRX ( XST , 14 , 4 , NXTRG , 0 ) ;
-                         end (* else *)
+                         if PLEN >= 0 then
+                           begin
+                             GETADR2 ( STK [ TOP - 1 ] , Q1 , P1 , B1 )
+                                       ;
+                             LITVALUE := - 65536 ;
+                             GENRXLIT ( XL , 14 , LITVALUE , 1 ) ;
+                             LITVALUE := PLEN ;
+                             if PLEN > 0 then
+                               GENRXLIT ( XA , 14 , LITVALUE , 1 ) ;
+                             FINDRG ;
+                             GENRX ( XLA , NXTRG , Q1 , B1 , P1 ) ;
+                             GENRX ( XST , 14 , 0 , NXTRG , 0 ) ;
+                             if VPA = RGS then
+                               begin
+                                 GENRX ( XLA , 14 , 4 , RGADR , 0 ) ;
+                               end (* then *)
+                             else
+                               if PLEN > 0 then
+                                 begin
+                                   GETADR2 ( STK [ TOP - 2 ] , Q2 , P2
+                                             , B2 ) ;
+                                   GENRX ( XLA , 14 , Q2 , 0 , 0 ) ;
+                                   LITTBL [ SCNSTNO ] . LNK := PCOUNTER
+                                                   - 1 ;
+                                   CODE . H [ PCOUNTER - 1 ] := TO_HINT
+                                                   ( Q2 ) ;
+                                 end (* then *)
+                               else
+                                 begin
+                                   GENRR ( XXR , 14 , 14 ) ;
+                                   GENRR ( XBCTR , 14 , 0 ) ;
+                                 end (* else *) ;
+                             GENRX ( XST , 14 , 4 , NXTRG , 0 ) ;
+                           end (* then *)
+                         else
+                           begin
+                             GETADR2 ( STK [ TOP - 1 ] , Q1 , P1 , B1 )
+                                       ;
+                             LITVALUE := - 65536 ;
+                             GENRXLIT ( XL , 14 , LITVALUE , 1 ) ;
+                             if VPA = RGS then
+                               begin
+                                 LEN_REG := RGADR ;
+                                 LEN_OFFS := 2 ;
+                                 GENRX ( XAH , 14 , 2 , RGADR , 0 ) ;
+                               end (* then *)
+                             else
+                               begin
+                                 P2 := FPA . LVL ;
+                                 Q2 := FPA . DSPLMT + 2 ;
+                                 BASE ( Q2 , P2 , B2 ) ;
+                                 CONS_REGS ( B2 , P2 ) ;
+                                 LEN_REG := B2 ;
+                                 LEN_OFFS := Q2 ;
+                                 GENRX ( XAH , 14 , Q2 , B2 , 0 ) ;
+                               end (* else *) ;
+                             FINDRG ;
+                             GENRX ( XLA , NXTRG , Q1 , B1 , P1 ) ;
+                             GENRX ( XST , 14 , 0 , NXTRG , 0 ) ;
+                             GENRX ( XLH , 14 , LEN_OFFS - 2 , LEN_REG
+                                     , 0 ) ;
+                             GENRR ( XLTR , 14 , 14 ) ;
+                             GENRELRX ( XBC , GEQCND , 6 ) ;
+                             GENRX ( XL , 14 , LEN_OFFS + 2 , LEN_REG ,
+                                     0 ) ;
+                             GENRELRX ( XBC , ANYCND , 4 ) ;
+                             GENRX ( XLA , 14 , LEN_OFFS + 2 , LEN_REG
+                                     , 0 ) ;
+                             GENRX ( XST , 14 , 4 , NXTRG , 0 ) ;
+                           end (* else *)
                      end (* with *) ;
-                   AVAIL [ NXTRG ] := TRUE ;
                    FREEREG_COND ( STK [ TOP - 2 ] , - 1 ) ;
                    STK [ TOP - 2 ] := STK [ TOP - 1 ] ;
                    TOP := TOP - 1 ;
@@ -14014,6 +14040,7 @@ procedure ASMNXTINST ;
 
         //*******************************************************
         // varchar convert 2: convert char array to string       
+        // if q = zero: build null string on stack               
         //*******************************************************
 
           PVC2 : if Q > 0 then
@@ -14039,7 +14066,7 @@ procedure ASMNXTINST ;
                      with STK [ TOP - 1 ] do
                        begin
                          PLEN := 0 ;
-                         DTYPE := VARC ;
+                         DTYPE := CARR ;
                        end (* with *) ;
                    end (* else *) ;
 
@@ -14132,8 +14159,8 @@ procedure ASMNXTINST ;
                              GENRX ( XLA , P1 , Q2 , B2 , P2 ) ;
                            end (* else *) ;
                          GENRX ( XLH , B1 , 2 , P1 , 0 ) ;
-                         GENRX ( XST , B1 , 0 , RGWORK1 , 0 ) ;
-                         GENRX ( XST , B1 , 2 , RGWORK1 , 0 ) ;
+                         GENRX ( XSTH , B1 , 0 , RGWORK1 , 0 ) ;
+                         GENRX ( XSTH , B1 , 2 , RGWORK1 , 0 ) ;
                          FINDRP ;
                          P2 := NXTRG ;
                          B2 := NXTRG + 1 ;

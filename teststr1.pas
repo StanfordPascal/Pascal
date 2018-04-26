@@ -967,13 +967,27 @@ begin (* HAUPTPROGRAMM *)
   WRITELN ( '<' , TRANSLATE ( P1 , 'x' , ' ' ) , '>' ) ;
   WRITE ( 'P1 nach TRANSLATE ....................: ' ) ;
   WRITELN ( '<' , P1 , '>' ) ;
-  TTAB := IDENT_T1 || IDENT_T2 ;
-  TTAB [ ORD ( ' ' ) + 1 ] := 'y' ;
-  P1 := '  Bernd Oppolzer    ' ;
-  WRITE ( 'Ergebnis von TRANSLATE ...............: ' ) ;
-  WRITELN ( '<' , TRANSLATE ( P1 , TTAB ) , '>' ) ;
-  WRITE ( 'P1 nach TRANSLATE (should not change) : ' ) ;
-  WRITELN ( '<' , P1 , '>' ) ;
+  if TRUE then
+    begin
+      TTAB := IDENT_T1 || IDENT_T2 ;
+      TTAB [ ORD ( ' ' ) + 1 ] := 'y' ;
+      P1 := '  Bernd Oppolzer    ' ;
+      P2 := TRANSLATE ( P1 , TTAB , '' ) ;
+      WRITE ( 'Ergebnis von TRANSLATE (3. P. leer) ..: ' ) ;
+      WRITELN ( '<' , P2 , '>' ) ;
+      WRITE ( 'Ergebnis von TRANSLATE (3. P. leer) ..: ' ) ;
+      WRITELN ( '<' , TRANSLATE ( P1 , TTAB , '' ) , '>' ) ;
+      WRITE ( 'P1 nach TRANSLATE (should not change) : ' ) ;
+      WRITELN ( '<' , P1 , '>' ) ;
+      P1 := '  Bernd Oppolzer    ' ;
+      P2 := TRANSLATE ( P1 , TTAB ) ;
+      WRITE ( 'Ergebnis von TRANSLATE (3. P. n.vorh.): ' ) ;
+      WRITELN ( '<' , P2 , '>' ) ;
+      WRITE ( 'Ergebnis von TRANSLATE (3. P. n.vorh.): ' ) ;
+      WRITELN ( '<' , TRANSLATE ( P1 , TTAB ) , '>' ) ;
+      WRITE ( 'P1 nach TRANSLATE (should not change) : ' ) ;
+      WRITELN ( '<' , P1 , '>' ) ;
+    end (* then *)
 
   //******************************************************************
   // Ende aller Tests                                                 

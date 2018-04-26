@@ -1583,7 +1583,7 @@ start stringops - p =            0
 start stringops - q =           -1
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  2    72 VPA=NEITHER (ADR )         
- +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0 VPA=NEITHER (VARC)         
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0 VPA=NEITHER (CARR)         
 start stringops - pcode = PVPO linecnt = 316
 start stringops - p =            2
 start stringops - q =          164
@@ -1706,7 +1706,7 @@ start stringops - p =            0
 start stringops - q =           -1
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  2    72 VPA=NEITHER (ADR )         
- +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0 VPA=NEITHER (VARC)         
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0 VPA=NEITHER (CARR)         
 DUMPSTK nach LCA x
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  3 FPA= -1     4 VPA=NEITHER (ADR )         
@@ -1806,7 +1806,7 @@ start stringops - p =            0
 start stringops - q =           -1
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  2    72 VPA=NEITHER (ADR )         
- +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0 VPA=NEITHER (VARC)         
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0 VPA=NEITHER (CARR)         
 DUMPSTK nach LCA x
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  3 FPA= -1     4 VPA=NEITHER (ADR )         
@@ -1910,7 +1910,7 @@ start stringops - p =            0
 start stringops - q =           -1
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  2    72 VPA=NEITHER (ADR )         
- +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0 VPA=NEITHER (VARC)         
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0 VPA=NEITHER (CARR)         
 start stringops - pcode = PVPO linecnt = 372
 start stringops - p =            2
 start stringops - q =          124
@@ -2075,7 +2075,7 @@ start stringops - p =            0
 start stringops - q =           -1
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  2    72 VPA=NEITHER (ADR )         
- +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0 VPA=NEITHER (VARC)         
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0 VPA=NEITHER (CARR)         
 DUMPSTK nach LCA x
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  3 FPA= -1     4 VPA=NEITHER (ADR )         
@@ -2085,18 +2085,17 @@ Available Regs:   1  2  3  4  5  6  7
 DUMPSTK nach LCA x
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  5 FPA= -1    41 VPA=NEITHER (ADR )         
-start stringops - pcode = PVC1 linecnt = 482
+start stringops - pcode = PVC2 linecnt = 482
 start stringops - p =            0
 start stringops - q =            0
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  2   128 VPA=NEITHER (ADR )         
- +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0    32 VPA=NEITHER (CHRC)         
 start stringops - pcode = PVST linecnt = 482
 start stringops - p =            0
 start stringops - q =          100
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  2   128 VPA=NEITHER (ADR )         
- +++ DEPTH= 2 STKADR=    0 PLEN=  1 SCNSTNO=  0 FPA=  0    32 VPA=NEITHER (CHRC)         
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0 VPA=NEITHER (CARR)         
 start stringops - pcode = PVPO linecnt = 482
 start stringops - p =            2
 start stringops - q =          244
@@ -2151,7 +2150,7 @@ start stringops - p =            0
 start stringops - q =           -1
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  2    72 VPA=NEITHER (ADR )         
- +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0 VPA=NEITHER (VARC)         
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0 VPA=NEITHER (CARR)         
 start stringops - pcode = PVPO linecnt = 517
 start stringops - p =            2
 start stringops - q =          140
@@ -3226,7 +3225,7 @@ start stringops - p =            0
 start stringops - q =           -1
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  2    72 VPA=NEITHER (ADR )         
- +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0 VPA=NEITHER (VARC)         
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0 VPA=NEITHER (CARR)         
 start stringops - pcode = PVC1 linecnt = 677
 start stringops - p =            0
 start stringops - q =            0
@@ -4700,7 +4699,7 @@ start stringops - p =            0
 start stringops - q =           -1
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  2    72 VPA=NEITHER (ADR )         
- +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0 VPA=NEITHER (VARC)         
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0 VPA=NEITHER (CARR)         
 start stringops - pcode = PVPO linecnt = 855
 start stringops - p =            2
 start stringops - q =          124
@@ -4734,43 +4733,43 @@ Available Regs:   1  2  3  4  5  6  7
 DUMPSTK nach LCA x
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  1 FPA= -1     0 VPA=NEITHER (ADR )         
-start stringops - pcode = PVC2 linecnt = 872
+start stringops - pcode = PVC2 linecnt = 874
 start stringops - p =            0
 start stringops - q =           20
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2724 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  1 FPA= -1     0 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 872
+start stringops - pcode = PVST linecnt = 874
 start stringops - p =            0
 start stringops - q =           20
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2724 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN= 20 SCNSTNO=  1 FPA= -1     0 VPA=NEITHER (CARR)         
-start stringops - pcode = PVPO linecnt = 872
+start stringops - pcode = PVPO linecnt = 874
 start stringops - p =            1
 start stringops - q =         3216
 Available Regs:   1  2  3  4  5  6  7
-start stringops - pcode = PVLD linecnt = 873
+start stringops - pcode = PVLD linecnt = 875
 start stringops - p =            1
 start stringops - q =           20
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2748 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2724 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 873
+start stringops - pcode = PVST linecnt = 875
 start stringops - p =            1
 start stringops - q =           -1
 Available Regs:   1  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2748 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0 VPA=RGS (VARC)         
  +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  3224 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 873
+start stringops - pcode = PVST linecnt = 875
 start stringops - p =            0
 start stringops - q =          200
 Available Regs:   1  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2748 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0 VPA=RGS
      VPA-REG =  2 DIRECT (VARC)         
-start stringops - pcode = PVPO linecnt = 873
+start stringops - pcode = PVPO linecnt = 875
 start stringops - p =            1
 start stringops - q =         3216
 Available Regs:   1  2  3  4  5  6  7
@@ -4786,20 +4785,20 @@ Available Regs:   1  2  3  4  5  6  7
 DUMPSTK nach LCA x
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  8 FPA= -1   112 VPA=NEITHER (ADR )         
-start stringops - pcode = PVC2 linecnt = 879
+start stringops - pcode = PVC2 linecnt = 881
 start stringops - p =            0
 start stringops - q =            8
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   260 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  8 FPA= -1   112 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 879
+start stringops - pcode = PVST linecnt = 881
 start stringops - p =            1
 start stringops - q =           -1
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   260 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN=  8 SCNSTNO=  8 FPA= -1   112 VPA=NEITHER (CARR)         
  +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  3224 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 879
+start stringops - pcode = PVST linecnt = 881
 start stringops - p =            1
 start stringops - q =           -1
 Available Regs:   1  3  4  5  6  7
@@ -4807,7 +4806,7 @@ Available Regs:   1  3  4  5  6  7
  +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0 VPA=RGS
      VPA-REG =  2 DIRECT (VARC)         
  +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  3232 VPA=NEITHER (ADR )         
-start stringops - pcode = PVPO linecnt = 879
+start stringops - pcode = PVPO linecnt = 881
 start stringops - p =            1
 start stringops - q =         3216
 Available Regs:   1  2  3  4  5  6  7
@@ -4817,20 +4816,20 @@ Available Regs:   1  2  3  4  5  6  7
 DUMPSTK nach LCA x
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO= 13 FPA= -1    16 VPA=NEITHER (ADR )         
-start stringops - pcode = PVC2 linecnt = 881
+start stringops - pcode = PVC2 linecnt = 883
 start stringops - p =            0
 start stringops - q =            4
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   260 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO= 13 FPA= -1    16 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 881
+start stringops - pcode = PVST linecnt = 883
 start stringops - p =            1
 start stringops - q =           -1
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   260 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN=  4 SCNSTNO= 13 FPA= -1    16 VPA=NEITHER (CARR)         
  +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  3240 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 881
+start stringops - pcode = PVST linecnt = 883
 start stringops - p =            1
 start stringops - q =           -1
 Available Regs:   1  3  4  5  6  7
@@ -4838,35 +4837,35 @@ Available Regs:   1  3  4  5  6  7
  +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0 VPA=RGS
      VPA-REG =  2 DIRECT (VARC)         
  +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  3248 VPA=NEITHER (ADR )         
-start stringops - pcode = PVPO linecnt = 881
+start stringops - pcode = PVPO linecnt = 883
 start stringops - p =            1
 start stringops - q =         3216
 Available Regs:   1  2  3  4  5  6  7
 DUMPSTK nach LCA x
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO= 17 FPA= -1     0 VPA=NEITHER (ADR )         
-start stringops - pcode = PVC2 linecnt = 887
+start stringops - pcode = PVC2 linecnt = 889
 start stringops - p =            0
 start stringops - q =           20
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2724 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO= 17 FPA= -1     0 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 887
+start stringops - pcode = PVST linecnt = 889
 start stringops - p =            0
 start stringops - q =           20
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2724 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN= 20 SCNSTNO= 17 FPA= -1     0 VPA=NEITHER (CARR)         
-start stringops - pcode = PVPO linecnt = 887
+start stringops - pcode = PVPO linecnt = 889
 start stringops - p =            1
 start stringops - q =         3216
 Available Regs:   1  2  3  4  5  6  7
-start stringops - pcode = PVLD linecnt = 888
+start stringops - pcode = PVLD linecnt = 890
 start stringops - p =            0
 start stringops - q =           20
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2724 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 888
+start stringops - pcode = PVST linecnt = 890
 start stringops - p =            1
 start stringops - q =           -1
 Available Regs:   1  2  3  4  5  6  7
@@ -4875,18 +4874,18 @@ Available Regs:   1  2  3  4  5  6  7
 DUMPSTK nach LCA x
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO= 20 FPA= -1   124 VPA=NEITHER (ADR )         
-start stringops - pcode = PVC2 linecnt = 888
+start stringops - pcode = PVC2 linecnt = 890
 start stringops - p =            0
 start stringops - q =            3
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO= 20 FPA= -1   124 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 888
+start stringops - pcode = PVST linecnt = 890
 start stringops - p =            1
 start stringops - q =           -1
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  3 SCNSTNO= 20 FPA= -1   124 VPA=NEITHER (CARR)         
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  3264 VPA=NEITHER (ADR )         
-start stringops - pcode = PVPO linecnt = 888
+start stringops - pcode = PVPO linecnt = 890
 start stringops - p =            1
 start stringops - q =         3216
 Available Regs:   1  2  3  4  5  6  7
@@ -4896,34 +4895,34 @@ Available Regs:   1  2  3  4  5  6  7
 DUMPSTK nach LCA x
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO= 24 FPA= -1     0 VPA=NEITHER (ADR )         
-start stringops - pcode = PVC2 linecnt = 891
+start stringops - pcode = PVC2 linecnt = 893
 start stringops - p =            0
 start stringops - q =           20
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2724 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO= 24 FPA= -1     0 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 891
+start stringops - pcode = PVST linecnt = 893
 start stringops - p =            0
 start stringops - q =           20
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2724 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN= 20 SCNSTNO= 24 FPA= -1     0 VPA=NEITHER (CARR)         
-start stringops - pcode = PVPO linecnt = 891
+start stringops - pcode = PVPO linecnt = 893
 start stringops - p =            1
 start stringops - q =         3216
 Available Regs:   1  2  3  4  5  6  7
-start stringops - pcode = PVLD linecnt = 892
+start stringops - pcode = PVLD linecnt = 894
 start stringops - p =            1
 start stringops - q =           20
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2724 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 892
+start stringops - pcode = PVST linecnt = 894
 start stringops - p =            1
 start stringops - q =           -1
 Available Regs:   1  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0 VPA=RGS (VARC)         
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  3272 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 892
+start stringops - pcode = PVST linecnt = 894
 start stringops - p =            1
 start stringops - q =           -1
 Available Regs:   1  3  4  5  6  7
@@ -4933,18 +4932,18 @@ Available Regs:   1  3  4  5  6  7
 DUMPSTK nach LCA x
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO= 28 FPA= -1   124 VPA=NEITHER (ADR )         
-start stringops - pcode = PVC2 linecnt = 892
+start stringops - pcode = PVC2 linecnt = 894
 start stringops - p =            0
 start stringops - q =            3
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO= 28 FPA= -1   124 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 892
+start stringops - pcode = PVST linecnt = 894
 start stringops - p =            1
 start stringops - q =           -1
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  3 SCNSTNO= 28 FPA= -1   124 VPA=NEITHER (CARR)         
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  3264 VPA=NEITHER (ADR )         
-start stringops - pcode = PVPO linecnt = 892
+start stringops - pcode = PVPO linecnt = 894
 start stringops - p =            1
 start stringops - q =         3216
 Available Regs:   1  2  3  4  5  6  7
@@ -4960,13 +4959,13 @@ Available Regs:   1  2  3  4  5  6  7
 DUMPSTK nach LCA x
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO= 34 FPA= -1   250 VPA=NEITHER (ADR )         
-start stringops - pcode = PVC2 linecnt = 898
+start stringops - pcode = PVC2 linecnt = 900
 start stringops - p =            0
 start stringops - q =            8
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   260 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO= 34 FPA= -1   250 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 898
+start stringops - pcode = PVST linecnt = 900
 start stringops - p =            1
 start stringops - q =           -1
 Available Regs:   1  2  3  4  5  6  7
@@ -4976,20 +4975,20 @@ Available Regs:   1  2  3  4  5  6  7
 DUMPSTK nach LCA x
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO= 37 FPA= -1   124 VPA=NEITHER (ADR )         
-start stringops - pcode = PVC2 linecnt = 898
+start stringops - pcode = PVC2 linecnt = 900
 start stringops - p =            0
 start stringops - q =            3
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   260 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO= 37 FPA= -1   124 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 898
+start stringops - pcode = PVST linecnt = 900
 start stringops - p =            1
 start stringops - q =           -1
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   260 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN=  3 SCNSTNO= 37 FPA= -1   124 VPA=NEITHER (CARR)         
  +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  3264 VPA=NEITHER (ADR )         
-start stringops - pcode = PVPO linecnt = 898
+start stringops - pcode = PVPO linecnt = 900
 start stringops - p =            1
 start stringops - q =         3216
 Available Regs:   1  2  3  4  5  6  7
@@ -4999,13 +4998,13 @@ Available Regs:   1  2  3  4  5  6  7
 DUMPSTK nach LCA x
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO= 41 FPA= -1   250 VPA=NEITHER (ADR )         
-start stringops - pcode = PVC2 linecnt = 900
+start stringops - pcode = PVC2 linecnt = 902
 start stringops - p =            0
 start stringops - q =            8
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   260 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO= 41 FPA= -1   250 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 900
+start stringops - pcode = PVST linecnt = 902
 start stringops - p =            1
 start stringops - q =           -1
 Available Regs:   1  2  3  4  5  6  7
@@ -5015,20 +5014,20 @@ Available Regs:   1  2  3  4  5  6  7
 DUMPSTK nach LCA x
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO= 44 FPA= -1   298 VPA=NEITHER (ADR )         
-start stringops - pcode = PVC2 linecnt = 900
+start stringops - pcode = PVC2 linecnt = 902
 start stringops - p =            0
 start stringops - q =            7
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   260 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO= 44 FPA= -1   298 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 900
+start stringops - pcode = PVST linecnt = 902
 start stringops - p =            1
 start stringops - q =           -1
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   260 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN=  7 SCNSTNO= 44 FPA= -1   298 VPA=NEITHER (CARR)         
  +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  3280 VPA=NEITHER (ADR )         
-start stringops - pcode = PVPO linecnt = 900
+start stringops - pcode = PVPO linecnt = 902
 start stringops - p =            1
 start stringops - q =         3216
 Available Regs:   1  2  3  4  5  6  7
@@ -5038,13 +5037,13 @@ Available Regs:   1  2  3  4  5  6  7
 DUMPSTK nach LCA x
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO= 48 FPA= -1   250 VPA=NEITHER (ADR )         
-start stringops - pcode = PVC2 linecnt = 902
+start stringops - pcode = PVC2 linecnt = 904
 start stringops - p =            0
 start stringops - q =            8
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   260 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO= 48 FPA= -1   250 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 902
+start stringops - pcode = PVST linecnt = 904
 start stringops - p =            1
 start stringops - q =           -1
 Available Regs:   1  2  3  4  5  6  7
@@ -5054,20 +5053,20 @@ Available Regs:   1  2  3  4  5  6  7
 DUMPSTK nach LCA x
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO= 51 FPA= -1   250 VPA=NEITHER (ADR )         
-start stringops - pcode = PVC2 linecnt = 902
+start stringops - pcode = PVC2 linecnt = 904
 start stringops - p =            0
 start stringops - q =            8
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   260 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO= 51 FPA= -1   250 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 902
+start stringops - pcode = PVST linecnt = 904
 start stringops - p =            1
 start stringops - q =           -1
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   260 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN=  8 SCNSTNO= 51 FPA= -1   250 VPA=NEITHER (CARR)         
  +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  3296 VPA=NEITHER (ADR )         
-start stringops - pcode = PVPO linecnt = 902
+start stringops - pcode = PVPO linecnt = 904
 start stringops - p =            1
 start stringops - q =         3216
 Available Regs:   1  2  3  4  5  6  7
@@ -5077,13 +5076,13 @@ Available Regs:   1  2  3  4  5  6  7
 DUMPSTK nach LCA x
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO= 55 FPA= -1   250 VPA=NEITHER (ADR )         
-start stringops - pcode = PVC2 linecnt = 904
+start stringops - pcode = PVC2 linecnt = 906
 start stringops - p =            0
 start stringops - q =            8
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   260 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO= 55 FPA= -1   250 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 904
+start stringops - pcode = PVST linecnt = 906
 start stringops - p =            1
 start stringops - q =           -1
 Available Regs:   1  2  3  4  5  6  7
@@ -5093,20 +5092,20 @@ Available Regs:   1  2  3  4  5  6  7
 DUMPSTK nach LCA x
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO= 58 FPA= -1   348 VPA=NEITHER (ADR )         
-start stringops - pcode = PVC2 linecnt = 904
+start stringops - pcode = PVC2 linecnt = 906
 start stringops - p =            0
 start stringops - q =            9
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   260 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO= 58 FPA= -1   348 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 904
+start stringops - pcode = PVST linecnt = 906
 start stringops - p =            1
 start stringops - q =           -1
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   260 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN=  9 SCNSTNO= 58 FPA= -1   348 VPA=NEITHER (CARR)         
  +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  3312 VPA=NEITHER (ADR )         
-start stringops - pcode = PVPO linecnt = 904
+start stringops - pcode = PVPO linecnt = 906
 start stringops - p =            1
 start stringops - q =         3216
 Available Regs:   1  2  3  4  5  6  7
@@ -5116,13 +5115,13 @@ Available Regs:   1  2  3  4  5  6  7
 DUMPSTK nach LCA x
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO= 62 FPA= -1   250 VPA=NEITHER (ADR )         
-start stringops - pcode = PVC2 linecnt = 906
+start stringops - pcode = PVC2 linecnt = 908
 start stringops - p =            0
 start stringops - q =            8
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   260 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO= 62 FPA= -1   250 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 906
+start stringops - pcode = PVST linecnt = 908
 start stringops - p =            1
 start stringops - q =           -1
 Available Regs:   1  2  3  4  5  6  7
@@ -5132,20 +5131,20 @@ Available Regs:   1  2  3  4  5  6  7
 DUMPSTK nach LCA x
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO= 65 FPA= -1   250 VPA=NEITHER (ADR )         
-start stringops - pcode = PVC2 linecnt = 906
+start stringops - pcode = PVC2 linecnt = 908
 start stringops - p =            0
 start stringops - q =            4
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   260 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO= 65 FPA= -1   250 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 906
+start stringops - pcode = PVST linecnt = 908
 start stringops - p =            1
 start stringops - q =           -1
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   260 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN=  4 SCNSTNO= 65 FPA= -1   250 VPA=NEITHER (CARR)         
  +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  3328 VPA=NEITHER (ADR )         
-start stringops - pcode = PVPO linecnt = 906
+start stringops - pcode = PVPO linecnt = 908
 start stringops - p =            1
 start stringops - q =         3216
 Available Regs:   1  2  3  4  5  6  7
@@ -5155,13 +5154,13 @@ Available Regs:   1  2  3  4  5  6  7
 DUMPSTK nach LCA x
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO= 69 FPA= -1   250 VPA=NEITHER (ADR )         
-start stringops - pcode = PVC2 linecnt = 908
+start stringops - pcode = PVC2 linecnt = 910
 start stringops - p =            0
 start stringops - q =            8
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   260 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO= 69 FPA= -1   250 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 908
+start stringops - pcode = PVST linecnt = 910
 start stringops - p =            1
 start stringops - q =           -1
 Available Regs:   1  2  3  4  5  6  7
@@ -5171,48 +5170,48 @@ Available Regs:   1  2  3  4  5  6  7
 DUMPSTK nach LCA x
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO= 72 FPA= -1   255 VPA=NEITHER (ADR )         
-start stringops - pcode = PVC2 linecnt = 908
+start stringops - pcode = PVC2 linecnt = 910
 start stringops - p =            0
 start stringops - q =            3
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   260 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO= 72 FPA= -1   255 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 908
+start stringops - pcode = PVST linecnt = 910
 start stringops - p =            1
 start stringops - q =           -1
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   260 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN=  3 SCNSTNO= 72 FPA= -1   255 VPA=NEITHER (CARR)         
  +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  3344 VPA=NEITHER (ADR )         
-start stringops - pcode = PVPO linecnt = 908
+start stringops - pcode = PVPO linecnt = 910
 start stringops - p =            1
 start stringops - q =         3216
 Available Regs:   1  2  3  4  5  6  7
 DUMPSTK nach LCA x
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO= 75 FPA= -1     0 VPA=NEITHER (ADR )         
-start stringops - pcode = PVC2 linecnt = 914
+start stringops - pcode = PVC2 linecnt = 916
 start stringops - p =            0
 start stringops - q =           20
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2724 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO= 75 FPA= -1     0 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 914
+start stringops - pcode = PVST linecnt = 916
 start stringops - p =            0
 start stringops - q =           20
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2724 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN= 20 SCNSTNO= 75 FPA= -1     0 VPA=NEITHER (CARR)         
-start stringops - pcode = PVPO linecnt = 914
+start stringops - pcode = PVPO linecnt = 916
 start stringops - p =            1
 start stringops - q =         3216
 Available Regs:   1  2  3  4  5  6  7
-start stringops - pcode = PVLD linecnt = 915
+start stringops - pcode = PVLD linecnt = 917
 start stringops - p =            0
 start stringops - q =           20
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2724 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 915
+start stringops - pcode = PVST linecnt = 917
 start stringops - p =            1
 start stringops - q =           -1
 Available Regs:   1  2  3  4  5  6  7
@@ -5221,18 +5220,18 @@ Available Regs:   1  2  3  4  5  6  7
 DUMPSTK nach LCA x
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO= 78 FPA= -1   400 VPA=NEITHER (ADR )         
-start stringops - pcode = PVC2 linecnt = 915
+start stringops - pcode = PVC2 linecnt = 917
 start stringops - p =            0
 start stringops - q =            9
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO= 78 FPA= -1   400 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 915
+start stringops - pcode = PVST linecnt = 917
 start stringops - p =            1
 start stringops - q =           -1
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  9 SCNSTNO= 78 FPA= -1   400 VPA=NEITHER (CARR)         
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  3360 VPA=NEITHER (ADR )         
-start stringops - pcode = PVPO linecnt = 915
+start stringops - pcode = PVPO linecnt = 917
 start stringops - p =            1
 start stringops - q =         3216
 Available Regs:   1  2  3  4  5  6  7
@@ -5242,28 +5241,28 @@ Available Regs:   1  2  3  4  5  6  7
 DUMPSTK nach LCA x
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO= 82 FPA= -1   449 VPA=NEITHER (ADR )         
-start stringops - pcode = PVC2 linecnt = 918
+start stringops - pcode = PVC2 linecnt = 920
 start stringops - p =            0
 start stringops - q =           13
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2724 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO= 82 FPA= -1   449 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 918
+start stringops - pcode = PVST linecnt = 920
 start stringops - p =            0
 start stringops - q =           20
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2724 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN= 13 SCNSTNO= 82 FPA= -1   449 VPA=NEITHER (CARR)         
-start stringops - pcode = PVPO linecnt = 918
+start stringops - pcode = PVPO linecnt = 920
 start stringops - p =            1
 start stringops - q =         3216
 Available Regs:   1  2  3  4  5  6  7
-start stringops - pcode = PVLD linecnt = 919
+start stringops - pcode = PVLD linecnt = 921
 start stringops - p =            0
 start stringops - q =           20
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2724 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 919
+start stringops - pcode = PVST linecnt = 921
 start stringops - p =            1
 start stringops - q =           -1
 Available Regs:   1  2  3  4  5  6  7
@@ -5272,18 +5271,18 @@ Available Regs:   1  2  3  4  5  6  7
 DUMPSTK nach LCA x
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO= 85 FPA= -1   468 VPA=NEITHER (ADR )         
-start stringops - pcode = PVC2 linecnt = 919
+start stringops - pcode = PVC2 linecnt = 921
 start stringops - p =            0
 start stringops - q =           10
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO= 85 FPA= -1   468 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 919
+start stringops - pcode = PVST linecnt = 921
 start stringops - p =            1
 start stringops - q =           -1
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN= 10 SCNSTNO= 85 FPA= -1   468 VPA=NEITHER (CARR)         
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  3360 VPA=NEITHER (ADR )         
-start stringops - pcode = PVPO linecnt = 919
+start stringops - pcode = PVPO linecnt = 921
 start stringops - p =            1
 start stringops - q =         3216
 Available Regs:   1  2  3  4  5  6  7
@@ -5293,28 +5292,28 @@ Available Regs:   1  2  3  4  5  6  7
 DUMPSTK nach LCA x
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO= 89 FPA= -1   518 VPA=NEITHER (ADR )         
-start stringops - pcode = PVC2 linecnt = 922
+start stringops - pcode = PVC2 linecnt = 924
 start stringops - p =            0
 start stringops - q =           13
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2724 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO= 89 FPA= -1   518 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 922
+start stringops - pcode = PVST linecnt = 924
 start stringops - p =            0
 start stringops - q =           20
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2724 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN= 13 SCNSTNO= 89 FPA= -1   518 VPA=NEITHER (CARR)         
-start stringops - pcode = PVPO linecnt = 922
+start stringops - pcode = PVPO linecnt = 924
 start stringops - p =            1
 start stringops - q =         3216
 Available Regs:   1  2  3  4  5  6  7
-start stringops - pcode = PVLD linecnt = 923
+start stringops - pcode = PVLD linecnt = 925
 start stringops - p =            0
 start stringops - q =           20
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2724 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 923
+start stringops - pcode = PVST linecnt = 925
 start stringops - p =            1
 start stringops - q =           -1
 Available Regs:   1  2  3  4  5  6  7
@@ -5323,18 +5322,18 @@ Available Regs:   1  2  3  4  5  6  7
 DUMPSTK nach LCA x
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO= 92 FPA= -1   468 VPA=NEITHER (ADR )         
-start stringops - pcode = PVC2 linecnt = 923
+start stringops - pcode = PVC2 linecnt = 925
 start stringops - p =            0
 start stringops - q =           10
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO= 92 FPA= -1   468 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 923
+start stringops - pcode = PVST linecnt = 925
 start stringops - p =            1
 start stringops - q =           -1
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN= 10 SCNSTNO= 92 FPA= -1   468 VPA=NEITHER (CARR)         
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  3360 VPA=NEITHER (ADR )         
-start stringops - pcode = PVPO linecnt = 923
+start stringops - pcode = PVPO linecnt = 925
 start stringops - p =            1
 start stringops - q =         3216
 Available Regs:   1  2  3  4  5  6  7
@@ -5344,28 +5343,28 @@ Available Regs:   1  2  3  4  5  6  7
 DUMPSTK nach LCA x
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO= 96 FPA= -1   571 VPA=NEITHER (ADR )         
-start stringops - pcode = PVC2 linecnt = 926
+start stringops - pcode = PVC2 linecnt = 928
 start stringops - p =            0
 start stringops - q =           13
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2724 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO= 96 FPA= -1   571 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 926
+start stringops - pcode = PVST linecnt = 928
 start stringops - p =            0
 start stringops - q =           20
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2724 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN= 13 SCNSTNO= 96 FPA= -1   571 VPA=NEITHER (CARR)         
-start stringops - pcode = PVPO linecnt = 926
+start stringops - pcode = PVPO linecnt = 928
 start stringops - p =            1
 start stringops - q =         3216
 Available Regs:   1  2  3  4  5  6  7
-start stringops - pcode = PVLD linecnt = 927
+start stringops - pcode = PVLD linecnt = 929
 start stringops - p =            0
 start stringops - q =           20
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2724 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 927
+start stringops - pcode = PVST linecnt = 929
 start stringops - p =            1
 start stringops - q =           -1
 Available Regs:   1  2  3  4  5  6  7
@@ -5374,18 +5373,18 @@ Available Regs:   1  2  3  4  5  6  7
 DUMPSTK nach LCA x
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO= 99 FPA= -1   468 VPA=NEITHER (ADR )         
-start stringops - pcode = PVC2 linecnt = 927
+start stringops - pcode = PVC2 linecnt = 929
 start stringops - p =            0
 start stringops - q =           10
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO= 99 FPA= -1   468 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 927
+start stringops - pcode = PVST linecnt = 929
 start stringops - p =            1
 start stringops - q =           -1
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN= 10 SCNSTNO= 99 FPA= -1   468 VPA=NEITHER (CARR)         
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  3360 VPA=NEITHER (ADR )         
-start stringops - pcode = PVPO linecnt = 927
+start stringops - pcode = PVPO linecnt = 929
 start stringops - p =            1
 start stringops - q =         3216
 Available Regs:   1  2  3  4  5  6  7
@@ -5395,28 +5394,28 @@ Available Regs:   1  2  3  4  5  6  7
 DUMPSTK nach LCA x
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=103 FPA= -1   624 VPA=NEITHER (ADR )         
-start stringops - pcode = PVC2 linecnt = 930
+start stringops - pcode = PVC2 linecnt = 932
 start stringops - p =            0
 start stringops - q =           20
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2724 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=103 FPA= -1   624 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 930
+start stringops - pcode = PVST linecnt = 932
 start stringops - p =            0
 start stringops - q =           20
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2724 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN= 20 SCNSTNO=103 FPA= -1   624 VPA=NEITHER (CARR)         
-start stringops - pcode = PVPO linecnt = 930
+start stringops - pcode = PVPO linecnt = 932
 start stringops - p =            1
 start stringops - q =         3216
 Available Regs:   1  2  3  4  5  6  7
-start stringops - pcode = PVLD linecnt = 931
+start stringops - pcode = PVLD linecnt = 933
 start stringops - p =            0
 start stringops - q =           20
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2724 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 931
+start stringops - pcode = PVST linecnt = 933
 start stringops - p =            1
 start stringops - q =           -1
 Available Regs:   1  2  3  4  5  6  7
@@ -5425,18 +5424,18 @@ Available Regs:   1  2  3  4  5  6  7
 DUMPSTK nach LCA x
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=106 FPA= -1   468 VPA=NEITHER (ADR )         
-start stringops - pcode = PVC2 linecnt = 931
+start stringops - pcode = PVC2 linecnt = 933
 start stringops - p =            0
 start stringops - q =           10
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=106 FPA= -1   468 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 931
+start stringops - pcode = PVST linecnt = 933
 start stringops - p =            1
 start stringops - q =           -1
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN= 10 SCNSTNO=106 FPA= -1   468 VPA=NEITHER (CARR)         
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  3360 VPA=NEITHER (ADR )         
-start stringops - pcode = PVPO linecnt = 931
+start stringops - pcode = PVPO linecnt = 933
 start stringops - p =            1
 start stringops - q =         3216
 Available Regs:   1  2  3  4  5  6  7
@@ -5446,46 +5445,46 @@ Available Regs:   1  2  3  4  5  6  7
 DUMPSTK nach LCA x
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=110 FPA= -1     0 VPA=NEITHER (ADR )         
-start stringops - pcode = PVC2 linecnt = 939
+start stringops - pcode = PVC2 linecnt = 941
 start stringops - p =            0
 start stringops - q =           20
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2724 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=110 FPA= -1     0 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 939
+start stringops - pcode = PVST linecnt = 941
 start stringops - p =            0
 start stringops - q =           20
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2724 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN= 20 SCNSTNO=110 FPA= -1     0 VPA=NEITHER (CARR)         
-start stringops - pcode = PVPO linecnt = 939
+start stringops - pcode = PVPO linecnt = 941
 start stringops - p =            1
 start stringops - q =         3216
 Available Regs:   1  2  3  4  5  6  7
 DUMPSTK nach LCA x
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=112 FPA= -1   684 VPA=NEITHER (ADR )         
-start stringops - pcode = PVLD linecnt = 942
+start stringops - pcode = PVLD linecnt = 944
 start stringops - p =            1
 start stringops - q =           20
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2748 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2724 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 942
+start stringops - pcode = PVST linecnt = 944
 start stringops - p =            1
 start stringops - q =           -1
 Available Regs:   1  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2748 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0 VPA=RGS (VARC)         
  +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  3352 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 942
+start stringops - pcode = PVST linecnt = 944
 start stringops - p =            0
 start stringops - q =          200
 Available Regs:   1  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2748 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0 VPA=RGS
      VPA-REG =  2 DIRECT (VARC)         
-start stringops - pcode = PVPO linecnt = 942
+start stringops - pcode = PVPO linecnt = 944
 start stringops - p =            1
 start stringops - q =         3216
 Available Regs:   1  2  3  4  5  6  7
@@ -5498,29 +5497,29 @@ Available Regs:   1  2  3  4  5  6  7
 DUMPSTK nach LCA x
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=117 FPA= -1     0 VPA=NEITHER (ADR )         
-start stringops - pcode = PVC2 linecnt = 947
+start stringops - pcode = PVC2 linecnt = 949
 start stringops - p =            0
 start stringops - q =           20
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2724 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=117 FPA= -1     0 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 947
+start stringops - pcode = PVST linecnt = 949
 start stringops - p =            0
 start stringops - q =           20
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2724 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN= 20 SCNSTNO=117 FPA= -1     0 VPA=NEITHER (CARR)         
-start stringops - pcode = PVPO linecnt = 947
+start stringops - pcode = PVPO linecnt = 949
 start stringops - p =            1
 start stringops - q =         3216
 Available Regs:   1  2  3  4  5  6  7
-start stringops - pcode = PVLD linecnt = 948
+start stringops - pcode = PVLD linecnt = 950
 start stringops - p =            1
 start stringops - q =           20
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2748 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2724 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 948
+start stringops - pcode = PVST linecnt = 950
 start stringops - p =            1
 start stringops - q =           -1
 Available Regs:   1  3  4  5  6  7
@@ -5530,13 +5529,13 @@ Available Regs:   1  3  4  5  6  7
 DUMPSTK nach LCA x
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=120 FPA= -1   804 VPA=NEITHER (ADR )         
-start stringops - pcode = PVC2 linecnt = 948
+start stringops - pcode = PVC2 linecnt = 950
 start stringops - p =            0
 start stringops - q =           26
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2748 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=120 FPA= -1   804 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 948
+start stringops - pcode = PVST linecnt = 950
 start stringops - p =            1
 start stringops - q =           -1
 Available Regs:   1  2  3  4  5  6  7
@@ -5546,27 +5545,27 @@ Available Regs:   1  2  3  4  5  6  7
 DUMPSTK nach LCA x
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=123 FPA= -1   832 VPA=NEITHER (ADR )         
-start stringops - pcode = PVC2 linecnt = 949
+start stringops - pcode = PVC2 linecnt = 951
 start stringops - p =            0
 start stringops - q =           26
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2748 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=123 FPA= -1   832 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 949
+start stringops - pcode = PVST linecnt = 951
 start stringops - p =            1
 start stringops - q =           -1
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2748 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN= 26 SCNSTNO=123 FPA= -1   832 VPA=NEITHER (CARR)         
  +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  3368 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 949
+start stringops - pcode = PVST linecnt = 951
 start stringops - p =            0
 start stringops - q =          200
 Available Regs:   1  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2748 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0 VPA=RGS
      VPA-REG =  2 DIRECT (VARC)         
-start stringops - pcode = PVPO linecnt = 949
+start stringops - pcode = PVPO linecnt = 951
 start stringops - p =            1
 start stringops - q =         3216
 Available Regs:   1  2  3  4  5  6  7
@@ -5579,107 +5578,107 @@ Available Regs:   1  2  3  4  5  6  7
 DUMPSTK nach LCA x
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=129 FPA= -1     0 VPA=NEITHER (ADR )         
-start stringops - pcode = PVC2 linecnt = 954
+start stringops - pcode = PVC2 linecnt = 956
 start stringops - p =            0
 start stringops - q =           20
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2724 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=129 FPA= -1     0 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 954
+start stringops - pcode = PVST linecnt = 956
 start stringops - p =            0
 start stringops - q =           20
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2724 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN= 20 SCNSTNO=129 FPA= -1     0 VPA=NEITHER (CARR)         
-start stringops - pcode = PVPO linecnt = 954
+start stringops - pcode = PVPO linecnt = 956
 start stringops - p =            1
 start stringops - q =         3216
 Available Regs:   1  2  3  4  5  6  7
-start stringops - pcode = PVLD linecnt = 955
+start stringops - pcode = PVLD linecnt = 957
 start stringops - p =            1
 start stringops - q =           20
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2748 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2724 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 955
+start stringops - pcode = PVST linecnt = 957
 start stringops - p =            1
 start stringops - q =           -1
 Available Regs:   1  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2748 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0 VPA=RGS (VARC)         
  +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  3352 VPA=NEITHER (ADR )         
-start stringops - pcode = PVC1 linecnt = 955
+start stringops - pcode = PVC1 linecnt = 957
 start stringops - p =            0
 start stringops - q =            0
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2748 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0   121 VPA=NEITHER (CHRC)         
-start stringops - pcode = PVST linecnt = 955
+start stringops - pcode = PVST linecnt = 957
 start stringops - p =            1
 start stringops - q =           -1
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2748 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN=  1 SCNSTNO=  0 FPA=  0   121 VPA=NEITHER (CHRC)         
  +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  3360 VPA=NEITHER (ADR )         
-start stringops - pcode = PVC1 linecnt = 955
+start stringops - pcode = PVC1 linecnt = 957
 start stringops - p =            0
 start stringops - q =            0
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2748 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0   122 VPA=NEITHER (CHRC)         
-start stringops - pcode = PVST linecnt = 955
+start stringops - pcode = PVST linecnt = 957
 start stringops - p =            1
 start stringops - q =           -1
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2748 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN=  1 SCNSTNO=  0 FPA=  0   122 VPA=NEITHER (CHRC)         
  +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  3368 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 955
+start stringops - pcode = PVST linecnt = 957
 start stringops - p =            0
 start stringops - q =          200
 Available Regs:   1  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2748 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0 VPA=RGS
      VPA-REG =  2 DIRECT (VARC)         
-start stringops - pcode = PVPO linecnt = 955
+start stringops - pcode = PVPO linecnt = 957
 start stringops - p =            1
 start stringops - q =         3216
 Available Regs:   1  2  3  4  5  6  7
 DUMPSTK nach LCA x
 Available Regs:   1  2  3  4  5  6  7
- +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=137 FPA= -1   858 VPA=NEITHER (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=135 FPA= -1   858 VPA=NEITHER (ADR )         
 DUMPSTK nach LCA x
 Available Regs:   1  2  3  4  5  6  7
- +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=138 FPA= -1   898 VPA=NEITHER (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=136 FPA= -1   898 VPA=NEITHER (ADR )         
 DUMPSTK nach LCA x
 Available Regs:   1  2  3  4  5  6  7
- +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=139 FPA= -1     0 VPA=NEITHER (ADR )         
-start stringops - pcode = PVC2 linecnt = 960
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=137 FPA= -1     0 VPA=NEITHER (ADR )         
+start stringops - pcode = PVC2 linecnt = 962
 start stringops - p =            0
 start stringops - q =           20
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2724 VPA=NEITHER (ADR )         
- +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=139 FPA= -1     0 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 960
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=137 FPA= -1     0 VPA=NEITHER (ADR )         
+start stringops - pcode = PVST linecnt = 962
 start stringops - p =            0
 start stringops - q =           20
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2724 VPA=NEITHER (ADR )         
- +++ DEPTH= 2 STKADR=    0 PLEN= 20 SCNSTNO=139 FPA= -1     0 VPA=NEITHER (CARR)         
-start stringops - pcode = PVPO linecnt = 960
+ +++ DEPTH= 2 STKADR=    0 PLEN= 20 SCNSTNO=137 FPA= -1     0 VPA=NEITHER (CARR)         
+start stringops - pcode = PVPO linecnt = 962
 start stringops - p =            1
 start stringops - q =         3216
 Available Regs:   1  2  3  4  5  6  7
 DUMPSTK nach LCA x
 Available Regs:   1  2  3  4  5  6  7
- +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=141 FPA= -1   858 VPA=NEITHER (ADR )         
-start stringops - pcode = PVLD linecnt = 962
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=139 FPA= -1   858 VPA=NEITHER (ADR )         
+start stringops - pcode = PVLD linecnt = 964
 start stringops - p =            1
 start stringops - q =           20
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   260 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2724 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 962
+start stringops - pcode = PVST linecnt = 964
 start stringops - p =            1
 start stringops - q =           -1
 Available Regs:   1  3  4  5  6  7
@@ -5688,37 +5687,37 @@ Available Regs:   1  3  4  5  6  7
  +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  3352 VPA=NEITHER (ADR )         
 DUMPSTK nach LCA x
 Available Regs:   1  2  3  4  5  6  7
- +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=143 FPA= -1   940 VPA=NEITHER (ADR )         
-start stringops - pcode = PVC2 linecnt = 962
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=141 FPA= -1   944 VPA=NEITHER (ADR )         
+start stringops - pcode = PVC2 linecnt = 964
 start stringops - p =            0
 start stringops - q =            4
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   260 VPA=NEITHER (ADR )         
- +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=143 FPA= -1   940 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 962
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=141 FPA= -1   944 VPA=NEITHER (ADR )         
+start stringops - pcode = PVST linecnt = 964
 start stringops - p =            1
 start stringops - q =           -1
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   260 VPA=NEITHER (ADR )         
- +++ DEPTH= 2 STKADR=    0 PLEN=  4 SCNSTNO=143 FPA= -1   940 VPA=NEITHER (CARR)         
+ +++ DEPTH= 2 STKADR=    0 PLEN=  4 SCNSTNO=141 FPA= -1   944 VPA=NEITHER (CARR)         
  +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  3360 VPA=NEITHER (ADR )         
 DUMPSTK nach LCA x
 Available Regs:   1  2  3  4  5  6  7
- +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=146 FPA= -1   944 VPA=NEITHER (ADR )         
-start stringops - pcode = PVC2 linecnt = 962
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=144 FPA= -1   948 VPA=NEITHER (ADR )         
+start stringops - pcode = PVC2 linecnt = 964
 start stringops - p =            0
 start stringops - q =            4
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   260 VPA=NEITHER (ADR )         
- +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=146 FPA= -1   944 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 962
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=144 FPA= -1   948 VPA=NEITHER (ADR )         
+start stringops - pcode = PVST linecnt = 964
 start stringops - p =            1
 start stringops - q =           -1
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   260 VPA=NEITHER (ADR )         
- +++ DEPTH= 2 STKADR=    0 PLEN=  4 SCNSTNO=146 FPA= -1   944 VPA=NEITHER (CARR)         
+ +++ DEPTH= 2 STKADR=    0 PLEN=  4 SCNSTNO=144 FPA= -1   948 VPA=NEITHER (CARR)         
  +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  3368 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 962
+start stringops - pcode = PVST linecnt = 964
 start stringops - p =            1
 start stringops - q =           -1
 Available Regs:   1  3  4  5  6  7
@@ -5726,75 +5725,75 @@ Available Regs:   1  3  4  5  6  7
  +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0 VPA=RGS
      VPA-REG =  2 DIRECT (VARC)         
  +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  3376 VPA=NEITHER (ADR )         
-start stringops - pcode = PVPO linecnt = 962
+start stringops - pcode = PVPO linecnt = 964
 start stringops - p =            1
 start stringops - q =         3216
 Available Regs:   1  2  3  4  5  6  7
 DUMPSTK nach LCA x
 Available Regs:   1  2  3  4  5  6  7
- +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=150 FPA= -1   898 VPA=NEITHER (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=148 FPA= -1   898 VPA=NEITHER (ADR )         
 DUMPSTK nach LCA x
 Available Regs:   1  2  3  4  5  6  7
- +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=151 FPA= -1     0 VPA=NEITHER (ADR )         
-start stringops - pcode = PVC2 linecnt = 965
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=149 FPA= -1     0 VPA=NEITHER (ADR )         
+start stringops - pcode = PVC2 linecnt = 967
 start stringops - p =            0
 start stringops - q =           20
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2724 VPA=NEITHER (ADR )         
- +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=151 FPA= -1     0 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 965
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=149 FPA= -1     0 VPA=NEITHER (ADR )         
+start stringops - pcode = PVST linecnt = 967
 start stringops - p =            0
 start stringops - q =           20
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2724 VPA=NEITHER (ADR )         
- +++ DEPTH= 2 STKADR=    0 PLEN= 20 SCNSTNO=151 FPA= -1     0 VPA=NEITHER (CARR)         
-start stringops - pcode = PVPO linecnt = 965
+ +++ DEPTH= 2 STKADR=    0 PLEN= 20 SCNSTNO=149 FPA= -1     0 VPA=NEITHER (CARR)         
+start stringops - pcode = PVPO linecnt = 967
 start stringops - p =            1
 start stringops - q =         3216
 Available Regs:   1  2  3  4  5  6  7
 DUMPSTK nach LCA x
 Available Regs:   1  2  3  4  5  6  7
- +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=153 FPA= -1   858 VPA=NEITHER (ADR )         
-start stringops - pcode = PVLD linecnt = 967
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=151 FPA= -1   858 VPA=NEITHER (ADR )         
+start stringops - pcode = PVLD linecnt = 969
 start stringops - p =            1
 start stringops - q =           20
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   260 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2724 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 967
+start stringops - pcode = PVST linecnt = 969
 start stringops - p =            1
 start stringops - q =           -1
 Available Regs:   1  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   260 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0 VPA=RGS (VARC)         
  +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  3384 VPA=NEITHER (ADR )         
-start stringops - pcode = PVC1 linecnt = 967
+start stringops - pcode = PVC1 linecnt = 969
 start stringops - p =            0
 start stringops - q =            0
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   260 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0   120 VPA=NEITHER (CHRC)         
-start stringops - pcode = PVST linecnt = 967
+start stringops - pcode = PVST linecnt = 969
 start stringops - p =            1
 start stringops - q =           -1
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   260 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN=  1 SCNSTNO=  0 FPA=  0   120 VPA=NEITHER (CHRC)         
  +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  3392 VPA=NEITHER (ADR )         
-start stringops - pcode = PVC1 linecnt = 967
+start stringops - pcode = PVC1 linecnt = 969
 start stringops - p =            0
 start stringops - q =            0
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   260 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0    32 VPA=NEITHER (CHRC)         
-start stringops - pcode = PVST linecnt = 967
+start stringops - pcode = PVST linecnt = 969
 start stringops - p =            1
 start stringops - q =           -1
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   260 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN=  1 SCNSTNO=  0 FPA=  0    32 VPA=NEITHER (CHRC)         
  +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  3400 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 967
+start stringops - pcode = PVST linecnt = 969
 start stringops - p =            1
 start stringops - q =           -1
 Available Regs:   1  3  4  5  6  7
@@ -5802,21 +5801,21 @@ Available Regs:   1  3  4  5  6  7
  +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0 VPA=RGS
      VPA-REG =  2 DIRECT (VARC)         
  +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  3408 VPA=NEITHER (ADR )         
-start stringops - pcode = PVPO linecnt = 967
+start stringops - pcode = PVPO linecnt = 969
 start stringops - p =            1
 start stringops - q =         3216
 Available Regs:   1  2  3  4  5  6  7
 DUMPSTK nach LCA x
 Available Regs:   1  2  3  4  5  6  7
- +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=160 FPA= -1   948 VPA=NEITHER (ADR )         
-start stringops - pcode = PVC2 linecnt = 970
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=156 FPA= -1   952 VPA=NEITHER (ADR )         
+start stringops - pcode = PVC2 linecnt = 975
 start stringops - p =            0
 start stringops - q =          128
 Available Regs:   1  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2956 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0    16 VPA=RGS
      VPA-REG =  2 DIRECT (ADR ) $PASMAI#
-start stringops - pcode = PVC2 linecnt = 970
+start stringops - pcode = PVC2 linecnt = 975
 start stringops - p =            0
 start stringops - q =          128
 Available Regs:   1  4  5  6  7
@@ -5825,7 +5824,7 @@ Available Regs:   1  4  5  6  7
      VPA-REG =  2 DIRECT (CARR) $PASMAI#
  +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0   144 VPA=RGS
      VPA-REG =  3 DIRECT (ADR ) $PASMAI#
-start stringops - pcode = PVCC linecnt = 970
+start stringops - pcode = PVCC linecnt = 975
 start stringops - p =            0
 start stringops - q =            0
 Available Regs:   1  4  5  6  7
@@ -5834,18 +5833,18 @@ Available Regs:   1  4  5  6  7
      VPA-REG =  2 DIRECT (CARR) $PASMAI#
  +++ DEPTH= 3 STKADR=    0 PLEN=128 SCNSTNO=  0 FPA=  0   144 VPA=RGS
      VPA-REG =  3 DIRECT (CARR) $PASMAI#
-start stringops - pcode = PVST linecnt = 970
+start stringops - pcode = PVST linecnt = 975
 start stringops - p =            0
 start stringops - q =          256
 Available Regs:   1  2  3  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2956 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN=256 SCNSTNO=  0 FPA=  0     0 VPA=RGS
      VPA-REG =  4 DIRECT (VARC) $PASMAI#
-start stringops - pcode = PVPO linecnt = 970
+start stringops - pcode = PVPO linecnt = 975
 start stringops - p =            1
 start stringops - q =         3216
 Available Regs:   1  2  3  4  5  6  7
-start stringops - pcode = PVIX linecnt = 971
+start stringops - pcode = PVIX linecnt = 976
 start stringops - p =            0
 start stringops - q =            0
 Available Regs:   1  2  3  4  5  6  7
@@ -5853,65 +5852,65 @@ Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0    33 VPA=NEITHER (INT )         
 DUMPSTK nach LCA x
 Available Regs:   1  2  3  4  5  6  7
- +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=163 FPA= -1     0 VPA=NEITHER (ADR )         
-start stringops - pcode = PVC2 linecnt = 972
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=159 FPA= -1     0 VPA=NEITHER (ADR )         
+start stringops - pcode = PVC2 linecnt = 977
 start stringops - p =            0
 start stringops - q =           20
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2724 VPA=NEITHER (ADR )         
- +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=163 FPA= -1     0 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 972
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=159 FPA= -1     0 VPA=NEITHER (ADR )         
+start stringops - pcode = PVST linecnt = 977
 start stringops - p =            0
 start stringops - q =           20
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2724 VPA=NEITHER (ADR )         
- +++ DEPTH= 2 STKADR=    0 PLEN= 20 SCNSTNO=163 FPA= -1     0 VPA=NEITHER (CARR)         
-start stringops - pcode = PVPO linecnt = 972
+ +++ DEPTH= 2 STKADR=    0 PLEN= 20 SCNSTNO=159 FPA= -1     0 VPA=NEITHER (CARR)         
+start stringops - pcode = PVPO linecnt = 977
 start stringops - p =            1
 start stringops - q =         3216
 Available Regs:   1  2  3  4  5  6  7
 DUMPSTK nach LCA x
 Available Regs:   1  2  3  4  5  6  7
- +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=165 FPA= -1   858 VPA=NEITHER (ADR )         
-start stringops - pcode = PVLD linecnt = 974
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=161 FPA= -1   996 VPA=NEITHER (ADR )         
+start stringops - pcode = PVLD linecnt = 979
 start stringops - p =            1
 start stringops - q =           20
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   260 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2724 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 974
+start stringops - pcode = PVST linecnt = 979
 start stringops - p =            1
 start stringops - q =           -1
 Available Regs:   1  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   260 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0 VPA=RGS (VARC)         
  +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  3416 VPA=NEITHER (ADR )         
-start stringops - pcode = PVLD linecnt = 974
+start stringops - pcode = PVLD linecnt = 979
 start stringops - p =            0
 start stringops - q =          256
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   260 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2956 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 974
+start stringops - pcode = PVST linecnt = 979
 start stringops - p =            1
 start stringops - q =           -1
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   260 VPA=NEITHER (ADR )         
  +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  1  2956 VPA=NEITHER (VARC)         
  +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  3424 VPA=NEITHER (ADR )         
-start stringops - pcode = PVC2 linecnt = 974
+start stringops - pcode = PVC2 linecnt = 979
 start stringops - p =            0
 start stringops - q =            0
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   260 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 974
+start stringops - pcode = PVST linecnt = 979
 start stringops - p =            1
 start stringops - q =           -1
 Available Regs:   1  2  3  4  5  6  7
  +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   260 VPA=NEITHER (ADR )         
- +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0 VPA=NEITHER (VARC)         
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0 VPA=NEITHER (CARR)         
  +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  3432 VPA=NEITHER (ADR )         
-start stringops - pcode = PVST linecnt = 974
+start stringops - pcode = PVST linecnt = 979
 start stringops - p =            1
 start stringops - q =           -1
 Available Regs:   1  3  4  5  6  7
@@ -5919,10 +5918,85 @@ Available Regs:   1  3  4  5  6  7
  +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0 VPA=RGS
      VPA-REG =  2 DIRECT (VARC)         
  +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  3440 VPA=NEITHER (ADR )         
-start stringops - pcode = PVPO linecnt = 974
+start stringops - pcode = PVPO linecnt = 979
 start stringops - p =            1
 start stringops - q =         3216
 Available Regs:   1  2  3  4  5  6  7
 DUMPSTK nach LCA x
 Available Regs:   1  2  3  4  5  6  7
- +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=170 FPA= -1   898 VPA=NEITHER (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=166 FPA= -1   898 VPA=NEITHER (ADR )         
+DUMPSTK nach LCA x
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=167 FPA= -1     0 VPA=NEITHER (ADR )         
+start stringops - pcode = PVC2 linecnt = 982
+start stringops - p =            0
+start stringops - q =           20
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2724 VPA=NEITHER (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=167 FPA= -1     0 VPA=NEITHER (ADR )         
+start stringops - pcode = PVST linecnt = 982
+start stringops - p =            0
+start stringops - q =           20
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2724 VPA=NEITHER (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN= 20 SCNSTNO=167 FPA= -1     0 VPA=NEITHER (CARR)         
+start stringops - pcode = PVPO linecnt = 982
+start stringops - p =            1
+start stringops - q =         3216
+Available Regs:   1  2  3  4  5  6  7
+DUMPSTK nach LCA x
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=169 FPA= -1  1036 VPA=NEITHER (ADR )         
+start stringops - pcode = PVLD linecnt = 984
+start stringops - p =            1
+start stringops - q =           20
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   260 VPA=NEITHER (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2724 VPA=NEITHER (ADR )         
+start stringops - pcode = PVST linecnt = 984
+start stringops - p =            1
+start stringops - q =           -1
+Available Regs:   1  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   260 VPA=NEITHER (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0 VPA=RGS (VARC)         
+ +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  3448 VPA=NEITHER (ADR )         
+start stringops - pcode = PVLD linecnt = 984
+start stringops - p =            0
+start stringops - q =          256
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   260 VPA=NEITHER (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  2956 VPA=NEITHER (ADR )         
+start stringops - pcode = PVST linecnt = 984
+start stringops - p =            1
+start stringops - q =           -1
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   260 VPA=NEITHER (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  1  2956 VPA=NEITHER (VARC)         
+ +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  3456 VPA=NEITHER (ADR )         
+start stringops - pcode = PVC2 linecnt = 984
+start stringops - p =            0
+start stringops - q =            0
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   260 VPA=NEITHER (ADR )         
+start stringops - pcode = PVST linecnt = 984
+start stringops - p =            1
+start stringops - q =           -1
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   260 VPA=NEITHER (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  0     0 VPA=NEITHER (CARR)         
+ +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  3464 VPA=NEITHER (ADR )         
+start stringops - pcode = PVST linecnt = 984
+start stringops - p =            1
+start stringops - q =           -1
+Available Regs:   1  3  4  5  6  7
+ +++ DEPTH= 1 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1   260 VPA=NEITHER (ADR )         
+ +++ DEPTH= 2 STKADR=    0 PLEN= -1 SCNSTNO=  0 FPA=  0     0 VPA=RGS
+     VPA-REG =  2 DIRECT (VARC)         
+ +++ DEPTH= 3 STKADR=    0 PLEN=  0 SCNSTNO=  0 FPA=  1  3472 VPA=NEITHER (ADR )         
+start stringops - pcode = PVPO linecnt = 984
+start stringops - p =            1
+start stringops - q =         3216
+Available Regs:   1  2  3  4  5  6  7
+DUMPSTK nach LCA x
+Available Regs:   1  2  3  4  5  6  7
+ +++ DEPTH= 2 STKADR=    0 PLEN=  0 SCNSTNO=174 FPA= -1   898 VPA=NEITHER (ADR )         

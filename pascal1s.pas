@@ -1119,7 +1119,7 @@ type ALPHA = array [ 1 .. IDLNGTH ] of CHAR ;
      (* CONSTANTS      *)
      (******************)
 
-     CSTCLASS = ( XINT , REEL , PSET , NULLSTR , STRG ) ;
+     CSTCLASS = ( XINT , REEL , PSET , STRG ) ;
 
      /********************************************************/
      /* neue darstellung fuer konstanten                     */
@@ -1139,7 +1139,7 @@ type ALPHA = array [ 1 .. IDLNGTH ] of CHAR ;
                end ;
      XCONSTANT = record
                    STRTYPE : CHAR ;
-                   case CONSTCLASS : CSTCLASS of
+                   case CSTCLASS of
                      XINT :
                        ( IVAL : INTEGER ) ;
                      REEL :
@@ -1150,7 +1150,7 @@ type ALPHA = array [ 1 .. IDLNGTH ] of CHAR ;
                          SETOFFS : INTEGER ;
                          SETTYPE : TTP ;
                          PVAL : SSP ) ;
-                     NULLSTR , STRG :
+                     STRG :
                        ( SVAL : SSP )
                  end ;
 
@@ -2675,8 +2675,8 @@ procedure INSYMBOL ;
 
 
    begin (* INSYMBOL *)
+     SYVAL . IVAL := 0 ;
      SYVAL . STRTYPE := ' ' ;
-     SYVAL . CONSTCLASS := XINT ;
 
      (**********************************************************)
      (*   diese logik war frueher in der prozedur endofline    *)
@@ -2824,16 +2824,10 @@ procedure INSYMBOL ;
                SYVAL . STRTYPE := ' ' ;
                SYLENGTH := K ;
                if SYLENGTH = 0 then
-                 begin
-                   SYVAL . CONSTCLASS := NULLSTR ;
-                   SYVAL . SVAL := NIL ;
-                 end (* then *)
+                 SYVAL . IVAL := ORD ( ' ' )
                else
                  if SYLENGTH = 1 then
-                   begin
-                     SYVAL . CONSTCLASS := XINT ;
-                     SYVAL . IVAL := ORD ( SARRAY [ 1 ] )
-                   end (* then *)
+                   SYVAL . IVAL := ORD ( SARRAY [ 1 ] )
                  else
                    begin
                      if SYLENGTH > MAXSTRL then
@@ -2842,7 +2836,6 @@ procedure INSYMBOL ;
                          SYLENGTH := MAXSTRL
                        end (* then *) ;
                      NEW ( SYVAL . SVAL ) ;
-                     SYVAL . CONSTCLASS := STRG ;
                      SYVAL . SVAL -> . TAG := 'S' ;
                      SYVAL . SVAL -> . LENGTH := SYLENGTH ;
                      SYVAL . SVAL -> . SSTR := SARRAY ;
@@ -2866,16 +2859,10 @@ procedure INSYMBOL ;
                SYVAL . STRTYPE := 'X' ;
                SYLENGTH := K ;
                if SYLENGTH = 0 then
-                 begin
-                   SYVAL . CONSTCLASS := NULLSTR ;
-                   SYVAL . SVAL := NIL ;
-                 end (* then *)
+                 SYVAL . IVAL := ORD ( ' ' )
                else
                  if SYLENGTH = 1 then
-                   begin
-                     SYVAL . CONSTCLASS := XINT ;
-                     SYVAL . IVAL := ORD ( SARRAY [ 1 ] )
-                   end (* then *)
+                   SYVAL . IVAL := ORD ( SARRAY [ 1 ] )
                  else
                    begin
                      if SYLENGTH > MAXSTRL then
@@ -2884,7 +2871,6 @@ procedure INSYMBOL ;
                          SYLENGTH := MAXSTRL
                        end (* then *) ;
                      NEW ( SYVAL . SVAL ) ;
-                     SYVAL . CONSTCLASS := STRG ;
                      SYVAL . SVAL -> . TAG := 'S' ;
                      SYVAL . SVAL -> . LENGTH := SYLENGTH ;
                      SYVAL . SVAL -> . SSTR := SARRAY ;
@@ -2909,16 +2895,10 @@ procedure INSYMBOL ;
                SYVAL . STRTYPE := 'X' ;
                SYLENGTH := K ;
                if SYLENGTH = 0 then
-                 begin
-                   SYVAL . CONSTCLASS := NULLSTR ;
-                   SYVAL . SVAL := NIL ;
-                 end (* then *)
+                 SYVAL . IVAL := ORD ( ' ' )
                else
                  if SYLENGTH = 1 then
-                   begin
-                     SYVAL . CONSTCLASS := XINT ;
-                     SYVAL . IVAL := ORD ( SARRAY [ 1 ] )
-                   end (* then *)
+                   SYVAL . IVAL := ORD ( SARRAY [ 1 ] )
                  else
                    begin
                      if SYLENGTH > MAXSTRL then
@@ -2927,7 +2907,6 @@ procedure INSYMBOL ;
                          SYLENGTH := MAXSTRL
                        end (* then *) ;
                      NEW ( SYVAL . SVAL ) ;
-                     SYVAL . CONSTCLASS := STRG ;
                      SYVAL . SVAL -> . TAG := 'S' ;
                      SYVAL . SVAL -> . LENGTH := SYLENGTH ;
                      SYVAL . SVAL -> . SSTR := SARRAY ;
@@ -2948,7 +2927,6 @@ procedure INSYMBOL ;
                if K > SIZEOF ( DIGIT ) then
                  K := SIZEOF ( DIGIT ) ;
                MEMCPY ( ADDR ( DIGIT ) , ADDR ( SCB . SYMBOL ) , K ) ;
-               SYVAL . CONSTCLASS := XINT ;
                SYVAL . IVAL := 0 ;
 
      (***********************************************)
@@ -3038,7 +3016,6 @@ procedure INSYMBOL ;
                if K > SIZEOF ( DIGIT ) then
                  K := SIZEOF ( DIGIT ) ;
                MEMCPY ( ADDR ( DIGIT ) , ADDR ( SCB . SYMBOL ) , K ) ;
-               SYVAL . CONSTCLASS := REEL ;
                SYVAL . RVAL := ' ' ;
                if K <= DIGMAX then
                  begin
@@ -4499,18 +4476,6 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
       begin (* MOD_STRCONST *)
         case CT_RESULT of
           2 : begin
-                if V . SVAL = NIL then
-                  begin
-
-        //******************************************************
-        // add sval, if length was 0 until now                  
-        //******************************************************
-
-                    NEW ( V . SVAL ) ;
-                    V . CONSTCLASS := STRG ;
-                    V . SVAL -> . TAG := 'S' ;
-                    V . SVAL -> . LENGTH := 0 ;
-                  end (* then *) ;
                 with V . SVAL -> do
                   begin
                     for I := LENGTH + 1 to SIZE_NEU do
@@ -4560,17 +4525,17 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
 
       begin (* STRCONCAT *)
 
-        //******************************************************
-        // neuen strtype ausrechnen                             
-        //******************************************************
+        /****************************/
+        /* neuen strtype ausrechnen */
+        /****************************/
 
         STRTYPE_NEW := TVAL . STRTYPE ;
         if SVAL . STRTYPE <> ' ' then
           STRTYPE_NEW := SVAL . STRTYPE ;
 
-        //******************************************************
-        // wenn target nullstring, einfach zuweisen             
-        //******************************************************
+        /********************************************/
+        /* wenn target nullstring, einfach zuweisen */
+        /********************************************/
 
         if LT = 0 then
           begin
@@ -4579,13 +4544,6 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
             LT := L ;
             return ;
           end (* then *) ;
-
-        //******************************************************
-        // wenn source laenge null, ist nichts weiter zu tun    
-        //******************************************************
-
-        if L = 0 then
-          return ;
 
         /************************/
         /* neuen strtype setzen */
@@ -4851,7 +4809,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                       INSYMBOL ;
                       if SY = STRINGCONST then
                         continue ;
-                      if LSTRING <> 1 then
+                      if LSTRING > 1 then
                         begin
                           NEW ( LSP , ARRAYS ) ;
                           with LSP -> do
@@ -4866,16 +4824,6 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                         end (* then *)
                       else
                         LSP := PTYPE_CHAR ;
-                      if FALSE then
-                        begin
-                          WRITELN ( 'line of code    = ' , LINECNT ) ;
-                          WRITELN ( 'fvalu.constclass = ' , FVALU .
-                                    CONSTCLASS ) ;
-                          WRITELN ( 'fvalu.ival       = ' , FVALU .
-                                    IVAL ) ;
-                          WRITELN ( 'fvalu.sval       = ' , FVALU .
-                                    SVAL ) ;
-                        end (* then *) ;
                       break ;
                     end (* tag/ca *) ;
 
@@ -6104,12 +6052,10 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                SCAL_OFFS := SCAL_OFFS * 4 ;
                while LCP1 <> NIL do
                  begin
-                   VALX . CONSTCLASS := XINT ;
                    VALX . IVAL := SCAL_OFFS ;
                    VALX . STRTYPE := ' ' ;
                    WRITEDFC ( PTYPE_INT , 2 , VALX , FALSE ) ;
                    CONSTLCOUNTER := CONSTLCOUNTER + 2 ;
-                   VALX . CONSTCLASS := XINT ;
                    VALX . IVAL := GETIDLEN ( LCP1 -> . NAME ) ;
                    VALX . STRTYPE := ' ' ;
                    WRITEDFC ( PTYPE_INT , 2 , VALX , FALSE ) ;
@@ -9037,19 +8983,16 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
       procedure GEN_LCA_M ( VALX : XCONSTANT ) ;
 
          begin (* GEN_LCA_M *)
-           if VALX . SVAL <> NIL then
+           if OPT . PRCODE then
              begin
-               if OPT . PRCODE then
-                 begin
-                   PUTIC ;
-                   WRITE ( PCODE , MN [ PCODE_LCA ] : 4 ) ;
-                   WRITE ( PCODE , ' M,' ) ;
-                   GEN_STRCONST ( VALX ) ;
-                   STRCOUNTER := STRCOUNTER + VALX . SVAL -> . LENGTH ;
-                   WRITELN ( PCODE ) ;
-                 end (* then *) ;
-               ICOUNTER := ICOUNTER + 1
-             end (* then *)
+               PUTIC ;
+               WRITE ( PCODE , MN [ PCODE_LCA ] : 4 ) ;
+               WRITE ( PCODE , ' M,' ) ;
+               GEN_STRCONST ( VALX ) ;
+               STRCOUNTER := STRCOUNTER + VALX . SVAL -> . LENGTH ;
+               WRITELN ( PCODE ) ;
+             end (* then *) ;
+           ICOUNTER := ICOUNTER + 1
          end (* GEN_LCA_M *) ;
 
 
@@ -15246,7 +15189,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                        // are not ptype_char                
                        //***********************************
 
-                                       if LSTRING <> 1 then
+                                       if LSTRING > 1 then
                                          begin
                                            NEW ( LSP , ARRAYS ) ;
                                            with LSP -> do
@@ -15261,19 +15204,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                                            TYPTR := LSP
                                          end (* then *)
                                        else
-                                         TYPTR := PTYPE_CHAR ;
-                                     if FALSE then
-                                       begin
-                                         WRITELN ( 'line of code    = '
-                                                   , LINECNT ) ;
-                                         WRITELN ( 'cval.constclass = '
-                                                   , CVAL . CONSTCLASS
-                                                   ) ;
-                                         WRITELN ( 'cval.ival       = '
-                                                   , CVAL . IVAL ) ;
-                                         WRITELN ( 'cval.sval       = '
-                                                   , CVAL . SVAL ) ;
-                                       end (* then *)
+                                         TYPTR := PTYPE_CHAR
                                    end (* with *) ;
                                SYLPARENT :
                                  begin

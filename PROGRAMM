@@ -1,0 +1,56 @@
+void print (FILE *fp)
+
+{
+   fprintf (fp, "\n");
+
+   fprintf (fp, "%3s", "");
+   fprintf (fp, "%-32s", "strcpy (akt_tabname, \"TABNAME\");"); 
+   fprintf (fp, "\n");
+
+   fprintf (fp, "%3s", "");
+   fprintf (fp, "%-17s", "sqlcallnr = xxxx;"); 
+   fprintf (fp, "\n");
+
+   fprintf (fp, "\n");
+
+   fprintf (fp, "%3s", "");
+   fprintf (fp, "%-8s", "EXEC SQL"); 
+   fprintf (fp, "\n");
+
+   fprintf (fp, "%6s", "");
+   fprintf (fp, "%-19s", "DELETE FROM TABNAME"); 
+   fprintf (fp, "\n");
+
+   fprintf (fp, "%7s", "");
+   fprintf (fp, "%-12s", "WHERE KEY IN"); 
+   fprintf (fp, "\n");
+
+   fprintf (fp, "%13s", "");
+   fprintf (fp, "%-11s", "(SELECT KEY"); 
+   fprintf (fp, "\n");
+
+   fprintf (fp, "%16s", "");
+   fprintf (fp, "%-23s", "FROM GTAG_EUDSGVO_KEY);"); 
+   fprintf (fp, "\n");
+
+   fprintf (fp, "\n");
+
+   fprintf (fp, "%3s", "");
+   fprintf (fp, "%-25s", "if (sqlca.sqlcode != 0 &&"); 
+   fprintf (fp, "\n");
+
+   fprintf (fp, "%7s", "");
+   fprintf (fp, "%-21s", "sqlca.sqlcode != 100)"); 
+   fprintf (fp, "\n");
+
+   fprintf (fp, "%6s", "");
+   fprintf (fp, "%-6s", "break;"); 
+   fprintf (fp, "\n");
+
+   fprintf (fp, "\n");
+
+   fprintf (fp, "%3s", "");
+   fprintf (fp, "%-33s", "anz_deletes += sqlca.sqlerrd [2];"); 
+   fprintf (fp, "\n");
+
+}

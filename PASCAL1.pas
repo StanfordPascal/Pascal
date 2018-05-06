@@ -823,7 +823,7 @@ program PASCALCOMPILER ( INPUT , OUTPUT , PCODE , LISTING , LISTDEF ,
 
 
 
-const VERSION = '2018.03' ;
+const VERSION = '2018.05' ;
       MAXLSIZE = 120 ;
       MAXERRNO = 999 ;
 

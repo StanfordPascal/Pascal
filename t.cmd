@@ -1,7 +1,7 @@
 rem call pp pascal2
-    call pas2 teststr0
-    pause
-    call x teststr0.asmout
+rem call pas2 teststr0
+rem pause
+rem call x teststr0.asmout
     call pas2 teststr1
     pause
     call x teststr1.asmout

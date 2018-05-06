@@ -1,0 +1,232 @@
+OISXCMP V4.16 - 01.03.2018
+
+Vergleich Datei NEW [xxx] mit Datei OLD [prt00e.txt]
+
+TAG LINE-N LINE-O ACT TEXT
+========================================================================
+NEW 000001 000000 CHG 
+NEW 000002 000000 CHG c:\work\pascal\work>pcint prr=teststr1.prr inc=paslibx,pasutils, pas=teststr1.pas out=teststr1.prrlis 
+NEW 000003 000000 CHG 
+NEW 000004 000000 CHG PCINT (Build 1.0 Apr  5 2018 07:58:58)
+NEW 000005 000000 CHG 
+NEW 000006 000001 ... c         = Bernd               
+------------------------------------------------------------------------
+OLD 000001 000006 ... c         = Bernd
+
+========================================================================
+NEW 000117 000112 ... Test Funktionsaufruf mit const Parm zwei Vars
+NEW 000118 000000 CHG addr(s) vor strfunc2 = 043501c0
+NEW 000119 000000 CHG strfunc2: addr stack = 04350de8
+NEW 000120 000000 CHG strfunc2: addr (x) = 04350d60
+NEW 000121 000000 CHG strfunc2: x = 043b002f 046372f0
+NEW 000122 000000 CHG strfunc2: addr (y) = 04350d68
+NEW 000123 000000 CHG strfunc2: y = 043e002f 046372f5
+NEW 000124 000119 ... strfunc2: x = <Bernd>
+------------------------------------------------------------------------
+OLD 000112 000117 ... Test Funktionsaufruf mit const Parm zwei Vars
+OLD 000113 000000 CHG addr(s) vor strfunc2 = 0003DBF0
+OLD 000114 000000 CHG strfunc2: addr stack = 0003E818
+OLD 000115 000000 CHG strfunc2: addr (x) = 0003E790
+OLD 000116 000000 CHG strfunc2: x = FFFF0005 00425A14
+OLD 000117 000000 CHG strfunc2: addr (y) = 0003E798
+OLD 000118 000000 CHG strfunc2: y = FFFF0008 00425A1D
+OLD 000119 000124 ... strfunc2: x = <Bernd>
+
+========================================================================
+NEW 000125 000120 ... strfunc2: y = <Oppolzer>
+NEW 000126 000000 CHG addr(s) nach strfunc2 = 043501c0
+NEW 000127 000122 ... p2 = funktion mit const String .......: <Bernd/Oppolzer>
+------------------------------------------------------------------------
+OLD 000120 000125 ... strfunc2: y = <Oppolzer>
+OLD 000121 000000 CHG addr(s) nach strfunc2 = 0003DBF0
+OLD 000122 000127 ... p2 = funktion mit const String .......: <Bernd/Oppolzer>
+
+========================================================================
+NEW 000128 000123 ... Test Funktionsaufruf mit const Parm zwei Expr
+NEW 000129 000000 CHG addr(s) vor strfunc2 = 043501c0
+NEW 000130 000000 CHG strfunc2: addr stack = 04350de8
+NEW 000131 000000 CHG strfunc2: addr (x) = 04350d60
+NEW 000132 000000 CHG strfunc2: x = 043c002f 046372f1
+NEW 000133 000000 CHG strfunc2: addr (y) = 04350d68
+NEW 000134 000000 CHG strfunc2: y = 043f002f 046372f8
+NEW 000135 000130 ... strfunc2: x = <Bernd >
+------------------------------------------------------------------------
+OLD 000123 000128 ... Test Funktionsaufruf mit const Parm zwei Expr
+OLD 000124 000000 CHG addr(s) vor strfunc2 = 0003DBF0
+OLD 000125 000000 CHG strfunc2: addr stack = 0003E818
+OLD 000126 000000 CHG strfunc2: addr (x) = 0003E790
+OLD 000127 000000 CHG strfunc2: x = FFFF0006 00425A14
+OLD 000128 000000 CHG strfunc2: addr (y) = 0003E798
+OLD 000129 000000 CHG strfunc2: y = FFFF0009 00425A1E
+OLD 000130 000135 ... strfunc2: x = <Bernd >
+
+========================================================================
+NEW 000136 000131 ... strfunc2: y = < Oppolzer>
+NEW 000137 000000 CHG addr(s) nach strfunc2 = 043501c0
+NEW 000138 000133 ... p2 = funktion mit const String .......: <Bernd / Oppolzer>
+------------------------------------------------------------------------
+OLD 000131 000136 ... strfunc2: y = < Oppolzer>
+OLD 000132 000000 CHG addr(s) nach strfunc2 = 0003DBF0
+OLD 000133 000138 ... p2 = funktion mit const String .......: <Bernd / Oppolzer>
+
+========================================================================
+NEW 000139 000134 ... Test Funktionsaufruf mit const Parm zwei Const
+NEW 000140 000000 CHG addr(s) vor strfunc2 = 043501c0
+NEW 000141 000000 CHG strfunc2: addr stack = 04350de8
+NEW 000142 000000 CHG strfunc2: addr (x) = 04350d60
+NEW 000143 000000 CHG strfunc2: x = 043b002f 046372f0
+NEW 000144 000000 CHG strfunc2: addr (y) = 04350d68
+NEW 000145 000000 CHG strfunc2: y = 043f002f 046372f5
+NEW 000146 000141 ... strfunc2: x = <Bernd>
+------------------------------------------------------------------------
+OLD 000134 000139 ... Test Funktionsaufruf mit const Parm zwei Const
+OLD 000135 000000 CHG addr(s) vor strfunc2 = 0003DBF0
+OLD 000136 000000 CHG strfunc2: addr stack = 0003E818
+OLD 000137 000000 CHG strfunc2: addr (x) = 0003E790
+OLD 000138 000000 CHG strfunc2: x = FFFF0005 00025D0E
+OLD 000139 000000 CHG strfunc2: addr (y) = 0003E798
+OLD 000140 000000 CHG strfunc2: y = FFFF0009 0002606C
+OLD 000141 000146 ... strfunc2: x = <Bernd>
+
+========================================================================
+NEW 000147 000142 ... strfunc2: y = < Oppolzer>
+NEW 000148 000000 CHG addr(s) nach strfunc2 = 043501c0
+NEW 000149 000144 ... p2 = funktion mit const String .......: <Bernd/ Oppolzer>
+------------------------------------------------------------------------
+OLD 000142 000147 ... strfunc2: y = < Oppolzer>
+OLD 000143 000000 CHG addr(s) nach strfunc2 = 0003DBF0
+OLD 000144 000149 ... p2 = funktion mit const String .......: <Bernd/ Oppolzer>
+
+========================================================================
+NEW 000150 000145 ... Test Funktionsaufruf mit const Parm Expr + Const
+NEW 000151 000000 CHG addr(s) vor strfunc2 = 043501c0
+NEW 000152 000000 CHG strfunc2: addr stack = 04350de8
+NEW 000153 000000 CHG strfunc2: addr (x) = 04350d60
+NEW 000154 000000 CHG strfunc2: x = 043c002f 046372f1
+NEW 000155 000000 CHG strfunc2: addr (y) = 04350d68
+NEW 000156 000000 CHG strfunc2: y = 043f002f 046372f7
+NEW 000157 000152 ... strfunc2: x = <Bernd >
+------------------------------------------------------------------------
+OLD 000145 000150 ... Test Funktionsaufruf mit const Parm Expr + Const
+OLD 000146 000000 CHG addr(s) vor strfunc2 = 0003DBF0
+OLD 000147 000000 CHG strfunc2: addr stack = 0003E818
+OLD 000148 000000 CHG strfunc2: addr (x) = 0003E790
+OLD 000149 000000 CHG strfunc2: x = FFFF0006 00425A14
+OLD 000150 000000 CHG strfunc2: addr (y) = 0003E798
+OLD 000151 000000 CHG strfunc2: y = FFFF0009 0002606C
+OLD 000152 000157 ... strfunc2: x = <Bernd >
+
+========================================================================
+NEW 000158 000153 ... strfunc2: y = < Oppolzer>
+NEW 000159 000000 CHG addr(s) nach strfunc2 = 043501c0
+NEW 000160 000155 ... p2 = funktion mit const String .......: <Bernd / Oppolzer>
+------------------------------------------------------------------------
+OLD 000153 000158 ... strfunc2: y = < Oppolzer>
+OLD 000154 000000 CHG addr(s) nach strfunc2 = 0003DBF0
+OLD 000155 000160 ... p2 = funktion mit const String .......: <Bernd / Oppolzer>
+
+========================================================================
+NEW 000163 000158 ... lf 2 von x    =            8
+NEW 000164 000000 CHG 1. byte von x =           79
+NEW 000165 000160 ... x [1]         = O
+------------------------------------------------------------------------
+OLD 000158 000163 ... lf 2 von x    =            8
+OLD 000159 000000 CHG 1. byte von x =          214
+OLD 000160 000165 ... x [1]         = O
+
+========================================================================
+NEW 000168 000163 ... lf 2 von y    =            8
+NEW 000169 000000 CHG 1. byte von y =           79
+NEW 000170 000165 ... y [1]         = O
+------------------------------------------------------------------------
+OLD 000163 000168 ... lf 2 von y    =            8
+OLD 000164 000000 CHG 1. byte von y =          214
+OLD 000165 000170 ... y [1]         = O
+
+========================================================================
+NEW 000173 000168 ... lf 2 von z    =            8
+NEW 000174 000000 CHG 1. byte von z =           79
+NEW 000175 000170 ... z [1]         = O
+------------------------------------------------------------------------
+OLD 000168 000173 ... lf 2 von z    =            8
+OLD 000169 000000 CHG 1. byte von z =          214
+OLD 000170 000175 ... z [1]         = O
+
+========================================================================
+NEW 000179 000174 ... lf 2 von x    =            8
+NEW 000180 000000 CHG 1. byte von x =           79
+NEW 000181 000176 ... x [1]         = O
+------------------------------------------------------------------------
+OLD 000174 000179 ... lf 2 von x    =            8
+OLD 000175 000000 CHG 1. byte von x =          214
+OLD 000176 000181 ... x [1]         = O
+
+========================================================================
+NEW 000184 000179 ... lf 2 von y    =            8
+NEW 000185 000000 CHG 1. byte von y =           79
+NEW 000186 000181 ... y [1]         = O
+------------------------------------------------------------------------
+OLD 000179 000184 ... lf 2 von y    =            8
+OLD 000180 000000 CHG 1. byte von y =          214
+OLD 000181 000186 ... y [1]         = O
+
+========================================================================
+NEW 000189 000184 ... lf 2 von z    =            8
+NEW 000190 000000 CHG 1. byte von z =           79
+NEW 000191 000186 ... z [1]         = O
+------------------------------------------------------------------------
+OLD 000184 000189 ... lf 2 von z    =            8
+OLD 000185 000000 CHG 1. byte von z =          214
+OLD 000186 000191 ... z [1]         = O
+
+========================================================================
+NEW 000195 000190 ... lf 2 von x    =            8
+NEW 000196 000000 CHG 1. byte von x =           79
+NEW 000197 000192 ... x [1]         = O
+------------------------------------------------------------------------
+OLD 000190 000195 ... lf 2 von x    =            8
+OLD 000191 000000 CHG 1. byte von x =          214
+OLD 000192 000197 ... x [1]         = O
+
+========================================================================
+NEW 000200 000195 ... lf 2 von y    =            8
+NEW 000201 000000 CHG 1. byte von y =           79
+NEW 000202 000197 ... y [1]         = O
+------------------------------------------------------------------------
+OLD 000195 000200 ... lf 2 von y    =            8
+OLD 000196 000000 CHG 1. byte von y =          214
+OLD 000197 000202 ... y [1]         = O
+
+========================================================================
+NEW 000205 000200 ... lf 2 von z    =            8
+NEW 000206 000000 CHG 1. byte von z =           79
+NEW 000207 000202 ... z [1]         = O
+------------------------------------------------------------------------
+OLD 000200 000205 ... lf 2 von z    =            8
+OLD 000201 000000 CHG 1. byte von z =          214
+OLD 000202 000207 ... z [1]         = O
+
+========================================================================
+NEW 000226 000221 ... test repeatstr  = <***************>
+NEW 000227 000000 CHG strresultp      =      nil
+NEW 000228 000000 CHG strresultp      =      nil
+NEW 000229 000000 CHG strresultp      =      nil
+NEW 000230 000000 CHG strresultp      = 046372f0
+NEW 000231 000226 === length (result) =           14
+NEW 000232 000000 CHG strresultp      = 046372fe
+NEW 000233 000228 === length (result) =           28
+NEW 000234 000000 CHG strresultp      = 046372f1
+NEW 000235 000230 ... length (result) =         1000
+------------------------------------------------------------------------
+OLD 000221 000226 ... test repeatstr  = <***************>
+OLD 000222 000000 CHG strresultp      = FFFFFFFF
+OLD 000223 000000 CHG strresultp      = FFFFFFFF
+OLD 000224 000000 CHG strresultp      = FFFFFFFF
+OLD 000225 000000 CHG strresultp      = 00026719
+OLD 000226 000231 === length (result) =           14
+OLD 000227 000000 CHG strresultp      = 00425A14
+OLD 000228 000233 === length (result) =           28
+OLD 000229 000000 CHG strresultp      = 00425A14
+OLD 000230 000235 ... length (result) =         1000
+
+*** Ende Vergleichsliste ***

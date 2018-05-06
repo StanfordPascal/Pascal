@@ -1,0 +1,15 @@
+
+   strcpy (akt_tabname, "TABNAME");
+   sqlcallnr = xxxx;
+
+   EXEC SQL
+      DELETE FROM TABNAME
+       WHERE KEY IN
+             (SELECT KEY
+                FROM GTAG_EUDSGVO_KEY);
+
+   if (sqlca.sqlcode != 0 &&
+       sqlca.sqlcode != 100)
+      break;
+
+   anz_deletes += sqlca.sqlerrd [2];

@@ -1,5 +1,6 @@
 //PASCALNC JOB (PASCAL),'INSTALL PASCAL',CLASS=A,MSGCLASS=X,
-//             TIME=1440,REGION=0M,MSGLEVEL=(1,1)
+//             TIME=1440,REGION=0M,MSGLEVEL=(1,1),
+//             USER=PASCALN,PASSWORD=PAS
 //*
 //**********************************************************
 //* CREATE DATASETS FOR NEW STANFORD PASCAL COMPILER

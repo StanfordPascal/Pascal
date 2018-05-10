@@ -65,14 +65,14 @@ rem **********************************************************
 rem +++ Version 2018.02 +++
 rem **********************************************************
 
-    call copymvs pascal1.pas   compiler.pas
+rem call copymvs pascal1.pas   compiler.pas
 rem call copymvs pascal1a.pas  compiler.pas
 rem call copymvs pascal1b.pas  compiler.pas
-    call copymvs pascal2.pas   compiler.pas
+rem call copymvs pascal2.pas   compiler.pas
 rem call copymvs pascal2a.pas  compiler.pas
 rem call copymvs pascal2b.pas  compiler.pas
-    call copymvs paslibx.pas   compiler.pas
-    call copymvs passcan.pas   compiler.pas
+rem call copymvs paslibx.pas   compiler.pas
+rem call copymvs passcan.pas   compiler.pas
 
 rem call copymvs manorboy.pas  testpgm.pas
 rem call copymvs testfpar.pas  testpgm.pas
@@ -135,4 +135,30 @@ rem call copymvs ..\oldcomp\cntl\pas1979.job   oldcomp.cntl
 rem call copymvs ..\oldcomp\cntl\pas1982.job   oldcomp.cntl
 rem call copymvs ..\oldcomp\cntl\pas2012.job   oldcomp.cntl
 rem call copymvs ..\oldcomp\cntl\pcod1982.job  oldcomp.cntl
+
+rem **********************************************************
+rem +++ Version 2018.05 +++
+rem **********************************************************
+
+    call copymvs pascal.messages compiler.messages
+
+rem call copymvs pascal1.pas   compiler.pas
+rem call copymvs pascal1a.pas  compiler.pas
+rem call copymvs pascal1b.pas  compiler.pas
+rem call copymvs pascal2.pas   compiler.pas
+rem call copymvs pascal2a.pas  compiler.pas
+rem call copymvs pascal2b.pas  compiler.pas
+rem call copymvs paslibx.pas   compiler.pas
+rem call copymvs passcan.pas   compiler.pas
+
+rem call copymvs testvarc.pas  testpgm.pas
+rem call copymvs testfpar.pas  testpgm.pas
+rem call copymvs testrdr.pas   testpgm.pas
+rem call copymvs testset4.pas  testpgm.pas
+rem call copymvs testuml.pas   testpgm.pas
+rem call copymvs teststr0.pas  testpgm.pas
+rem call copymvs teststr1.pas  testpgm.pas
+rem call copymvs listgenc.pas  testpgm.pas
+
+rem call copymvs pasmonn.ass   runtime.asm
 

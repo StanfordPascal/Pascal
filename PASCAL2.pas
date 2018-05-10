@@ -2454,10 +2454,15 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
 
      if PCODE = PENT then
        begin
-         WRITELN ( TRACEF ) ;
-         WRITELN ( TRACEF ) ;
-         WRITELN ( TRACEF , 'Neuer Entry ' , LBL1 . NAM ) ;
-         WRITELN ( TRACEF , 'TOP   = ' , TOP ) ;
+         if TOP <> 1 then
+           ERROR ( 701 ) ;
+         if FALSE then
+           begin
+             WRITELN ( TRACEF ) ;
+             WRITELN ( TRACEF ) ;
+             WRITELN ( TRACEF , 'Neuer Entry ' , LBL1 . NAM ) ;
+             WRITELN ( TRACEF , 'TOP   = ' , TOP ) ;
+           end (* then *) ;
          TOP := 1 ;
        end (* then *) ;
 
@@ -13239,7 +13244,7 @@ procedure ASMNXTINST ;
 
 
       begin (* STRINGOPS *)
-        if TRUE then
+        if FALSE then
           begin
             WRITE ( TRACEF , 'start stringops - pcode = ' , PCODE ) ;
             WRITELN ( TRACEF , ' linecnt = ' , LINECNT : 1 ) ;
@@ -15097,7 +15102,7 @@ procedure ASMNXTINST ;
                              FPA . DSPLMT := LITTBL [ LITOK ] . XIDP ;
                              VRBL := FALSE ;
                              DRCT := TRUE ;
-                             if TRUE then
+                             if FALSE then
                                begin
                                  WRITELN ( TRACEF ,
                                            'DUMPSTK nach LCA x' ) ;

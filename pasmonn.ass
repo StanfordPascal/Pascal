@@ -655,29 +655,29 @@ P0100    DS    0H
 *        print amount of acquired storage
 **********************************************************************
 *
-         L     R0,REQSTORE
-         CVD   R0,DOWO1
-         UNPK  TRGETM1+16(9),DOWO1+3(5)
-         OI    TRGETM1+24,X'F0'
-         LA    R3,TRGETM1
-         L     R15,=A(PTRACE)
-         BALR  R14,R15
+*        L     R0,REQSTORE
+*        CVD   R0,DOWO1
+*        UNPK  TRGETM1+16(9),DOWO1+3(5)
+*        OI    TRGETM1+24,X'F0'
+*        LA    R3,TRGETM1
+*        L     R15,=A(PTRACE)
+*        BALR  R14,R15
 *
-         L     R0,REQSTORE+4
-         CVD   R0,DOWO1
-         UNPK  TRGETM2+16(9),DOWO1+3(5)
-         OI    TRGETM2+24,X'F0'
-         LA    R3,TRGETM2
-         L     R15,=A(PTRACE)
-         BALR  R14,R15
+*        L     R0,REQSTORE+4
+*        CVD   R0,DOWO1
+*        UNPK  TRGETM2+16(9),DOWO1+3(5)
+*        OI    TRGETM2+24,X'F0'
+*        LA    R3,TRGETM2
+*        L     R15,=A(PTRACE)
+*        BALR  R14,R15
 *
-         L     R0,STRWSTOR
-         CVD   R0,DOWO1
-         UNPK  TRGETM3+16(9),DOWO1+3(5)
-         OI    TRGETM3+24,X'F0'
-         LA    R3,TRGETM3
-         L     R15,=A(PTRACE)
-         BALR  R14,R15
+*        L     R0,STRWSTOR
+*        CVD   R0,DOWO1
+*        UNPK  TRGETM3+16(9),DOWO1+3(5)
+*        OI    TRGETM3+24,X'F0'
+*        LA    R3,TRGETM3
+*        L     R15,=A(PTRACE)
+*        BALR  R14,R15
 *
 **********************************************************************
 *        new base

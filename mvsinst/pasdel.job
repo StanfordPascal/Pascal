@@ -1,5 +1,6 @@
 //PASCALND JOB (PASCAL),'DELETE PASCAL',CLASS=A,MSGCLASS=X,
-//             TIME=1440,REGION=0M,MSGLEVEL=(1,1)
+//             TIME=1440,REGION=0M,MSGLEVEL=(1,1),
+//             USER=PASCALN,PASSWORD=PAS
 //*
 //*******************************************************************
 //* DELETE DATASETS OF NEW STANFORD PASCAL COMPILER

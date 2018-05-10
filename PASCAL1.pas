@@ -1545,6 +1545,7 @@ type ALPHA = array [ 1 .. IDLNGTH ] of CHAR ;
                       ASSEMBLE : BOOLEAN ;   // show assembly
                       ASMVERB : BOOLEAN ;    // show verbose ass.
                       CTROPTION : BOOLEAN ;  // show counters
+                      SHOW_LISTDEF : BOOLEAN ;// show listdef
                     end ;
 
      /*****************************************************/
@@ -2474,6 +2475,7 @@ procedure WORK_OPTIONS ( var OPTLINE : SOURCELINE ; var SCB :
              'U' : GET_STAT := SCANCH = '+' ;
              'V' : ASMVERB := SCANCH = '+' ;
              'W' : WARNING := SCANCH <> '-' ;
+             'X' : SHOW_LISTDEF := SCANCH <> '-' ;
            end (* case *) ;
            if SCANCH in [ '+' , '-' ] then
              SCANCH := NEXTCH ;
@@ -7461,11 +7463,14 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
            // print stored constant and type                 
            //************************************************
 
-               DEF_PRINTHEAD ( 9 , ' ' ) ;
-               WRITE ( LISTDEF , SKNAME , ' static     ' ,
-                       CONSTLCOUNTER : 6 , ' ' ) ;
-               DEF_PRINTTYPE ( ELSP1 , ' ' ) ;
-               WRITELN ( LISTDEF ) ;
+               if OPT . SHOW_LISTDEF then
+                 begin
+                   DEF_PRINTHEAD ( 9 , ' ' ) ;
+                   WRITE ( LISTDEF , SKNAME , ' static     ' ,
+                           CONSTLCOUNTER : 6 , ' ' ) ;
+                   DEF_PRINTTYPE ( ELSP1 , ' ' ) ;
+                   WRITELN ( LISTDEF ) ;
+                 end (* then *) ;
 
            //************************************************
            // if comptypes returns 2, adjust                 
@@ -7785,11 +7790,14 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
         // print constant and type                        
         //************************************************
 
-                DEF_PRINTHEAD ( 9 , ' ' ) ;
-                WRITE ( LISTDEF , SKID , ' constant   ' , CONSTLCOUNTER
-                        : 6 , ' ' ) ;
-                DEF_PRINTTYPE ( LSP , ' ' ) ;
-                WRITELN ( LISTDEF ) ;
+                if OPT . SHOW_LISTDEF then
+                  begin
+                    DEF_PRINTHEAD ( 9 , ' ' ) ;
+                    WRITE ( LISTDEF , SKID , ' constant   ' ,
+                            CONSTLCOUNTER : 6 , ' ' ) ;
+                    DEF_PRINTTYPE ( LSP , ' ' ) ;
+                    WRITELN ( LISTDEF ) ;
+                  end (* then *)
               end (* then *)
             else
               LSP := NIL ;
@@ -7933,9 +7941,15 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
         if IS_MODULE and ( LEVEL <= 1 ) then
           ERROR ( 194 ) ;
         if LEVEL <= 1 then
-          DEF_PRINTHEAD ( 6 , ' ' )
+          begin
+            if OPT . SHOW_LISTDEF then
+              DEF_PRINTHEAD ( 6 , ' ' )
+          end (* then *)
         else
-          DEF_PRINTHEAD ( 5 , FPROCP -> . NAME ) ;
+          begin
+            if OPT . SHOW_LISTDEF then
+              DEF_PRINTHEAD ( 5 , FPROCP -> . NAME )
+          end (* else *) ;
         LISTTAG := 'D' ;
         NXT := NIL ;
         repeat
@@ -8021,7 +8035,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                   VADDR := LCOUNTER ;
                 if OPT . DEBUG_LEV > 0 then
                   DBG_PRINTSYMBOL ( NXT1 ) ;
-                DEF_PRINTSYMBOL ( NXT1 ) ;
+                if OPT . SHOW_LISTDEF then
+                  DEF_PRINTSYMBOL ( NXT1 ) ;
                 NXT1 := NEXT ;
               end (* with *) ;
           if SY = SYSEMICOLON then
@@ -8144,7 +8159,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                   VADDR := CONSTLCOUNTER ;
                 if OPT . DEBUG_LEV > 0 then
                   DBG_PRINTSYMBOL ( NXT1 ) ;
-                DEF_PRINTSYMBOL ( NXT1 ) ;
+                if OPT . SHOW_LISTDEF then
+                  DEF_PRINTSYMBOL ( NXT1 ) ;
                 NXT1 := NEXT ;
               end (* with *) ;
           if SY = SYSEMICOLON then
@@ -8894,7 +8910,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
           begin
             if OPT . DEBUG_LEV > 0 then
               DBG_PRINTSYMBOL ( LCP ) ;
-            DEF_PRINTSYMBOL ( LCP ) ;
+            if OPT . SHOW_LISTDEF then
+              DEF_PRINTSYMBOL ( LCP ) ;
             MARK ( MARKP ) ;
 
         (*****************************)
@@ -18282,7 +18299,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
          end (* then *) ;
        if OPT . DEBUG_LEV > 0 then
          DBG_PRINTSYMBOL ( NIL ) ;
-       DEF_PRINTTYPE ( NIL , 'H' ) ;
+       if OPT . SHOW_LISTDEF then
+         DEF_PRINTTYPE ( NIL , 'H' ) ;
 
      (**************************)
      (* PRINT HEAP TYPE DEFNS. *)
@@ -18560,7 +18578,8 @@ procedure PROGRAMME ( FSYS : SYMSET ) ;
      (* PRINT end message for listdef *)
      (*********************************)
 
-     DEF_PRINTHEAD ( 8 , ' ' ) ;
+     if OPT . SHOW_LISTDEF then
+       DEF_PRINTHEAD ( 8 , ' ' ) ;
    end (* PROGRAMME *) ;
 
 

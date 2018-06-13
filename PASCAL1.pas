@@ -820,10 +820,28 @@ program PASCALCOMPILER ( INPUT , OUTPUT , PCODE , LISTING , LISTDEF ,
 (*  and here: https://rosettacode.org/wiki/Man_or_boy_test#Pascal   *)
 (*                                                                  *)
 (********************************************************************)
+(*                                                                  *)
+(*  May 2018 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*             (berndoppolzer@yahoo.com)                            *)
+(*                                                                  *)
+(*  The P-Codes for Strings (starting with the letter V)            *)
+(*  are now recognized and translated to 370 machine code           *)
+(*  by PASCAL2 ... see there                                        *)
+(*                                                                  *)
+(********************************************************************)
+(*                                                                  *)
+(*  Jun.2018 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*             (berndoppolzer@yahoo.com)                            *)
+(*                                                                  *)
+(*  MEMCMP added as standard function, similar to MEMCPY.           *)
+(*  Two new PCODE instructions added to implement MEMCMP inline     *)
+(*  (MCC and MCV)                                                   *)
+(*                                                                  *)
+(********************************************************************)
 
 
 
-const VERSION = '2018.05' ;
+const VERSION = '2018.06' ;
       MAXLSIZE = 120 ;
       MAXERRNO = 999 ;
 
@@ -890,7 +908,7 @@ const VERSION = '2018.05' ;
       (* SIZE OF CHAR SET OF TARGET MACHINE     *)
       (******************************************)
 
-      OPMAX = 97 ;
+      OPMAX = 104 ;
 
       (*****************)
       (* OPCODE RANGE  *)
@@ -1071,6 +1089,8 @@ const VERSION = '2018.05' ;
       PCODE_VPO = 94 ;
       PCODE_VIX = 95 ;
       PCODE_VRP = 96 ;
+      PCODE_MCC = 97 ;
+      PCODE_MCV = 98 ;
 
 
 type ALPHA = array [ 1 .. IDLNGTH ] of CHAR ;
@@ -1977,7 +1997,8 @@ const BLANKID : ALPHA = '            ' ;
         ' DFC' , ' CST' , ' BGN' , ' UXJ' , ' XLB' , ' END' , ' PAK' ,
         ' ADA' , ' SBA' , ' XOR' , ' MFI' , ' MCP' , ' MSE' , ' DBG' ,
         ' MZE' , ' VC1' , ' VC2' , ' VCC' , ' VLD' , ' VST' , ' VMV' ,
-        ' VSM' , ' VLM' , ' VPU' , ' VPO' , ' VIX' , ' VRP' , '    ' )
+        ' VSM' , ' VLM' , ' VPU' , ' VPO' , ' VIX' , ' VRP' , ' MCC' ,
+        ' MCV' , '    ' , '    ' , '    ' , '    ' , '    ' , '    ' )
         ;
 
       (*********************************************************)
@@ -13774,6 +13795,10 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                  (* generate MCP, if length is variable    *)
                  (* otherwise MOV                          *)
                  (******************************************)
+                 (* MOV 0 does not make sense ... it is    *)
+                 (* only done to pop items from the stack  *)
+                 (* and minimize following errors          *)
+                 (******************************************)
 
                  if L_CONST then
                    begin
@@ -13785,6 +13810,128 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                  else
                    GEN0 ( PCODE_MCP ) ;
                end (* MEMCPY1 *) ;
+
+
+            procedure MEMCMP1 ;
+
+            //**********************************************
+            // memcmp generates inline code                 
+            // ...                                          
+            //**********************************************
+
+
+               var L : INTEGER ;
+                   L_CONST : BOOLEAN ;
+
+               begin (* MEMCMP1 *)
+                 L_CONST := FALSE ;
+                 EXPRESSION ( FSYS + [ SYCOMMA , SYRPARENT ] ) ;
+
+                 (******************************************)
+                 (* 1. parameter                           *)
+                 (******************************************)
+
+                 if SY = SYRPARENT then
+                   begin
+                     ERROR ( 197 ) ;
+                     return
+                   end (* then *) ;
+
+                 (******************************************)
+                 (* if type of expr = pointer then load it *)
+                 (******************************************)
+
+                 if GATTR . TYPTR <> NIL then
+                   if GATTR . TYPTR -> . FORM <> POINTER then
+                     ERROR ( 190 )
+                   else
+                     LOAD ;
+                 if SY = SYCOMMA then
+                   INSYMBOL ;
+
+                 (******************************************)
+                 (* 2. parameter                           *)
+                 (******************************************)
+
+                 EXPRESSION ( FSYS + [ SYCOMMA , SYRPARENT ] ) ;
+                 if SY = SYRPARENT then
+                   begin
+                     ERROR ( 197 ) ;
+                     return
+                   end (* then *) ;
+
+                 (******************************************)
+                 (* if type of expr = pointer then load it *)
+                 (******************************************)
+
+                 if GATTR . TYPTR <> NIL then
+                   if GATTR . TYPTR -> . FORM <> POINTER then
+                     ERROR ( 190 )
+                   else
+                     LOAD ;
+                 if SY = SYCOMMA then
+                   INSYMBOL ;
+
+                 (******************************************)
+                 (* 3. parameter                           *)
+                 (******************************************)
+
+                 EXPRESSION ( FSYS + [ SYCOMMA , SYRPARENT ] ) ;
+                 if SY = SYCOMMA then
+                   begin
+                     ERROR ( 198 ) ;
+                     SKIP ( FSYS + [ SYRPARENT ] ) ;
+                     return
+                   end (* then *) ;
+
+                 (******************************************)
+                 (* if type of expr = integer then load it *)
+                 (******************************************)
+
+                 if GATTR . TYPTR <> NIL then
+                   if GATTR . TYPTR <> PTYPE_INT then
+                     ERROR ( 191 )
+                   else
+                     begin
+                       if GATTR . KIND = CST then
+                         begin
+                           if FALSE then
+                             begin
+                               WRITELN ( 'memcpy 3. parameter' ) ;
+                               WRITELN ( 'memcpy: kind = ' , GATTR .
+                                         KIND ) ;
+                               WRITELN ( 'memcpy: ival = ' , GATTR .
+                                         CVAL . IVAL )
+                             end (* then *) ;
+                           L_CONST := TRUE ;
+                           L := GATTR . CVAL . IVAL ;
+                           if L <= 0 then
+                             ERROR ( 320 )
+                         end (* then *)
+                       else
+                         LOAD ;
+                     end (* else *) ;
+
+                 (******************************************)
+                 (* generate MCV, if length is variable    *)
+                 (* otherwise MCC                          *)
+                 (******************************************)
+                 (* MCC 0 does not make sense ... it is    *)
+                 (* only done to pop items from the stack  *)
+                 (* and minimize following errors          *)
+                 (******************************************)
+
+                 if L_CONST then
+                   begin
+                     if L > 0 then
+                       GEN1 ( PCODE_MCC , L )
+                     else
+                       GEN1 ( PCODE_MCC , 0 )
+                   end (* then *)
+                 else
+                   GEN0 ( PCODE_MCV ) ;
+                 GATTR . TYPTR := PTYPE_INT ;
+               end (* MEMCMP1 *) ;
 
 
             procedure ROUNDX1 ;
@@ -14807,6 +14954,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                     93 : INDEX1 ;
                     94 : VERIFY1 ;
                     95 : TRANSLATE1 ;
+                    96 : MEMCMP1 ;
                   end (* case *) ;
                   if LKEY in [ 16 .. 26 , 28 , 29 , 33 , 38 , 39 , 40 ,
                   41 , 42 , 43 , 44 , 47 , 63 , 64 , 78 , 79 ] then
@@ -18837,7 +18985,7 @@ procedure ENTSTDNAMES ;
            ( 'STRRESULTP  ' , 84 , FUNC ) ,    // ptr to str result
            ( 'REPEATSTR   ' , 85 , FUNC ) ,    // repeat str n times
            ( 'RESULTP     ' , 92 , FUNC ) ,    // ptr to result
-           ( '           ' , - 1 , PROC ) ,    //
+           ( 'MEMCMP      ' , 96 , FUNC ) ,    // like C memcmp
            ( '           ' , - 1 , PROC ) ,    //
            ( '           ' , - 1 , PROC ) ,    //
            ( '           ' , - 1 , PROC ) ,    //

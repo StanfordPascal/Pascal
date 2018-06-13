@@ -203,9 +203,9 @@ static SCANNER_INIT : INTEGER ;
 
 
 
-procedure WRITEPTR_LEN ( var F : TEXT ; CPSTART : VOIDPTR ; LEN :
-                       INTEGER ; TRIM_LEFT : BOOLEAN ; TRIM_RIGHT :
-                       BOOLEAN ) ;
+local procedure WRITEPTR_LEN ( var F : TEXT ; CPSTART : VOIDPTR ; LEN :
+                             INTEGER ; TRIM_LEFT : BOOLEAN ; TRIM_RIGHT
+                             : BOOLEAN ) ;
 
    var CP : -> CHAR ;
        I : INTEGER ;

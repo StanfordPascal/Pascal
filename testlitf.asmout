@@ -1,0 +1,89 @@
+
+     0000:  $PASMAIN ENT  P,1,L3    $PASMAIN            ,
+     0000:                T,T,F,F,2,0,,
+                     BGN  $PASMAIN,$PASMAIN            ,T
+@@ 0000: $PASMAIN CSECT
+@@ 0000:       BC    15,96(0,15)
+@@ 0004:       DC    AL1(70)
+@@ 0005:       DC    C'$PASMAIN $PASMAIN             TESTLITF             16:23:15 05/16/2018'
+@@ 004E:       DC    CL6'STPASC'    -- Compiler signature
+@@ 0054:       DC    XL2'1806'      -- Compiler version
+@@ 0056:       DC    AL2(0)         -- Stacksize
+@@ 0058:       DC    AL2(2)         -- Debug-Level
+@@ 005A:       DC    AL2(0)         -- Length of Proc
+@@ 005C:       DC    A(0)           -- Static CSECT
+@@ 0060: *                          -- save registers and chain areas
+@@ 0060:       STM   14,12,12(1)
+@@ 0064:       ST    1,8(13)
+@@ 0068:       ST    13,4(1)
+@@ 006C:       LR    13,1
+@@ 006E: *                          -- setup base registers
+@@ 006E:       LR    10,15
+@@ 0070:       LA    11,4092(10)
+@@ 0074: *                          -- check for enough stack space
+@@ 0074:       LA    1,464(1)
+@@ 0078:       C     1,72(12)
+@@ 007C:       BC    11,224(12)
+@@ 0080: *                          -- clear stack/heap area
+@@ 0080:       L     15,72(12)
+@@ 0084:       LA    14,400(12)
+@@ 0088:       SR    15,14
+@@ 008A:       XR    0,0
+@@ 008C:       LA    1,129
+@@ 0090:       SLL   1,24
+@@ 0094:       MVCL  14,0
+-------------------- LOC  21 --------------------------------
+     0096:           VPU  1,460
+@@ 0096:       L     2,388(12)
+@@ 009A:       ST    2,460(13)
+     009E:           LDA  1,400
+     009E:           LCA  M,20,'Bernd               '
+     009E:           MOV  20
+@@ 009E:       MVC   400(20,13),0(0)
+-------------------- LOC  22 --------------------------------
+     00A4:           LDA  1,420
+     00A4:           LCA  M,20,'Oppolzer            '
+     00A4:           MOV  20
+@@ 00A4:       MVC   420(20,13),20(0)
+@@ 00AA: *                          -- instruction is not
+@@ 00AA: *                          -- generated; length
+@@ 00AA: *                          -- of prev. instr. changed
+-------------------- LOC  23 --------------------------------
+     00A4:           LDA  1,440
+     00A4:           LCA  M,20,'Oppolzer            '
+     00A4:           MOV  20
+@@ 00A4:       MVC   440(20,13),20(0)
+-------------------- LOC  24 --------------------------------
+     00AA:           RET  P
+@@ 00AA: *                          -- restore registers
+@@ 00AA:       LM    14,12,12(13)
+@@ 00AE:       L     13,4(13)
+@@ 00B2: *                          -- branch to return address
+@@ 00B2:       BCR   15,14
+     00B4:  L3       DEF  I,464
+     00B4:           DEF  I,27
+     00B4:           DEF  I,0
+
+ OBJECT CODE FOR CSECT $PASMAIN  (PROCEDURE $PASMAIN            )
+
+ 0000: 47F0F060 24464150 4D534941 204E5024  5341414D 4E492020 20202020 20202020
+ 0020: 20205420 53454C54 54492046 20202020  20202020 20202020 3631323A 3A333531
+ 0040: 30202F35 3631322F 31300038 00005354  50415343 18060000 000200DC 00000000
+ 0060: 90EC100C 501D0008 50D10004 18D118AF  41BA0FFC 411101D0 591C0048 47BC00E0
+ 0080: 58FC0048 41EC0190 1BFE1700 41100081  89100018 0EE0582C 0184502D 01CCD227
+ 00A0: D190A0B4 D213D1B8 A0C898EC D00C58DD  000407FE 65426E72 20642020 20202020
+ 00C0: 20202020 20202020 704F6F70 7A6C7265  20202020 20202020 20202020 00000015
+ 00E0: 20202020 20202020 0052FF03
+
+ DEBUG INFORMATION:
+
+ DEBUG LEVEL  = 2
+ SOURCENAME   =         
+ PROCNAME     = $PASMAIN            
+ CODESIZE     = 220
+ STATIC CSECT =         
+ STACKSIZE    = 0
+
+     0000:           STP
+##             EXTRN $PASENT
+##             END   $PASENT

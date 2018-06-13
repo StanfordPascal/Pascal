@@ -1,7 +1,27 @@
 
-- Wenn LA und Offset/Register = 0, dann LR: besser zentral
-- VST 0,-1 Implementierung fehlt
-- bei VCC Abfrage auf MAXLENGTH = -1
+2018.06:
+
+* Fehlermeldung bzgl. WRITEPTR wegmachen
+* MEMCMP als builtin function
+
+- Problem bei PASRUNM usw.: Fehler in Pass 2 (254) - ansonsten cool
+- Kann man mit PASMAIN Bootstrap statisch linken ? nur ein Module ??
+- PRR plattformabh. bei PASCAL1 - implied subscriptrange !!
+- Lîsung fÅr Templates, z.B. AVL BÑume
+- Reaktion auf zu lange Strings ???
+- Fehlerbehandlung allgemein vereinheitlichen
+- PrÅfungen bei V-Instruktionen Mainframe vervollstÑndigen
+
+- weitere Doku auf Homepage
+- Makroprozessor
+
+=======================================================================================
+
+2018.05:
+
+* Wenn LA und Offset/Register = 0, dann LR: besser zentral
+* VST 0,-1 Implementierung fehlt
+* bei VCC Abfrage auf MAXLENGTH = -1
 
 * Andere Installations-Prozedur fÅr MVS
 * Dokument fÅr MVS-Installation

@@ -1,1 +1,1 @@
-call copyrdr %1.prr pascal %1 prr
+call copyrdr %1.prr pascomp %1 prr

@@ -496,59 +496,61 @@ static const filecb nullfcb_bin =
 #define XXX_LES    43
 #define XXX_LOC    44
 #define XXX_LOD    45
-#define XXX_MCP    46
-#define XXX_MFI    47
-#define XXX_MOD    48
-#define XXX_MOV    49
-#define XXX_MPI    50
-#define XXX_MPR    51
-#define XXX_MSE    52
-#define XXX_MST    53
-#define XXX_MZE    54
-#define XXX_NEQ    55
-#define XXX_NEW    56
-#define XXX_NGI    57
-#define XXX_NGR    58
-#define XXX_NOT    59
-#define XXX_ODD    60
-#define XXX_ORD    61
-#define XXX_PAK    62
-#define XXX_POP    63
-#define XXX_RET    64
-#define XXX_RND    65
-#define XXX_RST    66
-#define XXX_SAV    67
-#define XXX_SBA    68
-#define XXX_SBI    69
-#define XXX_SBR    70
-#define XXX_SCL    71
-#define XXX_SLD    72
-#define XXX_SMV    73
-#define XXX_SQI    74
-#define XXX_SQR    75
-#define XXX_STO    76
-#define XXX_STP    77
-#define XXX_STR    78
-#define XXX_TRC    79
-#define XXX_UJP    80
-#define XXX_UNI    81
-#define XXX_UXJ    82
-#define XXX_VC1    83
-#define XXX_VC2    84
-#define XXX_VCC    85
-#define XXX_VIX    86
-#define XXX_VLD    87
-#define XXX_VLM    88
-#define XXX_VMV    89
-#define XXX_VPO    90
-#define XXX_VPU    91
-#define XXX_VRP    92
-#define XXX_VSM    93
-#define XXX_VST    94
-#define XXX_XJP    95
-#define XXX_XLB    96
-#define XXX_XOR    97
-#define XXX_XPO    98
+#define XXX_MCC    46
+#define XXX_MCP    47
+#define XXX_MCV    48
+#define XXX_MFI    49
+#define XXX_MOD    50
+#define XXX_MOV    51
+#define XXX_MPI    52
+#define XXX_MPR    53
+#define XXX_MSE    54
+#define XXX_MST    55
+#define XXX_MZE    56
+#define XXX_NEQ    57
+#define XXX_NEW    58
+#define XXX_NGI    59
+#define XXX_NGR    60
+#define XXX_NOT    61
+#define XXX_ODD    62
+#define XXX_ORD    63
+#define XXX_PAK    64
+#define XXX_POP    65
+#define XXX_RET    66
+#define XXX_RND    67
+#define XXX_RST    68
+#define XXX_SAV    69
+#define XXX_SBA    70
+#define XXX_SBI    71
+#define XXX_SBR    72
+#define XXX_SCL    73
+#define XXX_SLD    74
+#define XXX_SMV    75
+#define XXX_SQI    76
+#define XXX_SQR    77
+#define XXX_STO    78
+#define XXX_STP    79
+#define XXX_STR    80
+#define XXX_TRC    81
+#define XXX_UJP    82
+#define XXX_UNI    83
+#define XXX_UXJ    84
+#define XXX_VC1    85
+#define XXX_VC2    86
+#define XXX_VCC    87
+#define XXX_VIX    88
+#define XXX_VLD    89
+#define XXX_VLM    90
+#define XXX_VMV    91
+#define XXX_VPO    92
+#define XXX_VPU    93
+#define XXX_VRP    94
+#define XXX_VSM    95
+#define XXX_VST    96
+#define XXX_XJP    97
+#define XXX_XLB    98
+#define XXX_XOR    99
+#define XXX_XPO   100
 
 
 
@@ -628,7 +630,9 @@ static opctab ot [] =
    { "LES", XXX_LES, 0, 'V' },
    { "LOC", XXX_LOC, 0, 'M' },
    { "LOD", XXX_LOD, 0, 'S' },
+   { "MCC", XXX_MCC, 0, 'A' },    /* neu 2018: Memcmp Instrukt.*/
    { "MCP", XXX_MCP, 0, '0' },    /* neu 2017: Memcpy Instrukt.*/
+   { "MCV", XXX_MCV, 0, '0' },    /* neu 2018: Memcmp Instrukt.*/
    { "MFI", XXX_MFI, 0, 'A' },    /* neu 2017: Mem Fill fest.L.*/
    { "MOD", XXX_MOD, 0, '0' },
    { "MOV", XXX_MOV, 0, 'A' },

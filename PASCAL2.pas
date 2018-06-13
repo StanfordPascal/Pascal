@@ -2,14 +2,6 @@ program PCODE_TRANSLATOR ( INPUT , OUTPUT , OBJCODE , ASMOUT , TRACEF )
                            ;
 
 (********************************************************************)
-(*                                                                  *)
-(*  aktuelle Themen:                                                *)
-(*                                                                  *)
-(*  - pruefung auf einhaltung der Laenge                            *)
-(*  - LA ggf. durch LH ... ersetzen (wg. 4096)                      *)
-(*  - Problem: Reg 14 wird ggf. benutzt (invalidieren)              *)
-(*                                                                  *)
-(********************************************************************)
 (*$D-,N+                                                            *)
 (********************************************************************)
 (*                                                                  *)
@@ -351,12 +343,51 @@ program PCODE_TRANSLATOR ( INPUT , OUTPUT , OBJCODE , ASMOUT , TRACEF )
 (*  see procedure STRINGOPS (and others)                            *)
 (*                                                                  *)
 (********************************************************************)
+(*                                                                  *)
+(*  May 2018 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*             (berndoppolzer@yahoo.com)                            *)
+(*                                                                  *)
+(*  The P-Codes for Strings (starting with the letter V)            *)
+(*  are now recognized and translated to 370 machine code;          *)
+(*  this was a hard piece of work and finally seems to work         *)
+(*  correctly with the 2018.05 release. There still remains         *)
+(*  some work to do: some of the length checks which should         *)
+(*  be in place for the strings to work correctly are still         *)
+(*  not yet implemented. Error handling should be improved and      *)
+(*  consolidated.                                                   *)
+(*                                                                  *)
+(********************************************************************)
+(*                                                                  *)
+(*  Jun.2018 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*             (berndoppolzer@yahoo.com)                            *)
+(*                                                                  *)
+(*  Some optimization has been applied to the literal pool;         *)
+(*  leading to errors 257 first. There was an interesting           *)
+(*  story about an old optimization strategy targetting             *)
+(*  series of MVCs, which lead to unused literals and errors        *)
+(*  257 ... see compiler Facebook page.                             *)
+(*                                                                  *)
+(*  This was fixed by adding field OPTIMIZED into LITTBL            *)
+(*                                                                  *)
+(*  Look into procedure SOPERATION, the code following the          *)
+(*  comment: CONSECUTIVE MVC INSTS                                  *)
+(*                                                                  *)
+(********************************************************************)
+(*                                                                  *)
+(*  Jun.2018 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*             (berndoppolzer@yahoo.com)                            *)
+(*                                                                  *)
+(*  MEMCMP added as standard function, similar to MEMCPY.           *)
+(*  Two new PCODE instructions added to implement MEMCMP inline     *)
+(*  (MCC and MCV)                                                   *)
+(*                                                                  *)
+(********************************************************************)
 
 
 
-const VERSION = '2018.05' ;        // Version for display message
-      VERSION2 = 0x1805 ;          // Version for load module
-      VERSION3 = 'XL2''1805''' ;   // Version for ASMOUT listing
+const VERSION = '2018.06' ;        // Version for display message
+      VERSION2 = 0x1806 ;          // Version for load module
+      VERSION3 = 'XL2''1806''' ;   // Version for ASMOUT listing
       MXADR = 65535 ;
       SHRTINT = 4095 ;
       HALFINT = 32700 ;
@@ -769,7 +800,7 @@ type OPTYPE = ( PCTS , PCTI , PLOD , PSTR , PLDA , PLOC , PSTO , PLDC ,
               PXLB , PCST , PDFC , PPAK , PADA , PSBA , PXOR , PMFI ,
               PMCP , PMSE , PDBG , PMZE , PVC1 , PVC2 , PVCC , PVLD ,
               PVST , PVMV , PVSM , PVLM , PVPU , PVPO , PVIX , PVRP ,
-              UNDEF_OP ) ;
+              PMCC , PMCV , UNDEF_OP ) ;
      CSPTYPE = ( PCTR , PN01 , PN02 , PN03 , PN04 , PN05 , PN06 , PN07
                , PN08 , PN09 , PPAG , PGET , PPUT , PRES , PREW , PRDC
                , PWRI , PWRE , PWRR , PWRC , PWRS , PWRX , PRDB , PWRB
@@ -1465,6 +1496,7 @@ var GS : GLOBAL_STATE ;
                                         LENGTH : HINTEGER ;
                                         XIDP : INTEGER ;
                                         LNK : ICRNG_EXT ;
+                                        OPTIMIZED : BOOLEAN ;
                                       end ;
     LBLTBL : array [ 0 .. LBLCNT ] of record
                                         DEFINED : BOOLEAN ;
@@ -1558,7 +1590,7 @@ const HEXTAB : array [ 0 .. 15 ] of CHAR = '0123456789abcdef' ;
         'XLB' , 'CST' , 'DFC' , 'PAK' , 'ADA' , 'SBA' , 'XOR' , 'MFI' ,
         'MCP' , 'MSE' , 'DBG' , 'MZE' , 'VC1' , 'VC2' , 'VCC' , 'VLD' ,
         'VST' , 'VMV' , 'VSM' , 'VLM' , 'VPU' , 'VPO' , 'VIX' , 'VRP' ,
-        '-?-' ) ;
+        'MCC' , 'MCV' , '-?-' ) ;
       CSPTBL : array [ CSPTYPE ] of BETA =
       ( 'N00' , 'N01' , 'N02' , 'N03' , 'N04' , 'N05' , 'N06' , 'N07' ,
         'N08' , 'N09' , 'PAG' , 'GET' , 'PUT' , 'RES' , 'REW' , 'RDC' ,
@@ -3019,6 +3051,26 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
            if ASM then
              WRITELN ( ASMOUT , ' ' : 2 , Q : 1 ) ;
          end (* tag/ca *) ;
+       PMCC : begin
+
+     //************************************************************
+     // one integer operand                                        
+     //************************************************************
+
+                READLN ( Q ) ;
+                if ASM then
+                  WRITELN ( ASMOUT , ' ' : 2 , Q : 1 ) ;
+              end (* tag/ca *) ;
+       PMCV : begin
+
+     //************************************************************
+     // no operands                                                
+     //************************************************************
+
+                READLN ( INPUT ) ;
+                if ASM then
+                  WRITELN ( ASMOUT ) ;
+              end (* tag/ca *) ;
        otherwise
          begin
 
@@ -3213,6 +3265,7 @@ procedure ASMNXTINST ;
         LITTBL [ NXTLIT ] . LTYPE := 'D' ;
         LITTBL [ NXTLIT ] . LENGTH := 8 ;
         LITTBL [ NXTLIT ] . XIDP := I ;
+        LITTBL [ NXTLIT ] . OPTIMIZED := FALSE ;
       end (* UPD_DBLTBL *) ;
 
 
@@ -3315,6 +3368,7 @@ procedure ASMNXTINST ;
         LITTBL [ NXTLIT ] . LTYPE := 'H' ;
         LITTBL [ NXTLIT ] . LENGTH := 2 ;
         LITTBL [ NXTLIT ] . XIDP := I ;
+        LITTBL [ NXTLIT ] . OPTIMIZED := FALSE ;
       end (* UPD_HWTBL *) ;
 
 
@@ -3392,6 +3446,7 @@ procedure ASMNXTINST ;
         LITTBL [ NXTLIT ] . LTYPE := 'I' ;
         LITTBL [ NXTLIT ] . LENGTH := 4 ;
         LITTBL [ NXTLIT ] . XIDP := I ;
+        LITTBL [ NXTLIT ] . OPTIMIZED := FALSE ;
       end (* UPD_INTTBL *) ;
 
 
@@ -3478,6 +3533,7 @@ procedure ASMNXTINST ;
         LITTBL [ NXTLIT ] . LTYPE := 'S' ;
         LITTBL [ NXTLIT ] . LENGTH := L ;
         LITTBL [ NXTLIT ] . XIDP := I * 4 ;
+        LITTBL [ NXTLIT ] . OPTIMIZED := FALSE ;
         if FALSE then
           begin
             WRITELN ( TRACEF , 'upd_settbl: nxtlit = ' , NXTLIT ) ;
@@ -4603,7 +4659,10 @@ procedure ASMNXTINST ;
                                             + 1 ) ;
                     end (* then *)
                   else
-                    ERROR ( 257 ) ;
+                    begin
+                      if not LITTBL [ I ] . OPTIMIZED then
+                        ERROR ( 257 ) ;
+                    end (* else *)
                 end (* for *) ;
 
         //******************************************************
@@ -4892,7 +4951,7 @@ procedure ASMNXTINST ;
       end (* CHECKDISP *) ;
 
 
-   procedure GENLA_LR ( R1 : RGRNG ; Q2 : ADRRNG ; R2 , X2 : RGRNG ) ;// genrr xlr
+   procedure GENLA_LR ( R1 : RGRNG ; Q2 : ADRRNG ; R2 , X2 : RGRNG ) ;
 
       begin (* GENLA_LR *)
         if Q2 = 0 then
@@ -8916,6 +8975,7 @@ procedure ASMNXTINST ;
                           LITTBL [ NXTLIT ] . LTYPE := 'X' ;
                           LITTBL [ NXTLIT ] . LENGTH := 0 ;
                           LITTBL [ NXTLIT ] . XIDP := 0 ;
+                          LITTBL [ NXTLIT ] . OPTIMIZED := FALSE ;
                         end ;
                       end (* else *)
                   end (* then *)
@@ -12046,6 +12106,349 @@ procedure ASMNXTINST ;
       end (* MSEOPERATION *) ;
 
 
+   procedure MCVOPERATION ( var L , R , LEN : DATUM ) ;
+
+   //****************************************************************
+   // generate CLCL instruction for MEMCMP                           
+   // length is not known at compile time                            
+   //****************************************************************
+
+
+      var P1 , B1 , P2 , B2 , PX , BX : LVLRNG ;
+          Q1 , Q2 , QX : ADRRNG ;
+          BPC : ICRNG ;
+          TARGET_REG : RGRNG ;
+
+      begin (* MCVOPERATION *)
+
+        //******************************************************
+        // get address of left operand                          
+        //******************************************************
+
+        GETADR2 ( L , Q1 , P1 , B1 ) ;
+        if not L . DRCT then
+          begin
+            GENRX ( XL , TXRG , Q1 , B1 , P1 ) ;
+            Q1 := 0 ;
+            B1 := 0 ;
+            P1 := TXRG ;
+          end (* then *) ;
+        TXRG := TRG1 ;
+
+        //******************************************************
+        // TO AVOID REASSIGNM. OF THE SAME BASE REG             
+        //******************************************************
+
+        OLDCSP := PSIO ;  // INDICATES LOSS OF TRG1
+
+        //******************************************************
+        // get address of right operand                         
+        //******************************************************
+
+        GETADR2 ( R , Q2 , P2 , B2 ) ;
+        if not R . DRCT then
+          begin
+            GENRX ( XL , TXRG , Q2 , B2 , P2 ) ;
+            Q2 := 0 ;
+            B2 := 0 ;
+            P2 := TXRG ;
+          end (* then *) ;
+        TXRG := TRG14 ;
+
+        //******************************************************
+        // get length                                           
+        //******************************************************
+
+        if FALSE then
+          begin
+            WRITELN ( TRACEF , 'len.drct   = ' , LEN . DRCT ) ;
+            WRITELN ( TRACEF , 'len.vrbl   = ' , LEN . VRBL ) ;
+            WRITELN ( TRACEF , 'len.dtype  = ' , LEN . DTYPE ) ;
+            WRITELN ( TRACEF , 'len.vpa    = ' , LEN . VPA ) ;
+            WRITELN ( TRACEF , 'len.rgadr  = ' , LEN . RGADR ) ;
+          end (* then *) ;
+
+        //******************************************************
+        // RESTORE THE OLD MIDLEVEL BASE REG                    
+        //******************************************************
+
+        if P1 < 0 then
+          begin
+            B1 := P1 ;
+            P1 := 0 ;
+          end (* then *) ;
+        if P2 < 0 then
+          begin
+            B2 := P2 ;
+            P2 := 0 ;
+          end (* then *) ;
+
+        //**************************************************
+        // THIS IS ONLY VALID FOR THE 370,                  
+        // FOR THE 360 THE 'MVCL' INSTRUNCTION SHOULD BE    
+        // REPLACED BY A subroutine or a loop or MVC;       
+        // because the length of the operands is not        
+        // known at compile time in this case, a fix list   
+        // of MVCs is not sufficient                        
+        //**************************************************
+
+        if ( B1 < 0 ) or ( B2 < 0 ) then
+          ERROR ( 202 ) ;
+        FINDRP ;
+        GENRX ( XLA , NXTRG , Q1 , B1 , P1 ) ;
+        P1 := NXTRG ;
+        B1 := NXTRG + 1 ;
+        FINDRP ;
+        GENRX ( XLA , NXTRG , Q2 , B2 , P2 ) ;
+        P2 := NXTRG ;
+        B2 := NXTRG + 1 ;
+
+        //******************************************************
+        // find number of target register and                   
+        // generate code to set target register to zero         
+        // before doing the comparison                          
+        //******************************************************
+
+        FINDRG ;
+        TARGET_REG := NXTRG ;
+        GENRR ( XXR , TARGET_REG , TARGET_REG ) ;
+
+        //******************************************************
+        // length operand                                       
+        // generate L or LR                                     
+        //******************************************************
+
+        GETOP_SIMPLE ( LEN , QX , PX , BX , B1 , TRUE ) ;
+
+        //******************************************************
+        // copy length in register b1 to register b2            
+        // and test                                             
+        //******************************************************
+
+        GENRR ( XLTR , B2 , B1 ) ;
+
+        //******************************************************
+        // check length for positive                            
+        // address of branch will be filled in later            
+        //******************************************************
+
+        GENRELRX ( XBC , LEQCND , 10 ) ;
+
+        //******************************************************
+        // generate CLCL instruction                            
+        //******************************************************
+
+        GENRR ( XCLCL , P1 , P2 ) ;
+
+        //******************************************************
+        // set result in target rec depending on CC             
+        //******************************************************
+
+        GENRELRX ( XBC , EQUCND , 7 ) ;
+        GENRR ( XBCTR , TARGET_REG , 0 ) ;
+        GENRELRX ( XBC , LESCND , 4 ) ;
+        GENRX ( XLA , TARGET_REG , 1 , 0 , 0 ) ;
+
+        //******************************************************
+        // free temporary registers                             
+        //******************************************************
+
+        AVAIL [ TARGET_REG ] := TRUE ;
+        AVAIL [ P1 ] := TRUE ;
+        AVAIL [ B1 ] := TRUE ;
+        AVAIL [ P2 ] := TRUE ;
+        AVAIL [ B2 ] := TRUE ;
+        S370CNT := S370CNT + 1 ;
+        FREEREG ( L ) ;
+        FREEREG ( R ) ;
+        FREEREG ( LEN ) ;
+
+        //******************************************************
+        // result is in top stack element (register)            
+        //******************************************************
+
+        with L do
+          begin
+            DTYPE := INT ;
+            PLEN := 0 ;
+            VRBL := TRUE ;
+            DRCT := TRUE ;
+            VPA := RGS ;
+            RGADR := TARGET_REG ;
+            FPA . LVL := 0 ;
+            FPA . DSPLMT := 0 ;
+            MEMADR . LVL := 0 ;
+            MEMADR . DSPLMT := 0 ;
+          end (* with *) ;
+      end (* MCVOPERATION *) ;
+
+
+   procedure MCCOPERATION ( var L , R : DATUM ; LEN : INTEGER ) ;
+
+   //****************************************************************
+   // generate CLC or CLCL instruction for MEMCMP                    
+   // length is known at compile time                                
+   //****************************************************************
+
+
+      var P1 , B1 , P2 , B2 , PX , BX : LVLRNG ;
+          Q1 , Q2 , QX : ADRRNG ;
+          BPC : ICRNG ;
+          TARGET_REG : RGRNG ;
+
+      begin (* MCCOPERATION *)
+
+        //******************************************************
+        // get address of left operand                          
+        //******************************************************
+
+        GETADR2 ( L , Q1 , P1 , B1 ) ;
+        if not L . DRCT then
+          begin
+            GENRX ( XL , TXRG , Q1 , B1 , P1 ) ;
+            Q1 := 0 ;
+            B1 := 0 ;
+            P1 := TXRG ;
+          end (* then *) ;
+        TXRG := TRG1 ;
+
+        //******************************************************
+        // TO AVOID REASSIGNM. OF THE SAME BASE REG             
+        //******************************************************
+
+        OLDCSP := PSIO ;  // INDICATES LOSS OF TRG1
+
+        //******************************************************
+        // get address of right operand                         
+        //******************************************************
+
+        GETADR2 ( R , Q2 , P2 , B2 ) ;
+        if not R . DRCT then
+          begin
+            GENRX ( XL , TXRG , Q2 , B2 , P2 ) ;
+            Q2 := 0 ;
+            B2 := 0 ;
+            P2 := TXRG ;
+          end (* then *) ;
+        TXRG := TRG14 ;
+
+        //******************************************************
+        // RESTORE THE OLD MIDLEVEL BASE REG                    
+        //******************************************************
+
+        if P1 < 0 then
+          begin
+            B1 := P1 ;
+            P1 := 0 ;
+          end (* then *) ;
+        if P2 < 0 then
+          begin
+            B2 := P2 ;
+            P2 := 0 ;
+          end (* then *) ;
+
+        //**************************************************
+        // THIS IS ONLY VALID FOR THE 370,                  
+        // FOR THE 360 THE 'MVCL' INSTRUNCTION SHOULD BE    
+        // REPLACED BY A subroutine or a loop or MVC;       
+        // because the length of the operands is not        
+        // known at compile time in this case, a fix list   
+        // of MVCs is not sufficient                        
+        //**************************************************
+
+        if ( B1 < 0 ) or ( B2 < 0 ) then
+          ERROR ( 202 ) ;
+        FINDRP ;
+        GENRX ( XLA , NXTRG , Q1 , B1 , P1 ) ;
+        P1 := NXTRG ;
+        B1 := NXTRG + 1 ;
+        FINDRP ;
+        GENRX ( XLA , NXTRG , Q2 , B2 , P2 ) ;
+        P2 := NXTRG ;
+        B2 := NXTRG + 1 ;
+
+        //******************************************************
+        // find number of target register and                   
+        // generate code to set target register to zero         
+        // before doing the comparison                          
+        //******************************************************
+
+        FINDRG ;
+        TARGET_REG := NXTRG ;
+        GENRR ( XXR , TARGET_REG , TARGET_REG ) ;
+
+        //******************************************************
+        // don't generate compare instructions,                 
+        // if length is less or equal to zero                   
+        // generate CLC, if length <= 256                       
+        // otherwise CLCL                                       
+        //******************************************************
+
+        if LEN > 0 then
+          if LEN <= 256 then
+            begin
+              GENSS ( XCLC , LEN , 0 , P1 , 0 , P2 ) ;
+            end (* then *)
+          else
+            begin
+
+        //******************************************************
+        // copy length in register b1 to register b2            
+        // and test                                             
+        //******************************************************
+
+              GENRX ( XLA , B1 , LEN , 0 , 0 ) ;
+              GENRR ( XLR , B2 , B1 ) ;
+
+        //******************************************************
+        // generate MVCL instruction                            
+        //******************************************************
+
+              GENRR ( XCLCL , P1 , P2 ) ;
+            end (* else *) ;
+
+        //******************************************************
+        // set result in target rec depending on CC             
+        //******************************************************
+
+        GENRELRX ( XBC , EQUCND , 7 ) ;
+        GENRR ( XBCTR , TARGET_REG , 0 ) ;
+        GENRELRX ( XBC , LESCND , 4 ) ;
+        GENRX ( XLA , TARGET_REG , 1 , 0 , 0 ) ;
+
+        //******************************************************
+        // free temporary registers                             
+        //******************************************************
+
+        AVAIL [ TARGET_REG ] := TRUE ;
+        AVAIL [ P1 ] := TRUE ;
+        AVAIL [ B1 ] := TRUE ;
+        AVAIL [ P2 ] := TRUE ;
+        AVAIL [ B2 ] := TRUE ;
+        S370CNT := S370CNT + 1 ;
+        FREEREG ( L ) ;
+        FREEREG ( R ) ;
+
+        //******************************************************
+        // result is in top stack element (register)            
+        //******************************************************
+
+        with L do
+          begin
+            DTYPE := INT ;
+            PLEN := 0 ;
+            VRBL := TRUE ;
+            DRCT := TRUE ;
+            VPA := RGS ;
+            RGADR := TARGET_REG ;
+            FPA . LVL := 0 ;
+            FPA . DSPLMT := 0 ;
+            MEMADR . LVL := 0 ;
+            MEMADR . DSPLMT := 0 ;
+          end (* with *) ;
+      end (* MCCOPERATION *) ;
+
+
    procedure STROPERATION_MVI ( var LEFT : DATUM ; CCONST : CHAR ) ;
 
    //****************************************************************
@@ -12192,12 +12595,32 @@ procedure ASMNXTINST ;
             GENSS ( XOPC , LENPARM , Q1 , P1 , Q2 , P2 ) ;
             if B1 < 0 then
               begin
+                if FALSE then
+                  begin
+                    WRITELN ( 'sop lit links, b1    = ' , B1 ) ;
+                    WRITELN ( 'sop lit links, index = ' , LEFT .
+                              SCNSTNO ) ;
+                    WRITELN ( 'sop cod links, pcnt  = ' , PCOUNTER - 2
+                              ) ;
+                    WRITELN ( 'sop cod links, code  = ' , TO_HINT ( Q1
+                              ) )
+                  end (* then *) ;
                 if B1 = - 1 then
                   LITTBL [ LEFT . SCNSTNO ] . LNK := PCOUNTER - 2 ;
                 CODE . H [ PCOUNTER - 2 ] := TO_HINT ( Q1 ) ;
               end (* then *) ;
             if B2 < 0 then
               begin
+                if FALSE then
+                  begin
+                    WRITELN ( 'sop lit rechts, b2    = ' , B2 ) ;
+                    WRITELN ( 'sop lit rechts, index = ' , RIGHT .
+                              SCNSTNO ) ;
+                    WRITELN ( 'sop cod rechts, pcnt  = ' , PCOUNTER - 1
+                              ) ;
+                    WRITELN ( 'sop cod rechts, code  = ' , TO_HINT ( Q2
+                              ) )
+                  end (* then *) ;
                 if B2 = - 1 then
                   LITTBL [ RIGHT . SCNSTNO ] . LNK := PCOUNTER - 1 ;
                 CODE . H [ PCOUNTER - 1 ] := TO_HINT ( Q2 ) ;
@@ -12210,6 +12633,8 @@ procedure ASMNXTINST ;
 
         //******************************************************
         // CONSECUTIVE MVC INSTS                                
+        // check if new MVC can be eliminated by changing       
+        // length of previous MVC                               
         //******************************************************
 
                       if ( CODE . H [ LPC - 2 ] + LLEN ) = CODE . H [
@@ -12218,6 +12643,28 @@ procedure ASMNXTINST ;
                         PCOUNTER - 1 ] then
                           if ( LLEN + LENPARM ) <= 256 then
                             begin
+                              if ASM then
+                                begin
+                                  HEXHW ( PCOUNTER * 2 , HEXPC ) ;
+                                  WRITE ( ASMOUT , ASMTAG , HEXPC ,
+                                          ': ' ) ;
+                                  WRITE ( ASMOUT , '*' , ' ' : 26 ,
+                                          '-- instruction is not' ) ;
+                                  WRITELN ( ASMOUT ) ;
+                                  HEXHW ( PCOUNTER * 2 , HEXPC ) ;
+                                  WRITE ( ASMOUT , ASMTAG , HEXPC ,
+                                          ': ' ) ;
+                                  WRITE ( ASMOUT , '*' , ' ' : 26 ,
+                                          '-- generated; length' ) ;
+                                  WRITELN ( ASMOUT ) ;
+                                  HEXHW ( PCOUNTER * 2 , HEXPC ) ;
+                                  WRITE ( ASMOUT , ASMTAG , HEXPC ,
+                                          ': ' ) ;
+                                  WRITE ( ASMOUT , '*' , ' ' : 26 ,
+                                          '-- of prev. instr. changed'
+                                          ) ;
+                                  WRITELN ( ASMOUT ) ;
+                                end (* then *) ;
                               CODE . H [ LPC - 3 ] := TO_HINT ( CODE .
                                                    H [ LPC - 3 ] +
                                                    LENPARM ) ;
@@ -12227,8 +12674,12 @@ procedure ASMNXTINST ;
                                 if RIGHT . SCNSTNO = NXTLIT - 1 then
                                   NXTLIT := NXTLIT - 1
                                 else
-                                  LITTBL [ RIGHT . SCNSTNO ] . LNK := 0
-                                                   ;
+                                  begin
+                                    LITTBL [ RIGHT . SCNSTNO ] . LNK :=
+                                                   0 ;
+                                    LITTBL [ RIGHT . SCNSTNO ] .
+                                    OPTIMIZED := TRUE
+                                  end (* else *) ;
                             end (* then *) ;
                     LPC := PCOUNTER ;
                     LLEN := LENPARM ;
@@ -15000,6 +15451,8 @@ procedure ASMNXTINST ;
                                  LITTBL [ NXTLIT ] . XIDP := LITTBL [
                                                    LITOK ] . XIDP +
                                                    XOFFS ;
+                                 LITTBL [ NXTLIT ] . OPTIMIZED := FALSE
+                                                   ;
                                  LITOK := NXTLIT ;
                                end (* then *)
                              else
@@ -15024,12 +15477,14 @@ procedure ASMNXTINST ;
                                    end (* then *) ;
                                  TAG := 'add' ;
                                  NXTLIT := NXTLIT + 1 ;
-                                 LITOK := NXTLIT ;
-                                 LITTBL [ LITOK ] . LNK := - TOP - 1 ;
-                                 LITTBL [ LITOK ] . LTYPE := 'C' ;
-                                 LITTBL [ LITOK ] . LENGTH := SLNGTH ;
-                                 LITTBL [ LITOK ] . XIDP := LX . NXTCH
+                                 LITTBL [ NXTLIT ] . LNK := - TOP - 1 ;
+                                 LITTBL [ NXTLIT ] . LTYPE := 'C' ;
+                                 LITTBL [ NXTLIT ] . LENGTH := SLNGTH ;
+                                 LITTBL [ NXTLIT ] . XIDP := LX . NXTCH
                                                    ;
+                                 LITTBL [ NXTLIT ] . OPTIMIZED := FALSE
+                                                   ;
+                                 LITOK := NXTLIT ;
                                  MEMCPY ( ADDR ( IDP_POOL . C [ LX .
                                           NXTCH ] ) , ADDR ( SVAL [ 1 ]
                                           ) , SLNGTH ) ;
@@ -15326,6 +15781,17 @@ procedure ASMNXTINST ;
                 MSEOPERATION ( STK [ TOP ] , STK [ TOP + 1 ] , STK [
                                TOP + 2 ] , Q ) ;
               end (* tag/ca *) ;
+       PMCC : begin
+                TOP := TOP - 2 ;
+                MCCOPERATION ( STK [ TOP ] , STK [ TOP + 1 ] , Q ) ;
+                TOP := TOP + 1 ;
+              end (* tag/ca *) ;
+       PMCV : begin
+                TOP := TOP - 3 ;
+                MCVOPERATION ( STK [ TOP ] , STK [ TOP + 1 ] , STK [
+                               TOP + 2 ] ) ;
+                TOP := TOP + 1 ;
+              end (* tag/ca *) ;
 
      (*****************************)
      (* CONTROL/BRANCH OPERATIONS *)
@@ -15612,10 +16078,11 @@ begin (* HAUPTPROGRAMM *)
     WRITE ( OUTPUT , 'NO' : 8 ) ;
   WRITELN ( OUTPUT , ' ASSEMBLY ERROR(S) DETECTED.' ) ;
   WRITELN ( OUTPUT , '****' : 7 , TOTALBYTES : 8 ,
-            ' BYTES OF CODE GENERATED,' , TIMER * 0.001 : 6 : 2 ,
+            ' BYTES OF CODE GENERATED,' , TIMER * 0.001 : 7 : 2 ,
             ' SECONDS IN POST_PROCESSING.' ) ;
   if S370CNT > 0 then
-    WRITELN ( OUTPUT , '****' : 7 , S370CNT : 8 ,
-              ' "370"-ONLY INSTRUCTION(S) ISSUED.' ) ;
+    if FALSE then
+      WRITELN ( OUTPUT , '****' : 7 , S370CNT : 8 ,
+                ' "370"-ONLY INSTRUCTION(S) ISSUED.' ) ;
   EXIT ( ERRORCNT ) ;
 end (* HAUPTPROGRAMM *) .

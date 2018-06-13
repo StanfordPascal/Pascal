@@ -1,0 +1,136 @@
+         TITLE 'PASCAL MAIN - CMS PARAMETER HANDLING'
+***********************************************************************
+*
+*        PASCAL
+*        -------
+*
+*        This PASCAL main routine can be linked as mainline
+*        on CMS with every Pascal program. It reads the tokenized
+*        parameter list from CMS and builds an OS type parameter
+*        list which can then be used by the pascal main program
+*
+*        (this replaces the routines RUNPARM or XRUNPARM,
+*        which were used before to load the Pascal generated
+*        modules dynamically)
+*
+*        The CMS command line is tokenized (every parameter
+*        truncated to 8 Bytes) and then put into doublewords,
+*        following the reg1 position. The end is marked by x'ff'.
+*
+*        For OS, the first parameter (which is the module name)
+*        is treated different and the other tokens are concatenated
+*        to give the OS parm, but a blank is inserted between each
+*        token
+*
+*        reg1 --->   adr1  --->  length and parm string
+*                    adr2  --->  program name (first token)
+*
+*        The PASMAIN CSECT is a (sort of) initialization of the
+*        PASMONN runtime for CMS and should be loaded at the
+*        CMS standard entry point X'20000'
+*
+***********************************************************************
+*
+PASMAIN  CSECT
+*
+**************************************************************
+*        registersicherung usw.
+**************************************************************
+*
+         STM   R14,R12,12(R13)
+         LR    R11,R15
+         USING PASMAIN,R11
+*
+         LA    R15,SAVEAREA
+         ST    R15,8(R13)
+         ST    R13,4(R15)
+         LR    R13,R15
+*
+**************************************************************
+*        tokenized parameter von CMS
+*        in OS type parameter list umbauen
+*        und dann $PASENT aufrufen
+**************************************************************
+*
+         LR    R2,R1             tokenized parameter list
+         XR    R4,R4             length of param = zero
+         LA    R5,PARAM+2        target adress of param = R5
+         MVC   PROGNAME+2(8),0(R2)    mv first token to progname
+         LA    R2,8(R2)          next token
+*
+LOOP     CLI   0(R2),X'FF'       no token ?
+         BE    ELOOP
+         CH    R4,=H'1000'       already 1000 bytes in target ?
+         BH    ELOOP
+*
+         MVC   0(8,R5),0(R2)     move token to target
+         MVI   8(R5),C' '        add blank in target
+         LA    R5,9(R5)          incr target pointer
+         LA    R4,9(R4)          incr param length
+         LA    R2,8(R2)          next token
+         B     LOOP              try again
+*
+ELOOP    DS    0H
+         STH   R4,PARAM          store param length
+         MVI   0(R5),X'0'        hex zero at the end of buffer
+*
+         LA    R1,APARAM
+         CALL  $PASENT
+*
+**************************************************************
+*        don't restore R15, return RC to opsys
+**************************************************************
+*
+         L     R13,4(R13)
+         L     R14,12(R13)
+         LM    R0,R12,20(R13)
+         BR    R14
+*
+**************************************************************
+*        Definitionen
+**************************************************************
+*
+SAVEAREA DS    18F
+AZEILE   DC    CL80' '
+PACK5    DS    PL5
+UNPACK9  DS    CL9
+TRHEX    DC    C'0123456789ABCDEF'
+APARAM   DC    A(PARAM)
+         DC    A(PROGNAME)
+         DC    F'-1'
+*
+**************************************************************
+*        sp teres Format f r Strings (mit Maxl nge)
+**************************************************************
+*
+PARAMMAX DC    H'1024'
+PARAM    DC    H'0'
+         DS    CL1024
+*
+         DC    H'8'
+PROGNAME DC    H'8'
+         DS    CL8
+*
+**************************************************************
+*        REGISTER ASSIGNMENTS
+**************************************************************
+*
+R0       EQU   0
+R1       EQU   1
+R2       EQU   2
+R3       EQU   3
+R4       EQU   4
+R5       EQU   5
+R6       EQU   6
+R7       EQU   7
+R8       EQU   8
+R9       EQU   9
+R10      EQU   10
+R11      EQU   11
+R12      EQU   12
+R13      EQU   13
+R14      EQU   14
+R15      EQU   15
+*
+         END   PASMAIN
+

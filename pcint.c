@@ -5560,6 +5560,30 @@ static void int1 (global_store *gs)
 
          break;
 
+      case XXX_MCC:
+
+         /************************************************/
+         /*   memcmp inline                              */
+         /*   get arg2 address from SP                   */
+         /*   get arg1 address from SP - 1               */
+         /*   pop all three items                        */
+         /************************************************/
+
+         intp = ADDRSTACK (gs -> sp);
+         charp = ADDRSTOR (*intp);
+         (gs -> sp) -= 4;
+
+         intp = ADDRSTACK (gs -> sp);
+         charp2 = ADDRSTOR (*intp);
+
+         if (pcode -> q > 0)
+         {
+            wert1 = memcmp (charp2, charp, pcode ->q);
+            *intp = wert1;
+         }
+
+         break;
+
       case XXX_MCP:
 
          /************************************************/
@@ -5584,6 +5608,34 @@ static void int1 (global_store *gs)
          if (wert1 > 0)
          {
             memcpy (charp2, charp, wert1);
+         }
+
+         break;
+
+      case XXX_MCV:
+
+         /************************************************/
+         /*   memcmp inline                              */
+         /*   get length from SP                         */
+         /*   get source address from SP - 1             */
+         /*   get target address from SP - 2             */
+         /*   pop all three items                        */
+         /************************************************/
+
+         wert1 = STACK_I (gs -> sp);
+         (gs -> sp) -= 4;
+
+         intp = ADDRSTACK (gs -> sp);
+         charp = ADDRSTOR (*intp);
+         (gs -> sp) -= 4;
+
+         intp = ADDRSTACK (gs -> sp);
+         charp2 = ADDRSTOR (*intp);
+
+         if (wert1 > 0)
+         {
+            wert1 = memcmp (charp2, charp, wert1);
+            *intp = wert1;
          }
 
          break;

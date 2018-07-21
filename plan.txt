@@ -1,19 +1,35 @@
 
 2018.06:
 
-* Fehlermeldung bzgl. WRITEPTR wegmachen
-* MEMCMP als builtin function
-
+- Testen Pascal auf LCM-Maschine
+- Erweitern AVLTREE fuer Objekt-Einfuegen und -Rueckgabe
+- Cache-Funktionen analog OISCACH
+- weitere Doku auf Homepage
+- neue Version: 2018.07
+- Reaktion auf zu lange Strings
+- Fehlerbehandlung allgemein vereinheitlichen
+- PrÅfungen bei V-Instruktionen Mainframe vervollstÑndigen
+- neue Version: 2018.08
 - Problem bei PASRUNM usw.: Fehler in Pass 2 (254) - ansonsten cool
 - Kann man mit PASMAIN Bootstrap statisch linken ? nur ein Module ??
 - PRR plattformabh. bei PASCAL1 - implied subscriptrange !!
-- Lîsung fÅr Templates, z.B. AVL BÑume
-- Reaktion auf zu lange Strings ???
-- Fehlerbehandlung allgemein vereinheitlichen
-- PrÅfungen bei V-Instruktionen Mainframe vervollstÑndigen
 
-- weitere Doku auf Homepage
 - Makroprozessor
+- externe Funktionen in C
+- DB2 Precompiler
+
+* neue Version fuer CMS: 2018.06
+* Baeume loeschen in AVLTREE usw.
+? Fehler bei Compiler und Formatierer raus in diesem Zusammenhang
+* Anzeigen Strings in LISTDEF
+* Fehler S331 in TESTAVL.PAS
+* Lîsung fÅr Templates, z.B. AVL BÑume
+* zunaechst Funktion zum Durchwandern fuer AVLTREE
+* dann Testen, ob's klappt
+* dann Funktion zum Drucken der AVLTREEs
+* dann ggf. Erweiterungen
+* Fehlermeldung bzgl. WRITEPTR wegmachen
+* MEMCMP als builtin function
 
 =======================================================================================
 
@@ -67,6 +83,7 @@
 * Variablen starten spÑter (400 statt 352) Compiler Ñndern
 * FL1 bis FL4 an anderen Offsets
 * weicher öbergang !!
+* Lîsung fÅr Templates, z.B. AVL BÑume
 
 - weitere Doku auf Homepage
 - Fehler bei Funktionsaufruf mit CHAR auf VM (??)
@@ -76,7 +93,6 @@
 - native Code auf Windows etc.
 - externe Funktionen in C
 - DB2 Precompiler
-- Lîsung fÅr Templates, z.B. AVL BÑume
 - 31 Bit Adressierung
 
 - echte DECIMALs implementieren

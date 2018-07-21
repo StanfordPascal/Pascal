@@ -10,9 +10,15 @@ rem call x testlit.asmout
 rem call pas2 testlitf
 rem pause
 rem call x testlitf.asmout
-    call pas2 testmcmp
-    pause
-    call x testmcmp.asmout
+rem call pas2 testmcmp
+rem pause
+rem call x testmcmp.asmout
 rem call pas2 paslibx
 rem pause
 rem call x paslibx.asmout
+    call pasf avltree
+    call pasf testavl
+    call pp avltree
+    call pp testavl
+    call prun testavl avltree >xxx
+    call xa xxx

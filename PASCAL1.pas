@@ -838,6 +838,25 @@ program PASCALCOMPILER ( INPUT , OUTPUT , PCODE , LISTING , LISTDEF ,
 (*  (MCC and MCV)                                                   *)
 (*                                                                  *)
 (********************************************************************)
+(*                                                                  *)
+(*  Jul.2018 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*             (berndoppolzer@yahoo.com)                            *)
+(*                                                                  *)
+(*  Error fixed: negative constants on CASE threw range errors;     *)
+(*  this has been corrected ... see test program TESTCASE.PAS       *)
+(*  (discovered while working on module AVLTREE.PAS)                *)
+(*                                                                  *)
+(*  Allow types with parameters being specified in pointer type     *)
+(*  declarations, for example:                                      *)
+(*                                                                  *)
+(*    var S1 : STRING ( 9 ) ;                                       *)
+(*        SP1 : -> STRING ( 9 ) ;                                   *)
+(*                                                                  *)
+(*  the second declaration (SP1) was not possible before,           *)
+(*  because only type identifiers were allowed after the            *)
+(*  arrow symbol (no type parameters).                              *)
+(*                                                                  *)
+(********************************************************************)
 
 
 
@@ -1249,7 +1268,8 @@ type ALPHA = array [ 1 .. IDLNGTH ] of CHAR ;
      //************************************************************
 
                    CSTRING :
-                     ( CONFORMANT : BOOLEAN ) ;
+                     ( CONFORMANT : BOOLEAN ;
+                       DEF_COMPLETE : BOOLEAN ) ;
                    ARRAYS :
                      ( AELTYPE , INXTYPE : TTP ) ;
                    RECORDS :
@@ -3748,6 +3768,8 @@ procedure DBG_PRINTSYMBOL ( LCP : IDP ) ;
                             WRITE ( DBGINFO , 'L' , SIZE : 1 , '; ' ) ;
                       SCALAR :
                         WRITE ( DBGINFO , 'L' , SIZE : 1 , '; ' ) ;
+                      CSTRING :
+                        WRITE ( DBGINFO , 'X' , SIZE - 4 : 1 , '; ' ) ;
                       POINTER :
                         begin
                           if ELTYPE <> NIL then
@@ -4181,6 +4203,8 @@ procedure DEF_PRINTTYPE ( TYPP : TTP ; MODUS : CHAR ) ;
                WRITE ( LISTDEF , ' scalar (' , SIZE : 1 , ')' ) ;
          SCALAR :
            WRITE ( LISTDEF , ' scalar (' , SIZE : 1 , ')' ) ;
+         CSTRING :
+           WRITE ( LISTDEF , ' string (' , SIZE - 4 : 1 , ')' ) ;
          POINTER :
            begin
              if ELTYPE <> NIL then
@@ -4772,7 +4796,10 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                           NEW ( IDTYPE ) ;
                           IDTYPE -> := PTYPE_VARCHAR -> ;
                           with IDTYPE -> do
-                            SIZE := PARAM1 + 4 ;
+                            begin
+                              SIZE := PARAM1 + 4 ;
+                              DEF_COMPLETE := TRUE ;
+                            end (* with *)
                         end (* then *)
                       else
                         if FSP = PTYPE_DECIMAL then
@@ -5741,24 +5768,26 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                 begin
                   if FORM = CSTRING then
                     begin
-                      if CONF then
-                        begin
-                          PARAM1 := 0 ;
-                          PARAM2 := 0 ;
-                          MODIFY_TYPE_PARMS ( FSP , IDX , PARAM1 ,
-                                              PARAM2 ) ;
-                          FSP -> . CONFORMANT := TRUE ;
-                        end (* then *)
-                      else
-                        begin
-                          ERRINFO := IDX ;
-                          ERROR_POS ( 'E' , 331 , ERRINFO , SCB .
-                                      LINENR , SCB . LINEPOS ) ;
-                          PARAM1 := 254 ;
-                          PARAM2 := 0 ;
-                          MODIFY_TYPE_PARMS ( FSP , IDX , PARAM1 ,
-                                              PARAM2 ) ;
-                        end (* else *)
+                      if not DEF_COMPLETE then
+                        if CONF then
+                          begin
+                            PARAM1 := 0 ;
+                            PARAM2 := 0 ;
+                            MODIFY_TYPE_PARMS ( FSP , IDX , PARAM1 ,
+                                                PARAM2 ) ;
+                            FSP -> . CONFORMANT := TRUE ;
+                            FSP -> . DEF_COMPLETE := TRUE ;
+                          end (* then *)
+                        else
+                          begin
+                            ERRINFO := IDX ;
+                            ERROR_POS ( 'E' , 331 , ERRINFO , SCB .
+                                        LINENR , SCB . LINEPOS ) ;
+                            PARAM1 := 254 ;
+                            PARAM2 := 0 ;
+                            MODIFY_TYPE_PARMS ( FSP , IDX , PARAM1 ,
+                                                PARAM2 ) ;
+                          end (* else *)
                     end (* then *)
                   else
                     if FORM = SCALAR then
@@ -6801,17 +6830,25 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                               NEXT := FWPTR ;
                               KLASS := TYPES
                             end (* with *) ;
-                          FWPTR := LCP
+                          FWPTR := LCP ;
+                          INSYMBOL ;
                         end (* then *)
                       else
                         begin
+                          INSYMBOL ;
                           if LCP -> . IDTYPE <> NIL then
-                            if LCP -> . IDTYPE -> . FORM = FILES then
-                              ERROR ( 108 )
-                            else
-                              LSP -> . ELTYPE := LCP -> . IDTYPE
-                        end (* else *) ;
-                      INSYMBOL ;
+                            LSP2 := LCP -> . IDTYPE ;
+                          TYPE_WITH_PARMS ( FSYS , SYID , LSP2 , FALSE
+                                            ) ;
+                          LCP -> . IDTYPE := LSP2 ;
+                          if LCP -> . IDTYPE <> NIL then
+                            begin
+                              if LCP -> . IDTYPE -> . FORM = FILES then
+                                ERROR ( 108 )
+                              else
+                                LSP -> . ELTYPE := LCP -> . IDTYPE
+                            end (* then *)
+                        end (* else *)
                     end (* then *)
                   else
                     ERROR ( 2 ) ;
@@ -9441,7 +9478,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
 
 
       procedure GENDEF ( LABELNR : ADDRRANGE ; TYP : CHAR ; WERT :
-                       ADDRRANGE ) ;
+                       INTEGER ) ;
 
          begin (* GENDEF *)
            if OPT . PRCODE then
@@ -18747,7 +18784,8 @@ procedure ENTERSTDTYPES ;
          ( 0 , CHARSIZE , FALSE , SCALAR , STANDARD , 'D' , 15 , 0 , 1
            , 2 , 1 , 31 , 15 ) ;
          VARCHARTYPE : TYPEREC =
-         ( MAXVARCHARSIZE , HINTSIZE , FALSE , CSTRING , FALSE ) ;
+         ( MAXVARCHARSIZE , HINTSIZE , FALSE , CSTRING , FALSE , FALSE
+           ) ;
          BOOLTYPE : TYPEREC =
          ( BOOLSIZE , BOOLSIZE , FALSE , SCALAR , DECLARED , NIL ) ;
          ANYPTYPE : TYPEREC =

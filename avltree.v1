@@ -1,0 +1,313 @@
+module AVLTREE ;
+
+(**************************************************************)
+(*                                                            *)
+(*   Versuch einer Portierung des AVLTREE Moduls in Pascal    *)
+(*   Soll funktionieren fuer beliebige AVL-Baeume             *)
+(*   Key- und Datendefinition kommt "von aussen"              *)
+(*                                                            *)
+(*   Bernd Oppolzer - 07.2018                                 *)
+(*                                                            *)
+(**************************************************************)
+(*$A+                                                         *)
+(**************************************************************)
+
+
+
+type PTR_AVLNODE = -> AVLNODE ;
+     AVLNODE = record
+                 PVORG : PTR_AVLNODE ;    // Vorgaenger
+                 PLN : PTR_AVLNODE ;      // linker Nachfolger
+                 PRN : PTR_AVLNODE ;      // rechter Nachfolger
+                 BALANCE : INTEGER ;      // balance lt. Wirth
+                 KEY : VOIDPTR ;          // Schluessel
+                 OBJ : VOIDPTR ;          // eigentliche Info
+               end ;
+
+
+
+function AVLSRCH ( SKEY : VOIDPTR ; function AVLCOMP ( X1 , X2 :
+                 VOIDPTR ) : INTEGER ; var PP : PTR_AVLNODE ; var
+                 HCHANGED : BOOLEAN ; EINFUEGEN : BOOLEAN ) :
+                 PTR_AVLNODE ;
+
+   var P1 : PTR_AVLNODE ;
+       P2 : PTR_AVLNODE ;
+       P : PTR_AVLNODE ;
+       PX : PTR_AVLNODE ;
+       PRES : PTR_AVLNODE ;
+       PVORG_SAVE : PTR_AVLNODE ;
+
+   begin (* AVLSRCH *)
+     P := PP ;
+     if P = NIL then
+       begin
+
+     /************************************************************/
+     /* Der Knoten existiert noch nicht, der gesuchte Schluessel */
+     /* wurde also nicht gefunden.                               */
+     /************************************************************/
+
+         if EINFUEGEN then
+           begin
+
+     /************************************************************/
+     /* Es wird ein neuer Knoten mit diesem Schluessel angelegt  */
+     /* und in den Baum eingefuegt.                              */
+     /************************************************************/
+
+             P := ALLOC ( SIZEOF ( AVLNODE ) ) ;
+             with P -> do
+               begin
+                 PVORG := NIL ;
+                 PLN := NIL ;
+                 PRN := NIL ;
+                 BALANCE := 0 ;
+                 KEY := NIL ;
+                 OBJ := NIL ;
+               end (* with *) ;
+             P -> . KEY := SKEY ;
+             HCHANGED := TRUE ;
+             PRES := P ;
+           end (* then *)
+         else
+           begin
+             PRES := NIL ;
+           end (* else *)
+       end (* then *)
+     else
+       if AVLCOMP ( SKEY , P -> . KEY ) < 0 then
+         begin
+
+     /************************************************************/
+     /* Der gesuchte Schluessel ist kleiner als der Schluessel   */
+     /* des aktuellen Knotens. Es wird also im linken Teilbaum   */
+     /* weitergesucht (rekursiver Aufruf). Nachdem das passiert  */
+     /* ist, wird geprueft, ob sich der linke Teilbaum durch ein */
+     /* eventuelles Einfuegen verlaengert hat.                   */
+     /************************************************************/
+
+           PRES := AVLSRCH ( SKEY , AVLCOMP , P -> . PLN , HCHANGED ,
+                   EINFUEGEN ) ;
+           if not EINFUEGEN and HCHANGED then
+             begin
+               PVORG_SAVE := P -> . PVORG ;
+
+     /**************************************************/
+     /* Falls der linke Teilbaum laenger geworden ist: */
+     /**************************************************/
+
+               case P -> . BALANCE of
+                 1 : begin
+
+     /********************************************/
+     /* bisher war der rechte Teilbaum laenger   */
+     /********************************************/
+
+                       P -> . BALANCE := 0 ;
+                       HCHANGED := FALSE ;
+                     end (* tag/ca *) ;
+                 0 : begin
+
+     /*********************************************/
+     /* bisher waren beide Teilbaeume gleich lang */
+     /*********************************************/
+
+                       P -> . BALANCE := - 1 ;
+                     end (* tag/ca *) ;
+                 otherwise
+                   begin
+
+     /***************************************************/
+     /* Der linke Teilbaum war ohnehin schon laenger.   */
+     /* Jetzt muss der Baum umorganisiert werden!       */
+     /* Zunaechst wird geprueft, ob beim linken Nach-   */
+     /* folger der linke Teilbaum laenger ist (Fall A)  */
+     /* oder der rechte (Fall B). Danach werden die     */
+     /* Verbindungszeiger neu gesetzt.                  */
+     /***************************************************/
+
+                     P1 := P -> . PLN ;
+                     if P1 -> . BALANCE = - 1 then
+                       begin
+
+     /************************************/
+     /* Fall A                           */
+     /************************************/
+
+                         PX := P1 -> . PRN ;
+                         P -> . PLN := PX ;
+                         if PX <> NIL then
+                           PX -> . PVORG := P ;
+                         P1 -> . PRN := P ;
+                         P -> . PVORG := P1 ;
+                         P -> . BALANCE := 0 ;
+                         P := P1 ;
+                       end (* then *)
+                     else
+                       begin
+
+     /************************************/
+     /* Fall B                           */
+     /************************************/
+
+                         P2 := P1 -> . PRN ;
+                         PX := P2 -> . PLN ;
+                         P1 -> . PRN := PX ;
+                         if PX <> NIL then
+                           PX -> . PVORG := P1 ;
+                         P2 -> . PLN := P1 ;
+                         P1 -> . PVORG := P2 ;
+                         PX := P2 -> . PRN ;
+                         P -> . PLN := PX ;
+                         if PX <> NIL then
+                           PX -> . PVORG := P ;
+                         P2 -> . PRN := P ;
+                         P -> . PVORG := P2 ;
+                         if P2 -> . BALANCE = - 1 then
+                           P -> . BALANCE := 1
+                         else
+                           P -> . BALANCE := 0 ;
+                         if P2 -> . BALANCE = 1 then
+                           P1 -> . BALANCE := - 1
+                         else
+                           P1 -> . BALANCE := 0 ;
+                         P := P2 ;
+                       end (* else *) ;
+                     P -> . BALANCE := 0 ;
+                     HCHANGED := FALSE ;
+                   end (* otherw *)
+               end (* case *) ;
+               if P -> . PLN <> NIL then
+                 P -> . PLN -> . PVORG := P ;
+               P -> . PVORG := PVORG_SAVE ;
+             end (* then *)
+         end (* then *)
+       else
+         if AVLCOMP ( SKEY , P -> . KEY ) > 0 then
+           begin
+
+     /************************************************************/
+     /* Der gesuchte Schluessel ist groesser als der Schluessel  */
+     /* des aktuellen Knotens. Es wird also im rechten Teilbaum  */
+     /* weitergesucht (rekursiver Aufruf). Nachdem das passiert  */
+     /* ist, wird geprueft ob sich der rechte Teilbaum durch ein */
+     /* eventuelles Einfuegen verlaengert hat.                   */
+     /************************************************************/
+
+             PRES := AVLSRCH ( SKEY , AVLCOMP , P -> . PRN , HCHANGED ,
+                     EINFUEGEN ) ;
+             if not EINFUEGEN and HCHANGED then
+               begin
+                 PVORG_SAVE := P -> . PVORG ;
+
+     /***************************************************/
+     /* Falls der rechte Teilbaum laenger geworden ist: */
+     /***************************************************/
+
+                 case P -> . BALANCE of
+                   - 1 : begin
+
+     /********************************************/
+     /* bisher war der linke Teilbaum laenger    */
+     /********************************************/
+
+                           P -> . BALANCE := 0 ;
+                           HCHANGED := FALSE ;
+                         end (* tag/ca *) ;
+                   0 : begin
+
+     /*********************************************/
+     /* bisher waren beide Teilbaeume gleich lang */
+     /*********************************************/
+
+                         P -> . BALANCE := 1 ;
+                       end (* tag/ca *) ;
+                   otherwise
+                     begin
+
+     /***************************************************/
+     /* Der rechte Teilbaum war ohnehin schon laenger.  */
+     /* Jetzt muss der Baum umorganisiert werden!       */
+     /* Zunaechst wird geprueft, ob beim rechten Nach-  */
+     /* folger der rechte Teilbaum laenger ist (Fall A) */
+     /* oder der linke (Fall B). Danach werden die      */
+     /* Verbindungszeiger neu gesetzt.                  */
+     /***************************************************/
+
+                       P1 := P -> . PRN ;
+                       if P1 -> . BALANCE = 1 then
+                         begin
+
+     /************************************/
+     /* Fall A                           */
+     /************************************/
+
+                           PX := P1 -> . PLN ;
+                           P -> . PRN := PX ;
+                           if PX <> NIL then
+                             PX -> . PVORG := P ;
+                           P1 -> . PLN := P ;
+                           P -> . PVORG := P1 ;
+                           P -> . BALANCE := 0 ;
+                           P := P1 ;
+                         end (* then *)
+                       else
+                         begin
+
+     /************************************/
+     /* Fall B                           */
+     /************************************/
+
+                           P2 := P1 -> . PLN ;
+                           PX := P2 -> . PRN ;
+                           P1 -> . PLN := PX ;
+                           if PX <> NIL then
+                             PX -> . PVORG := P1 ;
+                           P2 -> . PRN := P1 ;
+                           P1 -> . PVORG := P2 ;
+                           PX := P2 -> . PLN ;
+                           P -> . PRN := PX ;
+                           if PX <> NIL then
+                             PX -> . PVORG := P ;
+                           P2 -> . PLN := P ;
+                           P -> . PVORG := P2 ;
+                           if P2 -> . BALANCE = 1 then
+                             P -> . BALANCE := - 1
+                           else
+                             P -> . BALANCE := 0 ;
+                           if P2 -> . BALANCE = - 1 then
+                             P1 -> . BALANCE := 1
+                           else
+                             P1 -> . BALANCE := 0 ;
+                           P := P2 ;
+                         end (* else *) ;
+                       P -> . BALANCE := 0 ;
+                       HCHANGED := FALSE ;
+                     end (* otherw *)
+                 end (* case *) ;
+                 if P -> . PRN <> NIL then
+                   P -> . PRN -> . PVORG := P ;
+                 P -> . PVORG := PVORG_SAVE ;
+               end (* then *)
+           end (* then *)
+         else
+           begin
+
+     /***********************************************************/
+     /* Schluessel gefunden, diesen Knoten zurueckgeben         */
+     /***********************************************************/
+
+             PRES := P ;
+             if EINFUEGEN then
+               HCHANGED := FALSE ;
+           end (* else *) ;
+     PP := P ;
+     AVLSRCH := PRES ;
+   end (* AVLSRCH *) ;
+
+
+
+begin (* HAUPTPROGRAMM *)
+  
+end (* HAUPTPROGRAMM *) .

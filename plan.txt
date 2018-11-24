@@ -1,9 +1,11 @@
 
 2018.06:
 
-- Testen Pascal auf LCM-Maschine
-- Erweitern AVLTREE fuer Objekt-Einfuegen und -Rueckgabe
 - Cache-Funktionen analog OISCACH
+- Testen Pascal auf LCM-Maschine
+- READ Strings
+- READSTR (READ komplett ueberarbeiten)
+- WRITESTR
 - weitere Doku auf Homepage
 - neue Version: 2018.07
 - Reaktion auf zu lange Strings
@@ -18,6 +20,8 @@
 - externe Funktionen in C
 - DB2 Precompiler
 
+* Fehler: nach erstem -> char (8) kommt Fehler S330 bei folgenden char (8)
+* Erweitern AVLTREE fuer Objekt-Einfuegen und -Rueckgabe
 * neue Version fuer CMS: 2018.06
 * Baeume loeschen in AVLTREE usw.
 ? Fehler bei Compiler und Formatierer raus in diesem Zusammenhang

@@ -628,7 +628,7 @@ static void parm_fehler (int fnr,
 
 
 
-double roundx (double wert, short bereich)
+static double roundx (double wert, short bereich)
 
 /**********************************************************/
 /*                                                        */

@@ -8,39 +8,79 @@ program TESTAVL ( OUTPUT ) ;
 
 
 
+type CACHEPTR = -> CACHEREC ;
+     CACHEREC = record
+                  MAGIC : CHAR ( 8 ) ;     // always 'AVLCACHE'
+                  CNAME : CHAR ( 8 ) ;     // Name of Cache
+                  COUNT : INTEGER ;        // Nbr of entries
+                  PTREE : VOIDPTR ;        // ptr to tree
+                end ;
+
+
 var I : INTEGER ;
     RC : INTEGER ;
     PBAUM : VOIDPTR ;
     PELEMENT : VOIDPTR ;
     PLAUF : VOIDPTR ;
     HCHANGED : BOOLEAN ;
+    GEFUNDEN : BOOLEAN ;
     VVEKTOR : array [ 1 .. 20 ] of INTEGER ;
+    KEYLEN : INTEGER ;
     POBJ : VOIDPTR ;
+    OBJLEN : INTEGER ;
+    POBJLEN : -> INTEGER ;
     PINT : -> INTEGER ;
     S9 : STRING ( 9 ) ;
     PS9 : -> STRING ( 9 ) ;
+    SEQKEY : VOIDPTR ;
+    PKEY : VOIDPTR ;
+    LKEY : INTEGER ;
+    PDAT : VOIDPTR ;
+    LDAT : INTEGER ;
+    CACHENAME : CHAR ( 8 ) ;
+    KEY : CHAR ( 8 ) ;
+    DAT : CHAR ( 12 ) ;
+    PCACHE : CACHEPTR ;
+    PC12 : -> CHAR ( 12 ) ;
+    DUMMYP : VOIDPTR ;
+    DUMMYI : INTEGER ;
 
 
 
-function AVLSRCH ( SKEY : VOIDPTR ; SKEYLEN : INTEGER ; function
-                 AVLCOMP ( X1 , X2 : VOIDPTR ) : INTEGER ; var PP :
-                 VOIDPTR ; var HCHANGED : BOOLEAN ; EINFUEGEN : BOOLEAN
-                 ) : VOIDPTR ;
+function AVLSRCH ( SKEY : VOIDPTR ;           // ptr to key
+                 SKEYLEN : INTEGER ;          // keylen (if deep copy)
+                 var POBJ : VOIDPTR ;         // ptr to obj ptr
+                 var POBJLEN : VOIDPTR ;      // ptr to objlen field
+                 var GEFUNDEN : BOOLEAN ;     // true if found
+                 var PP : VOIDPTR ;           // tree pointer
+                 var HCHANGED : BOOLEAN ;     // height changed
+                 EINFUEGEN : BOOLEAN ;        // if insert then true
+                 function AVLCOMP ( X1 : VOIDPTR ; L1 : INTEGER ; X2 :
+                 VOIDPTR ; L2 : INTEGER ) : INTEGER ) : VOIDPTR ;
 
    EXTERNAL ;
 
 
 
-function AVLGET ( MODUS : CHAR ; START : VOIDPTR ; var RESULT : VOIDPTR
-                ; var PKEY : VOIDPTR ; var POBJ : VOIDPTR ) : INTEGER ;
+function AVLGET ( MODUS : CHAR ;            // mode = F(irst), N(ext)
+                START : VOIDPTR ;           // starting position
+                var RESULT : VOIDPTR ;      // new position
+                var PKEY : VOIDPTR ;        // pointer to key
+                var KEYLEN : INTEGER ;      // keylen
+                var POBJ : VOIDPTR ;        // pointer to obj
+                var OBJLEN : INTEGER )      // objlen
+                : INTEGER ;                 // zero, if OK
 
    EXTERNAL ;
 
 
 
-procedure AVLPRINT ( P : VOIDPTR ; var AUSGFILE : TEXT ; EINRUECK :
-                   INTEGER ; procedure AVLPKEY ( var F : TEXT ; P :
-                   VOIDPTR ) ; PV : VOIDPTR ; RICHTUNG : CHAR ) ;
+procedure AVLPRINT ( P : VOIDPTR ;            // tree to print
+                   var AUSGFILE : TEXT ;      // output file
+                   EINRUECK : INTEGER ;       // indentation count
+                   PV : VOIDPTR ;             // nil on top level call
+                   RICHTUNG : CHAR ;          // blank on top level call
+                   procedure AVLPKEY ( var F : TEXT ; P : VOIDPTR ) ) ;
 
    EXTERNAL ;
 
@@ -52,7 +92,21 @@ procedure AVLFREE ( P : VOIDPTR ) ;
 
 
 
-function COMPARE ( X1 , X2 : VOIDPTR ) : INTEGER ;
+function AVLCACHE ( FUNKCODE : CHAR ( 8 ) ;   // Funktionscode
+                  PHANDLE : VOIDPTR ;         // Cachehandle
+                  var SEQKEY : VOIDPTR ;      // seq. Keyposition,
+                  var PKEY : VOIDPTR ;        // Zeiger auf Key
+                  var LKEY : INTEGER ;        // Laenge Key
+                  var PDAT : VOIDPTR ;        // Zeiger auf Daten
+                  var LDAT : INTEGER )        // Laenge Daten
+                  : INTEGER ;
+
+   EXTERNAL ;
+
+
+
+function COMPARE ( X1 : VOIDPTR ; L1 : INTEGER ; X2 : VOIDPTR ; L2 :
+                 INTEGER ) : INTEGER ;
 
 //**********************************************************************
 // compare function for AVL tree key values (here: integer keys)        
@@ -100,7 +154,8 @@ procedure PRINTELEM ( var F : TEXT ; X : VOIDPTR ) ;
 
 
 
-function COMPARE_S9 ( X1 , X2 : VOIDPTR ) : INTEGER ;
+function COMPARE_S9 ( X1 : VOIDPTR ; L1 : INTEGER ; X2 : VOIDPTR ; L2 :
+                    INTEGER ) : INTEGER ;
 
 //**********************************************************************
 // compare function for AVL tree key values (here: string(9) keys)      
@@ -148,6 +203,37 @@ procedure PRINT_S9 ( var F : TEXT ; X : VOIDPTR ) ;
 
 
 
+procedure INSERT_WORD ;
+
+   type TPINT = -> INTEGER ;
+        TPPINT = -> TPINT ;
+
+   var PPINT : TPPINT ;
+       PINT : TPINT ;
+
+   begin (* INSERT_WORD *)
+     HCHANGED := FALSE ;
+     PELEMENT := AVLSRCH ( ADDR ( S9 ) , SIZEOF ( S9 ) , POBJ , POBJLEN
+                 , GEFUNDEN , PBAUM , HCHANGED , TRUE , COMPARE_S9 ) ;
+     if GEFUNDEN then
+       begin
+         PPINT := POBJ ;
+         PINT := PPINT -> ;
+         PINT -> := PINT -> + 1 ;
+       end (* then *)
+     else
+       begin
+         PINT := ALLOC ( SIZEOF ( INTEGER ) ) ;
+         PINT -> := 1 ;
+         PPINT := POBJ ;
+         PPINT -> := PINT ;
+         PINT := POBJLEN ;
+         PINT -> := SIZEOF ( INTEGER ) ;
+       end (* else *)
+   end (* INSERT_WORD *) ;
+
+
+
 begin (* HAUPTPROGRAMM *)
   VVEKTOR [ 1 ] := 3 ;
   VVEKTOR [ 2 ] := 5 ;
@@ -183,8 +269,8 @@ begin (* HAUPTPROGRAMM *)
   for I := 1 to 20 do
     begin
       HCHANGED := FALSE ;
-      PELEMENT := AVLSRCH ( ADDR ( VVEKTOR [ I ] ) , 0 , COMPARE ,
-                  PBAUM , HCHANGED , TRUE ) ;
+      PELEMENT := AVLSRCH ( ADDR ( VVEKTOR [ I ] ) , 0 , POBJ , POBJLEN
+                  , GEFUNDEN , PBAUM , HCHANGED , TRUE , COMPARE ) ;
     end (* for *) ;
 
   //******************************************************************
@@ -194,7 +280,7 @@ begin (* HAUPTPROGRAMM *)
   WRITELN ;
   WRITELN ( 'print AVL tree using general procedure AVLPRINT' ) ;
   WRITELN ( '===================================================' ) ;
-  AVLPRINT ( PBAUM , OUTPUT , 8 , PRINTELEM , NIL , ' ' ) ;
+  AVLPRINT ( PBAUM , OUTPUT , 8 , NIL , ' ' , PRINTELEM ) ;
 
   //******************************************************************
   // walk thru AVL tree and print values                              
@@ -203,12 +289,13 @@ begin (* HAUPTPROGRAMM *)
   WRITELN ;
   WRITELN ( 'walk thru AVL tree using general procedure AVLGET' ) ;
   WRITELN ( '===================================================' ) ;
-  PLAUF := PBAUM ;
-  RC := AVLGET ( 'F' , PLAUF , PLAUF , PINT , POBJ ) ;
+  RC := AVLGET ( 'F' , PBAUM , PLAUF , PINT , KEYLEN , POBJ , OBJLEN )
+        ;
   while RC = 0 do
     begin
-      WRITELN ( 'aus AVL-Baum: ' , PINT -> ) ;
-      RC := AVLGET ( 'N' , PLAUF , PLAUF , PINT , POBJ ) ;
+      WRITELN ( 'aus AVL-Baum: ' , PINT -> , '   Keylen: ' , KEYLEN ) ;
+      RC := AVLGET ( 'N' , PBAUM , PLAUF , PINT , KEYLEN , POBJ ,
+            OBJLEN ) ;
     end (* while *) ;
   AVLFREE ( PBAUM ) ;
 
@@ -226,7 +313,8 @@ begin (* HAUPTPROGRAMM *)
     begin
       HCHANGED := FALSE ;
       PELEMENT := AVLSRCH ( ADDR ( VVEKTOR [ I ] ) , SIZEOF ( INTEGER )
-                  , COMPARE , PBAUM , HCHANGED , TRUE ) ;
+                  , POBJ , POBJLEN , GEFUNDEN , PBAUM , HCHANGED , TRUE
+                  , COMPARE ) ;
     end (* for *) ;
 
   //******************************************************************
@@ -236,7 +324,7 @@ begin (* HAUPTPROGRAMM *)
   WRITELN ;
   WRITELN ( 'print AVL tree using general procedure AVLPRINT' ) ;
   WRITELN ( '===================================================' ) ;
-  AVLPRINT ( PBAUM , OUTPUT , 8 , PRINTELEM , NIL , ' ' ) ;
+  AVLPRINT ( PBAUM , OUTPUT , 8 , NIL , ' ' , PRINTELEM ) ;
 
   //******************************************************************
   // walk thru AVL tree and print values                              
@@ -245,12 +333,13 @@ begin (* HAUPTPROGRAMM *)
   WRITELN ;
   WRITELN ( 'walk thru AVL tree using general procedure AVLGET' ) ;
   WRITELN ( '===================================================' ) ;
-  PLAUF := PBAUM ;
-  RC := AVLGET ( 'F' , PLAUF , PLAUF , PINT , POBJ ) ;
+  RC := AVLGET ( 'F' , PBAUM , PLAUF , PINT , KEYLEN , POBJ , OBJLEN )
+        ;
   while RC = 0 do
     begin
-      WRITELN ( 'aus AVL-Baum: ' , PINT -> ) ;
-      RC := AVLGET ( 'N' , PLAUF , PLAUF , PINT , POBJ ) ;
+      WRITELN ( 'aus AVL-Baum: ' , PINT -> , '   Keylen: ' , KEYLEN ) ;
+      RC := AVLGET ( 'N' , PBAUM , PLAUF , PINT , KEYLEN , POBJ ,
+            OBJLEN ) ;
     end (* while *) ;
   AVLFREE ( PBAUM ) ;
 
@@ -273,42 +362,24 @@ begin (* HAUPTPROGRAMM *)
   WRITELN ( 'using general procedure AVLSRCH' ) ;
   WRITELN ( '===================================================' ) ;
   PBAUM := NIL ;
-  HCHANGED := FALSE ;
   S9 := 'wovon' ;
-  PELEMENT := AVLSRCH ( ADDR ( S9 ) , SIZEOF ( S9 ) , COMPARE_S9 ,
-              PBAUM , HCHANGED , TRUE ) ;
-  HCHANGED := FALSE ;
+  INSERT_WORD ;
   S9 := 'man' ;
-  PELEMENT := AVLSRCH ( ADDR ( S9 ) , SIZEOF ( S9 ) , COMPARE_S9 ,
-              PBAUM , HCHANGED , TRUE ) ;
-  HCHANGED := FALSE ;
+  INSERT_WORD ;
   S9 := 'nicht' ;
-  PELEMENT := AVLSRCH ( ADDR ( S9 ) , SIZEOF ( S9 ) , COMPARE_S9 ,
-              PBAUM , HCHANGED , TRUE ) ;
-  HCHANGED := FALSE ;
+  INSERT_WORD ;
   S9 := 'reden' ;
-  PELEMENT := AVLSRCH ( ADDR ( S9 ) , SIZEOF ( S9 ) , COMPARE_S9 ,
-              PBAUM , HCHANGED , TRUE ) ;
-  HCHANGED := FALSE ;
+  INSERT_WORD ;
   S9 := 'kann' ;
-  PELEMENT := AVLSRCH ( ADDR ( S9 ) , SIZEOF ( S9 ) , COMPARE_S9 ,
-              PBAUM , HCHANGED , TRUE ) ;
-  HCHANGED := FALSE ;
+  INSERT_WORD ;
   S9 := 'davon' ;
-  PELEMENT := AVLSRCH ( ADDR ( S9 ) , SIZEOF ( S9 ) , COMPARE_S9 ,
-              PBAUM , HCHANGED , TRUE ) ;
-  HCHANGED := FALSE ;
+  INSERT_WORD ;
   S9 := 'muss' ;
-  PELEMENT := AVLSRCH ( ADDR ( S9 ) , SIZEOF ( S9 ) , COMPARE_S9 ,
-              PBAUM , HCHANGED , TRUE ) ;
-  HCHANGED := FALSE ;
+  INSERT_WORD ;
   S9 := 'man' ;
-  PELEMENT := AVLSRCH ( ADDR ( S9 ) , SIZEOF ( S9 ) , COMPARE_S9 ,
-              PBAUM , HCHANGED , TRUE ) ;
-  HCHANGED := FALSE ;
+  INSERT_WORD ;
   S9 := 'schweigen' ;
-  PELEMENT := AVLSRCH ( ADDR ( S9 ) , SIZEOF ( S9 ) , COMPARE_S9 ,
-              PBAUM , HCHANGED , TRUE ) ;
+  INSERT_WORD ;
 
   //******************************************************************
   // print AVL tree using AVLPRINT                                    
@@ -317,7 +388,7 @@ begin (* HAUPTPROGRAMM *)
   WRITELN ;
   WRITELN ( 'print AVL tree using general procedure AVLPRINT' ) ;
   WRITELN ( '===================================================' ) ;
-  AVLPRINT ( PBAUM , OUTPUT , 10 , PRINT_S9 , NIL , ' ' ) ;
+  AVLPRINT ( PBAUM , OUTPUT , 10 , NIL , ' ' , PRINT_S9 ) ;
 
   //******************************************************************
   // walk thru AVL tree and print values                              
@@ -326,12 +397,307 @@ begin (* HAUPTPROGRAMM *)
   WRITELN ;
   WRITELN ( 'walk thru AVL tree using general procedure AVLGET' ) ;
   WRITELN ( '===================================================' ) ;
-  PLAUF := PBAUM ;
-  RC := AVLGET ( 'F' , PLAUF , PLAUF , PS9 , POBJ ) ;
+  PLAUF := NIL ;
+  RC := AVLGET ( 'N' , PBAUM , PLAUF , PS9 , KEYLEN , POBJ , OBJLEN ) ;
   while RC = 0 do
     begin
-      WRITELN ( 'aus AVL-Baum: ' , PS9 -> ) ;
-      RC := AVLGET ( 'N' , PLAUF , PLAUF , PS9 , POBJ ) ;
+      PINT := POBJ ;
+      WRITELN ( 'aus AVL-Baum: ' , PS9 -> : 9 , '   Keylen: ' , KEYLEN
+                , '   Obj: ' , PINT -> ) ;
+      RC := AVLGET ( 'N' , PBAUM , PLAUF , PS9 , KEYLEN , POBJ , OBJLEN
+            ) ;
     end (* while *) ;
   AVLFREE ( PBAUM ) ;
+
+  //******************************************************************
+  // test cache create calls                                          
+  //******************************************************************
+
+  WRITELN ;
+  WRITELN ( 'Test AVLCACHE CREATE' ) ;
+  WRITELN ( '===================================================' ) ;
+  PKEY := ADDR ( CACHENAME ) ;
+  CACHENAME := 'CACHE1' ;
+  RC := AVLCACHE ( 'CREATE' , NIL , SEQKEY , PKEY , LKEY , PDAT , LDAT
+        ) ;
+  WRITELN ( 'RC          = ' , RC ) ;
+  WRITELN ( 'PDAT        = ' , PDAT ) ;
+  WRITELN ( 'LDAT        = ' , LDAT ) ;
+  PCACHE := PDAT ;
+  WRITELN ( 'CACHE.MAGIC = ' , PCACHE -> . MAGIC ) ;
+  WRITELN ( 'CACHE.CNAME = ' , PCACHE -> . CNAME ) ;
+  WRITELN ( 'CACHE.COUNT = ' , PCACHE -> . COUNT ) ;
+  WRITELN ( 'CACHE.PTREE = ' , PCACHE -> . PTREE ) ;
+  WRITELN ;
+  WRITELN ( 'Test AVLCACHE CREATE' ) ;
+  WRITELN ( '===================================================' ) ;
+  PKEY := ADDR ( CACHENAME ) ;
+  CACHENAME := 'CACHE2' ;
+  RC := AVLCACHE ( 'CREATE' , NIL , SEQKEY , PKEY , LKEY , PDAT , LDAT
+        ) ;
+  WRITELN ( 'RC          = ' , RC ) ;
+  WRITELN ( 'PDAT        = ' , PDAT ) ;
+  WRITELN ( 'LDAT        = ' , LDAT ) ;
+  PCACHE := PDAT ;
+  WRITELN ( 'CACHE.MAGIC = ' , PCACHE -> . MAGIC ) ;
+  WRITELN ( 'CACHE.CNAME = ' , PCACHE -> . CNAME ) ;
+  WRITELN ( 'CACHE.COUNT = ' , PCACHE -> . COUNT ) ;
+  WRITELN ( 'CACHE.PTREE = ' , PCACHE -> . PTREE ) ;
+  WRITELN ;
+  WRITELN ( 'Test AVLCACHE CREATE' ) ;
+  WRITELN ( '===================================================' ) ;
+  PKEY := ADDR ( CACHENAME ) ;
+  CACHENAME := 'CACHE1' ;
+  RC := AVLCACHE ( 'CREATE' , NIL , SEQKEY , PKEY , LKEY , PDAT , LDAT
+        ) ;
+  WRITELN ( 'RC          = ' , RC ) ;
+  WRITELN ( 'PDAT        = ' , PDAT ) ;
+  WRITELN ( 'LDAT        = ' , LDAT ) ;
+  PCACHE := PDAT ;
+  WRITELN ( 'CACHE.MAGIC = ' , PCACHE -> . MAGIC ) ;
+  WRITELN ( 'CACHE.CNAME = ' , PCACHE -> . CNAME ) ;
+  WRITELN ( 'CACHE.COUNT = ' , PCACHE -> . COUNT ) ;
+  WRITELN ( 'CACHE.PTREE = ' , PCACHE -> . PTREE ) ;
+
+  //******************************************************************
+  // test put calls                                                   
+  //******************************************************************
+
+  WRITELN ;
+  WRITELN ( 'Test AVLCACHE PUT' ) ;
+  WRITELN ( '===================================================' ) ;
+  KEY := 'BERND' ;
+  DAT := 'OPPOLZER' ;
+  PKEY := ADDR ( KEY ) ;
+  LKEY := 5 ;
+  PDAT := ADDR ( DAT ) ;
+  LDAT := 12 ;
+  RC := AVLCACHE ( 'PUT' , PCACHE , SEQKEY , PKEY , LKEY , PDAT , LDAT
+        ) ;
+  WRITELN ( 'RC          = ' , RC ) ;
+  WRITELN ;
+  WRITELN ( 'Test AVLCACHE PUT' ) ;
+  WRITELN ( '===================================================' ) ;
+  KEY := 'BERND' ;
+  DAT := 'OPPOLZER' ;
+  PKEY := ADDR ( KEY ) ;
+  LKEY := 5 ;
+  PDAT := ADDR ( DAT ) ;
+  LDAT := 12 ;
+  RC := AVLCACHE ( 'PUT' , PCACHE , SEQKEY , PKEY , LKEY , PDAT , LDAT
+        ) ;
+  WRITELN ( 'RC          = ' , RC ) ;
+  WRITELN ;
+  WRITELN ( 'Test AVLCACHE PUT' ) ;
+  WRITELN ( '===================================================' ) ;
+  KEY := 'BERND2' ;
+  DAT := 'OPPOLZER' ;
+  PKEY := ADDR ( KEY ) ;
+  LKEY := 6 ;
+  PDAT := ADDR ( DAT ) ;
+  LDAT := 12 ;
+  RC := AVLCACHE ( 'PUT' , PCACHE , SEQKEY , PKEY , LKEY , PDAT , LDAT
+        ) ;
+  WRITELN ( 'RC          = ' , RC ) ;
+  WRITELN ;
+  WRITELN ( 'Test AVLCACHE PUT' ) ;
+  WRITELN ( '===================================================' ) ;
+  KEY := 'BERND1' ;
+  DAT := 'Oppolzer' ;
+  PKEY := ADDR ( KEY ) ;
+  LKEY := 6 ;
+  PDAT := ADDR ( DAT ) ;
+  LDAT := 12 ;
+  RC := AVLCACHE ( 'PUT' , PCACHE , SEQKEY , PKEY , LKEY , PDAT , LDAT
+        ) ;
+  WRITELN ( 'RC          = ' , RC ) ;
+
+  //******************************************************************
+  // nochmal test create                                              
+  //******************************************************************
+
+  WRITELN ;
+  WRITELN ( 'Test AVLCACHE CREATE' ) ;
+  WRITELN ( '===================================================' ) ;
+  PKEY := ADDR ( CACHENAME ) ;
+  CACHENAME := 'CACHE1' ;
+  RC := AVLCACHE ( 'CREATE' , NIL , SEQKEY , PKEY , LKEY , PDAT , LDAT
+        ) ;
+  WRITELN ( 'RC          = ' , RC ) ;
+  WRITELN ( 'PDAT        = ' , PDAT ) ;
+  WRITELN ( 'LDAT        = ' , LDAT ) ;
+  PCACHE := PDAT ;
+  WRITELN ( 'CACHE.MAGIC = ' , PCACHE -> . MAGIC ) ;
+  WRITELN ( 'CACHE.CNAME = ' , PCACHE -> . CNAME ) ;
+  WRITELN ( 'CACHE.COUNT = ' , PCACHE -> . COUNT ) ;
+  WRITELN ( 'CACHE.PTREE = ' , PCACHE -> . PTREE ) ;
+
+  //******************************************************************
+  // test get                                                         
+  //******************************************************************
+
+  WRITELN ;
+  WRITELN ( 'Test AVLCACHE GET' ) ;
+  WRITELN ( '===================================================' ) ;
+  KEY := 'BERND2' ;
+  PKEY := ADDR ( KEY ) ;
+  LKEY := 6 ;
+  PDAT := NIL ;
+  LDAT := 0 ;
+  RC := AVLCACHE ( 'GET' , PCACHE , SEQKEY , PKEY , LKEY , PDAT , LDAT
+        ) ;
+  WRITELN ( 'RC          = ' , RC ) ;
+  WRITELN ( 'PDAT        = ' , PDAT ) ;
+  WRITELN ( 'LDAT        = ' , LDAT ) ;
+  if RC = 0 then
+    begin
+      PC12 := PDAT ;
+      WRITELN ( 'PC12        = ' , PC12 ) ;
+      WRITELN ( 'PC12 ->     = ' , PC12 -> ) ;
+    end (* then *) ;
+
+  //******************************************************************
+  // test gfirst                                                      
+  //******************************************************************
+
+  WRITELN ;
+  WRITELN ( 'Test AVLCACHE GFIRST und GNEXT' ) ;
+  WRITELN ( '===================================================' ) ;
+  PKEY := NIL ;
+  LKEY := 0 ;
+  PDAT := NIL ;
+  LDAT := 0 ;
+  SEQKEY := NIL ;
+  RC := AVLCACHE ( 'GFIRST' , PCACHE , SEQKEY , PKEY , LKEY , PDAT ,
+        LDAT ) ;
+  WRITELN ( 'RC          = ' , RC ) ;
+  WRITELN ( 'PKEY        = ' , PKEY ) ;
+  WRITELN ( 'LKEY        = ' , LKEY ) ;
+  WRITELN ( 'PDAT        = ' , PDAT ) ;
+  WRITELN ( 'LDAT        = ' , LDAT ) ;
+  WRITELN ( 'SEQKEY      = ' , SEQKEY ) ;
+  if RC = 0 then
+    begin
+      PC12 := PKEY ;
+      WRITELN ( 'PKEY ->     = ' , SUBSTR ( PC12 -> , 1 , LKEY ) ) ;
+      PC12 := PDAT ;
+      WRITELN ( 'PDAT ->     = ' , SUBSTR ( PC12 -> , 1 , LDAT ) ) ;
+    end (* then *) ;
+  while TRUE do
+    begin
+      PKEY := NIL ;
+      LKEY := 0 ;
+      PDAT := NIL ;
+      LDAT := 0 ;
+      RC := AVLCACHE ( 'GNEXT' , PCACHE , SEQKEY , PKEY , LKEY , PDAT ,
+            LDAT ) ;
+      WRITELN ( 'RC          = ' , RC ) ;
+      WRITELN ( 'PKEY        = ' , PKEY ) ;
+      WRITELN ( 'LKEY        = ' , LKEY ) ;
+      WRITELN ( 'PDAT        = ' , PDAT ) ;
+      WRITELN ( 'LDAT        = ' , LDAT ) ;
+      WRITELN ( 'SEQKEY      = ' , SEQKEY ) ;
+      if RC = 0 then
+        begin
+          PC12 := PKEY ;
+          WRITELN ( 'PKEY ->     = ' , SUBSTR ( PC12 -> , 1 , LKEY ) )
+                    ;
+          PC12 := PDAT ;
+          WRITELN ( 'PDAT ->     = ' , SUBSTR ( PC12 -> , 1 , LDAT ) )
+                    ;
+        end (* then *)
+      else
+        break
+    end (* while *) ;
+  WRITELN ;
+  WRITELN ( 'Test AVLCACHE GNEXT only' ) ;
+  WRITELN ( '===================================================' ) ;
+  SEQKEY := NIL ;
+  while TRUE do
+    begin
+      PKEY := NIL ;
+      LKEY := 0 ;
+      PDAT := NIL ;
+      LDAT := 0 ;
+      RC := AVLCACHE ( 'GNEXT' , PCACHE , SEQKEY , PKEY , LKEY , PDAT ,
+            LDAT ) ;
+      WRITELN ( 'RC          = ' , RC ) ;
+      WRITELN ( 'PKEY        = ' , PKEY ) ;
+      WRITELN ( 'LKEY        = ' , LKEY ) ;
+      WRITELN ( 'PDAT        = ' , PDAT ) ;
+      WRITELN ( 'LDAT        = ' , LDAT ) ;
+      WRITELN ( 'SEQKEY      = ' , SEQKEY ) ;
+      if RC = 0 then
+        begin
+          PC12 := PKEY ;
+          WRITELN ( 'PKEY ->     = ' , SUBSTR ( PC12 -> , 1 , LKEY ) )
+                    ;
+          PC12 := PDAT ;
+          WRITELN ( 'PDAT ->     = ' , SUBSTR ( PC12 -> , 1 , LDAT ) )
+                    ;
+        end (* then *)
+      else
+        break
+    end (* while *) ;
+  WRITELN ;
+  WRITELN ( 'Test AVLCACHE TRACE' ) ;
+  WRITELN ( '===================================================' ) ;
+  PKEY := ADDR ( CACHENAME ) ;
+  RC := AVLCACHE ( 'TRACE' , PCACHE , DUMMYP , PKEY , DUMMYI , DUMMYP ,
+        DUMMYI ) ;
+
+  //******************************************************************
+  // nochmal test create                                              
+  //******************************************************************
+
+  WRITELN ;
+  WRITELN ( 'Test AVLCACHE CREATE' ) ;
+  WRITELN ( '===================================================' ) ;
+  PKEY := ADDR ( CACHENAME ) ;
+  CACHENAME := 'CACHE2' ;
+  RC := AVLCACHE ( 'CREATE' , NIL , SEQKEY , PKEY , LKEY , PDAT , LDAT
+        ) ;
+  WRITELN ( 'RC          = ' , RC ) ;
+  WRITELN ( 'PDAT        = ' , PDAT ) ;
+  WRITELN ( 'LDAT        = ' , LDAT ) ;
+  PCACHE := PDAT ;
+  WRITELN ( 'CACHE.MAGIC = ' , PCACHE -> . MAGIC ) ;
+  WRITELN ( 'CACHE.CNAME = ' , PCACHE -> . CNAME ) ;
+  WRITELN ( 'CACHE.COUNT = ' , PCACHE -> . COUNT ) ;
+  WRITELN ( 'CACHE.PTREE = ' , PCACHE -> . PTREE ) ;
+
+  //******************************************************************
+  // test gfirst                                                      
+  //******************************************************************
+
+  WRITELN ;
+  WRITELN ( 'Test AVLCACHE GNEXT on empty cache' ) ;
+  WRITELN ( '===================================================' ) ;
+  SEQKEY := NIL ;
+  while TRUE do
+    begin
+      PKEY := NIL ;
+      LKEY := 0 ;
+      PDAT := NIL ;
+      LDAT := 0 ;
+      RC := AVLCACHE ( 'GNEXT' , PCACHE , SEQKEY , PKEY , LKEY , PDAT ,
+            LDAT ) ;
+      WRITELN ( 'RC          = ' , RC ) ;
+      WRITELN ( 'PKEY        = ' , PKEY ) ;
+      WRITELN ( 'LKEY        = ' , LKEY ) ;
+      WRITELN ( 'PDAT        = ' , PDAT ) ;
+      WRITELN ( 'LDAT        = ' , LDAT ) ;
+      WRITELN ( 'SEQKEY      = ' , SEQKEY ) ;
+      if RC = 0 then
+        begin
+          PC12 := PKEY ;
+          WRITELN ( 'PKEY ->     = ' , SUBSTR ( PC12 -> , 1 , LKEY ) )
+                    ;
+          PC12 := PDAT ;
+          WRITELN ( 'PDAT ->     = ' , SUBSTR ( PC12 -> , 1 , LDAT ) )
+                    ;
+        end (* then *)
+      else
+        break
+    end (* while *) ;
 end (* HAUPTPROGRAMM *) .

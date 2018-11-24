@@ -856,6 +856,23 @@ program PASCALCOMPILER ( INPUT , OUTPUT , PCODE , LISTING , LISTDEF ,
 (*  because only type identifiers were allowed after the            *)
 (*  arrow symbol (no type parameters).                              *)
 (*                                                                  *)
+(*  Same goes for                                                   *)
+(*                                                                  *)
+(*    type CP8 = -> CHAR ( 8 ) ;                                    *)
+(*                                                                  *)
+(*  which is a pointer type declaration; variables of this          *)
+(*  type point to variables of type CHAR (8), which is an           *)
+(*  abbreviation for ARRAY [ 1 .. 8 ] OF CHAR ; you can also        *)
+(*  declare variables directly, like                                *)
+(*                                                                  *)
+(*    var PV8 : -> CHAR ( 8 ) ;                                     *)
+(*                                                                  *)
+(*  and then do something like this:                                *)
+(*                                                                  *)
+(*    PV8 := ALLOC ( 8 ) ;                                          *)
+(*    PV8 -> := 'Oppolzer';                                         *)
+(*    WRITELN ( PV8 -> ) ;                                          *)
+(*                                                                  *)
 (********************************************************************)
 
 
@@ -4685,6 +4702,9 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
           NEWIDP : IDP ;
 
       begin (* MODIFY_TYPE_PARMS *)
+        if FALSE then
+          WRITELN ( TRACEF , 'Start MODIFY_TYPE_PARMS, Loc = ' ,
+                    LINECNT ) ;
         with FSP -> do
           begin
 
@@ -4699,7 +4719,6 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                 return ;
             if FALSE then
               begin
-                WRITELN ( TRACEF , 'modify_type_parms' ) ;
                 WRITELN ( TRACEF , 'fsp.form          = ' , FORM ) ;
                 WRITELN ( TRACEF , 'fsp.scalkind      = ' , SCALKIND )
                           ;
@@ -4822,7 +4841,6 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
         with FSP -> do
           if FALSE then
             begin
-              WRITELN ( TRACEF , 'modify_type_parms' ) ;
               WRITELN ( TRACEF , 'loc               = ' , LINECNT ) ;
               WRITELN ( TRACEF , 'typenew           = ' , TYPENEW ) ;
               WRITELN ( TRACEF , 'fsp.form          = ' , FORM ) ;
@@ -5754,6 +5772,9 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
           IDP_KONST : IDP ;
 
       begin (* TYPE_WITH_PARMS *)
+        if FALSE then
+          WRITELN ( TRACEF , 'Start TYPE_WITH_PARMS, Loc = ' , LINECNT
+                    ) ;
 
         //******************************************************
         // if no sylparent present, then check for              
@@ -5838,18 +5859,19 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
 
         with FSP -> do
           begin
-            if FORM = SCALAR then
-              if FALSE then
-                begin
-                  WRITELN ( TRACEF , 'type_with_parms' ) ;
-                  WRITELN ( TRACEF , 'fsp.form          = ' , FORM ) ;
-                  WRITELN ( TRACEF , 'fsp.scalkind      = ' , SCALKIND
-                            ) ;
-                  WRITELN ( TRACEF , 'fsp.minparamcount = ' ,
-                            MINPARAMCOUNT ) ;
-                  WRITELN ( TRACEF , 'fsp.maxparamcount = ' ,
-                            MAXPARAMCOUNT ) ;
-                end (* then *) ;
+            if FALSE then
+              begin
+                WRITELN ( TRACEF , 'fsp.form          = ' , FORM ) ;
+                if FORM = SCALAR then
+                  begin
+                    WRITELN ( TRACEF , 'fsp.scalkind      = ' ,
+                              SCALKIND ) ;
+                    WRITELN ( TRACEF , 'fsp.minparamcount = ' ,
+                              MINPARAMCOUNT ) ;
+                    WRITELN ( TRACEF , 'fsp.maxparamcount = ' ,
+                              MAXPARAMCOUNT )
+                  end (* then *)
+              end (* then *) ;
             case FORM of
               SCALAR :
                 begin
@@ -6837,16 +6859,15 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                         begin
                           INSYMBOL ;
                           if LCP -> . IDTYPE <> NIL then
-                            LSP2 := LCP -> . IDTYPE ;
-                          TYPE_WITH_PARMS ( FSYS , SYID , LSP2 , FALSE
-                                            ) ;
-                          LCP -> . IDTYPE := LSP2 ;
-                          if LCP -> . IDTYPE <> NIL then
                             begin
-                              if LCP -> . IDTYPE -> . FORM = FILES then
-                                ERROR ( 108 )
-                              else
-                                LSP -> . ELTYPE := LCP -> . IDTYPE
+                              LSP2 := LCP -> . IDTYPE ;
+                              TYPE_WITH_PARMS ( FSYS , SYID , LSP2 ,
+                                                FALSE ) ;
+                              if LSP2 <> NIL then
+                                if LSP2 -> . FORM = FILES then
+                                  ERROR ( 108 )
+                                else
+                                  LSP -> . ELTYPE := LSP2
                             end (* then *)
                         end (* else *)
                     end (* then *)
@@ -10151,7 +10172,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                  ADJUST_STRINGSIZE := FALSE ;
                  if FALSE then
                    begin
-                     WRITELN ( TRACEF , 'work_param_byvalue, loc = ' ,
+                     WRITELN ( TRACEF , 'work_param_byvalue, Loc = ' ,
                                LINECNT ) ;
                      WRITELN ( TRACEF , 'CT_result = ' , CT_RESULT ) ;
                      WRITELN ( TRACEF , 'PARMTYPE -> . FORM = ' ,
@@ -10513,7 +10534,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
             begin (* WORK_PARAMETER *)
               if FALSE then
                 begin
-                  WRITELN ( TRACEF , 'work_parameter, loc = ' , LINECNT
+                  WRITELN ( TRACEF , 'work_parameter, Loc = ' , LINECNT
                             ) ;
                 end (* then *) ;
 
@@ -10583,7 +10604,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                 begin
                   WRITELN ( TRACEF , 'work_parameter, before comptypes'
                             ) ;
-                  WRITELN ( TRACEF , 'loc = ' , LINECNT ) ;
+                  WRITELN ( TRACEF , 'Loc = ' , LINECNT ) ;
                   WRITELN ( TRACEF , 'parmtype.form       = ' ,
                             PARMTYPE -> . FORM ) ;
                   if PARMTYPE -> . FORM = CSTRING then
@@ -15852,7 +15873,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                                  if FALSE then
                                    begin
                                      WRITELN ( TRACEF ,
-                                               'simpleex loc = ' ,
+                                               'simpleex Loc = ' ,
                                                LINECNT : 1 ) ;
                                      WRITELN ( TRACEF ,
                                              'gattr.kind           = '
@@ -16029,7 +16050,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                              begin
                                if FALSE then
                                  begin
-                                   WRITELN ( TRACEF , 'simpleex loc = '
+                                   WRITELN ( TRACEF , 'simpleex Loc = '
                                              , LINECNT : 1 ) ;
                                    WRITELN ( TRACEF ,
                                              'gattr.kind           = '
@@ -16368,7 +16389,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                       begin
                         if FALSE then
                           begin
-                            WRITELN ( TRACEF , 'expression loc = ' ,
+                            WRITELN ( TRACEF , 'expression Loc = ' ,
                                       LINECNT : 1 ) ;
                             WRITELN ( TRACEF , 'CT_result = ' ,
                                       CT_RESULT ) ;
@@ -16475,7 +16496,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                                    TYPTR ) ;
                       if FALSE then
                         begin
-                          WRITELN ( TRACEF , 'loc = ' , LINECNT : 1 ,
+                          WRITELN ( TRACEF , 'Loc = ' , LINECNT : 1 ,
                                     ' CT_result (1) = ' , CT_RESULT ) ;
                         end (* then *) ;
 

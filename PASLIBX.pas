@@ -1077,7 +1077,7 @@ local procedure MODIFY_TREE ( MODUS : CHAR ; HANC_ACT : PHANC ; SIZE :
 
        otherwise
          begin
-
+           
          end (* otherw *) ;
      end (* case *) ;
    end (* MODIFY_TREE *) ;
@@ -2586,21 +2586,17 @@ function $PASSTR3 ( FUNCCODE : INTEGER ; const S1 : STRING ; const S2 :
                begin
                  if L2 <> 256 then
                    EXIT ( 1202 ) ;
-
-if false then
-for i := 1 to l2 do
-writeln ('s2-test: ', ord (s2 [i]));
-
+                 if FALSE then
+                   for I := 1 to L2 do
+                     WRITELN ( 's2-test: ' , ORD ( S2 [ I ] ) ) ;
                  TTAB2 := SUBSTR ( S2 , 1 , 128 ) ;
                  MEMCPY ( ADDR ( TTAB ) , ADDR ( TTAB2 ) , 128 ) ;
                  TTAB2 := SUBSTR ( S2 , 129 , 128 ) ;
                  MEMCPY ( ADDR ( TTAB [ 128 ] ) , ADDR ( TTAB2 ) , 128
                           ) ;
-
-if false then
-for i := 0 to 255 do
-writeln ('ttab-test: ', ord (ttab [i]));
-
+                 if FALSE then
+                   for I := 0 to 255 do
+                     WRITELN ( 'ttab-test: ' , ORD ( TTAB [ I ] ) ) ;
                end (* else *) ;
              $PASSTR3 := S1 ;
              L1 := LENGTH ( S1 ) ;
@@ -2624,5 +2620,5 @@ writeln ('ttab-test: ', ord (ttab [i]));
 
 
 begin (* HAUPTPROGRAMM *)
-
+  
 end (* HAUPTPROGRAMM *) .

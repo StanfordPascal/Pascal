@@ -874,10 +874,18 @@ program PASCALCOMPILER ( INPUT , OUTPUT , PCODE , LISTING , LISTDEF ,
 (*    WRITELN ( PV8 -> ) ;                                          *)
 (*                                                                  *)
 (********************************************************************)
+(*                                                                  *)
+(*  Jan.2019 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*             (berndoppolzer@yahoo.com)                            *)
+(*                                                                  *)
+(*  - Error occured in PCINT.C when CASE Statement had no           *)
+(*    case tags at all (empty case). Fixed.                         *)
+(*                                                                  *)
+(********************************************************************)
 
 
 
-const VERSION = '2018.06' ;
+const VERSION = '2019.01' ;
       MAXLSIZE = 120 ;
       MAXERRNO = 999 ;
 

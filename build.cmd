@@ -1,11 +1,11 @@
 
-rem call pasf passcan
-rem call pasf paslibx
+    call pasf passcan
+    call pasf paslibx
     call pasf pascal1
     call pasf pascal2
 
-rem call pp passcan
-rem call pp paslibx
+    call pp passcan
+    call pp paslibx
     call pp pascal1
     call pp pascal2
 

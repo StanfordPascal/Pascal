@@ -543,6 +543,7 @@ static void load (void *vgs,
    pcode = gs -> code0 + gs -> code_used;
    gs -> code_used ++;
 
+   pcode -> status = 0;                  // incomplete
    pcode -> op = pot - gs -> ot;
    pcode -> t = ' ' ;
    pcode -> t2 = ' ' ;

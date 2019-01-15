@@ -385,9 +385,9 @@ program PCODE_TRANSLATOR ( INPUT , OUTPUT , OBJCODE , ASMOUT , TRACEF )
 
 
 
-const VERSION = '2018.06' ;        // Version for display message
-      VERSION2 = 0x1806 ;          // Version for load module
-      VERSION3 = 'XL2''1806''' ;   // Version for ASMOUT listing
+const VERSION = '2019.01' ;        // Version for display message
+      VERSION2 = 0x1901 ;          // Version for load module
+      VERSION3 = 'XL2''1901''' ;   // Version for ASMOUT listing
       MXADR = 65535 ;
       SHRTINT = 4095 ;
       HALFINT = 32700 ;

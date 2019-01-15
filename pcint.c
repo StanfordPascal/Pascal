@@ -51,7 +51,8 @@
 /*  24.02.2018 ! Oppolzer    ! FTN subroutine calls captured          */
 /*  25.02.2018 ! Oppolzer    ! saving display vector entries corr.    */
 /*  25.02.2018 ! Oppolzer    ! on CUP, RET and UJP (no static backc.) */
-/*  .......... ! ........    ! .....................................  */
+/*  14.01.2019 ! Oppolzer    ! Korrektur bei XJP ohne DEFs            */
+/*  14.01.2019 ! Oppolzer    ! (d.h. leeres Case-Statement)           */
 /*  .......... ! ........    ! .....................................  */
 /*  .......... ! ........    ! .....................................  */
 /*  .......... ! ........    ! .....................................  */
@@ -7736,26 +7737,41 @@ static void int1 (global_store *gs)
 
          label2 = pcode -> x;
 
-         if (pcode -> psect == NULL)
+         if (pcode -> status == 0)
          {
+            int cmin;
+            int cmax;
+            int i;
+            int def_gefunden;
+            int lab_gefunden;
+
+            //**********************************************
+            //   status of pcode will be "complete"
+            //   after the branch table has been built
+            //   even if pcode -> psect remeins NULL
+            //**********************************************
+
+            pcode -> status = 1;
+
             /************************************************/
             /*   build "real" branch table                  */
             /************************************************/
 
-            int cmin;
-            int cmax;
-            int i;
-
             //************************************************
-            // erste DEF Konstante suchen
+            // wir stehen jetzt auf LAB-Befehl, der durch
+            // XJP referenziert wird
             //************************************************
 
             pcodex = pcode1;
-            while (gs -> ot [pcodex -> op] . opnum != XXX_DEF)
-               pcodex ++;
 
-            cmin = pcodex -> q;
-            cmax = pcodex -> q;
+            //************************************************
+            // erster Befehl danach, DEF oder LOC
+            //************************************************
+
+            pcodex ++;
+
+            def_gefunden = 0;
+            lab_gefunden = 0;
 
             //************************************************
             // kleinsten und groessten Wert ermitteln
@@ -7763,57 +7779,86 @@ static void int1 (global_store *gs)
 
             for (;; pcodex ++)
             {
-               if (gs -> ot [pcodex -> op] . opnum == XXX_LAB)
+               switch (gs -> ot [pcodex -> op] . opnum)
                {
-                  pcodez = pcodex;
-                  break;
+                  case XXX_LOC:
+                     break;
+
+                  case XXX_LAB:
+                     pcodez = pcodex;
+                     lab_gefunden = 1;
+                     break;
+
+                  case XXX_DEF:
+                     if (def_gefunden)
+                     {
+                        if (cmin > pcodex -> q)
+                           cmin = pcodex -> q;
+                        if (cmax < pcodex -> q)
+                           cmax = pcodex -> q;
+                     }
+                     else
+                     {
+                        cmin = pcodex -> q;
+                        cmax = pcodex -> q;
+                        def_gefunden = 1;
+                     }
+                     break;
+
+                  default:
+                     break;
                }
 
-               if (gs -> ot [pcodex -> op] . opnum == XXX_DEF)
-               {
-                  if (cmin > pcodex -> q)
-                     cmin = pcodex -> q;
-                  if (cmax < pcodex -> q)
-                     cmax = pcodex -> q;
-               }
+               if (lab_gefunden)
+                  break;
             }
 
-            // printf ("+++ XJP cmin = %d\n", cmin);
-            // printf ("+++ XJP cmax = %d\n", cmax);
-
             //************************************************
-            // alloc fuer branch table
-            //************************************************
-
-            pcode -> psect = malloc ((CIXMAX + 2) * sizeof (int));
-            btable = (int *) (pcode -> psect);
-
-            //************************************************
-            // kleinsten und groessten Wert und
-            // default labels ablegen
+            // nur wenn def_gefunden wird eine Branch-Table
+            // erzeugt ... sonst brauchen wir keine
+            // evtl. dauerhaft anzeigen, dass branchtable
+            // gecheckt und erzeugt oder verworfen wurde
             //************************************************
 
-            btable [0] = cmin;
-            btable [1] = cmax;
-            for (i = 2; i < CIXMAX + 2; i ++)
-               btable [i] = label2;
-
-            //************************************************
-            // konkrete Labels fuer konkrete Werte eintragen
-            //************************************************
-
-            for (pcodex = pcode1;
-                 pcodex <= pcodez;
-                 pcodex ++)
+            if (def_gefunden)
             {
-               if (gs -> ot [pcodex -> op] . opnum == XXX_DEF)
-               {
-                  defconst = pcodex -> q;
-                  btarget = (pcodex + 1) -> q;
-                  btable [defconst - cmin + 2] = btarget;
+               // printf ("+++ XJP cmin = %d\n", cmin);
+               // printf ("+++ XJP cmax = %d\n", cmax);
 
-                  // printf ("+++ XJP defconst = %d\n", defconst);
-                  // printf ("+++ XJP btarget = %d\n", btarget);
+               //************************************************
+               // alloc fuer branch table
+               //************************************************
+
+               pcode -> psect = malloc ((CIXMAX + 2) * sizeof (int));
+               btable = (int *) (pcode -> psect);
+
+               //************************************************
+               // kleinsten und groessten Wert und
+               // default labels ablegen
+               //************************************************
+
+               btable [0] = cmin;
+               btable [1] = cmax;
+               for (i = 2; i < CIXMAX + 2; i ++)
+                  btable [i] = label2;
+
+               //************************************************
+               // konkrete Labels fuer konkrete Werte eintragen
+               //************************************************
+
+               for (pcodex = pcode1;
+                    pcodex <= pcodez;
+                    pcodex ++)
+               {
+                  if (gs -> ot [pcodex -> op] . opnum == XXX_DEF)
+                  {
+                     defconst = pcodex -> q;
+                     btarget = (pcodex + 1) -> q;
+                     btable [defconst - cmin + 2] = btarget;
+
+                     // printf ("+++ XJP defconst = %d\n", defconst);
+                     // printf ("+++ XJP btarget = %d\n", btarget);
+                  }
                }
             }
          }
@@ -7826,7 +7871,9 @@ static void int1 (global_store *gs)
 
          btable = (int *) (pcode -> psect);
 
-         if (wert < btable [0] || wert > btable [1])
+         if (btable == NULL ||
+             wert < btable [0] ||
+             wert > btable [1])
          {
             gs -> ip = label2;
 

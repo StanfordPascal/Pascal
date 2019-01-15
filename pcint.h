@@ -215,8 +215,26 @@ typedef struct
 funtab;
 
 
+//**********************************************************
+//  structure for code of stack machine
+//  op, t, p, q and x according to 197x definition
+//  t2 added for CUP external language
+//  plabel, poper, psect, psource etc. for debugging
+//  purposes ... same goes for loc
+//  status added in 2019 to record if operation is
+//  already fully prepared for execution or not
+//  for example: XJP needs a complete branch table
+//  to be built (or no branch table, if the case
+//  statement is empty). The branch table pointer may
+//  be NULL, so it may not be used to record the status
+//  of the preparation. That's why the status field
+//  has been inserted
+//**********************************************************
+
 typedef struct
 {                 /*******************************/
+   char status;   /* 0 = incomplete              */
+                  /* 1 = complete (z.B. XJP)     */
    char op;       /* operation code              */
    char t;        /* type field                  */
    char t2;       /* type field 2                */

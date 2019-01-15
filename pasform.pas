@@ -3085,11 +3085,14 @@ procedure CHANGE ( FSYS : SYMSET ) ;
      EINR := EINRSAVE ;
      CBLOCK ( FSYS , MAINWORT , 1 ) ;
      OUTSYMBOL ( S ) ;
-     INSYMBOL ;
-     S := SY ;
-     if S <> SYMB_EOF then
-       WRITELN ( '+++ Warnung: Es wurde nicht die' ,
-                 ' ganze Datei verarbeitet.' )
+     if TRUE then
+       begin
+         INSYMBOL ;
+         S := SY ;
+         if S <> SYMB_EOF then
+           WRITELN ( '+++ Warnung: Es wurde nicht die' ,
+                     ' ganze Datei verarbeitet.' )
+       end (* then *)
    end (* CHANGE *) ;
 
 

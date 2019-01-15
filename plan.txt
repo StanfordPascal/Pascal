@@ -1,17 +1,23 @@
 
 2018.06:
 
-- Cache-Funktionen analog OISCACH
-- Testen Pascal auf LCM-Maschine
+* Cache-Funktionen analog OISCACH
+* Testen Pascal auf LCM-Maschine
+* Fehler bei Leerzeile nach EOF (evtl. durch leere Case-Statements ausgeloest)
+* Fehler bei PASFORM (evtl. checken, ob Umgebung fuer PASSCAN passt)
+
+- Fehler bei TESTC1 (Error 145 kommt zu Unrecht)
 - READ Strings
 - READSTR (READ komplett ueberarbeiten)
 - WRITESTR
 - weitere Doku auf Homepage
-- neue Version: 2018.07
+- neue Version: 2019.01
+
 - Reaktion auf zu lange Strings
 - Fehlerbehandlung allgemein vereinheitlichen
 - PrÅfungen bei V-Instruktionen Mainframe vervollstÑndigen
 - neue Version: 2018.08
+
 - Problem bei PASRUNM usw.: Fehler in Pass 2 (254) - ansonsten cool
 - Kann man mit PASMAIN Bootstrap statisch linken ? nur ein Module ??
 - PRR plattformabh. bei PASCAL1 - implied subscriptrange !!

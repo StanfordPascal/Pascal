@@ -5748,6 +5748,18 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                 GEN_STRCONST ( LVALU ) ;
                 WRITELN ( PCODE ) ;
                 return ;
+              end (* then *) ;
+            if ELSP1 -> . FORM = CSTRING then
+              begin
+                WRITELN ( PCODE , ' H,' , ELSP1 -> . SIZE - 4 : 1 ) ;
+                WRITE ( PCODE , CONSTLCOUNTER + 2 : 1 , MN [ 70 ] ) ;
+                WRITELN ( PCODE , ' H,' , LVALU . SVAL -> . LENGTH : 1
+                          ) ;
+                WRITE ( PCODE , CONSTLCOUNTER + 4 : 1 , MN [ 70 ] ) ;
+                WRITE ( PCODE , ' M,' ) ;
+                GEN_STRCONST ( LVALU ) ;
+                WRITELN ( PCODE ) ;
+                return ;
               end (* then *)
           end (* else *)
       end (* WRITEDFC *) ;
@@ -7597,7 +7609,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
           begin
             CONSTANT ( FSYS , FSP , FVALU ) ;
             CT_RESULT := COMPTYPES ( LSP , FSP ) ;
-            if CT_RESULT in [ 1 , 2 , 3 ] then
+            if CT_RESULT in [ 1 , 2 , 3 , 5 ] then
               begin
                 if LSP <> NIL then
                   begin

@@ -1,0 +1,48 @@
+
+Stored Constants of Main Program
+------------------------------------------------------------------------
+X                    constant        0  *nil*
+X1                   constant        0  *nil*
+X2                   constant        0  array 1 10
+                             inxtype =  integer (2)
+                             aeltype =  char
+X3                   constant        0  array 1 10
+                             inxtype =  integer (2)
+                             aeltype =  char
+F                    constant        0  *nil*
+DEFAULT              constant        0  struct aln = 4
+  A                       field      0  integer
+  B                       field      4  string (5)
+                                        endstruct
+DEFAULT              static         16  integer
+DEFAULT              static         20  string (5)
+DEFAULT2             constant       29  struct aln = 2
+  MAXLEN                  field      0  integer (2)
+  ACTLEN                  field      2  integer (2)
+  B                       field      4  array 1 5
+                             inxtype =  integer (2)
+                             aeltype =  char
+                                        endstruct
+DEFAULT2             static         30  integer (2)
+DEFAULT2             static         32  integer (2)
+DEFAULT2             static         34  array 1 5
+                             inxtype =  integer (2)
+                             aeltype =  char
+
+*******************************************
+*** Stanford Pascal List of Definitions ***
+*******************************************
+
+
+Variables of Main Program
+------------------------------------------------------------------------
+R                    auto     1    400  struct aln = 4
+  A                       field      0  integer
+  B                       field      4  string (5)
+                                        endstruct
+S                    auto     1    414  string (20)
+
+**********************************
+*** End of List of Definitions ***
+**********************************
+

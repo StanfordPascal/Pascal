@@ -881,6 +881,38 @@ program PASCALCOMPILER ( INPUT , OUTPUT , PCODE , LISTING , LISTDEF ,
 (*  - Error occured in PCINT.C when CASE Statement had no           *)
 (*    case tags at all (empty case). Fixed.                         *)
 (*                                                                  *)
+(*  - Errors in structured constants involving strings. Fixed.      *)
+(*                                                                  *)
+(*    Example:                                                      *)
+(*                                                                  *)
+(*       type TMYRECORD = record                                    *)
+(*                          A : INTEGER ;                           *)
+(*                          B : STRING ( 5 ) ;                      *)
+(*                        end ;                                     *)
+(*                                                                  *)
+(*       const DEFAULT : TMYRECORD =                                *)
+(*             ( 100 , 'foo' ) ;                                    *)
+(*                                                                  *)
+(*  - No length required (or supported) for STRING constants        *)
+(*                                                                  *)
+(*  - Supporting typed STRING constants by converting them to       *)
+(*    char arrays internally (they are constant and fixed size,     *)
+(*    after all)                                                    *)
+(*                                                                  *)
+(*    Example:                                                      *)
+(*                                                                  *)
+(*       const X : STRING = 'Oppolzer' ;                            *)
+(*                                                                  *)
+(*    is much the same as                                           *)
+(*                                                                  *)
+(*       const X = 'Oppolzer' ;                                     *)
+(*                                                                  *)
+(*    but                                                           *)
+(*                                                                  *)
+(*       const X2 : CHAR ( 10 ) = 'Oppolzer' ;                      *)
+(*                                                                  *)
+(*    is different (8 Bytes Content plus 2 Blanks)                  *)
+(*                                                                  *)
 (********************************************************************)
 
 
@@ -1917,21 +1949,20 @@ var MXINT2 : INTEGER ;
     WLU_CNT : array [ 1 .. 10 , 1 .. 10 ] of INTEGER ;
 
     (******************************************)
-    (* ERROR MESSAGES:                        *)
-    (* ***************                        *)
+    (* errlog stores the error types that     *)
+    (* have occured during compile            *)
+    (* set of errcode = bit mask              *)
     (******************************************)
 
     ERRLOG : set of ERRCODE ;
-    ERRORCNT , WARNCNT : INTEGER ;
 
     (******************************************)
-    (* ERRORS AND WARNINGS COUNTS             *)
+    (* COMPILATION TIME                       *)
     (******************************************)
 
     CTIME : INTEGER ;
 
     (******************************************)
-    (* COMPILATION TIME                       *)
     (* KIND OF ERROR, 'E' / 'W' (WARNING)     *)
     (******************************************)
 
@@ -2252,13 +2283,7 @@ procedure ERROR_POS ( ERRTYPE : CHAR ; FERRNR : ERRCODE ; ERRINFO :
                 , LINEPOS ) ;
      ERRLN := LINENR ;
      if ( ERRTYPE <> 'W' ) or OPT . WARNING then
-       begin
-         ERRLOG := ERRLOG + [ FERRNR ] ;
-         if ERRTYPE <> 'W' then
-           ERRORCNT := ERRORCNT + 1
-         else
-           WARNCNT := WARNCNT + 1 ;
-       end (* then *) ;
+       ERRLOG := ERRLOG + [ FERRNR ] ;
    end (* ERROR_POS *) ;
 
 
@@ -2354,9 +2379,6 @@ procedure GOODBYE ;
      WRITELN ( OUTPUT , '****' : 7 , ' Compiler Summary ****' ) ;
      if OPT . WARNING then
        begin
-         if WARNCNT > 0 then
-           WRITELN ( OUTPUT , '****' : 7 , WARNCNT : 8 ,
-                     ' WARNING MESSAGE(S) ISSUED.' ) ;
          if OPT . MWARN then
            WRITELN ( OUTPUT , '****' : 7 ,
                      ' CONTENTS OF SOURCE LINES OUTSIDE  ' , OPT .
@@ -2389,9 +2411,10 @@ procedure GOODBYE ;
      WRITELN ( LISTING , '****' : 7 , OLDICOUNTER : 8 ,
                ' P_INSTRUCTIONS GENERATED,' , CTIME * 0.001 : 7 : 2 ,
                ' SECONDS IN COMPILATION.' ) ;
-     if ( ERRORCNT > 0 ) or ( WARNCNT > 0 ) then
+     if SCB . UFZAHL + SCB . SFZAHL + SCB . FEZAHL + SCB . WAZAHL <> 0
+     then
        LISTMSGS ;
-     EXIT ( ERRORCNT ) ;
+     EXIT ( SCB . UFZAHL + SCB . SFZAHL + SCB . FEZAHL ) ;
    end (* GOODBYE *) ;
 
 
@@ -3521,7 +3544,7 @@ function GETTYPE ( OPERAND : TTP ) : INTEGER ;
 
      if OPERAND = NIL then
        begin
-         if ERRORCNT = 0 then
+         if SCB . FEZAHL = 0 then
            ERROR ( 401 )
        end (* then *)
      else
@@ -4487,7 +4510,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
           CHARSIZE :
             ;
           otherwise
-            if ERRORCNT = 0 then
+            if SCB . FEZAHL = 0 then
               ERROR ( 401 ) ;
         end (* case *) ;
       end (* ALIGN *) ;
@@ -6057,7 +6080,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
 
 
    procedure TYP ( FSYS : SYMSET ; var FSP : TTP ; var FSIZE :
-                 ADDRRANGE ) ;
+                 ADDRRANGE ; CONFORMANT : BOOLEAN ) ;
 
       var LSP , LSP1 , LSP2 : TTP ;
           OLDTOP : DISPRANGE ;
@@ -6448,7 +6471,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                    INSYMBOL ;
                  end (* then *) ;
                TYPE_WITH_PARMS ( FSYS + [ SYRPARENT ] , SYID , FSP ,
-                                 FALSE ) ;
+                                 CONFORMANT ) ;
                if not ( SY in FSYS ) then
                  begin
                    ERROR ( 6 ) ;
@@ -6611,7 +6634,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                  ERROR ( 5 ) ;
                if FIRSTFLD = NIL then
                  FIRSTFLD := NXT1 ;
-               TYP ( FSYS + [ SYCASE , SYSEMICOLON ] , LSP , LSIZE ) ;
+               TYP ( FSYS + [ SYCASE , SYSEMICOLON ] , LSP , LSIZE ,
+                     FALSE ) ;
                LALNFCT := 1 ;
                if LSP <> NIL then
                  LALNFCT := LSP -> . ALN ;
@@ -6997,7 +7021,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                         else
                           ERROR ( 8 ) ;
                         PACKDATA := PACKST2 ;
-                        TYP ( FSYS , LSP , LSIZE ) ;
+                        TYP ( FSYS , LSP , LSIZE , FALSE ) ;
                         ARRAY_ERROR := FALSE ;
                         if LSP <> NIL then
                           begin
@@ -7206,7 +7230,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                           INSYMBOL
                         else
                           ERROR ( 8 ) ;
-                        TYP ( FSYS , LSP1 , LSIZE ) ;
+                        TYP ( FSYS , LSP1 , LSIZE , FALSE ) ;
                         LSP := PTYPE_TEXT ;
 
         (**************************)
@@ -7552,7 +7576,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
            CT_RESULT := COMPTYPES ( ELSP , ELSP1 ) ;
            if not ( CT_RESULT in [ 1 , 2 , 3 ] ) then
              begin
-               ERROR ( 145 ) ;
+               ERROR ( 740 ) ;
                ELSP1 := NIL
              end (* then *) ;
            if ELSP1 <> NIL then
@@ -7622,7 +7646,10 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
             else
               begin
                 if not LSP -> . ERRORFLAG then
-                  ERROR ( 145 ) ;
+                  begin
+                    WRITE ( TRACEF , 'ct_result = ' , CT_RESULT ) ;
+                    ERROR ( 741 ) ;
+                  end (* then *) ;
                 FSP := NIL
               end (* else *)
           end (* then *)
@@ -7644,7 +7671,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                 if LSP -> . FORM = POWER then
                   ELT := LSP -> . ELSET
                 else
-                  ERROR ( 145 ) ;
+                  ERROR ( 742 ) ;
               PSI := PSIGLOB ;
               PSI -> . ELEMCOUNT := 0 ;
               PSI -> . SETMIN := 0 ;
@@ -7659,7 +7686,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                   CONSTANT ( FSYS + [ SYRBRACK , SYCOMMA , SYDOTDOT ] ,
                              LSP1 , LVALU ) ;
                   if COMPTYPES ( LSP1 , ELT ) <> 1 then
-                    ERROR ( 145 ) ;
+                    ERROR ( 743 ) ;
                   ELT := LSP1 ;
                   NOCHMAL := SET_CONST_PART ( ELT , LVALU , PSI ) ;
                 until not NOCHMAL ;
@@ -7820,7 +7847,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                                                    LVALU ) ;
                                           if COMPTYPES ( IDTYPE , LSP1
                                           ) <> 1 then
-                                            ERROR ( 145 ) ;
+                                            ERROR ( 744 ) ;
                                         end (* else *) ;
                                       if SY = SYCOMMA then
                                         INSYMBOL
@@ -7867,6 +7894,11 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
           LVALU : XCONSTANT ;
           SKID : ALPHA ;
           SKLC : ADDRRANGE ;
+          STRING_GEF : BOOLEAN ;
+
+      const SINDEXTYPE : TYPEREC =
+            ( HINTSIZE , HINTSIZE , FALSE , SUBRANGE , NIL , ( ' ' ,
+              XINT , 1 ) , ( ' ' , XINT , 254 ) ) ;
 
       begin (* CONSTDECLARATION *)
         LISTTAG := 'C' ;
@@ -7878,12 +7910,31 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
         while SY = IDENT do
           begin
             SKID := SYID ;
+            STRING_GEF := FALSE ;
             INSYMBOL ;
             if SY = SYCOLON then
               begin
                 INSYMBOL ;
                 EXTUSED := TRUE ;
-                TYP ( FSYS + [ SYEQOP ] , LSP , SKLC ) ;
+                TYP ( FSYS + [ SYEQOP ] , LSP , SKLC , TRUE ) ;
+
+        //************************************************
+        // if type = string, show warning, if length was  
+        // specified ... and change type variable lsp     
+        // to nil (string size etc. is derived from the   
+        // string constant); only string_gef is set to tru
+        //e                                               
+        //************************************************
+
+                if LSP <> NIL then
+                  if LSP -> . FORM = CSTRING then
+                    begin
+                      STRING_GEF := TRUE ;
+                      if LSP -> . SIZE <> 4 then
+                        ERROR_POS ( 'W' , 339 , ' ' , SCB . LINENR ,
+                                    SCB . LINEPOS ) ;
+                      LSP := NIL ;
+                    end (* then *) ;
 
         //************************************************
         // print constant and type                        
@@ -7926,6 +7977,17 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                         VALUES := LVALU
                       end (* else *)
                   end (* with *) ;
+
+        //************************************************
+        // if type = string was found above and no string 
+        // constant, then show error here                 
+        //************************************************
+
+                if STRING_GEF then
+                  begin
+                    if LVALU . CONSTCLASS <> STRG then
+                      ERROR ( 129 )
+                  end (* then *) ;
                 ENTERID ( LCP ) ;
               end (* then *)
             else
@@ -7973,7 +8035,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
               INSYMBOL
             else
               ERROR ( 16 ) ;
-            TYP ( FSYS + [ SYSEMICOLON ] , LSP , LSIZE ) ;
+            TYP ( FSYS + [ SYSEMICOLON ] , LSP , LSIZE , FALSE ) ;
             ENTERID ( LCP ) ;
             LCP -> . IDTYPE := LSP ;
 
@@ -8104,7 +8166,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
             INSYMBOL
           else
             ERROR ( 5 ) ;
-          TYP ( FSYS + [ SYSEMICOLON ] + TYPEDELS , LSP , LSIZE ) ;
+          TYP ( FSYS + [ SYSEMICOLON ] + TYPEDELS , LSP , LSIZE , FALSE
+                ) ;
           while NXT1 <> NIL do
             with NXT1 -> do
               begin
@@ -8234,7 +8297,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
             INSYMBOL
           else
             ERROR ( 5 ) ;
-          TYP ( FSYS + [ SYSEMICOLON ] + TYPEDELS , LSP , LSIZE ) ;
+          TYP ( FSYS + [ SYSEMICOLON ] + TYPEDELS , LSP , LSIZE , FALSE
+                ) ;
           while NXT1 <> NIL do
             with NXT1 -> do
               begin
@@ -8489,6 +8553,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
          //****************************************************
 
 
+            var CONFORMANT : BOOLEAN ;
+
             begin (* OTHER_PARAMETER *)
               if SY = SYVAR then
                 begin
@@ -8573,14 +8639,15 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
               //************************************************
               // allow conformant strings for var parameters    
               // (see parameter on type_with_parms)             
+              // and const parameters                           
               // 06.01.2018                                     
               //************************************************
 
+                      CONFORMANT := LKIND in [ VARPARM , CONSTPARM ] ;
                       INSYMBOL ;
                       TYPE_WITH_PARMS ( FSYS + [ SYSEMICOLON ,
-                                        SYRPARENT ] , SYID , LSP , (
-                                        LKIND in [ VARPARM , CONSTPARM
-                                        ] ) ) ;
+                                        SYRPARENT ] , SYID , LSP ,
+                                        CONFORMANT ) ;
                       if LSP <> NIL then
                         if ( LKIND = NORMALVAR ) then
                           begin
@@ -9454,7 +9521,12 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                            if TYPTR -> . FORM = POWER then
                              GEN_LCA_S ( TYPTR -> . ELSET , CVAL )
                            else
-                             ERROR ( 416 ) ;
+                             if TYPTR -> . FORM = CSTRING then
+                               begin
+                                 GEN_LCA_M ( CVAL )
+                               end (* then *)
+                             else
+                               ERROR ( 416 ) ;
                    VARBL : case ACCESS of
                              DRCT : GEN2 ( PCODE_LDA , VLEVEL , DPLMT )
                                            ;
@@ -11289,7 +11361,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
 
                            begin
                              if COMPTYPES ( LSP , RWFILE ) <> 1 then
-                               ERROR ( 145 ) ;
+                               ERROR ( 745 ) ;
                              GEN2 ( PCODE_LDC , 1 , RWFILE -> . SIZE )
                                     ;
                              EXTUSED := TRUE ;
@@ -17510,7 +17582,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                           STORE ( LATTR ) ;
                         end (* then *)
                       else
-                        ERROR ( 145 )
+                        ERROR ( 746 )
                 end (* then *)
               else
                 begin
@@ -17599,7 +17671,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                             end (* else *) ;
                         end (* then *)
                       else
-                        ERROR ( 145 )
+                        ERROR ( 747 )
                 end (* then *)
               else
                 begin
@@ -18838,8 +18910,8 @@ procedure ENTERSTDTYPES ;
          ALFATYPE : TYPEREC =
          ( ALFALNGTH , CHARSIZE , FALSE , ARRAYS , NIL , NIL ) ;
          ALFAINX : TYPEREC =
-         ( INTSIZE , INTSIZE , FALSE , SUBRANGE , NIL , ( ' ' , XINT ,
-           1 ) , ( ' ' , XINT , ALFALNGTH ) ) ;
+         ( HINTSIZE , HINTSIZE , FALSE , SUBRANGE , NIL , ( ' ' , XINT
+           , 1 ) , ( ' ' , XINT , ALFALNGTH ) ) ;
          UTYP : IDENTIFIER =
          ( BLANKID , NIL , NIL , NIL , 0 , TYPES ) ;
          UCST : IDENTIFIER =
@@ -19807,8 +19879,6 @@ procedure INITSCALARS ;
      OPEN_RECORD := NIL ;
      PROGNAME := '$PASMAIN' ;
      PROCLAB := 0 ;
-     ERRORCNT := 0 ;
-     WARNCNT := 0 ;
      ERRKIND := 'E' ;
      EXTUSED := FALSE ;
      PACKDATA := FALSE ;

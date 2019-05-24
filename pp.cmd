@@ -1,6 +1,7 @@
 @echo off
 set dd_input=%1.pas
 set dd_listing=%1.lis
+set dd_output=
 rem set dd_listing=*stdout*
 set dd_pcode=%1.prr
 set dd_dbginfo=%1.dbginfo

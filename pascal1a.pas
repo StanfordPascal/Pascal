@@ -52,325 +52,542 @@ program PASCALCOMPILER ( INPUT , OUTPUT , PCODE , LISTING , LISTDEF ,
 (*              D-70771 Leinfelden-Echterdingen                     *)
 (*              Germany                                             *)
 (*                                                                  *)
-(*==================================================================*)
+(********************************************************************)
 (*                                                                  *)
-(* 02FEB2007 - Changes by Dave Edwards to use hex codes C0,D0       *)
-(*    (was 8B,9B) for EBCDIC brace characters (curly brackets).     *)
-(*    New constants CHLBRACE and CHRBRACE defined.                  *)
-(*    VERSION date left unchanged as MAY -82.                       *)
-(*    Hex C0,D0 seem to be the codes used by most curr. software    *)
-(*    such as tn3270 clients, Ascii-EBCDIC translate tables, etc.   *)
-(*    and conform to the standard IBM-037 US code page.             *)
-(*    See additional notes in file ccde:pascal_info.txt .           *)
-(*  - Also, in INITTABLES procedure, set UPSHIFT to only upshift    *)
-(*    lowercase chars (e.g. exclude tilde, which is in the range    *)
-(*    a to z), and add comments re. definition of SSY array.        *)
-(*    Note that curly brackets and backslash are within the         *)
-(*    range A to Z in the EBCDIC character set.                     *)
-(*  - Also fix spacing of text for BGN output record: change        *)
-(*    TIME:9 to TIME:8. Was causing last char of year to be         *)
-(*    truncated, in the info text at the start of $PASMAIN          *)
-(*    csect in the object file.                                     *)
-(*  - Source changes are identified by flag DE near beginning       *)
-(*    of lines.                                                     *)
-(*    (Write date of previous source file: 14sep1983.)              *)
-(*                                                                  *)
-(*==================================================================*)
-(*                                                                  *)
-(*  Oct.2011 - Extensions to the Compiler by Bernd Oppolzer         *)
-(*             (berndoppolzer@yahoo.com)                            *)
-(*                                                                  *)
-(*    PASCAL 1982 ported to VM370 R6 on Hercules (from MUSIC/SP)    *)
-(*                                                                  *)
-(*    Summary of Changes:                                           *)
-(*                                                                  *)
-(*    - another substitute for brackets: (. .) - not only (/ /)     *)
-(*                                                                  *)
-(*    - substitute for pointer symbol: ->                           *)
-(*                                                                  *)
-(*    - comments like PL/1 and C: /* ... */                         *)
-(*                                                                  *)
-(*    - year 2000 problem fixed (still TIME DEC used in PASMONN)    *)
-(*                                                                  *)
-(*    - new loop control statements: BREAK and CONTINUE             *)
-(*                                                                  *)
-(*    - RETURN statement                                            *)
-(*                                                                  *)
-(*  to be done:                                                     *)
-(*                                                                  *)
-(*    - allow shorter String constants to be assigned               *)
-(*      (padded with blanks)                                        *)
-(*                                                                  *)
-(*    - allow static definitions (local to procs and functions)     *)
-(*                                                                  *)
-(*==================================================================*)
-(*                                                                  *)
-(*  Aug.2016 - Extensions to the Compiler by Bernd Oppolzer         *)
-(*             (berndoppolzer@yahoo.com)                            *)
-(*                                                                  *)
-(*  to support the runtime extensions (PASCSP) regarding            *)
-(*  textfile I/O, the implicit RESET on INPUT on the beginning      *)
-(*  of the MAIN function has been removed; RESET is now done        *)
-(*  when the first READ operation is encountered. That means        *)
-(*  that the char variable INPUT -> is undefined until the          *)
-(*  end of the first READ operation                                 *)
-(*                                                                  *)
-(*==================================================================*)
-(*                                                                  *)
-(*  Sep.2016 - Extensions to the Compiler by Bernd Oppolzer         *)
-(*             (berndoppolzer@yahoo.com)                            *)
-(*                                                                  *)
-(*  a) shorter strings allowed on const initializers                *)
-(*     (on structured - typed - constants)                          *)
-(*                                                                  *)
-(*  b) shorter string constants on assignments                      *)
-(*                                                                  *)
-(*  c) even strings of length 1 (single chars) and zero ('')        *)
-(*                                                                  *)
-(*  d) prepared for new typeclass (charstring) -                    *)
-(*     but not yet used or implemented; could make some             *)
-(*     things simpler                                               *)
-(*                                                                  *)
-(*  e) using this: IDLNGTH changed from 12 to 20,                   *)
-(*     so that the first 20 characters are significant on           *)
-(*     identifiers (not only 12). The initializers needed           *)
-(*     not be changed; although they are still 12 bytes long,       *)
-(*     the fields are filled with blanks up to length 20            *)
-(*                                                                  *)
-(*  f) correct output to P-Code file, where necessary;              *)
-(*     format changes observed on CST, ENT and BGN                  *)
-(*                                                                  *)
-(*  g) no changes so far to caching routines etc.                   *)
+(*  History records - newest first                                  *)
 (*                                                                  *)
 (********************************************************************)
 (*                                                                  *)
-(*  Sep.2016 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*  May 2019 - Extensions to the Compiler by Bernd Oppolzer         *)
 (*             (berndoppolzer@yahoo.com)                            *)
 (*                                                                  *)
-(*  New functions added to support the construction of a new        *)
-(*  storage management library using Pascal:                        *)
+(*  - Code generation errors with builtin functions LENGTH          *)
+(*    and MAXLENGTH, when the lengths are known at compile time     *)
 (*                                                                  *)
-(*  - ADDR to get the address of any variable;                      *)
-(*    the result of this function is a pointer without type         *)
-(*    (aka void pointer) similar to the NIL pointer,                *)
-(*    which is compatible with every other pointer type             *)
+(*  When the LENGTH or MAXLENGTH function was related to an         *)
+(*  array element, the compiler generated code for the              *)
+(*  addressing of the element, although not needed. What made       *)
+(*  things worse: this code left an unneeded item (the address      *)
+(*  of the element) on the stack, which was not removed and led     *)
+(*  to problems in the PASCAL2 code generation (the PCINT           *)
+(*  interpreter doesn't complain, although the memory leak          *)
+(*  - or stack leak in this case - is clearly visible in            *)
+(*  debug mode).                                                    *)
 (*                                                                  *)
-(*  - PTRADD to add an integer expression to a pointer              *)
-(*    (of any type) - this adds addresses in contrast to C,         *)
-(*    where element sizes are added; PTRADD without a               *)
-(*    second argument (which is the same as PTRADD (X,0))           *)
-(*    can be used to convert a typed pointer to a void pointer      *)
+(*  The solution found is:                                          *)
 (*                                                                  *)
-(*  - PTRDIFF, that subtracts two pointers (of any type),           *)
-(*    giving an integer result                                      *)
+(*  to invalidate the generated code using two new P-Code           *)
+(*  instructions XBG and XEN.                                       *)
 (*                                                                  *)
-(*  - SIZEOF, which works much the same as the C function           *)
-(*    of the same name; as with C, you can specify a variable       *)
-(*    as argument or a type identifier                              *)
+(*  XBG <seqno> is generated, when a critical code sequence         *)
+(*  starts.                                                         *)
 (*                                                                  *)
-(*  - PTR2INT, which converts a pointer to an integer value         *)
+(*  If later the compiler decides that the code starting from       *)
+(*  the last scheduled XBG is not needed, it generates a            *)
+(*  XEN <seqno>,0 ... otherwise XEN <seqno>,1                       *)
+(*                                                                  *)
+(*  It is important that the compiler knows the seqno of the        *)
+(*  XBG to write it on the XEN ... and: it should write the         *)
+(*  XEN unconditionally, because PASCAL2 and the P-Code             *)
+(*  interpreter will look for it (if no XEN for a particular        *)
+(*  XBG is found, the code is generated, that is, an                *)
+(*  XEN <seqno>,1 is implied).                                      *)
 (*                                                                  *)
 (********************************************************************)
 (*                                                                  *)
-(*  Sep.2016 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*  May 2019 - Extensions to the Compiler by Bernd Oppolzer         *)
 (*             (berndoppolzer@yahoo.com)                            *)
 (*                                                                  *)
-(*  New keyword MODULE; a module is a collection of                 *)
-(*  external procedures without a main program. The keyword         *)
-(*  MODULE replaces the keyword PROGRAM on modules.                 *)
-(*  It sets the compiler switch X implicitly and enforces that      *)
-(*  the main block (which still has to be coded) is empty,          *)
-(*  that is: "begin end.". No main block is generated, so           *)
-(*  it is now possible to add multiply modules to a Pascal          *)
-(*  program without name conflicts.                                 *)
+(*  - Some errors were reported by Ed Lott (thanks)                 *)
+(*                                                                  *)
+(*    a) when the compiler generated calls to the CSP WRV           *)
+(*       (write strings), it did not make sure that the             *)
+(*       FCB address was loaded (see PASCAL2, LOADFCBADDRESS).      *)
+(*       Corrected 13.05.2019                                       *)
+(*                                                                  *)
+(*    b) when accessing static strings, the compiler did not        *)
+(*       add the offset of the string in the STATIC CSECT           *)
+(*       during address computation (in some situations)            *)
+(*       Corrected 14.05.2019                                       *)
+(*                                                                  *)
+(*    c) when accessing the length field of a string,               *)
+(*       the compiler did not compute the address correctly         *)
+(*       (especially when the string was an array element).         *)
+(*       The function GETADR2 must be used in this case.            *)
+(*       Corrected 15.05.2019                                       *)
+(*                                                                  *)
+(*    d) wrong code was generated, when a string array              *)
+(*       component was passed to a procedure (again, using          *)
+(*       GETADR2 solved the problem).                               *)
+(*       Corrected 17.05.2019                                       *)
 (*                                                                  *)
 (********************************************************************)
 (*                                                                  *)
-(*  Sep.2016 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*  Feb.2019 - Extensions to the Compiler by Bernd Oppolzer         *)
 (*             (berndoppolzer@yahoo.com)                            *)
 (*                                                                  *)
-(*  Standard functions and procedures may not only be               *)
-(*  implemented by inline code or CSP calls; another                *)
-(*  possible (new) technique is to call an external function        *)
-(*  in a library module.                                            *)
-(*                                                                  *)
-(*  To support this, several atributes have been added to the       *)
-(*  internal Standard procedure description:                        *)
-(*                                                                  *)
-(*     STANDARD :                                                   *)
-(*       ( KEY : INTEGER ;                                          *)
-(*         LIBNAME : EXTNAMTP ;                                     *)
-(*         FUNCCODE : INTEGER ;                                     *)
-(*         PARMCNT : INTEGER ;                                      *)
-(*         PROCTYP : CHAR ) ;                                       *)
-(*                                                                  *)
-(*   KEY is the only attribute that was present before and          *)
-(*   is the number of the CSP call.                                 *)
-(*                                                                  *)
-(*   If LIBNAME is not blank, the Standard Proc is implemented      *)
-(*   by a library function call. It gets the FUNCCODE as first      *)
-(*   parameter; PARMCNT and PROCTYP are other attributes that       *)
-(*   are needed to set up the CUP call for the library function     *)
+(*  - Fields of builtin record OSPARM renamed to PSTRING and        *)
+(*    PLENGTH (instead of STRING and LENGTH) due to name            *)
+(*    collision with new builtin type STRING and builtin            *)
+(*    function LENGTH (no real problem, but it is much nicer        *)
+(*    this way)                                                     *)
 (*                                                                  *)
 (********************************************************************)
 (*                                                                  *)
-(*  Sep.2016 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*  Jan.2019 - Extensions to the Compiler by Bernd Oppolzer         *)
 (*             (berndoppolzer@yahoo.com)                            *)
 (*                                                                  *)
-(*  Four new standard functions have been added using               *)
-(*  the library function facility:                                  *)
+(*  - Error occured in PCINT.C when CASE Statement had no           *)
+(*    case tags at all (empty case). Fixed.                         *)
 (*                                                                  *)
-(*  - ALLOC, which gets a length and returns a pointer              *)
-(*    to a new area of that length                                  *)
+(*  - Errors in structured constants involving strings. Fixed.      *)
 (*                                                                  *)
-(*  - ALLOCX, which does the same, but does not use the             *)
-(*    (yet to come) sophisticated logic like LE, but does a pure    *)
-(*    GETMAIN on every ALLOCX call, which is simple, but slow       *)
+(*    Example:                                                      *)
 (*                                                                  *)
-(*  - FREE, which frees the storage retrieved by ALLOC              *)
+(*       type TMYRECORD = record                                    *)
+(*                          A : INTEGER ;                           *)
+(*                          B : STRING ( 5 ) ;                      *)
+(*                        end ;                                     *)
 (*                                                                  *)
-(*  - FREEX, which frees the storage retrieved by ALLOCX,           *)
-(*    that is: FREEMAIN                                             *)
+(*       const DEFAULT : TMYRECORD =                                *)
+(*             ( 100 , 'foo' ) ;                                    *)
 (*                                                                  *)
-(*  The four new functions are implemented in the module            *)
-(*  PASLIBX, seperate from the compiler (in Pascal)                 *)
+(*  - No length required (or supported) for STRING constants        *)
+(*                                                                  *)
+(*  - Supporting typed STRING constants by converting them to       *)
+(*    char arrays internally (they are constant and fixed size,     *)
+(*    after all)                                                    *)
+(*                                                                  *)
+(*    Example:                                                      *)
+(*                                                                  *)
+(*       const X : STRING = 'Oppolzer' ;                            *)
+(*                                                                  *)
+(*    is much the same as                                           *)
+(*                                                                  *)
+(*       const X = 'Oppolzer' ;                                     *)
+(*                                                                  *)
+(*    but                                                           *)
+(*                                                                  *)
+(*       const X2 : CHAR ( 10 ) = 'Oppolzer' ;                      *)
+(*                                                                  *)
+(*    is different (8 Bytes Content plus 2 Blanks)                  *)
 (*                                                                  *)
 (********************************************************************)
 (*                                                                  *)
-(*  Oct.2016 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*  Jul.2018 - Extensions to the Compiler by Bernd Oppolzer         *)
 (*             (berndoppolzer@yahoo.com)                            *)
 (*                                                                  *)
-(*  New functions:                                                  *)
+(*  Error fixed: negative constants on CASE threw range errors;     *)
+(*  this has been corrected ... see test program TESTCASE.PAS       *)
+(*  (discovered while working on module AVLTREE.PAS)                *)
 (*                                                                  *)
-(*  - PTRCAST as a substitute for PTRADD with only one              *)
-(*    argument; used to cast pointers of different types            *)
+(*  Allow types with parameters being specified in pointer type     *)
+(*  declarations, for example:                                      *)
 (*                                                                  *)
-(*  - CHKHEAP to check the integrity of heap segments               *)
+(*    var S1 : STRING ( 9 ) ;                                       *)
+(*        SP1 : -> STRING ( 9 ) ;                                   *)
 (*                                                                  *)
-(*  - FILEFCB returns the pointer to the file control block         *)
-(*    of the specified file (which contains the DCB at              *)
-(*    position 36)                                                  *)
+(*  the second declaration (SP1) was not possible before,           *)
+(*  because only type identifiers were allowed after the            *)
+(*  arrow symbol (no type parameters).                              *)
 (*                                                                  *)
-(*  - Pointers of any type can be written directly using            *)
-(*    WRITE; the output format is 8 hex digits                      *)
+(*  Same goes for                                                   *)
 (*                                                                  *)
-(*  Other changes:                                                  *)
+(*    type CP8 = -> CHAR ( 8 ) ;                                    *)
 (*                                                                  *)
-(*  The CSECTs of the internal procedures are now called            *)
-(*  $PRVxxxx (xxxx is numbered starting from 0002).                 *)
+(*  which is a pointer type declaration; variables of this          *)
+(*  type point to variables of type CHAR (8), which is an           *)
+(*  abbreviation for ARRAY [ 1 .. 8 ] OF CHAR ; you can also        *)
+(*  declare variables directly, like                                *)
 (*                                                                  *)
-(*  For external modules, the CSECT names of the internal           *)
-(*  procedures are derived from the module name, for example:       *)
-(*  module $PASLIBX --> CSECT names $LIBXxxx                        *)
+(*    var PV8 : -> CHAR ( 8 ) ;                                     *)
 (*                                                                  *)
-(*  Only procs and funcs at level 1 are visible from outside        *)
-(*  and keep their original names                                   *)
+(*  and then do something like this:                                *)
 (*                                                                  *)
-(*  If the new keyword LOCAL is specified in front of a             *)
-(*  procedure or function declaration, the procedure is             *)
-(*  local, even if it appears in an external module at level 1.     *)
-(*                                                                  *)
-(*  This all helps to reduce name conflicts and to allow            *)
-(*  more than one external module (which was not possible           *)
-(*  in original Stanford Pascal)                                    *)
-(*                                                                  *)
-(*  Changes to the environment:                                     *)
-(*                                                                  *)
-(*  in CMS the RUNPARM module was used to start Pascal programs     *)
-(*  and to build an OS parm string out of the CMS tokenized         *)
-(*  parameters, but: the CMS tokens were concatenated without       *)
-(*  separating blanks. The new XRUNPARM module does the same,       *)
-(*  but inserts blanks between the CMS tokens.                      *)
+(*    PV8 := ALLOC ( 8 ) ;                                          *)
+(*    PV8 -> := 'Oppolzer';                                         *)
+(*    WRITELN ( PV8 -> ) ;                                          *)
 (*                                                                  *)
 (********************************************************************)
 (*                                                                  *)
-(*  Oct.2016 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*  Jun.2018 - Extensions to the Compiler by Bernd Oppolzer         *)
 (*             (berndoppolzer@yahoo.com)                            *)
 (*                                                                  *)
-(*  Static variables are supported; the new keyword static          *)
-(*  starts a declaration section for static variables (like         *)
-(*  the keyword var does it for "normal" auto variables)            *)
-(*                                                                  *)
-(*  This is done the same way in IBMs Pascal VS                     *)
-(*                                                                  *)
-(*  There is a separate STATIC CSECT for every Code CSECT           *)
-(*  (every proc/func) which can hold up to 4k of static             *)
-(*  variables or structured constants ... the same CSECT            *)
-(*  is used for both. The CSECT is part of the load module,         *)
-(*  that is: writing into this STATIC CSECT makes the program       *)
-(*  non-reentrant.                                                  *)
-(*                                                                  *)
-(*  The SNAPSHOT routine (now called PASSNAP) has been              *)
-(*  enhanced to be able to show static variables, too.              *)
-(*  To support this, the address of the STATIC CSECT is             *)
-(*  stored at a certain place in the function prolog, which         *)
-(*  can easily be found at run time (displacement of the            *)
-(*  branch instruction at the EPA minus 4). If the address          *)
-(*  at this place is zero, there are no static variables.           *)
-(*                                                                  *)
-(*  PASSNAP was further enhanced to show the EP addresses           *)
-(*  of every function, the call offset at every call level          *)
-(*  and the storage class, offset and address of every              *)
-(*  variable (in addition to the variable name and the              *)
-(*  value at the time of error or SNAPSHOT - in Pascal              *)
-(*  notation).                                                      *)
+(*  MEMCMP added as standard function, similar to MEMCPY.           *)
+(*  Two new PCODE instructions added to implement MEMCMP inline     *)
+(*  (MCC and MCV)                                                   *)
 (*                                                                  *)
 (********************************************************************)
 (*                                                                  *)
-(*  Nov.2016 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*  May 2018 - Extensions to the Compiler by Bernd Oppolzer         *)
 (*             (berndoppolzer@yahoo.com)                            *)
 (*                                                                  *)
-(*  To enable the port to ASCII platforms, the following            *)
-(*  changes have been made:                                         *)
-(*                                                                  *)
-(*  - the upper limit of for loops with loop control variables      *)
-(*    of type char is encoded in char representation instead        *)
-(*    of the internal numeric code in the P-Code source             *)
-(*                                                                  *)
-(*  - set constants of set of char have a new representation        *)
-(*    in the P-Code, envolving char representation of the           *)
-(*    chars contained in the set                                    *)
-(*                                                                  *)
-(*  - not related to the port: set constants in P-Code are          *)
-(*    represented by hexa byte strings instead of integer           *)
-(*    strings, which makes them much better readable                *)
+(*  The P-Codes for Strings (starting with the letter V)            *)
+(*  are now recognized and translated to 370 machine code           *)
+(*  by PASCAL2 ... see there                                        *)
 (*                                                                  *)
 (********************************************************************)
 (*                                                                  *)
-(*  Dec.2016 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*  Feb.2018 - Extensions to the Compiler by Bernd Oppolzer         *)
 (*             (berndoppolzer@yahoo.com)                            *)
 (*                                                                  *)
-(*  Another portability issue:                                      *)
+(*  many tests and improvements with respect to procedure and       *)
+(*  function parameters (procedures and functions passed as         *)
+(*  parameters to other procedures). The compiler had some bugs     *)
+(*  here. In this context I re-activated the 1982 version of the    *)
+(*  compiler, to see, if the bugs were there already (they were).   *)
 (*                                                                  *)
-(*  the branch table used with case statements implies the          *)
-(*  EBCDIC char set, if the case control variable is of type        *)
-(*  char. I changed the XJP logic to a portable representation      *)
-(*  of the branch table and shifted the construction of the         *)
-(*  "real" branch table to the second pass. This way, XJP           *)
-(*  instructions and "portable branch tables" can be moved          *)
-(*  to foreign platforms with foreign character sets.               *)
+(*  I was inspired to do this all by some postings regarding        *)
+(*  Knuth's Man-or-Boy test, which I didn't know before.            *)
 (*                                                                  *)
-(*  see boolean constant 'PORTABLE_BRANCHTABLE'                     *)
+(*  look here: https://en.wikipedia.org/wiki/Man_or_boy_test        *)
+(*                                                                  *)
+(*  and here: https://rosettacode.org/wiki/Man_or_boy_test#Pascal   *)
 (*                                                                  *)
 (********************************************************************)
 (*                                                                  *)
-(*  Jan.2017 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*  Feb.2018 - Extensions to the Compiler by Bernd Oppolzer         *)
 (*             (berndoppolzer@yahoo.com)                            *)
 (*                                                                  *)
-(*  First version, which was extended / improved on Windows         *)
-(*  first and later moved to Hercules/VM.                           *)
+(*  - const Parameters (like in Pascal/VS) to allow the             *)
+(*    implementation of most string functions using Pascal          *)
 (*                                                                  *)
-(*  From some discussions on the FPC mailing list, I got the        *)
-(*  idea to support bit operations on integer operands, too.        *)
+(*  - array like indexes for strings (new P-Code VIX similar        *)
+(*    to IXA to index characters in strings)                        *)
 (*                                                                  *)
-(*  The operations AND, OR, NOT have been extended to do            *)
-(*  bit operations, when being used with integers (was error        *)
-(*  134 before). Another operation XOR is provided (new             *)
-(*  reserved symbol) for exclusive or operation; can be used        *)
-(*  with integer or boolean operands.                               *)
+(*  - many string functions from Pascal/VS (and more) are           *)
+(*    supported; some implemented directly inline using             *)
+(*    new P-Code instructions, but most (for the moment)            *)
+(*    in Pascal (see PASLIBX.PAS)                                   *)
 (*                                                                  *)
-(*  New P-Code instruction XOR; the P-Code instructions             *)
-(*  AND, IOR, NOT and XOR have a type parameter (B or I).           *)
+(*    STR          - convert to string                              *)
+(*    MAXLENGTH    - maxlength of string                            *)
+(*    LENGTH       - length of string                               *)
+(*    STRRESULT    - result of str func                             *)
+(*    STRRESULTP   - ptr to str result                              *)
+(*    REPEATSTR    - repeat str n times                             *)
+(*    RESULTP      - ptr to result                                  *)
+(*    SUBSTR       - substring (like in PL/1)                       *)
+(*    DELETE       - delete part of string (args like substr)       *)
+(*    RTRIM        - trim blanks on the right                       *)
+(*    LTRIM        - trim blanks on the left                        *)
+(*    TRIM         - trim blanks on both sides                      *)
+(*    COMPRESS     - reduce multiple blanks to one blank            *)
+(*    INDEX        - search string position (like in PL/1)          *)
+(*    VERIFY       - verify string (like in PL/1)                   *)
+(*    TRANSLATE    - translate using tranlation table (PL/1)        *)
+(*                                                                  *)
+(********************************************************************)
+(*                                                                  *)
+(*  Jan.2018 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*             (berndoppolzer@yahoo.com)                            *)
+(*                                                                  *)
+(*  - Implementation of STRING (n)                                  *)
+(*                                                                  *)
+(*  - Many new P-Code instructions to support the STRING (n)        *)
+(*    datatype:                                                     *)
+(*                                                                  *)
+(*    VC1 - varchar convert 1                                       *)
+(*    VC2 - varchar convert 2                                       *)
+(*    VCC - varchar concat                                          *)
+(*    VLD - varchar load                                            *)
+(*    VLM - varchar load maxlength                                  *)
+(*    VMV - varchar move                                            *)
+(*    VPO - varchar pop workarea addr                               *)
+(*    VPU - varchar push workarea addr                              *)
+(*    VSM - varchar set maxlength                                   *)
+(*    VST - varchar store                                           *)
+(*                                                                  *)
+(*  - These P-Codes are not yet supported by the P-Code to          *)
+(*    370 translator PASCAL2, so the STRING (n) datatype            *)
+(*    only works on Windows etc. (at the moment)                    *)
+(*                                                                  *)
+(*  - Find more details in a separate document on the               *)
+(*    New Stanford Pascal compiler website                          *)
+(*                                                                  *)
+(********************************************************************)
+(*                                                                  *)
+(*  Jan.2018 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*             (berndoppolzer@yahoo.com)                            *)
+(*                                                                  *)
+(*  - More extensions to make Stanford Pascal a competitor          *)
+(*    to Pascal/VS (or VS Pascal) and PL/1                          *)
+(*                                                                  *)
+(*  - New data types CHAR (n), VARCHAR (n) - aka STRING (n)         *)
+(*    and DECIMAL (n, m)                                            *)
+(*                                                                  *)
+(*  - Only CHAR (n) is fully implemented at the moment,             *)
+(*    n can be in the range 1 to 254. Shorter CHARs may             *)
+(*    be assigned to longer CHARs (and passed as byvalue            *)
+(*    parameters to functions). CHAR (n) is an abbreviation         *)
+(*    for "array [1..n] of char" ... no need to define it.          *)
+(*                                                                  *)
+(*  - DECIMAL (n, m) is implemented internally as REAL              *)
+(*    (at the moment)                                               *)
+(*                                                                  *)
+(*  - New functions DIGITSOF and PRECISIONOF, to be used on         *)
+(*    DECIMAL data; WRITE with DECIMALs will by default             *)
+(*    use these options:                                            *)
+(*    WRITE (D);                                                    *)
+(*    with D of type DECIMAL will be the same as                    *)
+(*    WRITE (D: DIGITSOF(D) + 3 : PRECISIONOF(D));                  *)
+(*                                                                  *)
+(********************************************************************)
+(*                                                                  *)
+(*  Dec.2017 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*             (berndoppolzer@yahoo.com)                            *)
+(*                                                                  *)
+(*  - Extensions to EXTERNAL procedure declarations: the            *)
+(*    language of the external procedure may be specified,          *)
+(*    and an additional external name (8 chars), which is           *)
+(*    used instead of the Pascal name (which may be longer).        *)
+(*    Supported languages are FORTRAN and ASSEMBLER on the          *)
+(*    mainframe and Pascal, of course. On the PC only               *)
+(*    Pascal, at the moment, because the P-Code interpreter         *)
+(*    cannot call external C objects at the moment.                 *)
+(*                                                                  *)
+(*    Example:                                                      *)
+(*                                                                  *)
+(*    procedure PASCAL_TO_ASSEMBLER ( X1 : INTEGER ;                *)
+(*                                    var X2 : INTEGER ;            *)
+(*                                    T1 : CHAR20 ;                 *)
+(*                                    var T2 : CHAR20 ) ;           *)
+(*                                                                  *)
+(*       EXTERNAL ASSEMBLER 'PAS2ASM' ;                             *)
+(*                                                                  *)
+(*  - For ASSEMBLER and FORTRAN, different call sequences           *)
+(*    are created. ASSEMBLER and FORTRAN both use normal            *)
+(*    OS linkage conventions, and FORTRAN expects all parms         *)
+(*    passed by reference, so the Pascal compiler creates           *)
+(*    dummy arguments for every Pascal by-value parameter.          *)
+(*                                                                  *)
+(*  - External ASSEMBLER functions must return their result         *)
+(*    in general register 0 (or FP register 0, for double           *)
+(*    float results). This is also what FORTRAN does.               *)
+(*                                                                  *)
+(*  - Example programs for both languages, showing external         *)
+(*    procedures and functions implemented in ASSEMBLER and         *)
+(*    FORTRAN, have been created.                                   *)
+(*                                                                  *)
+(*  - More advanced topics: using the Pascal stack in the           *)
+(*    external procedures (allowing, maybe, recursive calls         *)
+(*    of the ASSEMBLER subfunctions), and calling some              *)
+(*    functions of the Pascal runtime library.                      *)
+(*    This is possible, too, but has not been tested yet.           *)
+(*                                                                  *)
+(********************************************************************)
+(*                                                                  *)
+(*  Dec.2017 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*             (berndoppolzer@yahoo.com)                            *)
+(*                                                                  *)
+(*  - Shorter strings (variables) can now be assigned to longer     *)
+(*    strings; the longer target strings are filled with blanks     *)
+(*    (no message P129: TYPE CONFLICT OF OPERANDS)                  *)
+(*                                                                  *)
+(*  - New P-Code instruction to support that (MFI to fill           *)
+(*    a memory area with a pattern - fixed size)                    *)
+(*                                                                  *)
+(*  - Some error messages now have additional information,          *)
+(*    for example P168: UNDEFINED LABEL - which is shown at the     *)
+(*    end of a procedure block - now shows the number of the        *)
+(*    missing label. Or: P117: MISSING FORWARE REFERENCE for        *)
+(*    types now shows the name of the missing type. This was        *)
+(*    shown before, but by doing an additional WRITELN call         *)
+(*    into the source listing file, which corrupted the clean       *)
+(*    layout of the listing a little bit. Now the information       *)
+(*    is part of the error message, and the place, where it is      *)
+(*    to be inserted, can be configured in the PASCAL.MESSAGES      *)
+(*    file.                                                         *)
+(*                                                                  *)
+(*  - New P-Code instructions MCP to support MEMCPY and             *)
+(*    MSE to support MEMSET ... no more function call               *)
+(*    involving Pascal loop with bytewise copy, should              *)
+(*    speed up things (maybe generating MVCL on 370 and             *)
+(*    memset on PCINT-based platforms)                              *)
+(*                                                                  *)
+(*  - New P-Code instruction MZE to fill an area of fixed           *)
+(*    length with zeroes (will generate XC instead of               *)
+(*    overlapping MVC on the mainframe)                             *)
+(*                                                                  *)
+(********************************************************************)
+(*                                                                  *)
+(*  Oct.2017 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*             (berndoppolzer@yahoo.com)                            *)
+(*                                                                  *)
+(*  - The old source program scanner (procedure INSYMBOL)           *)
+(*    has been completely replaced by a new scanner called          *)
+(*    PASSCAN; the new scanner is not hand-written any more,        *)
+(*    but it is generated using a scanner-generating tool that      *)
+(*    was written at the Computer Science department of the         *)
+(*    Stuttgart University in 1980 by four students (including      *)
+(*    myself). I extended this scanner generator in 1996, to        *)
+(*    make a usable product out of it, and I used it in many        *)
+(*    projects from 1996 until today. PASSCAN is an external        *)
+(*    module, seperate from the compiler. It does all the           *)
+(*    source handling and it writes the compile listing.            *)
+(*                                                                  *)
+(*  - The new scanner will make extensions to the compiler          *)
+(*    symbol repertoire much easier, because it is generated        *)
+(*    from a "grammar", which is in fact a large regular            *)
+(*    expression (with attributes). The scanner generator           *)
+(*    works similar to the well-known Unix tool "lex".              *)
+(*                                                                  *)
+(*  - With the help of the new scanner, some more extensions        *)
+(*    have been made - more will follow - for example:              *)
+(*                                                                  *)
+(*  - C++ style comments: // the rest of the line is a comment      *)
+(*                                                                  *)
+(*  - binary integer constants: 0b00010010                          *)
+(*                                                                  *)
+(*  - write integer with negative width produces leading zeroes     *)
+(*                                                                  *)
+(*  - some restrictions on character strings have been removed      *)
+(*                                                                  *)
+(*  - some errors in the set implementation have been corrected     *)
+(*                                                                  *)
+(*  - the compiler listing has been slightly reworked; it is        *)
+(*    now produced by the new generated scanner procedure           *)
+(*                                                                  *)
+(*  - this allows for lines with errors to be shown at the          *)
+(*    terminal, followed immediately by the error message;          *)
+(*    this way, the compile listing is needed no more for           *)
+(*    error diagnosis in most cases                                 *)
+(*                                                                  *)
+(*  - the compiler now runs with the debug switch on (that is:      *)
+(*    subrange checks etc. are now enabled on the compiler);        *)
+(*    when I first tried this, I discovered that the compiler       *)
+(*    up to now stored out-of-range values into scalar types        *)
+(*    etc., so that the debug switch had to be turned off ...       *)
+(*    this has been fixed.                                          *)
+(*                                                                  *)
+(*  - new operators (shift, more assignments like +=) and           *)
+(*    more operator levels now seem possible without much           *)
+(*    effort regarding the scanner; the extension of the            *)
+(*    scanner could be done within minutes.                         *)
+(*                                                                  *)
+(********************************************************************)
+(*                                                                  *)
+(*  Aug.2017 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*             (berndoppolzer@yahoo.com)                            *)
+(*                                                                  *)
+(*  - String constants now may be constructed of different          *)
+(*    parts, seperated by blanks, some of them coded in hex         *)
+(*    or binary, and others in normal char representation           *)
+(*                                                                  *)
+(*    Example: const S_VS_1 = X'1b' '&l12D' X'0d0a' ;               *)
+(*                                                                  *)
+(*    I used this to rewrite a very old BASIC program in            *)
+(*    Pascal which outputs printer control sequences to             *)
+(*    a HP Laserjet printer (preserving software and hardware       *)
+(*    investments)                                                  *)
+(*                                                                  *)
+(*  - SIZEOF supports simple string constants (will be              *)
+(*    problematic for expressions involving structured              *)
+(*    constants, let's see later ... maybe expressions              *)
+(*    should be allowed as argument to SIZEOF, not only             *)
+(*    type identifiers, const identifiers - now new - and           *)
+(*    variables with optional selectors).                           *)
+(*                                                                  *)
+(********************************************************************)
+(*                                                                  *)
+(*  Jun.2017 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*             (berndoppolzer@yahoo.com)                            *)
+(*                                                                  *)
+(*  - Character constants may be coded in hexadecimal and           *)
+(*    binary (X'nn', B'bbbbbbbb'); this is a large topic and        *)
+(*    not yet finished completely                                   *)
+(*                                                                  *)
+(*  - The implementation of sets will be reworked completely;       *)
+(*    larger sets will be allowed (up to 2000 elements), and        *)
+(*    some restrictions regarding set limits will be dropped        *)
+(*                                                                  *)
+(********************************************************************)
+(*                                                                  *)
+(*  May.2017 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*             (berndoppolzer@yahoo.com)                            *)
+(*                                                                  *)
+(*  - Minor error: allow CLOSE for non-Text-Files, too.             *)
+(*                                                                  *)
+(*  - New standard type ANYFILE, compatible to every other          *)
+(*    file type; file variables can be arguments to var             *)
+(*    parameters of type ANYFILE, and so functions and              *)
+(*    procedures can be written that accept files of any            *)
+(*    type as parameters                                            *)
+(*                                                                  *)
+(*  - standard type VOIDPTR renamed to ANYPTR; VOIDPTR is           *)
+(*    allowed, too (for compatibility reasons)                      *)
+(*                                                                  *)
+(*  - X -> is invalid (flagged by the compiler) for variables       *)
+(*    of type ANYPTR or ANYFILE; two new error messages 187         *)
+(*    and 188                                                       *)
+(*                                                                  *)
+(*  - new error message 182 for var parameters with                 *)
+(*    different lengths (was 142); this error is supressed          *)
+(*    when file arguments are passed to ANYFILE parameters          *)
+(*    (ANYFILEs variables have no file buffers, so they             *)
+(*    are shorter than other file variables)                        *)
+(*                                                                  *)
+(*  - yet to be done: a function that tells if an ANYFILE           *)
+(*    variable is a TEXT or a binary file; a function that          *)
+(*    returns the size and the address of the file buffer           *)
+(*    of an ANYFILE variable. What should already work with         *)
+(*    ANYFILEs: functions like ASSIGN, REWRITE, RESET, CLOSE,       *)
+(*    GET, PUT, and FILEFCB, which returns the address of the       *)
+(*    Pascal FCB of the file. Maybe: a function that casts          *)
+(*    an ANYFILE variable to a variable of type TEXT (so that       *)
+(*    functions requiring TEXT files can be used on ANYFILES).      *)
+(*                                                                  *)
+(********************************************************************)
+(*                                                                  *)
+(*  May.2017 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*             (berndoppolzer@yahoo.com)                            *)
+(*                                                                  *)
+(*  The compiler now runs on MVS (Hercules), too.                   *)
+(*  Same source code (PASCAL1, PASCAL2) as with CMS,                *)
+(*  same runtime (PASMONN) - although there are some                *)
+(*  CMS dependencies, controlled by SYSPARM(CMS).                   *)
+(*  Different PASSNAP ... see below.                                *)
+(*                                                                  *)
+(*  Several changes and corrections to PASMONN (Pascal runtime)     *)
+(*  have been made. The most important: PASMONN now supports        *)
+(*  RESET and REWRITE of PO members with their name specified       *)
+(*  at runtime using the new function ASSIGNMEM. After RESET,       *)
+(*  success can be checked by looking at a flag in the Pascal       *)
+(*  FCB, accessed by the (existing) function FILEFCB.               *)
+(*                                                                  *)
+(*  This has been necessary to provide a MVS variant of PASSNAP;    *)
+(*  PASSNAP reads debug information at runtime, which depends       *)
+(*  on the name of the source file. In CMS, this was accomplished   *)
+(*  using CMS FILEDEFs, issued from the Pascal program.             *)
+(*  In MVS, ASSIGNMEM is used. The version of PASSNAP for MVS       *)
+(*  is located in the source file PASSNAPM. The technique to        *)
+(*  open the debug information file is the only difference          *)
+(*  between PASSNAP (CMS) and PASSNAPM (MVS).                       *)
+(*                                                                  *)
+(*  There is still room for some improvement in the area of         *)
+(*  error handling etc.; some ideas:                                *)
+(*                                                                  *)
+(*  - register and PSW output in both PASSNAP and the simple        *)
+(*    error output written by PASMONN                               *)
+(*                                                                  *)
+(*  - correct handling of 1006 - stack/heap collision               *)
+(*                                                                  *)
+(*  - control PASSNAP output by runtime option                      *)
+(*                                                                  *)
+(*  - control ABEND with SYSUDUMP after PASSNAP by runtime option   *)
+(*                                                                  *)
+(*  - use CAMLST to determine the type of the assigned dataset      *)
+(*    (PS or PO) to prevent error 013-14 (which is unrecoverable)   *)
+(*                                                                  *)
+(*  - read directory or BLDL instead of reacting on 013-18          *)
+(*    using the DCB ABEND EXIT (which is recoverable)               *)
+(*                                                                  *)
+(*  - if no member specified and dataset assigned is a PDS,         *)
+(*    change RECFM to U on the fly and read directory               *)
+(*                                                                  *)
+(*  Thanks to Gerhard Postpischil and Juergen Winckelmann           *)
+(*  for help and good advice and for encouraging me to do           *)
+(*  the MVS port.                                                   *)
 (*                                                                  *)
 (********************************************************************)
 (*                                                                  *)
@@ -458,372 +675,329 @@ program PASCALCOMPILER ( INPUT , OUTPUT , PCODE , LISTING , LISTDEF ,
 (*                                                                  *)
 (********************************************************************)
 (*                                                                  *)
-(*  May.2017 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*  Jan.2017 - Extensions to the Compiler by Bernd Oppolzer         *)
 (*             (berndoppolzer@yahoo.com)                            *)
 (*                                                                  *)
-(*  The compiler now runs on MVS (Hercules), too.                   *)
-(*  Same source code (PASCAL1, PASCAL2) as with CMS,                *)
-(*  same runtime (PASMONN) - although there are some                *)
-(*  CMS dependencies, controlled by SYSPARM(CMS).                   *)
-(*  Different PASSNAP ... see below.                                *)
+(*  First version, which was extended / improved on Windows         *)
+(*  first and later moved to Hercules/VM.                           *)
 (*                                                                  *)
-(*  Several changes and corrections to PASMONN (Pascal runtime)     *)
-(*  have been made. The most important: PASMONN now supports        *)
-(*  RESET and REWRITE of PO members with their name specified       *)
-(*  at runtime using the new function ASSIGNMEM. After RESET,       *)
-(*  success can be checked by looking at a flag in the Pascal       *)
-(*  FCB, accessed by the (existing) function FILEFCB.               *)
+(*  From some discussions on the FPC mailing list, I got the        *)
+(*  idea to support bit operations on integer operands, too.        *)
 (*                                                                  *)
-(*  This has been necessary to provide a MVS variant of PASSNAP;    *)
-(*  PASSNAP reads debug information at runtime, which depends       *)
-(*  on the name of the source file. In CMS, this was accomplished   *)
-(*  using CMS FILEDEFs, issued from the Pascal program.             *)
-(*  In MVS, ASSIGNMEM is used. The version of PASSNAP for MVS       *)
-(*  is located in the source file PASSNAPM. The technique to        *)
-(*  open the debug information file is the only difference          *)
-(*  between PASSNAP (CMS) and PASSNAPM (MVS).                       *)
+(*  The operations AND, OR, NOT have been extended to do            *)
+(*  bit operations, when being used with integers (was error        *)
+(*  134 before). Another operation XOR is provided (new             *)
+(*  reserved symbol) for exclusive or operation; can be used        *)
+(*  with integer or boolean operands.                               *)
 (*                                                                  *)
-(*  There is still room for some improvement in the area of         *)
-(*  error handling etc.; some ideas:                                *)
-(*                                                                  *)
-(*  - register and PSW output in both PASSNAP and the simple        *)
-(*    error output written by PASMONN                               *)
-(*                                                                  *)
-(*  - correct handling of 1006 - stack/heap collision               *)
-(*                                                                  *)
-(*  - control PASSNAP output by runtime option                      *)
-(*                                                                  *)
-(*  - control ABEND with SYSUDUMP after PASSNAP by runtime option   *)
-(*                                                                  *)
-(*  - use CAMLST to determine the type of the assigned dataset      *)
-(*    (PS or PO) to prevent error 013-14 (which is unrecoverable)   *)
-(*                                                                  *)
-(*  - read directory or BLDL instead of reacting on 013-18          *)
-(*    using the DCB ABEND EXIT (which is recoverable)               *)
-(*                                                                  *)
-(*  - if no member specified and dataset assigned is a PDS,         *)
-(*    change RECFM to U on the fly and read directory               *)
-(*                                                                  *)
-(*  Thanks to Gerhard Postpischil and Juergen Winckelmann           *)
-(*  for help and good advice and for encouraging me to do           *)
-(*  the MVS port.                                                   *)
+(*  New P-Code instruction XOR; the P-Code instructions             *)
+(*  AND, IOR, NOT and XOR have a type parameter (B or I).           *)
 (*                                                                  *)
 (********************************************************************)
 (*                                                                  *)
-(*  May.2017 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*  Dec.2016 - Extensions to the Compiler by Bernd Oppolzer         *)
 (*             (berndoppolzer@yahoo.com)                            *)
 (*                                                                  *)
-(*  - Minor error: allow CLOSE for non-Text-Files, too.             *)
+(*  Another portability issue:                                      *)
 (*                                                                  *)
-(*  - New standard type ANYFILE, compatible to every other          *)
-(*    file type; file variables can be arguments to var             *)
-(*    parameters of type ANYFILE, and so functions and              *)
-(*    procedures can be written that accept files of any            *)
-(*    type as parameters                                            *)
+(*  the branch table used with case statements implies the          *)
+(*  EBCDIC char set, if the case control variable is of type        *)
+(*  char. I changed the XJP logic to a portable representation      *)
+(*  of the branch table and shifted the construction of the         *)
+(*  "real" branch table to the second pass. This way, XJP           *)
+(*  instructions and "portable branch tables" can be moved          *)
+(*  to foreign platforms with foreign character sets.               *)
 (*                                                                  *)
-(*  - standard type VOIDPTR renamed to ANYPTR; VOIDPTR is           *)
-(*    allowed, too (for compatibility reasons)                      *)
-(*                                                                  *)
-(*  - X -> is invalid (flagged by the compiler) for variables       *)
-(*    of type ANYPTR or ANYFILE; two new error messages 187         *)
-(*    and 188                                                       *)
-(*                                                                  *)
-(*  - new error message 182 for var parameters with                 *)
-(*    different lengths (was 142); this error is supressed          *)
-(*    when file arguments are passed to ANYFILE parameters          *)
-(*    (ANYFILEs variables have no file buffers, so they             *)
-(*    are shorter than other file variables)                        *)
-(*                                                                  *)
-(*  - yet to be done: a function that tells if an ANYFILE           *)
-(*    variable is a TEXT or a binary file; a function that          *)
-(*    returns the size and the address of the file buffer           *)
-(*    of an ANYFILE variable. What should already work with         *)
-(*    ANYFILEs: functions like ASSIGN, REWRITE, RESET, CLOSE,       *)
-(*    GET, PUT, and FILEFCB, which returns the address of the       *)
-(*    Pascal FCB of the file. Maybe: a function that casts          *)
-(*    an ANYFILE variable to a variable of type TEXT (so that       *)
-(*    functions requiring TEXT files can be used on ANYFILES).      *)
+(*  see boolean constant 'PORTABLE_BRANCHTABLE'                     *)
 (*                                                                  *)
 (********************************************************************)
 (*                                                                  *)
-(*  Jun.2017 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*  Nov.2016 - Extensions to the Compiler by Bernd Oppolzer         *)
 (*             (berndoppolzer@yahoo.com)                            *)
 (*                                                                  *)
-(*  - Character constants may be coded in hexadecimal and           *)
-(*    binary (X'nn', B'bbbbbbbb'); this is a large topic and        *)
-(*    not yet finished completely                                   *)
+(*  To enable the port to ASCII platforms, the following            *)
+(*  changes have been made:                                         *)
 (*                                                                  *)
-(*  - The implementation of sets will be reworked completely;       *)
-(*    larger sets will be allowed (up to 2000 elements), and        *)
-(*    some restrictions regarding set limits will be dropped        *)
+(*  - the upper limit of for loops with loop control variables      *)
+(*    of type char is encoded in char representation instead        *)
+(*    of the internal numeric code in the P-Code source             *)
+(*                                                                  *)
+(*  - set constants of set of char have a new representation        *)
+(*    in the P-Code, envolving char representation of the           *)
+(*    chars contained in the set                                    *)
+(*                                                                  *)
+(*  - not related to the port: set constants in P-Code are          *)
+(*    represented by hexa byte strings instead of integer           *)
+(*    strings, which makes them much better readable                *)
 (*                                                                  *)
 (********************************************************************)
 (*                                                                  *)
-(*  Aug.2017 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*  Oct.2016 - Extensions to the Compiler by Bernd Oppolzer         *)
 (*             (berndoppolzer@yahoo.com)                            *)
 (*                                                                  *)
-(*  - String constants now may be constructed of different          *)
-(*    parts, seperated by blanks, some of them coded in hex         *)
-(*    or binary, and others in normal char representation           *)
+(*  Static variables are supported; the new keyword static          *)
+(*  starts a declaration section for static variables (like         *)
+(*  the keyword var does it for "normal" auto variables)            *)
 (*                                                                  *)
-(*    Example: const S_VS_1 = X'1b' '&l12D' X'0d0a' ;               *)
+(*  This is done the same way in IBMs Pascal VS                     *)
 (*                                                                  *)
-(*    I used this to rewrite a very old BASIC program in            *)
-(*    Pascal which outputs printer control sequences to             *)
-(*    a HP Laserjet printer (preserving software and hardware       *)
-(*    investments)                                                  *)
+(*  There is a separate STATIC CSECT for every Code CSECT           *)
+(*  (every proc/func) which can hold up to 4k of static             *)
+(*  variables or structured constants ... the same CSECT            *)
+(*  is used for both. The CSECT is part of the load module,         *)
+(*  that is: writing into this STATIC CSECT makes the program       *)
+(*  non-reentrant.                                                  *)
 (*                                                                  *)
-(*  - SIZEOF supports simple string constants (will be              *)
-(*    problematic for expressions involving structured              *)
-(*    constants, let's see later ... maybe expressions              *)
-(*    should be allowed as argument to SIZEOF, not only             *)
-(*    type identifiers, const identifiers - now new - and           *)
-(*    variables with optional selectors).                           *)
+(*  The SNAPSHOT routine (now called PASSNAP) has been              *)
+(*  enhanced to be able to show static variables, too.              *)
+(*  To support this, the address of the STATIC CSECT is             *)
+(*  stored at a certain place in the function prolog, which         *)
+(*  can easily be found at run time (displacement of the            *)
+(*  branch instruction at the EPA minus 4). If the address          *)
+(*  at this place is zero, there are no static variables.           *)
+(*                                                                  *)
+(*  PASSNAP was further enhanced to show the EP addresses           *)
+(*  of every function, the call offset at every call level          *)
+(*  and the storage class, offset and address of every              *)
+(*  variable (in addition to the variable name and the              *)
+(*  value at the time of error or SNAPSHOT - in Pascal              *)
+(*  notation).                                                      *)
 (*                                                                  *)
 (********************************************************************)
 (*                                                                  *)
-(*  Oct.2017 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*  Oct.2016 - Extensions to the Compiler by Bernd Oppolzer         *)
 (*             (berndoppolzer@yahoo.com)                            *)
 (*                                                                  *)
-(*  - The old source program scanner (procedure INSYMBOL)           *)
-(*    has been completely replaced by a new scanner called          *)
-(*    PASSCAN; the new scanner is not hand-written any more,        *)
-(*    but it is generated using a scanner-generating tool that      *)
-(*    was written at the Computer Science department of the         *)
-(*    Stuttgart University in 1980 by four students (including      *)
-(*    myself). I extended this scanner generator in 1996, to        *)
-(*    make a usable product out of it, and I used it in many        *)
-(*    projects from 1996 until today. PASSCAN is an external        *)
-(*    module, seperate from the compiler. It does all the           *)
-(*    source handling and it writes the compile listing.            *)
+(*  New functions:                                                  *)
 (*                                                                  *)
-(*  - The new scanner will make extensions to the compiler          *)
-(*    symbol repertoire much easier, because it is generated        *)
-(*    from a "grammar", which is in fact a large regular            *)
-(*    expression (with attributes). The scanner generator           *)
-(*    works similar to the well-known Unix tool "lex".              *)
+(*  - PTRCAST as a substitute for PTRADD with only one              *)
+(*    argument; used to cast pointers of different types            *)
 (*                                                                  *)
-(*  - With the help of the new scanner, some more extensions        *)
-(*    have been made - more will follow - for example:              *)
+(*  - CHKHEAP to check the integrity of heap segments               *)
 (*                                                                  *)
-(*  - C++ style comments: // the rest of the line is a comment      *)
+(*  - FILEFCB returns the pointer to the file control block         *)
+(*    of the specified file (which contains the DCB at              *)
+(*    position 36)                                                  *)
 (*                                                                  *)
-(*  - binary integer constants: 0b00010010                          *)
+(*  - Pointers of any type can be written directly using            *)
+(*    WRITE; the output format is 8 hex digits                      *)
 (*                                                                  *)
-(*  - write integer with negative width produces leading zeroes     *)
+(*  Other changes:                                                  *)
 (*                                                                  *)
-(*  - some restrictions on character strings have been removed      *)
+(*  The CSECTs of the internal procedures are now called            *)
+(*  $PRVxxxx (xxxx is numbered starting from 0002).                 *)
 (*                                                                  *)
-(*  - some errors in the set implementation have been corrected     *)
+(*  For external modules, the CSECT names of the internal           *)
+(*  procedures are derived from the module name, for example:       *)
+(*  module $PASLIBX --> CSECT names $LIBXxxx                        *)
 (*                                                                  *)
-(*  - the compiler listing has been slightly reworked; it is        *)
-(*    now produced by the new generated scanner procedure           *)
+(*  Only procs and funcs at level 1 are visible from outside        *)
+(*  and keep their original names                                   *)
 (*                                                                  *)
-(*  - this allows for lines with errors to be shown at the          *)
-(*    terminal, followed immediately by the error message;          *)
-(*    this way, the compile listing is needed no more for           *)
-(*    error diagnosis in most cases                                 *)
+(*  If the new keyword LOCAL is specified in front of a             *)
+(*  procedure or function declaration, the procedure is             *)
+(*  local, even if it appears in an external module at level 1.     *)
 (*                                                                  *)
-(*  - the compiler now runs with the debug switch on (that is:      *)
-(*    subrange checks etc. are now enabled on the compiler);        *)
-(*    when I first tried this, I discovered that the compiler       *)
-(*    up to now stored out-of-range values into scalar types        *)
-(*    etc., so that the debug switch had to be turned off ...       *)
-(*    this has been fixed.                                          *)
+(*  This all helps to reduce name conflicts and to allow            *)
+(*  more than one external module (which was not possible           *)
+(*  in original Stanford Pascal)                                    *)
 (*                                                                  *)
-(*  - new operators (shift, more assignments like +=) and           *)
-(*    more operator levels now seem possible without much           *)
-(*    effort regarding the scanner; the extension of the            *)
-(*    scanner could be done within minutes.                         *)
+(*  Changes to the environment:                                     *)
+(*                                                                  *)
+(*  in CMS the RUNPARM module was used to start Pascal programs     *)
+(*  and to build an OS parm string out of the CMS tokenized         *)
+(*  parameters, but: the CMS tokens were concatenated without       *)
+(*  separating blanks. The new XRUNPARM module does the same,       *)
+(*  but inserts blanks between the CMS tokens.                      *)
 (*                                                                  *)
 (********************************************************************)
 (*                                                                  *)
-(*  Dec.2017 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*  Sep.2016 - Extensions to the Compiler by Bernd Oppolzer         *)
 (*             (berndoppolzer@yahoo.com)                            *)
 (*                                                                  *)
-(*  - Shorter strings (variables) can now be assigned to longer     *)
-(*    strings; the longer target strings are filled with blanks     *)
-(*    (no message P129: TYPE CONFLICT OF OPERANDS)                  *)
+(*  Four new standard functions have been added using               *)
+(*  the library function facility:                                  *)
 (*                                                                  *)
-(*  - New P-Code instruction to support that (MFI to fill           *)
-(*    a memory area with a pattern - fixed size)                    *)
+(*  - ALLOC, which gets a length and returns a pointer              *)
+(*    to a new area of that length                                  *)
 (*                                                                  *)
-(*  - Some error messages now have additional information,          *)
-(*    for example P168: UNDEFINED LABEL - which is shown at the     *)
-(*    end of a procedure block - now shows the number of the        *)
-(*    missing label. Or: P117: MISSING FORWARE REFERENCE for        *)
-(*    types now shows the name of the missing type. This was        *)
-(*    shown before, but by doing an additional WRITELN call         *)
-(*    into the source listing file, which corrupted the clean       *)
-(*    layout of the listing a little bit. Now the information       *)
-(*    is part of the error message, and the place, where it is      *)
-(*    to be inserted, can be configured in the PASCAL.MESSAGES      *)
-(*    file.                                                         *)
+(*  - ALLOCX, which does the same, but does not use the             *)
+(*    (yet to come) sophisticated logic like LE, but does a pure    *)
+(*    GETMAIN on every ALLOCX call, which is simple, but slow       *)
 (*                                                                  *)
-(*  - New P-Code instructions MCP to support MEMCPY and             *)
-(*    MSE to support MEMSET ... no more function call               *)
-(*    involving Pascal loop with bytewise copy, should              *)
-(*    speed up things (maybe generating MVCL on 370 and             *)
-(*    memset on PCINT-based platforms)                              *)
+(*  - FREE, which frees the storage retrieved by ALLOC              *)
 (*                                                                  *)
-(*  - New P-Code instruction MZE to fill an area of fixed           *)
-(*    length with zeroes (will generate XC instead of               *)
-(*    overlapping MVC on the mainframe)                             *)
+(*  - FREEX, which frees the storage retrieved by ALLOCX,           *)
+(*    that is: FREEMAIN                                             *)
+(*                                                                  *)
+(*  The four new functions are implemented in the module            *)
+(*  PASLIBX, seperate from the compiler (in Pascal)                 *)
 (*                                                                  *)
 (********************************************************************)
 (*                                                                  *)
-(*  Dec.2017 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*  Sep.2016 - Extensions to the Compiler by Bernd Oppolzer         *)
 (*             (berndoppolzer@yahoo.com)                            *)
 (*                                                                  *)
-(*  - Extensions to EXTERNAL procedure declarations: the            *)
-(*    language of the external procedure may be specified,          *)
-(*    and an additional external name (8 chars), which is           *)
-(*    used instead of the Pascal name (which may be longer).        *)
-(*    Supported languages are FORTRAN and ASSEMBLER on the          *)
-(*    mainframe and Pascal, of course. On the PC only               *)
-(*    Pascal, at the moment, because the P-Code interpreter         *)
-(*    cannot call external C objects at the moment.                 *)
+(*  Standard functions and procedures may not only be               *)
+(*  implemented by inline code or CSP calls; another                *)
+(*  possible (new) technique is to call an external function        *)
+(*  in a library module.                                            *)
 (*                                                                  *)
-(*    Example:                                                      *)
+(*  To support this, several atributes have been added to the       *)
+(*  internal Standard procedure description:                        *)
 (*                                                                  *)
-(*    procedure PASCAL_TO_ASSEMBLER ( X1 : INTEGER ;                *)
-(*                                    var X2 : INTEGER ;            *)
-(*                                    T1 : CHAR20 ;                 *)
-(*                                    var T2 : CHAR20 ) ;           *)
+(*     STANDARD :                                                   *)
+(*       ( KEY : INTEGER ;                                          *)
+(*         LIBNAME : EXTNAMTP ;                                     *)
+(*         FUNCCODE : INTEGER ;                                     *)
+(*         PARMCNT : INTEGER ;                                      *)
+(*         PROCTYP : CHAR ) ;                                       *)
 (*                                                                  *)
-(*       EXTERNAL ASSEMBLER 'PAS2ASM' ;                             *)
+(*   KEY is the only attribute that was present before and          *)
+(*   is the number of the CSP call.                                 *)
 (*                                                                  *)
-(*  - For ASSEMBLER and FORTRAN, different call sequences           *)
-(*    are created. ASSEMBLER and FORTRAN both use normal            *)
-(*    OS linkage conventions, and FORTRAN expects all parms         *)
-(*    passed by reference, so the Pascal compiler creates           *)
-(*    dummy arguments for every Pascal by-value parameter.          *)
-(*                                                                  *)
-(*  - External ASSEMBLER functions must return their result         *)
-(*    in general register 0 (or FP register 0, for double           *)
-(*    float results). This is also what FORTRAN does.               *)
-(*                                                                  *)
-(*  - Example programs for both languages, showing external         *)
-(*    procedures and functions implemented in ASSEMBLER and         *)
-(*    FORTRAN, have been created.                                   *)
-(*                                                                  *)
-(*  - More advanced topics: using the Pascal stack in the           *)
-(*    external procedures (allowing, maybe, recursive calls         *)
-(*    of the ASSEMBLER subfunctions), and calling some              *)
-(*    functions of the Pascal runtime library.                      *)
-(*    This is possible, too, but has not been tested yet.           *)
+(*   If LIBNAME is not blank, the Standard Proc is implemented      *)
+(*   by a library function call. It gets the FUNCCODE as first      *)
+(*   parameter; PARMCNT and PROCTYP are other attributes that       *)
+(*   are needed to set up the CUP call for the library function     *)
 (*                                                                  *)
 (********************************************************************)
 (*                                                                  *)
-(*  Jan.2018 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*  Sep.2016 - Extensions to the Compiler by Bernd Oppolzer         *)
 (*             (berndoppolzer@yahoo.com)                            *)
 (*                                                                  *)
-(*  - More extensions to make Stanford Pascal a competitor          *)
-(*    to Pascal/VS (or VS Pascal) and PL/1                          *)
-(*                                                                  *)
-(*  - New data types CHAR (n), VARCHAR (n) - aka STRING (n)         *)
-(*    and DECIMAL (n, m)                                            *)
-(*                                                                  *)
-(*  - Only CHAR (n) is fully implemented at the moment,             *)
-(*    n can be in the range 1 to 254. Shorter CHARs may             *)
-(*    be assigned to longer CHARs (and passed as byvalue            *)
-(*    parameters to functions). CHAR (n) is an abbreviation         *)
-(*    for "array [1..n] of char" ... no need to define it.          *)
-(*                                                                  *)
-(*  - DECIMAL (n, m) is implemented internally as REAL              *)
-(*    (at the moment)                                               *)
-(*                                                                  *)
-(*  - New functions DIGITSOF and PRECISIONOF, to be used on         *)
-(*    DECIMAL data; WRITE with DECIMALs will by default             *)
-(*    use these options:                                            *)
-(*    WRITE (D);                                                    *)
-(*    with D of type DECIMAL will be the same as                    *)
-(*    WRITE (D: DIGITSOF(D) + 3 : PRECISIONOF(D));                  *)
+(*  New keyword MODULE; a module is a collection of                 *)
+(*  external procedures without a main program. The keyword         *)
+(*  MODULE replaces the keyword PROGRAM on modules.                 *)
+(*  It sets the compiler switch X implicitly and enforces that      *)
+(*  the main block (which still has to be coded) is empty,          *)
+(*  that is: "begin end.". No main block is generated, so           *)
+(*  it is now possible to add multiply modules to a Pascal          *)
+(*  program without name conflicts.                                 *)
 (*                                                                  *)
 (********************************************************************)
 (*                                                                  *)
-(*  Jan.2018 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*  Sep.2016 - Extensions to the Compiler by Bernd Oppolzer         *)
 (*             (berndoppolzer@yahoo.com)                            *)
 (*                                                                  *)
-(*  - Implementation of STRING (n)                                  *)
+(*  New functions added to support the construction of a new        *)
+(*  storage management library using Pascal:                        *)
 (*                                                                  *)
-(*  - Many new P-Code instructions to support the STRING (n)        *)
-(*    datatype:                                                     *)
+(*  - ADDR to get the address of any variable;                      *)
+(*    the result of this function is a pointer without type         *)
+(*    (aka void pointer) similar to the NIL pointer,                *)
+(*    which is compatible with every other pointer type             *)
 (*                                                                  *)
-(*    VC1 - varchar convert 1                                       *)
-(*    VC2 - varchar convert 2                                       *)
-(*    VCC - varchar concat                                          *)
-(*    VLD - varchar load                                            *)
-(*    VLM - varchar load maxlength                                  *)
-(*    VMV - varchar move                                            *)
-(*    VPO - varchar pop workarea addr                               *)
-(*    VPU - varchar push workarea addr                              *)
-(*    VSM - varchar set maxlength                                   *)
-(*    VST - varchar store                                           *)
+(*  - PTRADD to add an integer expression to a pointer              *)
+(*    (of any type) - this adds addresses in contrast to C,         *)
+(*    where element sizes are added; PTRADD without a               *)
+(*    second argument (which is the same as PTRADD (X,0))           *)
+(*    can be used to convert a typed pointer to a void pointer      *)
 (*                                                                  *)
-(*  - These P-Codes are not yet supported by the P-Code to          *)
-(*    370 translator PASCAL2, so the STRING (n) datatype            *)
-(*    only works on Windows etc. (at the moment)                    *)
+(*  - PTRDIFF, that subtracts two pointers (of any type),           *)
+(*    giving an integer result                                      *)
 (*                                                                  *)
-(*  - Find more details in a separate document on the               *)
-(*    New Stanford Pascal compiler website                          *)
+(*  - SIZEOF, which works much the same as the C function           *)
+(*    of the same name; as with C, you can specify a variable       *)
+(*    as argument or a type identifier                              *)
+(*                                                                  *)
+(*  - PTR2INT, which converts a pointer to an integer value         *)
 (*                                                                  *)
 (********************************************************************)
 (*                                                                  *)
-(*  Feb.2018 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*  Sep.2016 - Extensions to the Compiler by Bernd Oppolzer         *)
 (*             (berndoppolzer@yahoo.com)                            *)
 (*                                                                  *)
-(*  - const Parameters (like in Pascal/VS) to allow the             *)
-(*    implementation of most string functions using Pascal          *)
+(*  a) shorter strings allowed on const initializers                *)
+(*     (on structured - typed - constants)                          *)
 (*                                                                  *)
-(*  - array like indexes for strings (new P-Code VIX similar        *)
-(*    to IXA to index characters in strings)                        *)
+(*  b) shorter string constants on assignments                      *)
 (*                                                                  *)
-(*  - many string functions from Pascal/VS (and more) are           *)
-(*    supported; some implemented directly inline using             *)
-(*    new P-Code instructions, but most (for the moment)            *)
-(*    in Pascal (see PASLIBX.PAS)                                   *)
+(*  c) even strings of length 1 (single chars) and zero ('')        *)
 (*                                                                  *)
-(*    STR          - convert to string                              *)
-(*    MAXLENGTH    - maxlength of string                            *)
-(*    LENGTH       - length of string                               *)
-(*    STRRESULT    - result of str func                             *)
-(*    STRRESULTP   - ptr to str result                              *)
-(*    REPEATSTR    - repeat str n times                             *)
-(*    RESULTP      - ptr to result                                  *)
-(*    SUBSTR       - substring (like in PL/1)                       *)
-(*    DELETE       - delete part of string (args like substr)       *)
-(*    RTRIM        - trim blanks on the right                       *)
-(*    LTRIM        - trim blanks on the left                        *)
-(*    TRIM         - trim blanks on both sides                      *)
-(*    COMPRESS     - reduce multiple blanks to one blank            *)
-(*    INDEX        - search string position (like in PL/1)          *)
-(*    VERIFY       - verify string (like in PL/1)                   *)
-(*    TRANSLATE    - translate using tranlation table (PL/1)        *)
+(*  d) prepared for new typeclass (charstring) -                    *)
+(*     but not yet used or implemented; could make some             *)
+(*     things simpler                                               *)
+(*                                                                  *)
+(*  e) using this: IDLNGTH changed from 12 to 20,                   *)
+(*     so that the first 20 characters are significant on           *)
+(*     identifiers (not only 12). The initializers needed           *)
+(*     not be changed; although they are still 12 bytes long,       *)
+(*     the fields are filled with blanks up to length 20            *)
+(*                                                                  *)
+(*  f) correct output to P-Code file, where necessary;              *)
+(*     format changes observed on CST, ENT and BGN                  *)
+(*                                                                  *)
+(*  g) no changes so far to caching routines etc.                   *)
 (*                                                                  *)
 (********************************************************************)
 (*                                                                  *)
-(*  Feb.2018 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*  Aug.2016 - Extensions to the Compiler by Bernd Oppolzer         *)
 (*             (berndoppolzer@yahoo.com)                            *)
 (*                                                                  *)
-(*  many tests and improvements with respect to procedure and       *)
-(*  function parameters (procedures and functions passed as         *)
-(*  parameters to other procedures). The compiler had some bugs     *)
-(*  here. In this context I re-activated the 1982 version of the    *)
-(*  compiler, to see, if the bugs were there already (they were).   *)
+(*  to support the runtime extensions (PASCSP) regarding            *)
+(*  textfile I/O, the implicit RESET on INPUT on the beginning      *)
+(*  of the MAIN function has been removed; RESET is now done        *)
+(*  when the first READ operation is encountered. That means        *)
+(*  that the char variable INPUT -> is undefined until the          *)
+(*  end of the first READ operation                                 *)
 (*                                                                  *)
-(*  I was inspired to do this all by some postings regarding        *)
-(*  Knuth's Man-or-Boy test, which I didn't know before.            *)
+(********************************************************************)
 (*                                                                  *)
-(*  look here: https://en.wikipedia.org/wiki/Man_or_boy_test        *)
+(*  Oct.2011 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*             (berndoppolzer@yahoo.com)                            *)
 (*                                                                  *)
-(*  and here: https://rosettacode.org/wiki/Man_or_boy_test#Pascal   *)
+(*    PASCAL 1982 ported to VM370 R6 on Hercules (from MUSIC/SP)    *)
+(*                                                                  *)
+(*    Summary of Changes:                                           *)
+(*                                                                  *)
+(*    - another substitute for brackets: (. .) - not only (/ /)     *)
+(*                                                                  *)
+(*    - substitute for pointer symbol: ->                           *)
+(*                                                                  *)
+(*    - comments like PL/1 and C: /* ... */                         *)
+(*                                                                  *)
+(*    - year 2000 problem fixed (still TIME DEC used in PASMONN)    *)
+(*                                                                  *)
+(*    - new loop control statements: BREAK and CONTINUE             *)
+(*                                                                  *)
+(*    - RETURN statement                                            *)
+(*                                                                  *)
+(*  to be done:                                                     *)
+(*                                                                  *)
+(*    - allow shorter String constants to be assigned               *)
+(*      (padded with blanks)                                        *)
+(*                                                                  *)
+(*    - allow static definitions (local to procs and functions)     *)
+(*                                                                  *)
+(********************************************************************)
+(*                                                                  *)
+(* 02FEB2007 - Changes by Dave Edwards to use hex codes C0,D0       *)
+(*    (was 8B,9B) for EBCDIC brace characters (curly brackets).     *)
+(*    New constants CHLBRACE and CHRBRACE defined.                  *)
+(*    VERSION date left unchanged as MAY -82.                       *)
+(*    Hex C0,D0 seem to be the codes used by most curr. software    *)
+(*    such as tn3270 clients, Ascii-EBCDIC translate tables, etc.   *)
+(*    and conform to the standard IBM-037 US code page.             *)
+(*    See additional notes in file ccde:pascal_info.txt .           *)
+(*  - Also, in INITTABLES procedure, set UPSHIFT to only upshift    *)
+(*    lowercase chars (e.g. exclude tilde, which is in the range    *)
+(*    a to z), and add comments re. definition of SSY array.        *)
+(*    Note that curly brackets and backslash are within the         *)
+(*    range A to Z in the EBCDIC character set.                     *)
+(*  - Also fix spacing of text for BGN output record: change        *)
+(*    TIME:9 to TIME:8. Was causing last char of year to be         *)
+(*    truncated, in the info text at the start of $PASMAIN          *)
+(*    csect in the object file.                                     *)
+(*  - Source changes are identified by flag DE near beginning       *)
+(*    of lines.                                                     *)
+(*    (Write date of previous source file: 14sep1983.)              *)
 (*                                                                  *)
 (********************************************************************)
 
 
 
-const VERSION = '2018.05' ;
+const VERSION = '2019.05' ;
       MAXLSIZE = 120 ;
       MAXERRNO = 999 ;
 
@@ -890,7 +1064,7 @@ const VERSION = '2018.05' ;
       (* SIZE OF CHAR SET OF TARGET MACHINE     *)
       (******************************************)
 
-      OPMAX = 97 ;
+      OPMAX = 104 ;
 
       (*****************)
       (* OPCODE RANGE  *)
@@ -1071,6 +1245,10 @@ const VERSION = '2018.05' ;
       PCODE_VPO = 94 ;
       PCODE_VIX = 95 ;
       PCODE_VRP = 96 ;
+      PCODE_MCC = 97 ;
+      PCODE_MCV = 98 ;
+      PCODE_XBG = 100 ;
+      PCODE_XEN = 101 ;
 
 
 type ALPHA = array [ 1 .. IDLNGTH ] of CHAR ;
@@ -1229,7 +1407,8 @@ type ALPHA = array [ 1 .. IDLNGTH ] of CHAR ;
      //************************************************************
 
                    CSTRING :
-                     ( CONFORMANT : BOOLEAN ) ;
+                     ( CONFORMANT : BOOLEAN ;
+                       DEF_COMPLETE : BOOLEAN ) ;
                    ARRAYS :
                      ( AELTYPE , INXTYPE : TTP ) ;
                    RECORDS :
@@ -1852,25 +2031,32 @@ var MXINT2 : INTEGER ;
     WLU_CNT : array [ 1 .. 10 , 1 .. 10 ] of INTEGER ;
 
     (******************************************)
-    (* ERROR MESSAGES:                        *)
-    (* ***************                        *)
+    (* errlog stores the error types that     *)
+    (* have occured during compile            *)
+    (* set of errcode = bit mask              *)
     (******************************************)
 
     ERRLOG : set of ERRCODE ;
-    ERRORCNT , WARNCNT : INTEGER ;
 
     (******************************************)
-    (* ERRORS AND WARNINGS COUNTS             *)
+    (* COMPILATION TIME                       *)
     (******************************************)
 
     CTIME : INTEGER ;
 
     (******************************************)
-    (* COMPILATION TIME                       *)
     (* KIND OF ERROR, 'E' / 'W' (WARNING)     *)
     (******************************************)
 
     ERRKIND : CHAR ;
+
+    (******************************************)
+    (* ordinal number of conditional          *)
+    (* code sequences, startet by XBG and     *)
+    (* ended by XEN Pcode                     *)
+    (******************************************)
+
+    XBG_NUMBER : INTEGER ;
 
     (***********************************************************)
     (* STRUCTURED CONSTANTS, READ-ONLY TABLES                  *)
@@ -1977,7 +2163,8 @@ const BLANKID : ALPHA = '            ' ;
         ' DFC' , ' CST' , ' BGN' , ' UXJ' , ' XLB' , ' END' , ' PAK' ,
         ' ADA' , ' SBA' , ' XOR' , ' MFI' , ' MCP' , ' MSE' , ' DBG' ,
         ' MZE' , ' VC1' , ' VC2' , ' VCC' , ' VLD' , ' VST' , ' VMV' ,
-        ' VSM' , ' VLM' , ' VPU' , ' VPO' , ' VIX' , ' VRP' , '    ' )
+        ' VSM' , ' VLM' , ' VPU' , ' VPO' , ' VIX' , ' VRP' , ' MCC' ,
+        ' MCV' , '    ' , '    ' , '    ' , '    ' , '    ' , '    ' )
         ;
 
       (*********************************************************)
@@ -2186,13 +2373,7 @@ procedure ERROR_POS ( ERRTYPE : CHAR ; FERRNR : ERRCODE ; ERRINFO :
                 , LINEPOS ) ;
      ERRLN := LINENR ;
      if ( ERRTYPE <> 'W' ) or OPT . WARNING then
-       begin
-         ERRLOG := ERRLOG + [ FERRNR ] ;
-         if ERRTYPE <> 'W' then
-           ERRORCNT := ERRORCNT + 1
-         else
-           WARNCNT := WARNCNT + 1 ;
-       end (* then *) ;
+       ERRLOG := ERRLOG + [ FERRNR ] ;
    end (* ERROR_POS *) ;
 
 
@@ -2288,9 +2469,6 @@ procedure GOODBYE ;
      WRITELN ( OUTPUT , '****' : 7 , ' Compiler Summary ****' ) ;
      if OPT . WARNING then
        begin
-         if WARNCNT > 0 then
-           WRITELN ( OUTPUT , '****' : 7 , WARNCNT : 8 ,
-                     ' WARNING MESSAGE(S) ISSUED.' ) ;
          if OPT . MWARN then
            WRITELN ( OUTPUT , '****' : 7 ,
                      ' CONTENTS OF SOURCE LINES OUTSIDE  ' , OPT .
@@ -2323,9 +2501,10 @@ procedure GOODBYE ;
      WRITELN ( LISTING , '****' : 7 , OLDICOUNTER : 8 ,
                ' P_INSTRUCTIONS GENERATED,' , CTIME * 0.001 : 7 : 2 ,
                ' SECONDS IN COMPILATION.' ) ;
-     if ( ERRORCNT > 0 ) or ( WARNCNT > 0 ) then
+     if SCB . UFZAHL + SCB . SFZAHL + SCB . FEZAHL + SCB . WAZAHL <> 0
+     then
        LISTMSGS ;
-     EXIT ( ERRORCNT ) ;
+     EXIT ( SCB . UFZAHL + SCB . SFZAHL + SCB . FEZAHL ) ;
    end (* GOODBYE *) ;
 
 
@@ -3455,7 +3634,7 @@ function GETTYPE ( OPERAND : TTP ) : INTEGER ;
 
      if OPERAND = NIL then
        begin
-         if ERRORCNT = 0 then
+         if SCB . FEZAHL = 0 then
            ERROR ( 401 )
        end (* then *)
      else
@@ -3727,6 +3906,8 @@ procedure DBG_PRINTSYMBOL ( LCP : IDP ) ;
                             WRITE ( DBGINFO , 'L' , SIZE : 1 , '; ' ) ;
                       SCALAR :
                         WRITE ( DBGINFO , 'L' , SIZE : 1 , '; ' ) ;
+                      CSTRING :
+                        WRITE ( DBGINFO , 'X' , SIZE - 4 : 1 , '; ' ) ;
                       POINTER :
                         begin
                           if ELTYPE <> NIL then
@@ -4160,6 +4341,8 @@ procedure DEF_PRINTTYPE ( TYPP : TTP ; MODUS : CHAR ) ;
                WRITE ( LISTDEF , ' scalar (' , SIZE : 1 , ')' ) ;
          SCALAR :
            WRITE ( LISTDEF , ' scalar (' , SIZE : 1 , ')' ) ;
+         CSTRING :
+           WRITE ( LISTDEF , ' string (' , SIZE - 4 : 1 , ')' ) ;
          POINTER :
            begin
              if ELTYPE <> NIL then
@@ -4417,7 +4600,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
           CHARSIZE :
             ;
           otherwise
-            if ERRORCNT = 0 then
+            if SCB . FEZAHL = 0 then
               ERROR ( 401 ) ;
         end (* case *) ;
       end (* ALIGN *) ;
@@ -4640,6 +4823,9 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
           NEWIDP : IDP ;
 
       begin (* MODIFY_TYPE_PARMS *)
+        if FALSE then
+          WRITELN ( TRACEF , 'Start MODIFY_TYPE_PARMS, Loc = ' ,
+                    LINECNT ) ;
         with FSP -> do
           begin
 
@@ -4654,7 +4840,6 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                 return ;
             if FALSE then
               begin
-                WRITELN ( TRACEF , 'modify_type_parms' ) ;
                 WRITELN ( TRACEF , 'fsp.form          = ' , FORM ) ;
                 WRITELN ( TRACEF , 'fsp.scalkind      = ' , SCALKIND )
                           ;
@@ -4751,7 +4936,10 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                           NEW ( IDTYPE ) ;
                           IDTYPE -> := PTYPE_VARCHAR -> ;
                           with IDTYPE -> do
-                            SIZE := PARAM1 + 4 ;
+                            begin
+                              SIZE := PARAM1 + 4 ;
+                              DEF_COMPLETE := TRUE ;
+                            end (* with *)
                         end (* then *)
                       else
                         if FSP = PTYPE_DECIMAL then
@@ -4774,7 +4962,6 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
         with FSP -> do
           if FALSE then
             begin
-              WRITELN ( TRACEF , 'modify_type_parms' ) ;
               WRITELN ( TRACEF , 'loc               = ' , LINECNT ) ;
               WRITELN ( TRACEF , 'typenew           = ' , TYPENEW ) ;
               WRITELN ( TRACEF , 'fsp.form          = ' , FORM ) ;
@@ -5674,6 +5861,18 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                 GEN_STRCONST ( LVALU ) ;
                 WRITELN ( PCODE ) ;
                 return ;
+              end (* then *) ;
+            if ELSP1 -> . FORM = CSTRING then
+              begin
+                WRITELN ( PCODE , ' H,' , ELSP1 -> . SIZE - 4 : 1 ) ;
+                WRITE ( PCODE , CONSTLCOUNTER + 2 : 1 , MN [ 70 ] ) ;
+                WRITELN ( PCODE , ' H,' , LVALU . SVAL -> . LENGTH : 1
+                          ) ;
+                WRITE ( PCODE , CONSTLCOUNTER + 4 : 1 , MN [ 70 ] ) ;
+                WRITE ( PCODE , ' M,' ) ;
+                GEN_STRCONST ( LVALU ) ;
+                WRITELN ( PCODE ) ;
+                return ;
               end (* then *)
           end (* else *)
       end (* WRITEDFC *) ;
@@ -5706,6 +5905,9 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
           IDP_KONST : IDP ;
 
       begin (* TYPE_WITH_PARMS *)
+        if FALSE then
+          WRITELN ( TRACEF , 'Start TYPE_WITH_PARMS, Loc = ' , LINECNT
+                    ) ;
 
         //******************************************************
         // if no sylparent present, then check for              
@@ -5720,24 +5922,26 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                 begin
                   if FORM = CSTRING then
                     begin
-                      if CONF then
-                        begin
-                          PARAM1 := 0 ;
-                          PARAM2 := 0 ;
-                          MODIFY_TYPE_PARMS ( FSP , IDX , PARAM1 ,
-                                              PARAM2 ) ;
-                          FSP -> . CONFORMANT := TRUE ;
-                        end (* then *)
-                      else
-                        begin
-                          ERRINFO := IDX ;
-                          ERROR_POS ( 'E' , 331 , ERRINFO , SCB .
-                                      LINENR , SCB . LINEPOS ) ;
-                          PARAM1 := 254 ;
-                          PARAM2 := 0 ;
-                          MODIFY_TYPE_PARMS ( FSP , IDX , PARAM1 ,
-                                              PARAM2 ) ;
-                        end (* else *)
+                      if not DEF_COMPLETE then
+                        if CONF then
+                          begin
+                            PARAM1 := 0 ;
+                            PARAM2 := 0 ;
+                            MODIFY_TYPE_PARMS ( FSP , IDX , PARAM1 ,
+                                                PARAM2 ) ;
+                            FSP -> . CONFORMANT := TRUE ;
+                            FSP -> . DEF_COMPLETE := TRUE ;
+                          end (* then *)
+                        else
+                          begin
+                            ERRINFO := IDX ;
+                            ERROR_POS ( 'E' , 331 , ERRINFO , SCB .
+                                        LINENR , SCB . LINEPOS ) ;
+                            PARAM1 := 254 ;
+                            PARAM2 := 0 ;
+                            MODIFY_TYPE_PARMS ( FSP , IDX , PARAM1 ,
+                                                PARAM2 ) ;
+                          end (* else *)
                     end (* then *)
                   else
                     if FORM = SCALAR then
@@ -5788,18 +5992,19 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
 
         with FSP -> do
           begin
-            if FORM = SCALAR then
-              if FALSE then
-                begin
-                  WRITELN ( TRACEF , 'type_with_parms' ) ;
-                  WRITELN ( TRACEF , 'fsp.form          = ' , FORM ) ;
-                  WRITELN ( TRACEF , 'fsp.scalkind      = ' , SCALKIND
-                            ) ;
-                  WRITELN ( TRACEF , 'fsp.minparamcount = ' ,
-                            MINPARAMCOUNT ) ;
-                  WRITELN ( TRACEF , 'fsp.maxparamcount = ' ,
-                            MAXPARAMCOUNT ) ;
-                end (* then *) ;
+            if FALSE then
+              begin
+                WRITELN ( TRACEF , 'fsp.form          = ' , FORM ) ;
+                if FORM = SCALAR then
+                  begin
+                    WRITELN ( TRACEF , 'fsp.scalkind      = ' ,
+                              SCALKIND ) ;
+                    WRITELN ( TRACEF , 'fsp.minparamcount = ' ,
+                              MINPARAMCOUNT ) ;
+                    WRITELN ( TRACEF , 'fsp.maxparamcount = ' ,
+                              MAXPARAMCOUNT )
+                  end (* then *)
+              end (* then *) ;
             case FORM of
               SCALAR :
                 begin
@@ -5965,7 +6170,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
 
 
    procedure TYP ( FSYS : SYMSET ; var FSP : TTP ; var FSIZE :
-                 ADDRRANGE ) ;
+                 ADDRRANGE ; CONFORMANT : BOOLEAN ) ;
 
       var LSP , LSP1 , LSP2 : TTP ;
           OLDTOP : DISPRANGE ;
@@ -6356,7 +6561,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                    INSYMBOL ;
                  end (* then *) ;
                TYPE_WITH_PARMS ( FSYS + [ SYRPARENT ] , SYID , FSP ,
-                                 FALSE ) ;
+                                 CONFORMANT ) ;
                if not ( SY in FSYS ) then
                  begin
                    ERROR ( 6 ) ;
@@ -6519,7 +6724,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                  ERROR ( 5 ) ;
                if FIRSTFLD = NIL then
                  FIRSTFLD := NXT1 ;
-               TYP ( FSYS + [ SYCASE , SYSEMICOLON ] , LSP , LSIZE ) ;
+               TYP ( FSYS + [ SYCASE , SYSEMICOLON ] , LSP , LSIZE ,
+                     FALSE ) ;
                LALNFCT := 1 ;
                if LSP <> NIL then
                  LALNFCT := LSP -> . ALN ;
@@ -6780,17 +6986,24 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                               NEXT := FWPTR ;
                               KLASS := TYPES
                             end (* with *) ;
-                          FWPTR := LCP
+                          FWPTR := LCP ;
+                          INSYMBOL ;
                         end (* then *)
                       else
                         begin
+                          INSYMBOL ;
                           if LCP -> . IDTYPE <> NIL then
-                            if LCP -> . IDTYPE -> . FORM = FILES then
-                              ERROR ( 108 )
-                            else
-                              LSP -> . ELTYPE := LCP -> . IDTYPE
-                        end (* else *) ;
-                      INSYMBOL ;
+                            begin
+                              LSP2 := LCP -> . IDTYPE ;
+                              TYPE_WITH_PARMS ( FSYS , SYID , LSP2 ,
+                                                FALSE ) ;
+                              if LSP2 <> NIL then
+                                if LSP2 -> . FORM = FILES then
+                                  ERROR ( 108 )
+                                else
+                                  LSP -> . ELTYPE := LSP2
+                            end (* then *)
+                        end (* else *)
                     end (* then *)
                   else
                     ERROR ( 2 ) ;
@@ -6898,7 +7111,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                         else
                           ERROR ( 8 ) ;
                         PACKDATA := PACKST2 ;
-                        TYP ( FSYS , LSP , LSIZE ) ;
+                        TYP ( FSYS , LSP , LSIZE , FALSE ) ;
                         ARRAY_ERROR := FALSE ;
                         if LSP <> NIL then
                           begin
@@ -7107,7 +7320,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                           INSYMBOL
                         else
                           ERROR ( 8 ) ;
-                        TYP ( FSYS , LSP1 , LSIZE ) ;
+                        TYP ( FSYS , LSP1 , LSIZE , FALSE ) ;
                         LSP := PTYPE_TEXT ;
 
         (**************************)
@@ -7453,7 +7666,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
            CT_RESULT := COMPTYPES ( ELSP , ELSP1 ) ;
            if not ( CT_RESULT in [ 1 , 2 , 3 ] ) then
              begin
-               ERROR ( 145 ) ;
+               ERROR ( 740 ) ;
                ELSP1 := NIL
              end (* then *) ;
            if ELSP1 <> NIL then
@@ -7510,7 +7723,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
           begin
             CONSTANT ( FSYS , FSP , FVALU ) ;
             CT_RESULT := COMPTYPES ( LSP , FSP ) ;
-            if CT_RESULT in [ 1 , 2 , 3 ] then
+            if CT_RESULT in [ 1 , 2 , 3 , 5 ] then
               begin
                 if LSP <> NIL then
                   begin
@@ -7523,7 +7736,10 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
             else
               begin
                 if not LSP -> . ERRORFLAG then
-                  ERROR ( 145 ) ;
+                  begin
+                    WRITE ( TRACEF , 'ct_result = ' , CT_RESULT ) ;
+                    ERROR ( 741 ) ;
+                  end (* then *) ;
                 FSP := NIL
               end (* else *)
           end (* then *)
@@ -7545,7 +7761,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                 if LSP -> . FORM = POWER then
                   ELT := LSP -> . ELSET
                 else
-                  ERROR ( 145 ) ;
+                  ERROR ( 742 ) ;
               PSI := PSIGLOB ;
               PSI -> . ELEMCOUNT := 0 ;
               PSI -> . SETMIN := 0 ;
@@ -7560,7 +7776,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                   CONSTANT ( FSYS + [ SYRBRACK , SYCOMMA , SYDOTDOT ] ,
                              LSP1 , LVALU ) ;
                   if COMPTYPES ( LSP1 , ELT ) <> 1 then
-                    ERROR ( 145 ) ;
+                    ERROR ( 743 ) ;
                   ELT := LSP1 ;
                   NOCHMAL := SET_CONST_PART ( ELT , LVALU , PSI ) ;
                 until not NOCHMAL ;
@@ -7721,7 +7937,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                                                    LVALU ) ;
                                           if COMPTYPES ( IDTYPE , LSP1
                                           ) <> 1 then
-                                            ERROR ( 145 ) ;
+                                            ERROR ( 744 ) ;
                                         end (* else *) ;
                                       if SY = SYCOMMA then
                                         INSYMBOL
@@ -7768,6 +7984,11 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
           LVALU : XCONSTANT ;
           SKID : ALPHA ;
           SKLC : ADDRRANGE ;
+          STRING_GEF : BOOLEAN ;
+
+      const SINDEXTYPE : TYPEREC =
+            ( HINTSIZE , HINTSIZE , FALSE , SUBRANGE , NIL , ( ' ' ,
+              XINT , 1 ) , ( ' ' , XINT , 254 ) ) ;
 
       begin (* CONSTDECLARATION *)
         LISTTAG := 'C' ;
@@ -7779,12 +8000,31 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
         while SY = IDENT do
           begin
             SKID := SYID ;
+            STRING_GEF := FALSE ;
             INSYMBOL ;
             if SY = SYCOLON then
               begin
                 INSYMBOL ;
                 EXTUSED := TRUE ;
-                TYP ( FSYS + [ SYEQOP ] , LSP , SKLC ) ;
+                TYP ( FSYS + [ SYEQOP ] , LSP , SKLC , TRUE ) ;
+
+        //************************************************
+        // if type = string, show warning, if length was  
+        // specified ... and change type variable lsp     
+        // to nil (string size etc. is derived from the   
+        // string constant); only string_gef is set to tru
+        //e                                               
+        //************************************************
+
+                if LSP <> NIL then
+                  if LSP -> . FORM = CSTRING then
+                    begin
+                      STRING_GEF := TRUE ;
+                      if LSP -> . SIZE <> 4 then
+                        ERROR_POS ( 'W' , 339 , ' ' , SCB . LINENR ,
+                                    SCB . LINEPOS ) ;
+                      LSP := NIL ;
+                    end (* then *) ;
 
         //************************************************
         // print constant and type                        
@@ -7827,6 +8067,17 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                         VALUES := LVALU
                       end (* else *)
                   end (* with *) ;
+
+        //************************************************
+        // if type = string was found above and no string 
+        // constant, then show error here                 
+        //************************************************
+
+                if STRING_GEF then
+                  begin
+                    if LVALU . CONSTCLASS <> STRG then
+                      ERROR ( 129 )
+                  end (* then *) ;
                 ENTERID ( LCP ) ;
               end (* then *)
             else
@@ -7874,7 +8125,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
               INSYMBOL
             else
               ERROR ( 16 ) ;
-            TYP ( FSYS + [ SYSEMICOLON ] , LSP , LSIZE ) ;
+            TYP ( FSYS + [ SYSEMICOLON ] , LSP , LSIZE , FALSE ) ;
             ENTERID ( LCP ) ;
             LCP -> . IDTYPE := LSP ;
 
@@ -8005,7 +8256,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
             INSYMBOL
           else
             ERROR ( 5 ) ;
-          TYP ( FSYS + [ SYSEMICOLON ] + TYPEDELS , LSP , LSIZE ) ;
+          TYP ( FSYS + [ SYSEMICOLON ] + TYPEDELS , LSP , LSIZE , FALSE
+                ) ;
           while NXT1 <> NIL do
             with NXT1 -> do
               begin
@@ -8135,7 +8387,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
             INSYMBOL
           else
             ERROR ( 5 ) ;
-          TYP ( FSYS + [ SYSEMICOLON ] + TYPEDELS , LSP , LSIZE ) ;
+          TYP ( FSYS + [ SYSEMICOLON ] + TYPEDELS , LSP , LSIZE , FALSE
+                ) ;
           while NXT1 <> NIL do
             with NXT1 -> do
               begin
@@ -8390,6 +8643,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
          //****************************************************
 
 
+            var CONFORMANT : BOOLEAN ;
+
             begin (* OTHER_PARAMETER *)
               if SY = SYVAR then
                 begin
@@ -8474,14 +8729,15 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
               //************************************************
               // allow conformant strings for var parameters    
               // (see parameter on type_with_parms)             
+              // and const parameters                           
               // 06.01.2018                                     
               //************************************************
 
+                      CONFORMANT := LKIND in [ VARPARM , CONSTPARM ] ;
                       INSYMBOL ;
                       TYPE_WITH_PARMS ( FSYS + [ SYSEMICOLON ,
-                                        SYRPARENT ] , SYID , LSP , (
-                                        LKIND in [ VARPARM , CONSTPARM
-                                        ] ) ) ;
+                                        SYRPARENT ] , SYID , LSP ,
+                                        CONFORMANT ) ;
                       if LSP <> NIL then
                         if ( LKIND = NORMALVAR ) then
                           begin
@@ -9025,6 +9281,35 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
           ERRINFO : CHAR32 ;
 
 
+      function GEN_XBG : INTEGER ;
+
+         begin (* GEN_XBG *)
+           if OPT . PRCODE then
+             begin
+               PUTIC ;
+               XBG_NUMBER := XBG_NUMBER + 1 ;
+               WRITELN ( PCODE , 'XBG' : 4 , ' ' , XBG_NUMBER : 1 ) ;
+             end (* then *) ;
+           GEN_XBG := XBG_NUMBER ;
+         end (* GEN_XBG *) ;
+
+
+      procedure GEN_XEN ( XBG_NO : INTEGER ; DO_GEN : BOOLEAN ) ;
+
+         begin (* GEN_XEN *)
+           if OPT . PRCODE then
+             begin
+               PUTIC ;
+               WRITE ( PCODE , 'XEN' : 4 , ' ' , XBG_NUMBER : 1 , ',' )
+                       ;
+               if DO_GEN then
+                 WRITELN ( PCODE , '1' )
+               else
+                 WRITELN ( PCODE , '0' )
+             end (* then *) ;
+         end (* GEN_XEN *) ;
+
+
       procedure GEN0 ( FOP : OPRANGE ) ;
 
          begin (* GEN0 *)
@@ -9355,7 +9640,12 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                            if TYPTR -> . FORM = POWER then
                              GEN_LCA_S ( TYPTR -> . ELSET , CVAL )
                            else
-                             ERROR ( 416 ) ;
+                             if TYPTR -> . FORM = CSTRING then
+                               begin
+                                 GEN_LCA_M ( CVAL )
+                               end (* then *)
+                             else
+                               ERROR ( 416 ) ;
                    VARBL : case ACCESS of
                              DRCT : GEN2 ( PCODE_LDA , VLEVEL , DPLMT )
                                            ;
@@ -9420,7 +9710,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
 
 
       procedure GENDEF ( LABELNR : ADDRRANGE ; TYP : CHAR ; WERT :
-                       ADDRRANGE ) ;
+                       INTEGER ) ;
 
          begin (* GENDEF *)
            if OPT . PRCODE then
@@ -10093,7 +10383,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                  ADJUST_STRINGSIZE := FALSE ;
                  if FALSE then
                    begin
-                     WRITELN ( TRACEF , 'work_param_byvalue, loc = ' ,
+                     WRITELN ( TRACEF , 'work_param_byvalue, Loc = ' ,
                                LINECNT ) ;
                      WRITELN ( TRACEF , 'CT_result = ' , CT_RESULT ) ;
                      WRITELN ( TRACEF , 'PARMTYPE -> . FORM = ' ,
@@ -10455,7 +10745,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
             begin (* WORK_PARAMETER *)
               if FALSE then
                 begin
-                  WRITELN ( TRACEF , 'work_parameter, loc = ' , LINECNT
+                  WRITELN ( TRACEF , 'work_parameter, Loc = ' , LINECNT
                             ) ;
                 end (* then *) ;
 
@@ -10525,7 +10815,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                 begin
                   WRITELN ( TRACEF , 'work_parameter, before comptypes'
                             ) ;
-                  WRITELN ( TRACEF , 'loc = ' , LINECNT ) ;
+                  WRITELN ( TRACEF , 'Loc = ' , LINECNT ) ;
                   WRITELN ( TRACEF , 'parmtype.form       = ' ,
                             PARMTYPE -> . FORM ) ;
                   if PARMTYPE -> . FORM = CSTRING then
@@ -11190,7 +11480,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
 
                            begin
                              if COMPTYPES ( LSP , RWFILE ) <> 1 then
-                               ERROR ( 145 ) ;
+                               ERROR ( 745 ) ;
                              GEN2 ( PCODE_LDC , 1 , RWFILE -> . SIZE )
                                     ;
                              EXTUSED := TRUE ;
@@ -12002,7 +12292,10 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
             //**********************************************
 
 
+               var XBG_LOCAL : INTEGER ;
+
                begin (* MAXLENGTH1 *)
+                 XBG_LOCAL := GEN_XBG ;
                  EXPRESSION ( FSYS + [ SYRPARENT ] ) ;
                  if GATTR . TYPTR <> NIL then
 
@@ -12012,6 +12305,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
 
                    if GATTR . TYPTR = PTYPE_CHAR then
                      begin
+                       GEN_XEN ( XBG_LOCAL , FALSE ) ;
                        GEN2 ( PCODE_LDC , 1 , 1 ) ;
                      end (* then *)
                    else
@@ -12022,13 +12316,16 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
 
                      if IS_CARRAY ( GATTR . TYPTR ) then
                        begin
+                         GEN_XEN ( XBG_LOCAL , FALSE ) ;
                          GEN2 ( PCODE_LDC , 1 , GATTR . TYPTR -> . SIZE
                                 ) ;
                        end (* then *)
                      else
-                       if GATTR . TYPTR -> . FORM = CSTRING then
-                         if GATTR . KIND <> EXPR then
-                           begin
+                       begin
+                         GEN_XEN ( XBG_LOCAL , TRUE ) ;
+                         if GATTR . TYPTR -> . FORM = CSTRING then
+                           if GATTR . KIND <> EXPR then
+                             begin
 
                  //*******************************************
                  // if not expression and not conformant      
@@ -12036,23 +12333,24 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                  // string type definition                    
                  //*******************************************
 
-                             if not GATTR . TYPTR -> . CONFORMANT then
-                               GEN2 ( PCODE_LDC , 1 , GATTR . TYPTR ->
-                                      . SIZE - 4 )
-                             else
+                               if not GATTR . TYPTR -> . CONFORMANT
+                               then
+                                 GEN2 ( PCODE_LDC , 1 , GATTR . TYPTR
+                                        -> . SIZE - 4 )
+                               else
 
                  //*******************************************
                  // otherwise, if string variable, locate it  
                  // and get maxlength from there              
                  //*******************************************
 
-                               begin
-                                 LOADADDRESS ;
-                                 GEN2 ( PCODE_IND , ORD ( 'H' ) , 0 )
-                               end (* else *)
-                           end (* then *)
-                         else
-                           begin
+                                 begin
+                                   LOADADDRESS ;
+                                   GEN2 ( PCODE_IND , ORD ( 'H' ) , 0 )
+                                 end (* else *)
+                             end (* then *)
+                           else
+                             begin
 
                  //*****************************************************
                  // if string expression (= string on stack),           
@@ -12060,10 +12358,13 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                  // maxlength will be equal to length in this case      
                  //*****************************************************
 
-                             GEN0 ( PCODE_VLM ) ;
-                           end (* else *)
-                       else
-                         ERROR ( 340 ) ;
+                               GEN0 ( PCODE_VLM ) ;
+                             end (* else *)
+                         else
+                           ERROR ( 340 ) ;
+                       end (* else *)
+                 else
+                   GEN_XEN ( XBG_LOCAL , TRUE ) ;
                  GATTR . TYPTR := PTYPE_INT ;
                end (* MAXLENGTH1 *) ;
 
@@ -12076,7 +12377,10 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
             //**********************************************
 
 
+               var XBG_LOCAL : INTEGER ;
+
                begin (* LENGTH1 *)
+                 XBG_LOCAL := GEN_XBG ;
                  EXPRESSION ( FSYS + [ SYRPARENT ] ) ;
                  if GATTR . TYPTR <> NIL then
 
@@ -12086,6 +12390,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
 
                    if GATTR . TYPTR = PTYPE_CHAR then
                      begin
+                       GEN_XEN ( XBG_LOCAL , FALSE ) ;
                        GEN2 ( PCODE_LDC , 1 , 1 ) ;
                      end (* then *)
                    else
@@ -12096,24 +12401,27 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
 
                      if IS_CARRAY ( GATTR . TYPTR ) then
                        begin
+                         GEN_XEN ( XBG_LOCAL , FALSE ) ;
                          GEN2 ( PCODE_LDC , 1 , GATTR . TYPTR -> . SIZE
                                 ) ;
                        end (* then *)
                      else
-                       if GATTR . TYPTR -> . FORM = CSTRING then
-                         if GATTR . KIND <> EXPR then
-                           begin
+                       begin
+                         GEN_XEN ( XBG_LOCAL , TRUE ) ;
+                         if GATTR . TYPTR -> . FORM = CSTRING then
+                           if GATTR . KIND <> EXPR then
+                             begin
 
                  //*******************************************
                  // if string variable, locate it             
                  // and get length from there                 
                  //*******************************************
 
-                             LOADADDRESS ;
-                             GEN2 ( PCODE_IND , ORD ( 'H' ) , 2 )
-                           end (* then *)
-                         else
-                           begin
+                               LOADADDRESS ;
+                               GEN2 ( PCODE_IND , ORD ( 'H' ) , 2 )
+                             end (* then *)
+                           else
+                             begin
 
                  //*****************************************************
                  // if string expression (= string on stack),           
@@ -12122,10 +12430,13 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                  // (maxlength field = -1)                              
                  //*****************************************************
 
-                             GEN0 ( PCODE_VLM ) ;
-                           end (* else *)
-                       else
-                         ERROR ( 340 ) ;
+                               GEN0 ( PCODE_VLM ) ;
+                             end (* else *)
+                         else
+                           ERROR ( 340 ) ;
+                       end (* else *)
+                 else
+                   GEN_XEN ( XBG_LOCAL , TRUE ) ;
                  GATTR . TYPTR := PTYPE_INT ;
                end (* LENGTH1 *) ;
 
@@ -13774,6 +14085,10 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                  (* generate MCP, if length is variable    *)
                  (* otherwise MOV                          *)
                  (******************************************)
+                 (* MOV 0 does not make sense ... it is    *)
+                 (* only done to pop items from the stack  *)
+                 (* and minimize following errors          *)
+                 (******************************************)
 
                  if L_CONST then
                    begin
@@ -13785,6 +14100,128 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                  else
                    GEN0 ( PCODE_MCP ) ;
                end (* MEMCPY1 *) ;
+
+
+            procedure MEMCMP1 ;
+
+            //**********************************************
+            // memcmp generates inline code                 
+            // ...                                          
+            //**********************************************
+
+
+               var L : INTEGER ;
+                   L_CONST : BOOLEAN ;
+
+               begin (* MEMCMP1 *)
+                 L_CONST := FALSE ;
+                 EXPRESSION ( FSYS + [ SYCOMMA , SYRPARENT ] ) ;
+
+                 (******************************************)
+                 (* 1. parameter                           *)
+                 (******************************************)
+
+                 if SY = SYRPARENT then
+                   begin
+                     ERROR ( 197 ) ;
+                     return
+                   end (* then *) ;
+
+                 (******************************************)
+                 (* if type of expr = pointer then load it *)
+                 (******************************************)
+
+                 if GATTR . TYPTR <> NIL then
+                   if GATTR . TYPTR -> . FORM <> POINTER then
+                     ERROR ( 190 )
+                   else
+                     LOAD ;
+                 if SY = SYCOMMA then
+                   INSYMBOL ;
+
+                 (******************************************)
+                 (* 2. parameter                           *)
+                 (******************************************)
+
+                 EXPRESSION ( FSYS + [ SYCOMMA , SYRPARENT ] ) ;
+                 if SY = SYRPARENT then
+                   begin
+                     ERROR ( 197 ) ;
+                     return
+                   end (* then *) ;
+
+                 (******************************************)
+                 (* if type of expr = pointer then load it *)
+                 (******************************************)
+
+                 if GATTR . TYPTR <> NIL then
+                   if GATTR . TYPTR -> . FORM <> POINTER then
+                     ERROR ( 190 )
+                   else
+                     LOAD ;
+                 if SY = SYCOMMA then
+                   INSYMBOL ;
+
+                 (******************************************)
+                 (* 3. parameter                           *)
+                 (******************************************)
+
+                 EXPRESSION ( FSYS + [ SYCOMMA , SYRPARENT ] ) ;
+                 if SY = SYCOMMA then
+                   begin
+                     ERROR ( 198 ) ;
+                     SKIP ( FSYS + [ SYRPARENT ] ) ;
+                     return
+                   end (* then *) ;
+
+                 (******************************************)
+                 (* if type of expr = integer then load it *)
+                 (******************************************)
+
+                 if GATTR . TYPTR <> NIL then
+                   if GATTR . TYPTR <> PTYPE_INT then
+                     ERROR ( 191 )
+                   else
+                     begin
+                       if GATTR . KIND = CST then
+                         begin
+                           if FALSE then
+                             begin
+                               WRITELN ( 'memcpy 3. parameter' ) ;
+                               WRITELN ( 'memcpy: kind = ' , GATTR .
+                                         KIND ) ;
+                               WRITELN ( 'memcpy: ival = ' , GATTR .
+                                         CVAL . IVAL )
+                             end (* then *) ;
+                           L_CONST := TRUE ;
+                           L := GATTR . CVAL . IVAL ;
+                           if L <= 0 then
+                             ERROR ( 320 )
+                         end (* then *)
+                       else
+                         LOAD ;
+                     end (* else *) ;
+
+                 (******************************************)
+                 (* generate MCV, if length is variable    *)
+                 (* otherwise MCC                          *)
+                 (******************************************)
+                 (* MCC 0 does not make sense ... it is    *)
+                 (* only done to pop items from the stack  *)
+                 (* and minimize following errors          *)
+                 (******************************************)
+
+                 if L_CONST then
+                   begin
+                     if L > 0 then
+                       GEN1 ( PCODE_MCC , L )
+                     else
+                       GEN1 ( PCODE_MCC , 0 )
+                   end (* then *)
+                 else
+                   GEN0 ( PCODE_MCV ) ;
+                 GATTR . TYPTR := PTYPE_INT ;
+               end (* MEMCMP1 *) ;
 
 
             procedure ROUNDX1 ;
@@ -14807,6 +15244,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                     93 : INDEX1 ;
                     94 : VERIFY1 ;
                     95 : TRANSLATE1 ;
+                    96 : MEMCMP1 ;
                   end (* case *) ;
                   if LKEY in [ 16 .. 26 , 28 , 29 , 33 , 38 , 39 , 40 ,
                   41 , 42 , 43 , 44 , 47 , 63 , 64 , 78 , 79 ] then
@@ -15667,7 +16105,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                                  if FALSE then
                                    begin
                                      WRITELN ( TRACEF ,
-                                               'simpleex loc = ' ,
+                                               'simpleex Loc = ' ,
                                                LINECNT : 1 ) ;
                                      WRITELN ( TRACEF ,
                                              'gattr.kind           = '
@@ -15844,7 +16282,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                              begin
                                if FALSE then
                                  begin
-                                   WRITELN ( TRACEF , 'simpleex loc = '
+                                   WRITELN ( TRACEF , 'simpleex Loc = '
                                              , LINECNT : 1 ) ;
                                    WRITELN ( TRACEF ,
                                              'gattr.kind           = '
@@ -16183,7 +16621,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                       begin
                         if FALSE then
                           begin
-                            WRITELN ( TRACEF , 'expression loc = ' ,
+                            WRITELN ( TRACEF , 'expression Loc = ' ,
                                       LINECNT : 1 ) ;
                             WRITELN ( TRACEF , 'CT_result = ' ,
                                       CT_RESULT ) ;
@@ -16290,7 +16728,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                                    TYPTR ) ;
                       if FALSE then
                         begin
-                          WRITELN ( TRACEF , 'loc = ' , LINECNT : 1 ,
+                          WRITELN ( TRACEF , 'Loc = ' , LINECNT : 1 ,
                                     ' CT_result (1) = ' , CT_RESULT ) ;
                         end (* then *) ;
 
@@ -17284,7 +17722,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                           STORE ( LATTR ) ;
                         end (* then *)
                       else
-                        ERROR ( 145 )
+                        ERROR ( 746 )
                 end (* then *)
               else
                 begin
@@ -17373,7 +17811,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                             end (* else *) ;
                         end (* then *)
                       else
-                        ERROR ( 145 )
+                        ERROR ( 747 )
                 end (* then *)
               else
                 begin
@@ -18599,7 +19037,8 @@ procedure ENTERSTDTYPES ;
          ( 0 , CHARSIZE , FALSE , SCALAR , STANDARD , 'D' , 15 , 0 , 1
            , 2 , 1 , 31 , 15 ) ;
          VARCHARTYPE : TYPEREC =
-         ( MAXVARCHARSIZE , HINTSIZE , FALSE , CSTRING , FALSE ) ;
+         ( MAXVARCHARSIZE , HINTSIZE , FALSE , CSTRING , FALSE , FALSE
+           ) ;
          BOOLTYPE : TYPEREC =
          ( BOOLSIZE , BOOLSIZE , FALSE , SCALAR , DECLARED , NIL ) ;
          ANYPTYPE : TYPEREC =
@@ -18611,8 +19050,8 @@ procedure ENTERSTDTYPES ;
          ALFATYPE : TYPEREC =
          ( ALFALNGTH , CHARSIZE , FALSE , ARRAYS , NIL , NIL ) ;
          ALFAINX : TYPEREC =
-         ( INTSIZE , INTSIZE , FALSE , SUBRANGE , NIL , ( ' ' , XINT ,
-           1 ) , ( ' ' , XINT , ALFALNGTH ) ) ;
+         ( HINTSIZE , HINTSIZE , FALSE , SUBRANGE , NIL , ( ' ' , XINT
+           , 1 ) , ( ' ' , XINT , ALFALNGTH ) ) ;
          UTYP : IDENTIFIER =
          ( BLANKID , NIL , NIL , NIL , 0 , TYPES ) ;
          UCST : IDENTIFIER =
@@ -18837,7 +19276,7 @@ procedure ENTSTDNAMES ;
            ( 'STRRESULTP  ' , 84 , FUNC ) ,    // ptr to str result
            ( 'REPEATSTR   ' , 85 , FUNC ) ,    // repeat str n times
            ( 'RESULTP     ' , 92 , FUNC ) ,    // ptr to result
-           ( '           ' , - 1 , PROC ) ,    //
+           ( 'MEMCMP      ' , 96 , FUNC ) ,    // like C memcmp
            ( '           ' , - 1 , PROC ) ,    //
            ( '           ' , - 1 , PROC ) ,    //
            ( '           ' , - 1 , PROC ) ,    //
@@ -19156,9 +19595,9 @@ procedure ENTSTDNAMES ;
      // OSPARM pointer ...                                         
      // is defined here as                                         
      // var OSPARM : -> record                                     
-     //                    LENGTH : integer ;                      
-     //                    STRING : array [ 1 .. MAXSTRL ]         
-     //                             of char ;                      
+     //                    PLENGTH : integer ;                     
+     //                    PSTRING : array [ 1 .. MAXSTRL ]        
+     //                              of char ;                     
      //                 end ;                                      
      // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
      // the component names will be changed later                  
@@ -19204,7 +19643,7 @@ procedure ENTSTDNAMES ;
                  NEW ( FSTFLD , FIELD ) ;
                  with FSTFLD -> do
                    begin
-                     NAME := 'LENGTH' ;
+                     NAME := 'PLENGTH' ;
                      IDTYPE := PTYPE_INT ;
                      FLDADDR := 0 ;
                      KLASS := FIELD ;
@@ -19219,7 +19658,7 @@ procedure ENTSTDNAMES ;
                      NEW ( NEXT , FIELD ) ;
                      with NEXT -> do
                        begin
-                         NAME := 'STRING' ;
+                         NAME := 'PSTRING' ;
                          FLDADDR := PTRSIZE ;
                          NEXT := NIL ;
                          KLASS := FIELD ;
@@ -19580,8 +20019,6 @@ procedure INITSCALARS ;
      OPEN_RECORD := NIL ;
      PROGNAME := '$PASMAIN' ;
      PROCLAB := 0 ;
-     ERRORCNT := 0 ;
-     WARNCNT := 0 ;
      ERRKIND := 'E' ;
      EXTUSED := FALSE ;
      PACKDATA := FALSE ;
@@ -19627,6 +20064,12 @@ procedure INITSCALARS ;
      CTLS . VPU2_DONE := FALSE ;
      CTLS . VPU2_OFFSET := 0 ;
      CTLS . VPU2_LEVEL := 0 ;
+
+     (***************************************************)
+     (* intial value for xbg_number                     *)
+     (***************************************************)
+
+     XBG_NUMBER := 0 ;
    end (* INITSCALARS *) ;
 
 
@@ -19768,13 +20211,13 @@ begin (* HAUPTPROGRAMM *)
       begin
         SOURCENAME := '' ;
         for SX := 1 to 8 do
-          if SX <= LENGTH then
-            SOURCENAME [ SX ] := STRING [ SX ] ;
-        if LENGTH > 8 then
+          if SX <= PLENGTH then
+            SOURCENAME [ SX ] := PSTRING [ SX ] ;
+        if PLENGTH > 8 then
           begin
             OPTLINE := ' ' ;
-            for CHCNT := 9 to LENGTH do
-              OPTLINE [ CHCNT - 8 ] := STRING [ CHCNT ] ;
+            for CHCNT := 9 to PLENGTH do
+              OPTLINE [ CHCNT - 8 ] := PSTRING [ CHCNT ] ;
             WORK_OPTIONS ( OPTLINE , SCB , OPT ) ;
           end (* then *)
       end (* with *) ;

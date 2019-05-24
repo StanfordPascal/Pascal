@@ -1,18 +1,26 @@
 module $PASLIBX ;
 
-(*********************************************************************)
-(*$D+,A+                                                             *)
-(*********************************************************************)
-(*                                                                   *)
-(*  Neue Speicherverwaltung fuer Pascal analog LE-Memory Manager     *)
-(*                                                                   *)
-(*  10.2016 - bernd.oppolzer@yahoo.com                               *)
-(*                                                                   *)
-(*********************************************************************)
-(*                                                                   *)
-(*  mit statischen Variablen - siehe static-Definitionen             *)
-(*                                                                   *)
-(*********************************************************************)
+(********************************************************************)
+(*$D+,A+                                                            *)
+(********************************************************************)
+(*                                                                  *)
+(*  Neue Speicherverwaltung fuer Pascal analog LE-Memory Manager    *)
+(*                                                                  *)
+(*  10.2016 - bernd.oppolzer@yahoo.com                              *)
+(*                                                                  *)
+(********************************************************************)
+(*                                                                  *)
+(*  mit statischen Variablen - siehe static-Definitionen            *)
+(*                                                                  *)
+(********************************************************************)
+(*                                                                  *)
+(*  Historie:                                                       *)
+(*                                                                  *)
+(*  17.02.2019: kritischer Fehler gefunden in MODIFY_TREE           *)
+(*  in der Umgebung des Aufrufs von SUCHE_HFRE (siehe Variable      *)
+(*  VMODUS2 und Einsortieren des neuen HFREs bei gleicher Laenge)   *)
+(*                                                                  *)
+(********************************************************************)
 
 
 
@@ -468,6 +476,7 @@ local procedure MODIFY_TREE ( MODUS : CHAR ; HANC_ACT : PHANC ; SIZE :
        SIZE_NEU : INTEGER ;
        ADRDIFF : INTEGER ;
        PLAUF_SUCH : PHFRE ;
+       VMODUS2 : CHAR ;
 
 
    procedure MODIFY_PRIOR ( PNEU : PHFRE ; VORG_MODUS : CHAR ; HANC_ACT
@@ -677,14 +686,28 @@ local procedure MODIFY_TREE ( MODUS : CHAR ; HANC_ACT : PHANC ; SIZE :
         else
           begin
             SIZE_ALT := HANC_ACT -> . LEN_FREE1 ;
-            PLAUFX := HANC_ACT -> . FREE1 ;
+            PLAUFALT := HANC_ACT -> . FREE1 ;
+            PLAUFX := PLAUFALT ;
           end (* else *) ;
         while TRUE do
           with PLAUFX -> do
             begin
-              if FREELOW = NIL then
-                break ;
+
+        //****************************************
+        // schauen ob size von plaufx >= der      
+        // geforderten groesse ist                
+        // falls ja, passt diese stelle           
+        //****************************************
+
               if SIZE_ALT <= SIZE_FREE then
+                break ;
+
+        //****************************************
+        // falls nein, weiterschalten zu          
+        // naechst tieferem element               
+        //****************************************
+
+              if FREELOW = NIL then
                 break ;
               if SIZE_ALT > 8 then
                 SIZE_ALT := LEN_FREELOW
@@ -804,10 +827,10 @@ local procedure MODIFY_TREE ( MODUS : CHAR ; HANC_ACT : PHANC ; SIZE :
      if TRLEVEL >= 3 then
        begin
          WRITELN ( 'modify_tree: modus = ' , MODUS ) ;
+         WRITELN ( 'modify_tree: plaufact = ' , PLAUFACT ) ;
          WRITELN ( 'modify_tree: hanc_act = ' , HANC_ACT ) ;
          WRITELN ( 'modify_tree: size = ' , SIZE ) ;
          WRITELN ( 'modify_tree: plauf = ' , PLAUF ) ;
-         WRITELN ( 'modify_tree: plaufact = ' , PLAUFACT ) ;
        end (* then *) ;
 
      /*******************************************************/
@@ -831,6 +854,27 @@ local procedure MODIFY_TREE ( MODUS : CHAR ; HANC_ACT : PHANC ; SIZE :
 
                SIZE_FREE := SIZE_FREE - SIZE ;
 
+     /*****************************************/
+     /* Element passt, jetzt muss der Baum    */
+     /* evtl. modifiziert werden              */
+     /*****************************************/
+
+               if TRLEVEL >= 3 then
+                 begin
+                   WRITELN ( 'nach SUCHE_HFRE_NACH_GROESSE' ) ;
+                   WRITELN ( 'modify_tree: modus = ' , MODUS ) ;
+                   WRITELN ( 'modify_tree: hanc_act = ' , HANC_ACT ) ;
+                   WRITELN ( 'modify_tree: size_free = ' , SIZE_FREE )
+                             ;
+                   WRITELN ( 'modify_tree: size = ' , SIZE ) ;
+                   WRITELN ( 'modify_tree: plauf = ' , PLAUF ) ;
+                   WRITELN ( 'modify_tree: plauf/len_freelow = ' ,
+                             PLAUF -> . LEN_FREELOW ) ;
+                   WRITELN ( 'modify_tree: plaufalt = ' , PLAUFALT ) ;
+                   WRITELN ( 'modify_tree: vorg_modus = ' , VORG_MODUS
+                             ) ;
+                 end (* then *) ;
+
      /****************************************************/
      /*  modus = T(op) oder V(ertikal)                   */
      /*  top, wenn der HANC direkt auf das benutzte      */
@@ -844,6 +888,8 @@ local procedure MODIFY_TREE ( MODUS : CHAR ; HANC_ACT : PHANC ; SIZE :
 
                if PLAUF -> . LEN_FREELOW < SIZE_FREE then
                  begin
+                   if TRLEVEL >= 3 then
+                     WRITELN ( 'modify_tree: fall 1' ) ;
 
      /******************************************/
      /* sonderfall: free element ist immer     */
@@ -854,6 +900,8 @@ local procedure MODIFY_TREE ( MODUS : CHAR ; HANC_ACT : PHANC ; SIZE :
 
                    if PLAUF -> . FREEEQ = NIL then
                      begin
+                       if TRLEVEL >= 3 then
+                         WRITELN ( 'modify_tree: fall 1.1' ) ;
 
      /***********************************/
      /* es gibt auch keine nachbarn mit */
@@ -869,6 +917,8 @@ local procedure MODIFY_TREE ( MODUS : CHAR ; HANC_ACT : PHANC ; SIZE :
                      end (* then *)
                    else
                      begin
+                       if TRLEVEL >= 3 then
+                         WRITELN ( 'modify_tree: fall 1.2' ) ;
 
      /**************************************/
      /* leider gibt es nachbarn; also      */
@@ -911,6 +961,8 @@ local procedure MODIFY_TREE ( MODUS : CHAR ; HANC_ACT : PHANC ; SIZE :
 
                if PLAUF -> . FREEEQ <> NIL then
                  begin
+                   if TRLEVEL >= 3 then
+                     WRITELN ( 'modify_tree: fall 2.1' ) ;
                    PNACHB := PLAUF -> . FREEEQ ;
                    CHAIN_PRIOR ( PNACHB , VORG_MODUS , HANC_ACT ,
                                  PLAUFALT , PLAUF -> . LEN_FREEEQ ) ;
@@ -919,6 +971,8 @@ local procedure MODIFY_TREE ( MODUS : CHAR ; HANC_ACT : PHANC ; SIZE :
                  end (* then *)
                else
                  begin
+                   if TRLEVEL >= 3 then
+                     WRITELN ( 'modify_tree: fall 2.2' ) ;
                    PNACHB := PLAUF -> . FREELOW ;
                    CHAIN_PRIOR ( PNACHB , VORG_MODUS , HANC_ACT ,
                                  PLAUFALT , PLAUF -> . LEN_FREELOW ) ;
@@ -943,16 +997,57 @@ local procedure MODIFY_TREE ( MODUS : CHAR ; HANC_ACT : PHANC ; SIZE :
      /* von pfreen ...                       */
      /****************************************/
 
+               if TRLEVEL >= 3 then
+                 begin
+                   WRITELN ( 'vor SUCHE_HFRE' ) ;
+                   WRITELN ( 'modify_tree: modus = ' , MODUS ) ;
+                   WRITELN ( 'modify_tree: hanc_act = ' , HANC_ACT ) ;
+                   WRITELN ( 'modify_tree: size_free = ' , SIZE_FREE )
+                             ;
+                   WRITELN ( 'modify_tree: size = ' , SIZE ) ;
+                   WRITELN ( 'modify_tree: plauf = ' , PLAUF ) ;
+                   WRITELN ( 'modify_tree: plaufalt = ' , PLAUFALT ) ;
+                   WRITELN ( 'modify_tree: vorg_modus = ' , VORG_MODUS
+                             ) ;
+                 end (* then *) ;
                SUCHE_HFRE ;
+               if PLAUFALT = HANC_ACT -> . FREE1 then
+                 VMODUS2 := 'T'
+               else
+                 VMODUS2 := 'V' ;
+               if TRLEVEL >= 3 then
+                 begin
+                   WRITELN ( 'nach SUCHE_HFRE' ) ;
+                   WRITELN ( 'modify_tree: modus = ' , MODUS ) ;
+                   WRITELN ( 'modify_tree: hanc_act = ' , HANC_ACT ) ;
+                   WRITELN ( 'modify_tree: size_free = ' , SIZE_FREE )
+                             ;
+                   WRITELN ( 'modify_tree: size = ' , SIZE ) ;
+                   WRITELN ( 'modify_tree: plauf = ' , PLAUF ) ;
+                   WRITELN ( 'modify_tree: plaufalt = ' , PLAUFALT ) ;
+                   WRITELN ( 'modify_tree: vorg_modus = ' , VORG_MODUS
+                             ) ;
+                   WRITELN ( 'modify_tree: vmodus2 = ' , VMODUS2 ) ;
+                 end (* then *) ;
 
      /****************************************/
-     /* bei allen element vorher war         */
+     /* bei allen elementen vorher war       */
      /* LEN_FREELOW groesser; jetzt ist      */
      /* erstmals LEN_FREELOW kleiner gleich  */
      /* oder FREELOW nil                     */
      /****************************************/
      /* bei gleicher laenge:                 */
      /* einsortieren nach adressen           */
+     /* in genau dieser liste                */
+     /****************************************/
+     /* bei kleinerer laenge:                */
+     /* neue liste aufbauen vor der          */
+     /* gefundenen liste                     */
+     /****************************************/
+     /* in beiden faellen ist vmodus2        */
+     /* zu beachten (d.h. das gefundene      */
+     /* plaufalt koennte direkt am           */
+     /* hanc dranhaengen)                    */
      /****************************************/
      /* das ist m.E. die einzige Stelle,     */
      /* wo uebrigbleibende Luecken der       */
@@ -964,8 +1059,8 @@ local procedure MODIFY_TREE ( MODUS : CHAR ; HANC_ACT : PHANC ; SIZE :
                  begin
                    PFREEN := PTRADD ( PLAUF , SIZE ) ;
                    COPY_HFRE ( PLAUF , PFREEN , SIZE_FREE ) ;
-                   INS_HFRE_EQUAL ( PFREEN , SIZE_FREE , PLAUFALT -> .
-                                    FREELOW , PLAUFALT , 'V' ) ;
+                   INS_HFRE_EQUAL ( PFREEN , SIZE_FREE , PLAUFALT ,
+                                    PLAUFALT , VMODUS2 ) ;
                    return ;
                  end (* then *) ;
 
@@ -977,8 +1072,8 @@ local procedure MODIFY_TREE ( MODUS : CHAR ; HANC_ACT : PHANC ; SIZE :
 
                PFREEN := PTRADD ( PLAUF , SIZE ) ;
                COPY_HFRE ( PLAUF , PFREEN , SIZE_FREE ) ;
-               INS_HFRE_ABOVE ( PFREEN , SIZE , NIL , PLAUFALT , 'V' )
-                                ;
+               INS_HFRE_ABOVE ( PFREEN , SIZE , NIL , PLAUFALT ,
+                                VMODUS2 ) ;
              end (* tag/ca *) ;
 
      /*******************************************************/
@@ -1538,7 +1633,7 @@ local procedure FREE_AREA ( PTR : VOIDPTR ) ;
      /* existierende hancs ueberpruefen          */
      /********************************************/
 
-     if TRLEVEL >= 1 then
+     if ( TRLEVEL >= 1 ) or FALSE then
        begin
          WRITELN ( '--------------------------' ,
                    '-----------------------' ) ;
@@ -1562,7 +1657,7 @@ local procedure FREE_AREA ( PTR : VOIDPTR ) ;
      with HANC_ACT -> do
        begin
          PTR_ENDE := PTRADD ( XP , SIZEX ) ;
-         if TRLEVEL >= 3 then
+         if ( TRLEVEL >= 3 ) or FALSE then
            begin
              WRITELN ( 'free_area: xp = ' , XP ) ;
              WRITELN ( 'free_area: sizex = ' , SIZEX ) ;

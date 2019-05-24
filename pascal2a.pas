@@ -2,14 +2,6 @@ program PCODE_TRANSLATOR ( INPUT , OUTPUT , OBJCODE , ASMOUT , TRACEF )
                            ;
 
 (********************************************************************)
-(*                                                                  *)
-(*  aktuelle Themen:                                                *)
-(*                                                                  *)
-(*  - pruefung auf einhaltung der Laenge                            *)
-(*  - LA ggf. durch LH ... ersetzen (wg. 4096)                      *)
-(*  - Problem: Reg 14 wird ggf. benutzt (invalidieren)              *)
-(*                                                                  *)
-(********************************************************************)
 (*$D-,N+                                                            *)
 (********************************************************************)
 (*                                                                  *)
@@ -124,33 +116,273 @@ program PCODE_TRANSLATOR ( INPUT , OUTPUT , OBJCODE , ASMOUT , TRACEF )
 (*              Germany                                             *)
 (*                                                                  *)
 (********************************************************************)
-(*  History of changes since 2011:                                  *)
-(********************************************************************)
 (*                                                                  *)
-(*  modification in 2011 by bernd oppolzer / stuttgart / germany    *)
-(*                                                                  *)
-(*                          berndoppolzer@yahoo.com                 *)
-(*                                                                  *)
-(*  - activate output of assembler mnemonics to asmout              *)
-(*    to make analyzing the object code easier.                     *)
-(*    the final goal is to create other pcode translators           *)
-(*    for other platforms, e.g. windows and linux                   *)
+(*  History records - newest first                                  *)
 (*                                                                  *)
 (********************************************************************)
 (*                                                                  *)
-(*  modification in 2016 by bernd oppolzer / stuttgart / germany    *)
+(*  May 2019 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*             (berndoppolzer@yahoo.com)                            *)
 (*                                                                  *)
-(*                          berndoppolzer@yahoo.com                 *)
+(*  - Code generation errors with builtin functions LENGTH          *)
+(*    and MAXLENGTH, when the lengths are known at compile time     *)
 (*                                                                  *)
-(*  there was a need to do an explicit reset(input) at the          *)
-(*  beginning of the main procedure, because the compiler           *)
-(*  doesn't insert it any more automatically due to some            *)
-(*  improvements (in my opinion); but pascal2.pas checks for        *)
-(*  eof(input) before first read, and therefore the reset has       *)
-(*  to be done before the first read (the implicit reset at the     *)
-(*  time of the first read call is not sufficient).                 *)
+(*  When the LENGTH or MAXLENGTH function was related to an         *)
+(*  array element, the compiler generated code for the              *)
+(*  addressing of the element, although not needed. What made       *)
+(*  things worse: this code left an unneeded item (the address      *)
+(*  of the element) on the stack, which was not removed and led     *)
+(*  to problems in the PASCAL2 code generation (the PCINT           *)
+(*  interpreter doesn't complain, although the memory leak          *)
+(*  - or stack leak in this case - is clearly visible in            *)
+(*  debug mode).                                                    *)
 (*                                                                  *)
-(*  see some comments in pasmonn.ass for details.                   *)
+(*  The solution found is:                                          *)
+(*                                                                  *)
+(*  to invalidate the generated code using two new P-Code           *)
+(*  instructions XBG and XEN.                                       *)
+(*                                                                  *)
+(*  XBG <seqno> is generated, when a critical code sequence         *)
+(*  starts.                                                         *)
+(*                                                                  *)
+(*  If later the compiler decides that the code starting from       *)
+(*  the last scheduled XBG is not needed, it generates a            *)
+(*  XEN <seqno>,0 ... otherwise XEN <seqno>,1                       *)
+(*                                                                  *)
+(*  It is important that the compiler knows the seqno of the        *)
+(*  XBG to write it on the XEN ... and: it should write the         *)
+(*  XEN unconditionally, because PASCAL2 and the P-Code             *)
+(*  interpreter will look for it (if no XEN for a particular        *)
+(*  XBG is found, the code is generated, that is, an                *)
+(*  XEN <seqno>,1 is implied).                                      *)
+(*                                                                  *)
+(********************************************************************)
+(*                                                                  *)
+(*  May 2019 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*             (berndoppolzer@yahoo.com)                            *)
+(*                                                                  *)
+(*  - Some errors were reported by Ed Lott (thanks)                 *)
+(*                                                                  *)
+(*    a) when the compiler generated calls to the CSP WRV           *)
+(*       (write strings), it did not make sure that the             *)
+(*       FCB address was loaded (see PASCAL2, LOADFCBADDRESS).      *)
+(*       Corrected 13.05.2019                                       *)
+(*                                                                  *)
+(*    b) when accessing static strings, the compiler did not        *)
+(*       add the offset of the string in the STATIC CSECT           *)
+(*       during address computation (in some situations)            *)
+(*       Corrected 14.05.2019                                       *)
+(*                                                                  *)
+(*    c) when accessing the length field of a string,               *)
+(*       the compiler did not compute the address correctly         *)
+(*       (especially when the string was an array element).         *)
+(*       The function GETADR2 must be used in this case.            *)
+(*       Corrected 15.05.2019                                       *)
+(*                                                                  *)
+(*    d) wrong code was generated, when a string array              *)
+(*       component was passed to a procedure (again, using          *)
+(*       GETADR2 solved the problem).                               *)
+(*       Corrected 17.05.2019                                       *)
+(*                                                                  *)
+(********************************************************************)
+(*                                                                  *)
+(*  Jun.2018 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*             (berndoppolzer@yahoo.com)                            *)
+(*                                                                  *)
+(*  MEMCMP added as standard function, similar to MEMCPY.           *)
+(*  Two new PCODE instructions added to implement MEMCMP inline     *)
+(*  (MCC and MCV)                                                   *)
+(*                                                                  *)
+(********************************************************************)
+(*                                                                  *)
+(*  Jun.2018 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*             (berndoppolzer@yahoo.com)                            *)
+(*                                                                  *)
+(*  Some optimization has been applied to the literal pool;         *)
+(*  leading to errors 257 first. There was an interesting           *)
+(*  story about an old optimization strategy targetting             *)
+(*  series of MVCs, which lead to unused literals and errors        *)
+(*  257 ... see compiler Facebook page.                             *)
+(*                                                                  *)
+(*  This was fixed by adding field OPTIMIZED into LITTBL            *)
+(*                                                                  *)
+(*  Look into procedure SOPERATION, the code following the          *)
+(*  comment: CONSECUTIVE MVC INSTS                                  *)
+(*                                                                  *)
+(********************************************************************)
+(*                                                                  *)
+(*  May 2018 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*             (berndoppolzer@yahoo.com)                            *)
+(*                                                                  *)
+(*  The P-Codes for Strings (starting with the letter V)            *)
+(*  are now recognized and translated to 370 machine code;          *)
+(*  this was a hard piece of work and finally seems to work         *)
+(*  correctly with the 2018.05 release. There still remains         *)
+(*  some work to do: some of the length checks which should         *)
+(*  be in place for the strings to work correctly are still         *)
+(*  not yet implemented. Error handling should be improved and      *)
+(*  consolidated.                                                   *)
+(*                                                                  *)
+(********************************************************************)
+(*                                                                  *)
+(*  Mar.2018 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*             (berndoppolzer@yahoo.com)                            *)
+(*                                                                  *)
+(*  Implementing the new P-Code instructions to support             *)
+(*  Strings aka VarChars ... the new P-Codes all start with         *)
+(*  the letter V and are described elsewhere.                       *)
+(*                                                                  *)
+(*  The handling and administration of the literal pool             *)
+(*  has been improved, see type literal_pool_control;               *)
+(*  character string literals are stored only once, if              *)
+(*  they appear more than once in a procedure or function;          *)
+(*  this is also true if one string is the beginning or ending      *)
+(*  part of another string (the longer string must have             *)
+(*  appeared first in the source).                                  *)
+(*                                                                  *)
+(*  Many minor improvements to PASCAL2 to make the String           *)
+(*  implementation possible :-)                                     *)
+(*                                                                  *)
+(*  The new P-Codes:                                                *)
+(*                                                                  *)
+(*  'VC1' , 'VC2' , 'VCC' , 'VLD'                                   *)
+(*  'VST' , 'VMV' , 'VSM' , 'VLM'                                   *)
+(*  'VPU' , 'VPO' , 'VIX' , 'VRP'                                   *)
+(*                                                                  *)
+(*  see procedure STRINGOPS (and others)                            *)
+(*                                                                  *)
+(********************************************************************)
+(*                                                                  *)
+(*  Dec.2017 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*             (berndoppolzer@yahoo.com)                            *)
+(*                                                                  *)
+(*  New P-Code instructions to better support block moves           *)
+(*  like memcpy and memset:                                         *)
+(*                                                                  *)
+(*   - PCODE_MFI = 80 ;  // memory fill - constant length           *)
+(*   - PCODE_MCP = 81 ;  // memcpy - three parameters               *)
+(*   - PCODE_MSE = 82 ;  // memset - three parameters               *)
+(*   - PCODE_MZE = 84 ;  // memory zero - constant length           *)
+(*                                                                  *)
+(*  and a new DBG instruction, which should be ignored:             *)
+(*                                                                  *)
+(*   - PCODE_DBG = 83 ;  // one parameter, ignored at the moment    *)
+(*                                                                  *)
+(********************************************************************)
+(*                                                                  *)
+(*  Aug.2017 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*             (berndoppolzer@yahoo.com)                            *)
+(*                                                                  *)
+(*  Some corrections on the implementation of Pascal sets,          *)
+(*  sets can have up to 2000 elements now ... see constants         *)
+(*  MXPLNGTH etc.                                                   *)
+(*                                                                  *)
+(*  More improvements on sets will follow                           *)
+(*                                                                  *)
+(********************************************************************)
+(*                                                                  *)
+(*  May.2017 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*             (berndoppolzer@yahoo.com)                            *)
+(*                                                                  *)
+(*  The compiler now runs on MVS (Hercules), too.                   *)
+(*  Same source code (PASCAL1, PASCAL2) as with CMS,                *)
+(*  same runtime (PASMONN) - although there are some                *)
+(*  CMS dependencies, controlled by SYSPARM(CMS).                   *)
+(*  Different PASSNAP ... see below.                                *)
+(*                                                                  *)
+(*  See more comments in PASCAL1.PAS                                *)
+(*                                                                  *)
+(********************************************************************)
+(*                                                                  *)
+(*  Jan.2017 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*             (berndoppolzer@yahoo.com)                            *)
+(*                                                                  *)
+(*  From some discussions on the FPC mailing list, I got the        *)
+(*  idea to support bit operations on integer operands, too.        *)
+(*                                                                  *)
+(*  The operations AND, OR, NOT have been extended to do            *)
+(*  bit operations, when being used with integers (was error        *)
+(*  134 before). Another operation XOR is provided (new             *)
+(*  reserved symbol) for exclusive or operation; can be used        *)
+(*  with integer or boolean operands.                               *)
+(*                                                                  *)
+(*  New P-Code instruction XOR; the P-Code instructions             *)
+(*  AND, IOR, NOT and XOR have a type parameter (B or I).           *)
+(*                                                                  *)
+(*  PASCAL2 was extended to support the integer operands            *)
+(*  with AND, IOR and NOT and the new P-Code instruction XOR;       *)
+(*  the constant XOR had to be renamed to XORX, because             *)
+(*  XOR now is a reserved word.                                     *)
+(*                                                                  *)
+(********************************************************************)
+(*                                                                  *)
+(*  Dec.2016 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*             (berndoppolzer@yahoo.com)                            *)
+(*                                                                  *)
+(*  The generation of the STATIC and CODE CSECTs was changed.       *)
+(*                                                                  *)
+(*  The STATIC CSECT contains its own size at offset 8;             *)
+(*  the real data starts at offset 16 (10 to 15 are free).          *)
+(*                                                                  *)
+(*  The CODE CSECT contains the Pascal procedure name also          *)
+(*  in the NODEBUG case in the CSECT identifier, and the            *)
+(*  stacksize at a certain position (see GEN_CSECT and              *)
+(*  INIT_CSECT for details).                                        *)
+(*                                                                  *)
+(*  This way it is possible for PASSNAP to show the areas           *)
+(*  in their correct length also in the NODEBUG case in             *)
+(*  hex dump format; and with the real Pascal proc names            *)
+(*  (but no Pascal variable names; to do this, the DEBUG            *)
+(*  switch and a DBGINFO file is needed).                           *)
+(*                                                                  *)
+(********************************************************************)
+(*                                                                  *)
+(*  Dec.2016 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*             (berndoppolzer@yahoo.com)                            *)
+(*                                                                  *)
+(*  Another portability issue:                                      *)
+(*                                                                  *)
+(*  the branch table used with case statements implies the          *)
+(*  EBCDIC char set, if the case control variable is of type        *)
+(*  char. I changed the XJP logic to a portable representation      *)
+(*  of the branch table and shifted the construction of the         *)
+(*  "real" branch table to the second pass. This way, XJP           *)
+(*  instructions and "portable branch tables" can be moved          *)
+(*  to foreign platforms with foreign character sets.               *)
+(*                                                                  *)
+(*  see boolean constant 'PORTABLE_BRANCHTABLE' in pass 1           *)
+(*                                                                  *)
+(*  this is the second pass (the P-Code translator);                *)
+(*  it recognizes and handles both variants of branch tables,       *)
+(*  portable and non-portable                                       *)
+(*                                                                  *)
+(********************************************************************)
+(*                                                                  *)
+(*  Nov.2016 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*             (berndoppolzer@yahoo.com)                            *)
+(*                                                                  *)
+(*  To enable the port to ASCII platforms, the following            *)
+(*  changes have been made:                                         *)
+(*                                                                  *)
+(*  - set constants of set of char have a new representation        *)
+(*    in the P-Code, envolving char representation of the           *)
+(*    chars contained in the set                                    *)
+(*                                                                  *)
+(*  - not related to the port: set constants in P-Code are          *)
+(*    represented by hexa byte strings instead of integer           *)
+(*    strings, which makes them much better readable                *)
+(*                                                                  *)
+(*  See procedure READSET                                           *)
+(*                                                                  *)
+(********************************************************************)
+(*                                                                  *)
+(*  Oct.2016 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*             (berndoppolzer@yahoo.com)                            *)
+(*                                                                  *)
+(*  modification to support static variables and to provide         *)
+(*  informations for SNAPSHOT, so that static variables can         *)
+(*  be found at run time. See pass 1 (PASCAL1.PAS) for details,     *)
+(*  and some comments in INIT_CSECT and GEN_CSECT.                  *)
 (*                                                                  *)
 (********************************************************************)
 (*                                                                  *)
@@ -184,6 +416,22 @@ program PCODE_TRANSLATOR ( INPUT , OUTPUT , OBJCODE , ASMOUT , TRACEF )
 (*                                                                  *)
 (*                          berndoppolzer@yahoo.com                 *)
 (*                                                                  *)
+(*  there was a need to do an explicit reset(input) at the          *)
+(*  beginning of the main procedure, because the compiler           *)
+(*  doesn't insert it any more automatically due to some            *)
+(*  improvements (in my opinion); but pascal2.pas checks for        *)
+(*  eof(input) before first read, and therefore the reset has       *)
+(*  to be done before the first read (the implicit reset at the     *)
+(*  time of the first read call is not sufficient).                 *)
+(*                                                                  *)
+(*  see some comments in pasmonn.ass for details.                   *)
+(*                                                                  *)
+(********************************************************************)
+(*                                                                  *)
+(*  modification in 2016 by bernd oppolzer / stuttgart / germany    *)
+(*                                                                  *)
+(*                          berndoppolzer@yahoo.com                 *)
+(*                                                                  *)
 (*  the procedure names applied to the object file in case of       *)
 (*  the active debug switch had to be extended to 20 chars,         *)
 (*  so that SNAPSHOT could get the long names correctly.            *)
@@ -191,172 +439,22 @@ program PCODE_TRANSLATOR ( INPUT , OUTPUT , OBJCODE , ASMOUT , TRACEF )
 (*                                                                  *)
 (********************************************************************)
 (*                                                                  *)
-(*  Oct.2016 - Extensions to the Compiler by Bernd Oppolzer         *)
-(*             (berndoppolzer@yahoo.com)                            *)
+(*  modification in 2011 by bernd oppolzer / stuttgart / germany    *)
 (*                                                                  *)
-(*  modification to support static variables and to provide         *)
-(*  informations for SNAPSHOT, so that static variables can         *)
-(*  be found at run time. See pass 1 (PASCAL1.PAS) for details,     *)
-(*  and some comments in INIT_CSECT and GEN_CSECT.                  *)
+(*                          berndoppolzer@yahoo.com                 *)
 (*                                                                  *)
-(********************************************************************)
-(*                                                                  *)
-(*  Nov.2016 - Extensions to the Compiler by Bernd Oppolzer         *)
-(*             (berndoppolzer@yahoo.com)                            *)
-(*                                                                  *)
-(*  To enable the port to ASCII platforms, the following            *)
-(*  changes have been made:                                         *)
-(*                                                                  *)
-(*  - set constants of set of char have a new representation        *)
-(*    in the P-Code, envolving char representation of the           *)
-(*    chars contained in the set                                    *)
-(*                                                                  *)
-(*  - not related to the port: set constants in P-Code are          *)
-(*    represented by hexa byte strings instead of integer           *)
-(*    strings, which makes them much better readable                *)
-(*                                                                  *)
-(*  See procedure READSET                                           *)
-(*                                                                  *)
-(********************************************************************)
-(*                                                                  *)
-(*  Dec.2016 - Extensions to the Compiler by Bernd Oppolzer         *)
-(*             (berndoppolzer@yahoo.com)                            *)
-(*                                                                  *)
-(*  Another portability issue:                                      *)
-(*                                                                  *)
-(*  the branch table used with case statements implies the          *)
-(*  EBCDIC char set, if the case control variable is of type        *)
-(*  char. I changed the XJP logic to a portable representation      *)
-(*  of the branch table and shifted the construction of the         *)
-(*  "real" branch table to the second pass. This way, XJP           *)
-(*  instructions and "portable branch tables" can be moved          *)
-(*  to foreign platforms with foreign character sets.               *)
-(*                                                                  *)
-(*  see boolean constant 'PORTABLE_BRANCHTABLE' in pass 1           *)
-(*                                                                  *)
-(*  this is the second pass (the P-Code translator);                *)
-(*  it recognizes and handles both variants of branch tables,       *)
-(*  portable and non-portable                                       *)
-(*                                                                  *)
-(********************************************************************)
-(*                                                                  *)
-(*  Dec.2016 - Extensions to the Compiler by Bernd Oppolzer         *)
-(*             (berndoppolzer@yahoo.com)                            *)
-(*                                                                  *)
-(*  The generation of the STATIC and CODE CSECTs was changed.       *)
-(*                                                                  *)
-(*  The STATIC CSECT contains its own size at offset 8;             *)
-(*  the real data starts at offset 16 (10 to 15 are free).          *)
-(*                                                                  *)
-(*  The CODE CSECT contains the Pascal procedure name also          *)
-(*  in the NODEBUG case in the CSECT identifier, and the            *)
-(*  stacksize at a certain position (see GEN_CSECT and              *)
-(*  INIT_CSECT for details).                                        *)
-(*                                                                  *)
-(*  This way it is possible for PASSNAP to show the areas           *)
-(*  in their correct length also in the NODEBUG case in             *)
-(*  hex dump format; and with the real Pascal proc names            *)
-(*  (but no Pascal variable names; to do this, the DEBUG            *)
-(*  switch and a DBGINFO file is needed).                           *)
-(*                                                                  *)
-(********************************************************************)
-(*                                                                  *)
-(*  Jan.2017 - Extensions to the Compiler by Bernd Oppolzer         *)
-(*             (berndoppolzer@yahoo.com)                            *)
-(*                                                                  *)
-(*  From some discussions on the FPC mailing list, I got the        *)
-(*  idea to support bit operations on integer operands, too.        *)
-(*                                                                  *)
-(*  The operations AND, OR, NOT have been extended to do            *)
-(*  bit operations, when being used with integers (was error        *)
-(*  134 before). Another operation XOR is provided (new             *)
-(*  reserved symbol) for exclusive or operation; can be used        *)
-(*  with integer or boolean operands.                               *)
-(*                                                                  *)
-(*  New P-Code instruction XOR; the P-Code instructions             *)
-(*  AND, IOR, NOT and XOR have a type parameter (B or I).           *)
-(*                                                                  *)
-(*  PASCAL2 was extended to support the integer operands            *)
-(*  with AND, IOR and NOT and the new P-Code instruction XOR;       *)
-(*  the constant XOR had to be renamed to XORX, because             *)
-(*  XOR now is a reserved word.                                     *)
-(*                                                                  *)
-(********************************************************************)
-(*                                                                  *)
-(*  May.2017 - Extensions to the Compiler by Bernd Oppolzer         *)
-(*             (berndoppolzer@yahoo.com)                            *)
-(*                                                                  *)
-(*  The compiler now runs on MVS (Hercules), too.                   *)
-(*  Same source code (PASCAL1, PASCAL2) as with CMS,                *)
-(*  same runtime (PASMONN) - although there are some                *)
-(*  CMS dependencies, controlled by SYSPARM(CMS).                   *)
-(*  Different PASSNAP ... see below.                                *)
-(*                                                                  *)
-(*  See more comments in PASCAL1.PAS                                *)
-(*                                                                  *)
-(********************************************************************)
-(*                                                                  *)
-(*  Aug.2017 - Extensions to the Compiler by Bernd Oppolzer         *)
-(*             (berndoppolzer@yahoo.com)                            *)
-(*                                                                  *)
-(*  Some corrections on the implementation of Pascal sets,          *)
-(*  sets can have up to 2000 elements now ... see constants         *)
-(*  MXPLNGTH etc.                                                   *)
-(*                                                                  *)
-(*  More improvements on sets will follow                           *)
-(*                                                                  *)
-(********************************************************************)
-(*                                                                  *)
-(*  Dec.2017 - Extensions to the Compiler by Bernd Oppolzer         *)
-(*             (berndoppolzer@yahoo.com)                            *)
-(*                                                                  *)
-(*  New P-Code instructions to better support block moves           *)
-(*  like memcpy and memset:                                         *)
-(*                                                                  *)
-(*   - PCODE_MFI = 80 ;  // memory fill - constant length           *)
-(*   - PCODE_MCP = 81 ;  // memcpy - three parameters               *)
-(*   - PCODE_MSE = 82 ;  // memset - three parameters               *)
-(*   - PCODE_MZE = 84 ;  // memory zero - constant length           *)
-(*                                                                  *)
-(*  and a new DBG instruction, which should be ignored:             *)
-(*                                                                  *)
-(*   - PCODE_DBG = 83 ;  // one parameter, ignored at the moment    *)
-(*                                                                  *)
-(********************************************************************)
-(*                                                                  *)
-(*  Mar.2018 - Extensions to the Compiler by Bernd Oppolzer         *)
-(*             (berndoppolzer@yahoo.com)                            *)
-(*                                                                  *)
-(*  Implementing the new P-Code instructions to support             *)
-(*  Strings aka VarChars ... the new P-Codes all start with         *)
-(*  the letter V and are described elsewhere.                       *)
-(*                                                                  *)
-(*  The handling and administration of the literal pool             *)
-(*  has been improved, see type literal_pool_control;               *)
-(*  character string literals are stored only once, if              *)
-(*  they appear more than once in a procedure or function;          *)
-(*  this is also true if one string is the beginning or ending      *)
-(*  part of another string (the longer string must have             *)
-(*  appeared first in the source).                                  *)
-(*                                                                  *)
-(*  Many minor improvements to PASCAL2 to make the String           *)
-(*  implementation possible :-)                                     *)
-(*                                                                  *)
-(*  The new P-Codes:                                                *)
-(*                                                                  *)
-(*  'VC1' , 'VC2' , 'VCC' , 'VLD'                                   *)
-(*  'VST' , 'VMV' , 'VSM' , 'VLM'                                   *)
-(*  'VPU' , 'VPO' , 'VIX' , 'VRP'                                   *)
-(*                                                                  *)
-(*  see procedure STRINGOPS (and others)                            *)
+(*  - activate output of assembler mnemonics to asmout              *)
+(*    to make analyzing the object code easier.                     *)
+(*    the final goal is to create other pcode translators           *)
+(*    for other platforms, e.g. windows and linux                   *)
 (*                                                                  *)
 (********************************************************************)
 
 
 
-const VERSION = '2018.05' ;        // Version for display message
-      VERSION2 = 0x1805 ;          // Version for load module
-      VERSION3 = 'XL2''1805''' ;   // Version for ASMOUT listing
+const VERSION = '2019.05' ;        // Version for display message
+      VERSION2 = 0x1905 ;          // Version for load module
+      VERSION3 = 'XL2''1905''' ;   // Version for ASMOUT listing
       MXADR = 65535 ;
       SHRTINT = 4095 ;
       HALFINT = 32700 ;
@@ -769,7 +867,7 @@ type OPTYPE = ( PCTS , PCTI , PLOD , PSTR , PLDA , PLOC , PSTO , PLDC ,
               PXLB , PCST , PDFC , PPAK , PADA , PSBA , PXOR , PMFI ,
               PMCP , PMSE , PDBG , PMZE , PVC1 , PVC2 , PVCC , PVLD ,
               PVST , PVMV , PVSM , PVLM , PVPU , PVPO , PVIX , PVRP ,
-              UNDEF_OP ) ;
+              PMCC , PMCV , PXXX , PXBG , PXEN , UNDEF_OP ) ;
      CSPTYPE = ( PCTR , PN01 , PN02 , PN03 , PN04 , PN05 , PN06 , PN07
                , PN08 , PN09 , PPAG , PGET , PPUT , PRES , PREW , PRDC
                , PWRI , PWRE , PWRR , PWRC , PWRS , PWRX , PRDB , PWRB
@@ -893,6 +991,7 @@ type OPTYPE = ( PCTS , PCTI , PLOD , PSTR , PLDA , PLOC , PSTO , PLDC ,
                       FILL_LINEPTR : BOOLEAN ;
                       MOD1DEFSTEP : INTEGER ;
                       MOD2DEFSTEP : INTEGER ;
+                      XBG_XEN_SUPPRESSED : INTEGER ;
                     end ;
 
      //****************************************************************
@@ -977,6 +1076,22 @@ type OPTYPE = ( PCTS , PCTI , PLOD , PSTR , PLDA , PLOC , PSTO , PLDC ,
                         NEXT : PPI
                       end ;
 
+     //****************************************************************
+     // XBG/XEN control                                                
+     // a P-Code instruction XBG starts a conditional code section     
+     // which may be ignored, if the corresponding XEN instruction     
+     // has a second parameter of zero. The XBG/XEN pairs are read     
+     // in the first pass (READNXTINST with modus = 1). The result     
+     // is recorded in this chain.                                     
+     //****************************************************************
+
+     PXXI = -> XBG_XEN_INFO ;
+     XBG_XEN_INFO = record
+                      XBG_NO : INTEGER ;
+                      VALID : BOOLEAN ;
+                      NEXT : PXXI
+                    end ;
+
 
 var GS : GLOBAL_STATE ;
     LINECNT : INTEGER ;
@@ -990,6 +1105,15 @@ var GS : GLOBAL_STATE ;
     PIAKT : PPI ;
 
     //**************************************************************
+    // anchor for procedure information chain                       
+    // built during first p-code reading                            
+    //**************************************************************
+
+    XXIANKER : PXXI ;
+    XXIAKT : PXXI ;
+    XXILAUF : PXXI ;
+
+    //**************************************************************
     // CURRENT/OLD INST. OPCODE                                     
     // CURRENT STND. PROC. CODE                                     
     // CURRENT (SYMBOLIC) PCODE /CSP NAME                           
@@ -997,7 +1121,7 @@ var GS : GLOBAL_STATE ;
 
     PCODE , OLDPCODE : OPTYPE ;
     CSP , OLDCSP : CSPTYPE ;
-    NMCDE , EMPTY : BETA ;
+    P_OPCODE , EMPTY : BETA ;
     PROCOFFSET : INTEGER ;
     OP_SP : BOOLEAN ;
 
@@ -1465,6 +1589,8 @@ var GS : GLOBAL_STATE ;
                                         LENGTH : HINTEGER ;
                                         XIDP : INTEGER ;
                                         LNK : ICRNG_EXT ;
+                                        XLINECNT : INTEGER ;
+                                        OPTIMIZED : BOOLEAN ;
                                       end ;
     LBLTBL : array [ 0 .. LBLCNT ] of record
                                         DEFINED : BOOLEAN ;
@@ -1558,7 +1684,7 @@ const HEXTAB : array [ 0 .. 15 ] of CHAR = '0123456789abcdef' ;
         'XLB' , 'CST' , 'DFC' , 'PAK' , 'ADA' , 'SBA' , 'XOR' , 'MFI' ,
         'MCP' , 'MSE' , 'DBG' , 'MZE' , 'VC1' , 'VC2' , 'VCC' , 'VLD' ,
         'VST' , 'VMV' , 'VSM' , 'VLM' , 'VPU' , 'VPO' , 'VIX' , 'VRP' ,
-        '-?-' ) ;
+        'MCC' , 'MCV' , '-?-' , 'XBG' , 'XEN' , '-?-' ) ;
       CSPTBL : array [ CSPTYPE ] of BETA =
       ( 'N00' , 'N01' , 'N02' , 'N03' , 'N04' , 'N05' , 'N06' , 'N07' ,
         'N08' , 'N09' , 'PAG' , 'GET' , 'PUT' , 'RES' , 'REW' , 'RDC' ,
@@ -1756,12 +1882,12 @@ procedure ENTERLOOKUP ;
    var H : INTEGER ;     // was 0 .. HTSIZE, changed due to rangeerr
 
    begin (* ENTERLOOKUP *)
-     H := ( ORD ( NMCDE [ 1 ] ) * 64 +         // hashcode part 1
-          ORD ( NMCDE [ 2 ] ) * 4096 +         // hashcode part 2
-          ORD ( NMCDE [ 3 ] ) ) MOD HTSIZE ;   // hashcode part 3
+     H := ( ORD ( P_OPCODE [ 1 ] ) * 64 +         // hashcode part 1
+          ORD ( P_OPCODE [ 2 ] ) * 4096 +         // hashcode part 2
+          ORD ( P_OPCODE [ 3 ] ) ) MOD HTSIZE ;   // hashcode part 3
      repeat
        with HTBL [ H ] do
-         if NAME <> NMCDE then
+         if NAME <> P_OPCODE then
            if NAME <> EMPTY then
              begin
                H := H + STEP ;
@@ -1782,7 +1908,7 @@ procedure ENTERLOOKUP ;
      (* ENTER THE ITEM *)
      (******************)
 
-                 NAME := NMCDE ;
+                 NAME := P_OPCODE ;
                  if OP_SP then
                    OPCDE := PCODE
                  else
@@ -2419,26 +2545,55 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
      GET ( INPUT ) ;
      if INPUT -> = ' ' then
        SKIPBLANKS ;
-     READ ( NMCDE ) ;
+
+     //************************************************************
+     // P-Opcode einlesen                                          
+     //************************************************************
+
+     READ ( P_OPCODE ) ;
+
+     //************************************************************
+     // when reading the first time, only certain P-Opcodes are    
+     // of interest                                                
+     //************************************************************
+
      if MODUS = 1 then
        begin
-         if ( NMCDE <> 'ENT' ) and ( NMCDE <> 'RET' ) and ( NMCDE <>
-         'DEF' ) and ( NMCDE <> 'STP' ) then
+         if ( P_OPCODE <> 'ENT' ) and ( P_OPCODE <> 'RET' ) and (
+         P_OPCODE <> 'DEF' ) and ( P_OPCODE <> 'STP' ) and ( P_OPCODE
+         <> 'XBG' ) and ( P_OPCODE <> 'XEN' ) then
            begin
              READLN ( INPUT ) ;
              return ;
            end (* then *) ;
        end (* then *)
+
+     //************************************************************
+     // when reading the second time, there may be                 
+     // XBG/XEN suppressing in effect ... if so, only              
+     // XEN P-Codes need to be interpreted, because only XEN       
+     // may terminate the XBG/XEN suppressing                      
+     //************************************************************
+
      else
-       if ASM and ( NMCDE <> 'LOC' ) and ( NMCDE <> 'ENT' ) then
-         begin
-           if NMCDE = 'DFC' then
-             HEXHW ( LBL1 . CADDR , HLOC )
-           else
-             HEXHW ( 2 * PCOUNTER , HLOC ) ;
-           WRITE ( ASMOUT , HLOC : 9 , ':  ' , LBL1 . NAM : LBL1 . LEN
-                   , ' ' : 6 - LBL1 . LEN , NMCDE : 6 ) ;
-         end (* then *) ;
+       begin
+         if GS . XBG_XEN_SUPPRESSED > 0 then
+           if P_OPCODE <> 'XEN' then
+             begin
+               READLN ( INPUT ) ;
+               return ;
+             end (* then *) ;
+         if ASM and ( P_OPCODE <> 'LOC' ) and ( P_OPCODE <> 'ENT' )
+         then
+           begin
+             if P_OPCODE = 'DFC' then
+               HEXHW ( LBL1 . CADDR , HLOC )
+             else
+               HEXHW ( 2 * PCOUNTER , HLOC ) ;
+             WRITE ( ASMOUT , HLOC : 9 , ':  ' , LBL1 . NAM : LBL1 .
+                     LEN , ' ' : 6 - LBL1 . LEN , P_OPCODE : 6 ) ;
+           end (* then *)
+       end (* else *) ;
 
      //************************************************************
      // achtung, nur uebergangsweise, bis V-Befehle                
@@ -2474,20 +2629,93 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
      //************************************************************
 
      case PCODE of
+
+     //************************************************************
+     // pcodes with no operands                                    
+     //************************************************************
+
        PADI , PADR , PSBI , PSBR , PFLT , PFLO , PNGI , PNGR , PSQI ,
        PSQR , PABI , PABR , PMOD , PODD , PMPI , PMPR , PDVI , PDVR ,
        PUNI , PINT , PDIF , PINN , PCRD , PLAB , PSAV , PRST , PCHR ,
        PORD , PXPO , PPOP , PXLB , PEND , PADA , PSBA , PMCP :
          begin
-
-     (***************)
-     (* NO OPERANDS *)
-     (***************)
-
            READLN ( INPUT ) ;
            if ASM then
              WRITELN ( ASMOUT ) ;
          end (* tag/ca *) ;
+
+     //************************************************************
+     // XBG creates a linked list of its parameters and            
+     // the indicators on the corresponding XEN instructions       
+     // during pass 1                                              
+     // When in pass 2, XBG suppresses the reading of              
+     // P-instructions until the corresponding XEN is found        
+     // (if the indicator - boolean VALID - is off)                
+     //************************************************************
+
+       PXBG : begin
+                READLN ( Q ) ;
+                if ASM then
+                  WRITELN ( ASMOUT , ' ' : 2 , Q : 1 ) ;
+                if MODUS = 1 then
+                  begin
+                    if XXIANKER = NIL then
+                      begin
+                        NEW ( XXIANKER ) ;
+                        XXIAKT := XXIANKER
+                      end (* then *)
+                    else
+                      begin
+                        NEW ( XXIAKT -> . NEXT ) ;
+                        XXIAKT := XXIAKT -> . NEXT
+                      end (* else *) ;
+                    XXIAKT -> . NEXT := NIL ;
+                    XXIAKT -> . XBG_NO := Q ;
+                    XXIAKT -> . VALID := TRUE ;
+                  end (* then *)
+                else
+                  begin
+                    XXILAUF := XXIANKER ;
+                    while XXILAUF <> NIL do
+                      begin
+                        if XXILAUF -> . XBG_NO = Q then
+                          break ;
+                        XXILAUF := XXILAUF -> . NEXT ;
+                      end (* while *) ;
+                    if XXILAUF <> NIL then
+                      if not XXILAUF -> . VALID then
+                        GS . XBG_XEN_SUPPRESSED := Q ;
+                  end (* else *)
+              end (* tag/ca *) ;
+       PXEN : begin
+                READLN ( Q , CH , P ) ;
+                if ASM then
+                  WRITELN ( ASMOUT , ' ' : 2 , Q : 1 , ',' , P : 1 ) ;
+                if MODUS = 1 then
+                  begin
+                    XXILAUF := XXIANKER ;
+                    while XXILAUF <> NIL do
+                      begin
+                        if XXILAUF -> . XBG_NO = Q then
+                          break ;
+                        XXILAUF := XXILAUF -> . NEXT ;
+                      end (* while *) ;
+                    if XXILAUF <> NIL then
+                      XXILAUF -> . VALID := ( P <> 0 ) ;
+                  end (* then *)
+                else
+                  begin
+                    XXILAUF := XXIANKER ;
+                    while XXILAUF <> NIL do
+                      begin
+                        if XXILAUF -> . XBG_NO = Q then
+                          break ;
+                        XXILAUF := XXILAUF -> . NEXT ;
+                      end (* while *) ;
+                    if XXILAUF <> NIL then
+                      GS . XBG_XEN_SUPPRESSED := - 1 ;
+                  end (* else *)
+              end (* tag/ca *) ;
        PSTP : begin
                 if MODUS = 1 then
                   begin
@@ -2787,8 +3015,8 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
                         FIRST_ASMOUT := FALSE
                       end (* then *) ;
                     WRITE ( ASMOUT , '     0000:  ' , LBL1 . NAM : LBL1
-                            . LEN , ' ' : 6 - LBL1 . LEN , NMCDE : 4 )
-                            ;
+                            . LEN , ' ' : 6 - LBL1 . LEN , P_OPCODE : 4
+                            ) ;
                     WRITELN ( ASMOUT , CST_CURPNAME : IDLNGTH + 2 ,
                               CST_CURPNO : 4 , ',' , ASM : 1 , ',' ,
                               CST_GET_STAT : 1 , ',' , CST_ASMVERB : 1
@@ -2910,7 +3138,7 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
                         WRITE ( ASMOUT , HLOC : 9 , ':  ' ) ;
                         WRITE ( ASMOUT , LBL1 . NAM : LBL1 . LEN ) ;
                         WRITE ( ASMOUT , ' ' : 6 - LBL1 . LEN ) ;
-                        WRITE ( ASMOUT , NMCDE : 4 ) ;
+                        WRITE ( ASMOUT , P_OPCODE : 4 ) ;
                         WRITE ( ASMOUT , CH1 : 3 , ',' ) ;
                         WRITE ( ASMOUT , P : 1 , ',' ) ;
                         WRITE ( ASMOUT , PIAKT -> . SEGSZE . NAM : 4 )
@@ -2948,9 +3176,9 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
      (*************************************)
 
                 SKIPBLANKS ;
-                READ ( NMCDE ) ;
+                READ ( P_OPCODE ) ;
                 if FALSE then
-                  WRITE ( TRACEF , 'read = ' , NMCDE ) ;
+                  WRITE ( TRACEF , 'read = ' , P_OPCODE ) ;
                 if INPUT -> = ',' then
                   begin
                     READLN ( CH , PROCOFFSET ) ;
@@ -2964,8 +3192,8 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
                 ENTERLOOKUP ;
                 OP_SP := TRUE ;
                 if ASM then
-                  WRITELN ( ASMOUT , NMCDE : 5 , ',' , PROCOFFSET : 1 )
-                            ;
+                  WRITELN ( ASMOUT , P_OPCODE : 5 , ',' , PROCOFFSET :
+                            1 ) ;
                 if FALSE then
                   WRITELN ( TRACEF , '  csp  = ' , ORD ( CSP ) ) ;
               end (* tag/ca *) ;
@@ -3019,6 +3247,26 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
            if ASM then
              WRITELN ( ASMOUT , ' ' : 2 , Q : 1 ) ;
          end (* tag/ca *) ;
+       PMCC : begin
+
+     //************************************************************
+     // one integer operand                                        
+     //************************************************************
+
+                READLN ( Q ) ;
+                if ASM then
+                  WRITELN ( ASMOUT , ' ' : 2 , Q : 1 ) ;
+              end (* tag/ca *) ;
+       PMCV : begin
+
+     //************************************************************
+     // no operands                                                
+     //************************************************************
+
+                READLN ( INPUT ) ;
+                if ASM then
+                  WRITELN ( ASMOUT ) ;
+              end (* tag/ca *) ;
        otherwise
          begin
 
@@ -3028,7 +3276,7 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
 
            if not ASM then
              WRITE ( OUTPUT , LBL1 . NAM : LBL1 . LEN , ' ' : 6 - LBL1
-                     . LEN , ' "' , NMCDE , '" ' ) ;
+                     . LEN , ' "' , P_OPCODE , '" ' ) ;
            while not EOLN do
              begin
                WRITE ( OUTPUT , INPUT -> ) ;
@@ -3188,6 +3436,7 @@ procedure ASMNXTINST ;
             LX . HW_GAP := - 1
           end (* then *) ;
         NXTLIT := NXTLIT + 1 ;
+        LITTBL [ NXTLIT ] . XLINECNT := LINECNT ;
         LITTBL [ NXTLIT ] . LNK := PCOUNTER ;
 
         //******************************************************
@@ -3213,6 +3462,7 @@ procedure ASMNXTINST ;
         LITTBL [ NXTLIT ] . LTYPE := 'D' ;
         LITTBL [ NXTLIT ] . LENGTH := 8 ;
         LITTBL [ NXTLIT ] . XIDP := I ;
+        LITTBL [ NXTLIT ] . OPTIMIZED := FALSE ;
       end (* UPD_DBLTBL *) ;
 
 
@@ -3306,6 +3556,7 @@ procedure ASMNXTINST ;
         if I >= LX . NXTCH then
           LX . NXTCH := I + 2 ;
         NXTLIT := NXTLIT + 1 ;
+        LITTBL [ NXTLIT ] . XLINECNT := LINECNT ;
         LITTBL [ NXTLIT ] . LNK := PCOUNTER ;
         if FALSE then
           begin
@@ -3315,6 +3566,7 @@ procedure ASMNXTINST ;
         LITTBL [ NXTLIT ] . LTYPE := 'H' ;
         LITTBL [ NXTLIT ] . LENGTH := 2 ;
         LITTBL [ NXTLIT ] . XIDP := I ;
+        LITTBL [ NXTLIT ] . OPTIMIZED := FALSE ;
       end (* UPD_HWTBL *) ;
 
 
@@ -3382,6 +3634,7 @@ procedure ASMNXTINST ;
         if I >= LX . NXTCH then
           LX . NXTCH := I + 4 ;
         NXTLIT := NXTLIT + 1 ;
+        LITTBL [ NXTLIT ] . XLINECNT := LINECNT ;
         LITTBL [ NXTLIT ] . LNK := PCOUNTER ;
         if FALSE then
           begin
@@ -3392,6 +3645,7 @@ procedure ASMNXTINST ;
         LITTBL [ NXTLIT ] . LTYPE := 'I' ;
         LITTBL [ NXTLIT ] . LENGTH := 4 ;
         LITTBL [ NXTLIT ] . XIDP := I ;
+        LITTBL [ NXTLIT ] . OPTIMIZED := FALSE ;
       end (* UPD_INTTBL *) ;
 
 
@@ -3474,10 +3728,12 @@ procedure ASMNXTINST ;
 
         CODE . H [ PCOUNTER ] := TO_HINT ( I * 4 ) ;
         NXTLIT := NXTLIT + 1 ;
+        LITTBL [ NXTLIT ] . XLINECNT := LINECNT ;
         LITTBL [ NXTLIT ] . LNK := PCOUNTER ;
         LITTBL [ NXTLIT ] . LTYPE := 'S' ;
         LITTBL [ NXTLIT ] . LENGTH := L ;
         LITTBL [ NXTLIT ] . XIDP := I * 4 ;
+        LITTBL [ NXTLIT ] . OPTIMIZED := FALSE ;
         if FALSE then
           begin
             WRITELN ( TRACEF , 'upd_settbl: nxtlit = ' , NXTLIT ) ;
@@ -3971,6 +4227,8 @@ procedure ASMNXTINST ;
 
    procedure GENRXLIT ;
 
+      var DLEFT , DRIGHT : INTEGER ;
+
       begin (* GENRXLIT *)
         if R = TRG14 then
           TXR_CONTENTS . VALID := FALSE ;
@@ -4021,8 +4279,13 @@ procedure ASMNXTINST ;
               if TAG = 0 then
                 WRITELN ( ASMOUT , ',=F''' , D : 1 , '''' )
               else
-                WRITELN ( ASMOUT , ',=H''' , D DIV 65536 : 1 , ',' , D
-                          MOD 65536 : 1 , '''' )
+                begin
+                  DLEFT := D and ( not 0xffff ) ;
+                  DRIGHT := D and 0xffff ;
+                  DLEFT := DLEFT DIV 65536 ;
+                  WRITELN ( ASMOUT , ',=H''' , DLEFT : 1 , ',' , DRIGHT
+                            : 1 , '''' )
+                end (* else *)
           end (* then *) ;
 
         (**********************************)
@@ -4585,8 +4848,29 @@ procedure ASMNXTINST ;
         if NXTLIT > 0 then
           if ( LX . NXTDBL * 4 + PCOUNTER ) <= 8187 then
             begin
+              if FALSE then
+                WRITELN ( TRACEF , 'DUMP LITERALS ' , ' - linecnt = ' ,
+                          LINECNT : 1 ) ;
               for I := 1 to NXTLIT do
                 begin
+                  if FALSE then
+                    begin
+                      WRITELN ( TRACEF ,
+                                '----------------------------------' )
+                                ;
+                      WRITELN ( TRACEF , 'littbl.line   = ' , LITTBL [
+                                I ] . XLINECNT ) ;
+                      WRITELN ( TRACEF , 'littbl.lnk    = ' , LITTBL [
+                                I ] . LNK ) ;
+                      WRITELN ( TRACEF , 'littbl.ltype  = ' , LITTBL [
+                                I ] . LTYPE ) ;
+                      WRITELN ( TRACEF , 'littbl.length = ' , LITTBL [
+                                I ] . LENGTH ) ;
+                      WRITELN ( TRACEF , 'littbl.xidp   = ' , LITTBL [
+                                I ] . XIDP ) ;
+                      WRITELN ( TRACEF , 'littbl.optim. = ' , LITTBL [
+                                I ] . OPTIMIZED ) ;
+                    end (* then *) ;
                   TPC := LITTBL [ I ] . LNK ;
                   if TPC > 0 then
 
@@ -4603,7 +4887,15 @@ procedure ASMNXTINST ;
                                             + 1 ) ;
                     end (* then *)
                   else
-                    ERROR ( 257 ) ;
+                    begin
+                      if not LITTBL [ I ] . OPTIMIZED then
+                        begin
+                          ERROR ( 257 ) ;
+                          WRITELN ( TRACEF ,
+                              '*** error 257 *** literal not used ***'
+                                    ) ;
+                        end (* then *)
+                    end (* else *)
                 end (* for *) ;
 
         //******************************************************
@@ -4892,7 +5184,7 @@ procedure ASMNXTINST ;
       end (* CHECKDISP *) ;
 
 
-   procedure GENLA_LR ( R1 : RGRNG ; Q2 : ADRRNG ; R2 , X2 : RGRNG ) ;// genrr xlr
+   procedure GENLA_LR ( R1 : RGRNG ; Q2 : ADRRNG ; R2 , X2 : RGRNG ) ;
 
       begin (* GENLA_LR *)
         if Q2 = 0 then
@@ -5356,9 +5648,9 @@ procedure ASMNXTINST ;
                 R := RGADR
               else
 
-        (***************************)
-        (*VPA = MEM OR VPA = ONSTK *)
-        (***************************)
+        (****************************)
+        (* VPA = MEM OR VPA = ONSTK *)
+        (****************************)
 
                 begin
                   if VPA = MEM then
@@ -5924,8 +6216,8 @@ procedure ASMNXTINST ;
         if not FILREGACTIVE then
           if CSP in [ PRES , PREW , PGET , PPUT , PRLN , PWLN , PPAG ,
           PSKP , PLIM , PRDB , PWRB , PRDH , PRDY , PEOL , PEOT , PEOF
-          , PELN , PRDC , PWRC , PRDI , PWRI , PRDS , PWRS , PRDR ,
-          PWRR , PWRP , PWRX , PFDF , PWRD , PWRE , PCLS ] then
+          , PELN , PRDC , PWRC , PRDI , PWRI , PRDS , PWRS , PWRV ,
+          PRDR , PWRR , PWRP , PWRX , PFDF , PWRD , PWRE , PCLS ] then
             with STK [ STP ] do
               begin
                 if VRBL then
@@ -6639,7 +6931,7 @@ procedure ASMNXTINST ;
                  end (* tag/ca *) ;
           otherwise
             begin
-              WRITE ( ' -->' , NMCDE ) ;
+              WRITE ( ' -->' , P_OPCODE ) ;
               ERROR ( 607 )
             end (* otherw *) ;
         end (* case *) ;
@@ -8403,6 +8695,71 @@ procedure ASMNXTINST ;
       end (* CSETOPS *) ;
 
 
+   procedure GEN_STRING_ADRESSE ( var SDAT : DATUM ; LOAD_REG : BOOLEAN
+                                ; var OFFSET : ADRRNG ; var RGWORK :
+                                RGRNG ) ;
+
+      var B : RGRNG ;
+          P2 : RGRNG ;
+          Q2 : ADRRNG ;
+
+      begin (* GEN_STRING_ADRESSE *)
+        OFFSET := 0 ;
+        with SDAT do
+          if VPA = RGS then
+            begin
+              RGWORK := RGADR ;
+
+        //******************************************************
+        // offset muss ggf. drauf                               
+        // bei statischen variablen                             
+        //******************************************************
+
+              P2 := FPA . LVL ;
+              Q2 := FPA . DSPLMT ;
+              if Q2 <> 0 then
+                if P2 > 0 then
+                  begin
+                    BASE ( Q2 , P2 , B ) ;
+                    if P2 <= 0 then
+                      P2 := B
+                    else
+                      if B > 0 then
+                        GENRR ( XAR , P2 , B ) ;
+                    if Q2 = 0 then
+                      GENRR ( XAR , RGWORK , P2 )
+                    else
+                      GENRX ( XLA , RGWORK , Q2 , P2 , RGWORK ) ;
+                  end (* then *)
+                else
+                  if LOAD_REG then
+                    begin
+                      if Q2 = - 1 then
+                        GENRR ( XBCTR , RGWORK , 0 )
+                      else
+                        GENRXLIT ( XA , RGWORK , Q2 , 0 ) ;
+                    end (* then *)
+                  else
+                    begin
+                      OFFSET := Q2
+                    end (* else *)
+            end (* then *)
+          else
+            begin
+              P2 := FPA . LVL ;
+              Q2 := FPA . DSPLMT ;
+              BASE ( Q2 , P2 , B2 ) ;
+              if P2 < 0 then
+                begin
+                  LITTBL [ SCNSTNO ] . LNK := PCOUNTER + 1 ;
+                  P2 := 0 ;
+                end (* then *) ;
+              GENRX ( XLA , 14 , Q2 , B2 , P2 ) ;
+              RGWORK := 14 ;
+            end (* else *)
+      end (* GEN_STRING_ADRESSE *) ;
+
+
    procedure STRINGCOMPARE ( var LEFT , RIGHT : DATUM ) ;
 
    //****************************************************************
@@ -8415,6 +8772,7 @@ procedure ASMNXTINST ;
       var LBL : PLABEL ;
           RGWORK : RGRNG ;
           LITVALUE : INTEGER ;
+          DUMMY_OFFS : ADRRNG ;
 
       begin (* STRINGCOMPARE *)
 
@@ -8458,23 +8816,7 @@ procedure ASMNXTINST ;
         // take care, if literal (carr constant)                
         //******************************************************
 
-            if VPA = RGS then
-              begin
-                RGWORK := RGADR
-              end (* then *)
-            else
-              begin
-                P2 := FPA . LVL ;
-                Q2 := FPA . DSPLMT ;
-                BASE ( Q2 , P2 , B2 ) ;
-                if P2 < 0 then
-                  begin
-                    LITTBL [ SCNSTNO ] . LNK := PCOUNTER + 1 ;
-                    P2 := 0 ;
-                  end (* then *) ;
-                GENRX ( XLA , 14 , Q2 , B2 , P2 ) ;
-                RGWORK := 14 ;
-              end (* else *) ;
+            GEN_STRING_ADRESSE ( LEFT , TRUE , DUMMY_OFFS , RGWORK ) ;
             GENRX ( XST , RGWORK , 4 , TRG1 , 0 ) ;
           end (* with *) ;
 
@@ -8491,23 +8833,7 @@ procedure ASMNXTINST ;
               LITVALUE := - 1 ;
             GENRXLIT ( XL , 14 , LITVALUE , 0 ) ;
             GENRX ( XST , 14 , 8 , TRG1 , 0 ) ;
-            if VPA = RGS then
-              begin
-                RGWORK := RGADR
-              end (* then *)
-            else
-              begin
-                P2 := FPA . LVL ;
-                Q2 := FPA . DSPLMT ;
-                BASE ( Q2 , P2 , B2 ) ;
-                if P2 < 0 then
-                  begin
-                    LITTBL [ SCNSTNO ] . LNK := PCOUNTER + 1 ;
-                    P2 := 0 ;
-                  end (* then *) ;
-                GENRX ( XLA , 14 , Q2 , B2 , P2 ) ;
-                RGWORK := 14 ;
-              end (* else *) ;
+            GEN_STRING_ADRESSE ( RIGHT , TRUE , DUMMY_OFFS , RGWORK ) ;
             GENRX ( XST , RGWORK , 12 , TRG1 , 0 ) ;
           end (* with *) ;
 
@@ -8912,10 +9238,12 @@ procedure ASMNXTINST ;
                                                    H [ PCOUNTER - 4 ] )
                                                    ;
                           NXTLIT := NXTLIT + 1 ;
+                          LITTBL [ NXTLIT ] . XLINECNT := LINECNT ;
                           LITTBL [ NXTLIT ] . LNK := PCOUNTER - 1 ;
                           LITTBL [ NXTLIT ] . LTYPE := 'X' ;
                           LITTBL [ NXTLIT ] . LENGTH := 0 ;
                           LITTBL [ NXTLIT ] . XIDP := 0 ;
+                          LITTBL [ NXTLIT ] . OPTIMIZED := FALSE ;
                         end ;
                       end (* else *)
                   end (* then *)
@@ -12046,6 +12374,349 @@ procedure ASMNXTINST ;
       end (* MSEOPERATION *) ;
 
 
+   procedure MCVOPERATION ( var L , R , LEN : DATUM ) ;
+
+   //****************************************************************
+   // generate CLCL instruction for MEMCMP                           
+   // length is not known at compile time                            
+   //****************************************************************
+
+
+      var P1 , B1 , P2 , B2 , PX , BX : LVLRNG ;
+          Q1 , Q2 , QX : ADRRNG ;
+          BPC : ICRNG ;
+          TARGET_REG : RGRNG ;
+
+      begin (* MCVOPERATION *)
+
+        //******************************************************
+        // get address of left operand                          
+        //******************************************************
+
+        GETADR2 ( L , Q1 , P1 , B1 ) ;
+        if not L . DRCT then
+          begin
+            GENRX ( XL , TXRG , Q1 , B1 , P1 ) ;
+            Q1 := 0 ;
+            B1 := 0 ;
+            P1 := TXRG ;
+          end (* then *) ;
+        TXRG := TRG1 ;
+
+        //******************************************************
+        // TO AVOID REASSIGNM. OF THE SAME BASE REG             
+        //******************************************************
+
+        OLDCSP := PSIO ;  // INDICATES LOSS OF TRG1
+
+        //******************************************************
+        // get address of right operand                         
+        //******************************************************
+
+        GETADR2 ( R , Q2 , P2 , B2 ) ;
+        if not R . DRCT then
+          begin
+            GENRX ( XL , TXRG , Q2 , B2 , P2 ) ;
+            Q2 := 0 ;
+            B2 := 0 ;
+            P2 := TXRG ;
+          end (* then *) ;
+        TXRG := TRG14 ;
+
+        //******************************************************
+        // get length                                           
+        //******************************************************
+
+        if FALSE then
+          begin
+            WRITELN ( TRACEF , 'len.drct   = ' , LEN . DRCT ) ;
+            WRITELN ( TRACEF , 'len.vrbl   = ' , LEN . VRBL ) ;
+            WRITELN ( TRACEF , 'len.dtype  = ' , LEN . DTYPE ) ;
+            WRITELN ( TRACEF , 'len.vpa    = ' , LEN . VPA ) ;
+            WRITELN ( TRACEF , 'len.rgadr  = ' , LEN . RGADR ) ;
+          end (* then *) ;
+
+        //******************************************************
+        // RESTORE THE OLD MIDLEVEL BASE REG                    
+        //******************************************************
+
+        if P1 < 0 then
+          begin
+            B1 := P1 ;
+            P1 := 0 ;
+          end (* then *) ;
+        if P2 < 0 then
+          begin
+            B2 := P2 ;
+            P2 := 0 ;
+          end (* then *) ;
+
+        //**************************************************
+        // THIS IS ONLY VALID FOR THE 370,                  
+        // FOR THE 360 THE 'MVCL' INSTRUNCTION SHOULD BE    
+        // REPLACED BY A subroutine or a loop or MVC;       
+        // because the length of the operands is not        
+        // known at compile time in this case, a fix list   
+        // of MVCs is not sufficient                        
+        //**************************************************
+
+        if ( B1 < 0 ) or ( B2 < 0 ) then
+          ERROR ( 202 ) ;
+        FINDRP ;
+        GENRX ( XLA , NXTRG , Q1 , B1 , P1 ) ;
+        P1 := NXTRG ;
+        B1 := NXTRG + 1 ;
+        FINDRP ;
+        GENRX ( XLA , NXTRG , Q2 , B2 , P2 ) ;
+        P2 := NXTRG ;
+        B2 := NXTRG + 1 ;
+
+        //******************************************************
+        // find number of target register and                   
+        // generate code to set target register to zero         
+        // before doing the comparison                          
+        //******************************************************
+
+        FINDRG ;
+        TARGET_REG := NXTRG ;
+        GENRR ( XXR , TARGET_REG , TARGET_REG ) ;
+
+        //******************************************************
+        // length operand                                       
+        // generate L or LR                                     
+        //******************************************************
+
+        GETOP_SIMPLE ( LEN , QX , PX , BX , B1 , TRUE ) ;
+
+        //******************************************************
+        // copy length in register b1 to register b2            
+        // and test                                             
+        //******************************************************
+
+        GENRR ( XLTR , B2 , B1 ) ;
+
+        //******************************************************
+        // check length for positive                            
+        // address of branch will be filled in later            
+        //******************************************************
+
+        GENRELRX ( XBC , LEQCND , 10 ) ;
+
+        //******************************************************
+        // generate CLCL instruction                            
+        //******************************************************
+
+        GENRR ( XCLCL , P1 , P2 ) ;
+
+        //******************************************************
+        // set result in target rec depending on CC             
+        //******************************************************
+
+        GENRELRX ( XBC , EQUCND , 7 ) ;
+        GENRR ( XBCTR , TARGET_REG , 0 ) ;
+        GENRELRX ( XBC , LESCND , 4 ) ;
+        GENRX ( XLA , TARGET_REG , 1 , 0 , 0 ) ;
+
+        //******************************************************
+        // free temporary registers                             
+        //******************************************************
+
+        AVAIL [ TARGET_REG ] := TRUE ;
+        AVAIL [ P1 ] := TRUE ;
+        AVAIL [ B1 ] := TRUE ;
+        AVAIL [ P2 ] := TRUE ;
+        AVAIL [ B2 ] := TRUE ;
+        S370CNT := S370CNT + 1 ;
+        FREEREG ( L ) ;
+        FREEREG ( R ) ;
+        FREEREG ( LEN ) ;
+
+        //******************************************************
+        // result is in top stack element (register)            
+        //******************************************************
+
+        with L do
+          begin
+            DTYPE := INT ;
+            PLEN := 0 ;
+            VRBL := TRUE ;
+            DRCT := TRUE ;
+            VPA := RGS ;
+            RGADR := TARGET_REG ;
+            FPA . LVL := 0 ;
+            FPA . DSPLMT := 0 ;
+            MEMADR . LVL := 0 ;
+            MEMADR . DSPLMT := 0 ;
+          end (* with *) ;
+      end (* MCVOPERATION *) ;
+
+
+   procedure MCCOPERATION ( var L , R : DATUM ; LEN : INTEGER ) ;
+
+   //****************************************************************
+   // generate CLC or CLCL instruction for MEMCMP                    
+   // length is known at compile time                                
+   //****************************************************************
+
+
+      var P1 , B1 , P2 , B2 , PX , BX : LVLRNG ;
+          Q1 , Q2 , QX : ADRRNG ;
+          BPC : ICRNG ;
+          TARGET_REG : RGRNG ;
+
+      begin (* MCCOPERATION *)
+
+        //******************************************************
+        // get address of left operand                          
+        //******************************************************
+
+        GETADR2 ( L , Q1 , P1 , B1 ) ;
+        if not L . DRCT then
+          begin
+            GENRX ( XL , TXRG , Q1 , B1 , P1 ) ;
+            Q1 := 0 ;
+            B1 := 0 ;
+            P1 := TXRG ;
+          end (* then *) ;
+        TXRG := TRG1 ;
+
+        //******************************************************
+        // TO AVOID REASSIGNM. OF THE SAME BASE REG             
+        //******************************************************
+
+        OLDCSP := PSIO ;  // INDICATES LOSS OF TRG1
+
+        //******************************************************
+        // get address of right operand                         
+        //******************************************************
+
+        GETADR2 ( R , Q2 , P2 , B2 ) ;
+        if not R . DRCT then
+          begin
+            GENRX ( XL , TXRG , Q2 , B2 , P2 ) ;
+            Q2 := 0 ;
+            B2 := 0 ;
+            P2 := TXRG ;
+          end (* then *) ;
+        TXRG := TRG14 ;
+
+        //******************************************************
+        // RESTORE THE OLD MIDLEVEL BASE REG                    
+        //******************************************************
+
+        if P1 < 0 then
+          begin
+            B1 := P1 ;
+            P1 := 0 ;
+          end (* then *) ;
+        if P2 < 0 then
+          begin
+            B2 := P2 ;
+            P2 := 0 ;
+          end (* then *) ;
+
+        //**************************************************
+        // THIS IS ONLY VALID FOR THE 370,                  
+        // FOR THE 360 THE 'MVCL' INSTRUNCTION SHOULD BE    
+        // REPLACED BY A subroutine or a loop or MVC;       
+        // because the length of the operands is not        
+        // known at compile time in this case, a fix list   
+        // of MVCs is not sufficient                        
+        //**************************************************
+
+        if ( B1 < 0 ) or ( B2 < 0 ) then
+          ERROR ( 202 ) ;
+        FINDRP ;
+        GENRX ( XLA , NXTRG , Q1 , B1 , P1 ) ;
+        P1 := NXTRG ;
+        B1 := NXTRG + 1 ;
+        FINDRP ;
+        GENRX ( XLA , NXTRG , Q2 , B2 , P2 ) ;
+        P2 := NXTRG ;
+        B2 := NXTRG + 1 ;
+
+        //******************************************************
+        // find number of target register and                   
+        // generate code to set target register to zero         
+        // before doing the comparison                          
+        //******************************************************
+
+        FINDRG ;
+        TARGET_REG := NXTRG ;
+        GENRR ( XXR , TARGET_REG , TARGET_REG ) ;
+
+        //******************************************************
+        // don't generate compare instructions,                 
+        // if length is less or equal to zero                   
+        // generate CLC, if length <= 256                       
+        // otherwise CLCL                                       
+        //******************************************************
+
+        if LEN > 0 then
+          if LEN <= 256 then
+            begin
+              GENSS ( XCLC , LEN , 0 , P1 , 0 , P2 ) ;
+            end (* then *)
+          else
+            begin
+
+        //******************************************************
+        // copy length in register b1 to register b2            
+        // and test                                             
+        //******************************************************
+
+              GENRX ( XLA , B1 , LEN , 0 , 0 ) ;
+              GENRR ( XLR , B2 , B1 ) ;
+
+        //******************************************************
+        // generate MVCL instruction                            
+        //******************************************************
+
+              GENRR ( XCLCL , P1 , P2 ) ;
+            end (* else *) ;
+
+        //******************************************************
+        // set result in target rec depending on CC             
+        //******************************************************
+
+        GENRELRX ( XBC , EQUCND , 7 ) ;
+        GENRR ( XBCTR , TARGET_REG , 0 ) ;
+        GENRELRX ( XBC , LESCND , 4 ) ;
+        GENRX ( XLA , TARGET_REG , 1 , 0 , 0 ) ;
+
+        //******************************************************
+        // free temporary registers                             
+        //******************************************************
+
+        AVAIL [ TARGET_REG ] := TRUE ;
+        AVAIL [ P1 ] := TRUE ;
+        AVAIL [ B1 ] := TRUE ;
+        AVAIL [ P2 ] := TRUE ;
+        AVAIL [ B2 ] := TRUE ;
+        S370CNT := S370CNT + 1 ;
+        FREEREG ( L ) ;
+        FREEREG ( R ) ;
+
+        //******************************************************
+        // result is in top stack element (register)            
+        //******************************************************
+
+        with L do
+          begin
+            DTYPE := INT ;
+            PLEN := 0 ;
+            VRBL := TRUE ;
+            DRCT := TRUE ;
+            VPA := RGS ;
+            RGADR := TARGET_REG ;
+            FPA . LVL := 0 ;
+            FPA . DSPLMT := 0 ;
+            MEMADR . LVL := 0 ;
+            MEMADR . DSPLMT := 0 ;
+          end (* with *) ;
+      end (* MCCOPERATION *) ;
+
+
    procedure STROPERATION_MVI ( var LEFT : DATUM ; CCONST : CHAR ) ;
 
    //****************************************************************
@@ -12192,12 +12863,32 @@ procedure ASMNXTINST ;
             GENSS ( XOPC , LENPARM , Q1 , P1 , Q2 , P2 ) ;
             if B1 < 0 then
               begin
+                if FALSE then
+                  begin
+                    WRITELN ( 'sop lit links, b1    = ' , B1 ) ;
+                    WRITELN ( 'sop lit links, index = ' , LEFT .
+                              SCNSTNO ) ;
+                    WRITELN ( 'sop cod links, pcnt  = ' , PCOUNTER - 2
+                              ) ;
+                    WRITELN ( 'sop cod links, code  = ' , TO_HINT ( Q1
+                              ) )
+                  end (* then *) ;
                 if B1 = - 1 then
                   LITTBL [ LEFT . SCNSTNO ] . LNK := PCOUNTER - 2 ;
                 CODE . H [ PCOUNTER - 2 ] := TO_HINT ( Q1 ) ;
               end (* then *) ;
             if B2 < 0 then
               begin
+                if FALSE then
+                  begin
+                    WRITELN ( 'sop lit rechts, b2    = ' , B2 ) ;
+                    WRITELN ( 'sop lit rechts, index = ' , RIGHT .
+                              SCNSTNO ) ;
+                    WRITELN ( 'sop cod rechts, pcnt  = ' , PCOUNTER - 1
+                              ) ;
+                    WRITELN ( 'sop cod rechts, code  = ' , TO_HINT ( Q2
+                              ) )
+                  end (* then *) ;
                 if B2 = - 1 then
                   LITTBL [ RIGHT . SCNSTNO ] . LNK := PCOUNTER - 1 ;
                 CODE . H [ PCOUNTER - 1 ] := TO_HINT ( Q2 ) ;
@@ -12210,6 +12901,8 @@ procedure ASMNXTINST ;
 
         //******************************************************
         // CONSECUTIVE MVC INSTS                                
+        // check if new MVC can be eliminated by changing       
+        // length of previous MVC                               
         //******************************************************
 
                       if ( CODE . H [ LPC - 2 ] + LLEN ) = CODE . H [
@@ -12218,6 +12911,28 @@ procedure ASMNXTINST ;
                         PCOUNTER - 1 ] then
                           if ( LLEN + LENPARM ) <= 256 then
                             begin
+                              if ASM then
+                                begin
+                                  HEXHW ( PCOUNTER * 2 , HEXPC ) ;
+                                  WRITE ( ASMOUT , ASMTAG , HEXPC ,
+                                          ': ' ) ;
+                                  WRITE ( ASMOUT , '*' , ' ' : 26 ,
+                                          '-- instruction is not' ) ;
+                                  WRITELN ( ASMOUT ) ;
+                                  HEXHW ( PCOUNTER * 2 , HEXPC ) ;
+                                  WRITE ( ASMOUT , ASMTAG , HEXPC ,
+                                          ': ' ) ;
+                                  WRITE ( ASMOUT , '*' , ' ' : 26 ,
+                                          '-- generated; length' ) ;
+                                  WRITELN ( ASMOUT ) ;
+                                  HEXHW ( PCOUNTER * 2 , HEXPC ) ;
+                                  WRITE ( ASMOUT , ASMTAG , HEXPC ,
+                                          ': ' ) ;
+                                  WRITE ( ASMOUT , '*' , ' ' : 26 ,
+                                          '-- of prev. instr. changed'
+                                          ) ;
+                                  WRITELN ( ASMOUT ) ;
+                                end (* then *) ;
                               CODE . H [ LPC - 3 ] := TO_HINT ( CODE .
                                                    H [ LPC - 3 ] +
                                                    LENPARM ) ;
@@ -12227,8 +12942,12 @@ procedure ASMNXTINST ;
                                 if RIGHT . SCNSTNO = NXTLIT - 1 then
                                   NXTLIT := NXTLIT - 1
                                 else
-                                  LITTBL [ RIGHT . SCNSTNO ] . LNK := 0
-                                                   ;
+                                  begin
+                                    LITTBL [ RIGHT . SCNSTNO ] . LNK :=
+                                                   0 ;
+                                    LITTBL [ RIGHT . SCNSTNO ] .
+                                    OPTIMIZED := TRUE
+                                  end (* else *) ;
                             end (* then *) ;
                     LPC := PCOUNTER ;
                     LLEN := LENPARM ;
@@ -12441,25 +13160,27 @@ procedure ASMNXTINST ;
             FINDRG ;
             TARGET_REG := NXTRG
           end (* then *) ;
+        if TRUE then
+          begin
+            WRITELN ( TRACEF , 'start STRING_GET_ACTLEN, linecnt = ' ,
+                      LINECNT : 1 ) ;
+            WRITE ( TRACEF , 'S = ' ) ;
+            DUMPSTKELEM ( S ) ;
+          end (* then *) ;
         with S do
           begin
-            if VPA = RGS then
+            GETADR2 ( S , Q2 , P2 , B2 ) ;
+            if TRUE then
               begin
-                if GEN_ADD then
-                  GENRX ( XAH , TARGET_REG , 2 , RGADR , 0 )
-                else
-                  GENRX ( XLH , TARGET_REG , 2 , RGADR , 0 )
-              end (* then *)
+                WRITELN ( TRACEF , 'after getadr2' ) ;
+                WRITELN ( TRACEF , 'p2      = ' , P2 : 4 ) ;
+                WRITELN ( TRACEF , 'q2      = ' , Q2 : 4 ) ;
+                WRITELN ( TRACEF , 'b2      = ' , B2 : 4 ) ;
+              end (* then *) ;
+            if GEN_ADD then
+              GENRX ( XAH , TARGET_REG , 2 + Q2 , B2 , P2 )
             else
-              begin
-                P2 := FPA . LVL ;
-                Q2 := FPA . DSPLMT + 2 ;
-                BASE ( Q2 , P2 , B2 ) ;
-                if GEN_ADD then
-                  GENRX ( XAH , TARGET_REG , Q2 , B2 , P2 )
-                else
-                  GENRX ( XLH , TARGET_REG , Q2 , B2 , P2 )
-              end (* else *) ;
+              GENRX ( XLH , TARGET_REG , 2 + Q2 , B2 , P2 )
           end (* with *)
       end (* STRING_GET_ACTLEN *) ;
 
@@ -12495,6 +13216,15 @@ procedure ASMNXTINST ;
              DO_STATICWORK : BOOLEAN ;
 
          begin (* WORK_VCC *)
+           if TRUE then
+             begin
+               WRITELN ( TRACEF , 'start WORK_VCC, linecnt = ' ,
+                         LINECNT : 1 ) ;
+               WRITE ( TRACEF , 'STK -1' ) ;
+               DUMPSTKELEM ( STK [ TOP - 1 ] ) ;
+               WRITE ( TRACEF , 'STK -2' ) ;
+               DUMPSTKELEM ( STK [ TOP - 2 ] ) ;
+             end (* then *) ;
            DO_STATICWORK := TRUE ;
 
            //*********************************************
@@ -12639,6 +13369,11 @@ procedure ASMNXTINST ;
                        begin
                          AVAIL [ RGWORK ] := TRUE ;
                          GENRX ( XL , TRG1 , STRCURR , 12 , 0 ) ;
+
+           //************************************************
+           // maybe wrong                                    
+           //************************************************
+
                          with STK [ TOP - 2 ] do
                            if VPA = RGS then
                              begin
@@ -12658,6 +13393,11 @@ procedure ASMNXTINST ;
            //************************************************
 
                          GENRX ( XST , TXRG , 0 , TRG1 , 0 ) ;
+
+           //************************************************
+           // maybe wrong                                    
+           //************************************************
+
                          with STK [ TOP - 1 ] do
                            if VPA = RGS then
                              begin
@@ -12775,6 +13515,16 @@ procedure ASMNXTINST ;
       procedure WORK_VST ;
 
          begin (* WORK_VST *)
+           if FALSE then
+             begin
+               WRITELN ( TRACEF , 'start WORK_VST, linecnt = ' ,
+                         LINECNT : 1 ) ;
+               WRITELN ( TRACEF , 'p = ' , P : 4 , ' q = ' , Q : 4 ) ;
+               WRITE ( TRACEF , 'STK -1' ) ;
+               DUMPSTKELEM ( STK [ TOP - 1 ] ) ;
+               WRITE ( TRACEF , 'STK -2' ) ;
+               DUMPSTKELEM ( STK [ TOP - 2 ] ) ;
+             end (* then *) ;
 
            //************************************************
            // p = mode (0 or 1)                              
@@ -12959,22 +13709,68 @@ procedure ASMNXTINST ;
                    with STK [ TOP - 1 ] do
                      if PLEN > 0 then
                        begin
+                         if FALSE then
+                           begin
+                             WRITELN ( TRACEF , 'VST - linecnt = ' ,
+                                       LINECNT : 1 ) ;
+                             WRITELN ( TRACEF , 'VST - p = ' , P ) ;
+                             WRITELN ( TRACEF , 'VST - q = ' , Q ) ;
+                             DUMPSTKELEM ( STK [ TOP - 1 ] ) ;
+                             WRITELN ( TRACEF , 'scnstno = ' , SCNSTNO
+                                       : 1 ) ;
+                             WRITELN ( TRACEF , 'plen = ' , PLEN : 1 )
+                                       ;
+                           end (* then *) ;
                          LITVALUE := - 65536 + PLEN ;
                          GENRXLIT ( XL , 14 , LITVALUE , 1 ) ;
                          GENRX ( XST , 14 , 0 , NXTRG , 0 ) ;
-                         if VPA = RGS then
+
+           //*********************************************
+           // error fixed 17.05.2019:                     
+           // the LA instruction was not generated with   
+           // the correct base register. GETADR2 must be  
+           // used (this is again the solution).          
+           // See the LA below, which uses Q2, P2 and B2; 
+           // don't know if the literal logic is correct  
+           // here                                        
+           //*********************************************
+
+                         GETADR2 ( STK [ TOP - 1 ] , Q2 , P2 , B2 ) ;
+                         if FALSE then
                            begin
-                             GENRX ( XLA , 14 , 4 , RGADR , 0 ) ;
+                             WRITELN ( TRACEF , 'after getadr2' ) ;
+                             WRITELN ( TRACEF , 'p2      = ' , P2 : 4 )
+                                       ;
+                             WRITELN ( TRACEF , 'q2      = ' , Q2 : 4 )
+                                       ;
+                             WRITELN ( TRACEF , 'b2      = ' , B2 : 4 )
+                                       ;
+                             WRITELN ( TRACEF , 'scnstno = ' , SCNSTNO
+                                       : 4 ) ;
+                             WRITELN ( TRACEF , 'plen    = ' , PLEN : 4
+                                       ) ;
+                           end (* then *) ;
+                         if P2 < 0 then
+                           begin
+                             if SCNSTNO > 0 then
+                               begin
+                                 if PLEN > 0 then
+                                   begin
+                                     GENRX ( XLA , 14 , Q2 , 0 , 0 ) ;
+                                     LITTBL [ SCNSTNO ] . LNK :=
+                                                   PCOUNTER - 1 ;
+                                     CODE . H [ PCOUNTER - 1 ] :=
+                                                   TO_HINT ( Q2 ) ;
+                                   end (* then *)
+                                 else
+                                   begin
+                                     GENRR ( XXR , 14 , 14 ) ;
+                                     GENRR ( XBCTR , 14 , 0 ) ;
+                                   end (* else *) ;
+                               end (* then *)
                            end (* then *)
                          else
-                           begin
-                             GETADR2 ( STK [ TOP - 1 ] , Q2 , P2 , B2 )
-                                       ;
-                             GENRX ( XLA , 14 , Q2 , 0 , 0 ) ;
-                             LITTBL [ SCNSTNO ] . LNK := PCOUNTER - 1 ;
-                             CODE . H [ PCOUNTER - 1 ] := TO_HINT ( Q2
-                                                   ) ;
-                           end (* else *) ;
+                           GENLA_LR ( 14 , Q2 + 4 , B2 , P2 ) ;
                          GENRX ( XST , 14 , 4 , NXTRG , 0 ) ;
                        end (* then *)
                      else
@@ -13140,6 +13936,17 @@ procedure ASMNXTINST ;
 
                    with STK [ TOP - 2 ] do
                      begin
+                       if FALSE then
+                         begin
+                           WRITELN ( TRACEF , 'VST - linecnt = ' ,
+                                     LINECNT : 1 ) ;
+                           WRITELN ( TRACEF , 'VST - p = ' , P ) ;
+                           WRITELN ( TRACEF , 'VST - q = ' , Q ) ;
+                           DUMPSTKELEM ( STK [ TOP - 2 ] ) ;
+                           WRITELN ( TRACEF , 'scnstno = ' , SCNSTNO :
+                                     1 ) ;
+                           WRITELN ( TRACEF , 'plen = ' , PLEN : 1 ) ;
+                         end (* then *) ;
                        if PLEN = 1 then
                          begin
                            GETADR2 ( STK [ TOP - 1 ] , Q1 , P1 , B1 ) ;
@@ -13165,26 +13972,61 @@ procedure ASMNXTINST ;
                              FINDRG ;
                              GENRX ( XLA , NXTRG , Q1 , B1 , P1 ) ;
                              GENRX ( XST , 14 , 0 , NXTRG , 0 ) ;
-                             if VPA = RGS then
+
+           //*********************************************
+           // error fixed 17.05.2019:                     
+           // the LA instruction was not generated with   
+           // the correct base register. GETADR2 must be  
+           // used (this is again the solution).          
+           // See the LA below, which uses Q2, P2 and B2; 
+           // don't know if the literal logic is correct  
+           // here                                        
+           //*********************************************
+
+                             GETADR2 ( STK [ TOP - 2 ] , Q2 , P2 , B2 )
+                                       ;
+                             if FALSE then
                                begin
-                                 GENRX ( XLA , 14 , 4 , RGADR , 0 ) ;
+                                 WRITELN ( TRACEF , 'after getadr2' ) ;
+                                 WRITELN ( TRACEF , 'p2      = ' , P2 :
+                                           4 ) ;
+                                 WRITELN ( TRACEF , 'q2      = ' , Q2 :
+                                           4 ) ;
+                                 WRITELN ( TRACEF , 'b2      = ' , B2 :
+                                           4 ) ;
+                                 WRITELN ( TRACEF , 'scnstno = ' ,
+                                           SCNSTNO : 4 ) ;
+                                 WRITELN ( TRACEF , 'plen    = ' , PLEN
+                                           : 4 ) ;
+                               end (* then *) ;
+                             if P2 < 0 then
+                               begin
+                                 if SCNSTNO > 0 then
+                                   begin
+                                     if PLEN > 0 then
+                                       begin
+                                         GENRX ( XLA , 14 , Q2 , 0 , 0
+                                                 ) ;
+                                         LITTBL [ SCNSTNO ] . LNK :=
+                                                   PCOUNTER - 1 ;
+                                         CODE . H [ PCOUNTER - 1 ] :=
+                                                   TO_HINT ( Q2 ) ;
+                                         if FALSE then
+                                           WRITELN ( TRACEF ,
+                                                   'set literal ' , Q2
+                                                   : 1 ,
+                                                   ' at position ' ,
+                                                   PCOUNTER - 1 : 1 ) ;
+                                       end (* then *)
+                                     else
+                                       begin
+                                         GENRR ( XXR , 14 , 14 ) ;
+                                         GENRR ( XBCTR , 14 , 0 ) ;
+                                       end (* else *) ;
+                                   end (* then *)
                                end (* then *)
                              else
-                               if PLEN > 0 then
-                                 begin
-                                   GETADR2 ( STK [ TOP - 2 ] , Q2 , P2
-                                             , B2 ) ;
-                                   GENRX ( XLA , 14 , Q2 , 0 , 0 ) ;
-                                   LITTBL [ SCNSTNO ] . LNK := PCOUNTER
-                                                   - 1 ;
-                                   CODE . H [ PCOUNTER - 1 ] := TO_HINT
-                                                   ( Q2 ) ;
-                                 end (* then *)
-                               else
-                                 begin
-                                   GENRR ( XXR , 14 , 14 ) ;
-                                   GENRR ( XBCTR , 14 , 0 ) ;
-                                 end (* else *) ;
+                               GENLA_LR ( 14 , Q2 + 4 , B2 , P2 ) ;
                              GENRX ( XST , 14 , 4 , NXTRG , 0 ) ;
                            end (* then *)
                          else
@@ -13193,6 +14035,11 @@ procedure ASMNXTINST ;
                                        ;
                              LITVALUE := - 65536 ;
                              GENRXLIT ( XL , 14 , LITVALUE , 1 ) ;
+
+           //************************************************
+           // maybe wrong                                    
+           //************************************************
+
                              if VPA = RGS then
                                begin
                                  LEN_REG := RGADR ;
@@ -13363,72 +14210,81 @@ procedure ASMNXTINST ;
                            begin
                              if FALSE then
                                begin
-                                 WRITELN ( TRACEF ,
-                                           'pvld - vrbl       = ' ,
-                                           VRBL ) ;
-                                 WRITELN ( TRACEF ,
-                                           'pvld - drct       = ' ,
-                                           DRCT ) ;
-                                 WRITELN ( TRACEF ,
-                                           'pvld - vpa        = ' , VPA
-                                           ) ;
-                                 WRITELN ( TRACEF ,
-                                           'pvld - fpa.lvl    = ' , FPA
-                                           . LVL ) ;
-                                 WRITELN ( TRACEF ,
-                                           'pvld - fpa.dsplmt = ' , FPA
-                                           . DSPLMT ) ;
-                                 WRITELN ( TRACEF ,
-                                           'pvld - mem.lvl    = ' ,
-                                           MEMADR . LVL ) ;
-                                 WRITELN ( TRACEF ,
-                                           'pvld - mem.dsplmt = ' ,
-                                           MEMADR . DSPLMT ) ;
+                                 WRITELN ( TRACEF , 'VLD - linecnt = '
+                                           , LINECNT : 1 ) ;
+                                 WRITELN ( TRACEF , 'VLD - p = ' , P )
+                                           ;
+                                 WRITELN ( TRACEF , 'VLD - q = ' , Q )
+                                           ;
+                                 WRITE ( TRACEF , 'STK -1' ) ;
+                                 DUMPSTKELEM ( STK [ TOP - 1 ] )
                                end (* then *) ;
                              FINDRG ;
-                             if VRBL then
-                               begin
-                                 P2 := MEMADR . LVL ;
-                                 Q2 := MEMADR . DSPLMT ;
-                                 BASE ( Q2 , P2 , B2 ) ;
-                                 GENRX ( XL , NXTRG , Q2 , B2 , P2 ) ;
-                               end (* then *)
-                             else
-                               begin
-                                 P2 := FPA . LVL ;
-                                 Q2 := FPA . DSPLMT ;
-                                 BASE ( Q2 , P2 , B2 ) ;
-                                 GENRX ( XLA , NXTRG , Q2 , B2 , P2 ) ;
-                               end (* else *) ;
+
+        //*********************************************
+        // error fixed 17.05.2019:                     
+        // wrong code generation with array elements   
+        // GETADR2 must be used                        
+        // (this is again the solution).               
+        // the original code made a difference         
+        // depending on VRBL ... don't know if this    
+        // is correct                                  
+        //*********************************************
+
+                             GETADR2 ( STK [ TOP - 1 ] , Q2 , P2 , B2 )
+                                       ;
+                             GENRX ( XLA , NXTRG , Q2 , B2 , P2 ) ;
+                             FREEREG ( STK [ TOP - 1 ] ) ;
                              FPA := ZEROBL ;
                              VPA := RGS ;
                              MEMADR := ZEROBL ;
                              RGADR := NXTRG ;
+                             VRBL := TRUE ;
+                             if TRUE then
+                               begin
+                                 WRITELN ( TRACEF , 'VLD - linecnt = '
+                                           , LINECNT : 1 ) ;
+                                 WRITELN ( TRACEF , 'VLD - p = ' , P )
+                                           ;
+                                 WRITELN ( TRACEF , 'VLD - q = ' , Q )
+                                           ;
+                                 WRITE ( TRACEF , 'STK -1' ) ;
+                                 DUMPSTKELEM ( STK [ TOP - 1 ] )
+                               end (* then *) ;
                            end (* then *)
                        end (* with *)
                    else
                      with STK [ TOP - 1 ] do
                        begin
+                         if FALSE then
+                           begin
+                             WRITELN ( TRACEF , 'VLD - linecnt = ' ,
+                                       LINECNT : 1 ) ;
+                             WRITELN ( TRACEF , 'VLD - p = ' , P ) ;
+                             WRITELN ( TRACEF , 'VLD - q = ' , Q ) ;
+                             WRITE ( TRACEF , 'STK -1' ) ;
+                             DUMPSTKELEM ( STK [ TOP - 1 ] )
+                           end (* then *) ;
                          FINDRG ;
                          RGWORK1 := NXTRG ;
                          GENRX ( XL , RGWORK1 , STRCURR , 12 , 0 ) ;
                          FINDRP ;
                          P1 := NXTRG ;
                          B1 := NXTRG + 1 ;
-                         if VRBL then
-                           begin
-                             P2 := MEMADR . LVL ;
-                             Q2 := MEMADR . DSPLMT ;
-                             BASE ( Q2 , P2 , B2 ) ;
-                             GENRX ( XL , P1 , Q2 , B2 , P2 ) ;
-                           end (* then *)
-                         else
-                           begin
-                             P2 := FPA . LVL ;
-                             Q2 := FPA . DSPLMT ;
-                             BASE ( Q2 , P2 , B2 ) ;
-                             GENRX ( XLA , P1 , Q2 , B2 , P2 ) ;
-                           end (* else *) ;
+
+        //*********************************************
+        // error fixed 17.05.2019:                     
+        // wrong code generation with array elements   
+        // GETADR2 must be used                        
+        // (this is again the solution).               
+        // the original code made a difference         
+        // depending on VRBL ... don't know if this    
+        // is correct                                  
+        //*********************************************
+
+                         GETADR2 ( STK [ TOP - 1 ] , Q2 , P2 , B2 ) ;
+                         GENRX ( XLA , P1 , Q2 , B2 , P2 ) ;
+                         FREEREG ( STK [ TOP - 1 ] ) ;
                          GENRX ( XLH , B1 , 2 , P1 , 0 ) ;
                          GENRX ( XSTH , B1 , 0 , RGWORK1 , 0 ) ;
                          GENRX ( XSTH , B1 , 2 , RGWORK1 , 0 ) ;
@@ -14994,12 +15850,16 @@ procedure ASMNXTINST ;
                                begin
                                  TAG := 'use' ;
                                  NXTLIT := NXTLIT + 1 ;
+                                 LITTBL [ NXTLIT ] . XLINECNT :=
+                                                   LINECNT ;
                                  LITTBL [ NXTLIT ] . LNK := - TOP - 1 ;
                                  LITTBL [ NXTLIT ] . LTYPE := 'C' ;
                                  LITTBL [ NXTLIT ] . LENGTH := SLNGTH ;
                                  LITTBL [ NXTLIT ] . XIDP := LITTBL [
                                                    LITOK ] . XIDP +
                                                    XOFFS ;
+                                 LITTBL [ NXTLIT ] . OPTIMIZED := FALSE
+                                                   ;
                                  LITOK := NXTLIT ;
                                end (* then *)
                              else
@@ -15024,12 +15884,16 @@ procedure ASMNXTINST ;
                                    end (* then *) ;
                                  TAG := 'add' ;
                                  NXTLIT := NXTLIT + 1 ;
-                                 LITOK := NXTLIT ;
-                                 LITTBL [ LITOK ] . LNK := - TOP - 1 ;
-                                 LITTBL [ LITOK ] . LTYPE := 'C' ;
-                                 LITTBL [ LITOK ] . LENGTH := SLNGTH ;
-                                 LITTBL [ LITOK ] . XIDP := LX . NXTCH
+                                 LITTBL [ NXTLIT ] . XLINECNT :=
+                                                   LINECNT ;
+                                 LITTBL [ NXTLIT ] . LNK := - TOP - 1 ;
+                                 LITTBL [ NXTLIT ] . LTYPE := 'C' ;
+                                 LITTBL [ NXTLIT ] . LENGTH := SLNGTH ;
+                                 LITTBL [ NXTLIT ] . XIDP := LX . NXTCH
                                                    ;
+                                 LITTBL [ NXTLIT ] . OPTIMIZED := FALSE
+                                                   ;
+                                 LITOK := NXTLIT ;
                                  MEMCPY ( ADDR ( IDP_POOL . C [ LX .
                                           NXTCH ] ) , ADDR ( SVAL [ 1 ]
                                           ) , SLNGTH ) ;
@@ -15326,6 +16190,17 @@ procedure ASMNXTINST ;
                 MSEOPERATION ( STK [ TOP ] , STK [ TOP + 1 ] , STK [
                                TOP + 2 ] , Q ) ;
               end (* tag/ca *) ;
+       PMCC : begin
+                TOP := TOP - 2 ;
+                MCCOPERATION ( STK [ TOP ] , STK [ TOP + 1 ] , Q ) ;
+                TOP := TOP + 1 ;
+              end (* tag/ca *) ;
+       PMCV : begin
+                TOP := TOP - 3 ;
+                MCVOPERATION ( STK [ TOP ] , STK [ TOP + 1 ] , STK [
+                               TOP + 2 ] ) ;
+                TOP := TOP + 1 ;
+              end (* tag/ca *) ;
 
      (*****************************)
      (* CONTROL/BRANCH OPERATIONS *)
@@ -15408,6 +16283,7 @@ procedure SETUP ;
      GS . FILL_LINEPTR := FALSE ;
      GS . MOD1DEFSTEP := - 1 ;
      GS . MOD2DEFSTEP := - 1 ;
+     GS . XBG_XEN_SUPPRESSED := - 1 ;
      EMPTY := '   ' ;
      BRMSK [ PEQU ] := 8 ;
      BRMSK [ PNEQ ] := 7 ;
@@ -15426,13 +16302,13 @@ procedure SETUP ;
      OP_SP := TRUE ;
      for PCODE := PCTS to PRED ( UNDEF_OP ) do
        begin
-         NMCDE := PTBL [ PCODE ] ;
+         P_OPCODE := PTBL [ PCODE ] ;
          ENTERLOOKUP
        end (* for *) ;
      OP_SP := FALSE ;
      for CSP := PCTR to PRED ( UNDEF_CSP ) do
        begin
-         NMCDE := CSPTBL [ CSP ] ;
+         P_OPCODE := CSPTBL [ CSP ] ;
          ENTERLOOKUP
        end (* for *) ;
      OP_SP := TRUE ;
@@ -15524,17 +16400,18 @@ begin (* HAUPTPROGRAMM *)
 
   if OSPARM <> NIL then
     with OSPARM -> do
-      if LENGTH >= 2 then
-        for Q := 1 to LENGTH - 1 do
-          if ( STRING [ Q ] = 'T' ) and ( STRING [ Q + 1 ] = 'R' ) then
+      if PLENGTH >= 2 then
+        for Q := 1 to PLENGTH - 1 do
+          if ( PSTRING [ Q ] = 'T' ) and ( PSTRING [ Q + 1 ] = 'R' )
+          then
             TRACE := TRUE
           else
-            if ( STRING [ Q ] = 'C' ) and ( STRING [ Q + 1 ] = 'K' )
+            if ( PSTRING [ Q ] = 'C' ) and ( PSTRING [ Q + 1 ] = 'K' )
             then
               CKMODE := TRUE
             else
-              if ( STRING [ Q ] = 'M' ) and ( STRING [ Q + 1 ] = 'U' )
-              then
+              if ( PSTRING [ Q ] = 'M' ) and ( PSTRING [ Q + 1 ] = 'U'
+              ) then
                 MUSIC := TRUE ;
   TIMER := CLOCK ( 0 ) ;
   WRITELN ( OUTPUT , '****' : 7 ,
@@ -15548,6 +16425,7 @@ begin (* HAUPTPROGRAMM *)
   //******************************************************************
 
   PIANKER := NIL ;
+  XXIANKER := NIL ;
   repeat
     READNXTINST ( 1 ) ;
   until PCODE = PSTP ;
@@ -15612,10 +16490,11 @@ begin (* HAUPTPROGRAMM *)
     WRITE ( OUTPUT , 'NO' : 8 ) ;
   WRITELN ( OUTPUT , ' ASSEMBLY ERROR(S) DETECTED.' ) ;
   WRITELN ( OUTPUT , '****' : 7 , TOTALBYTES : 8 ,
-            ' BYTES OF CODE GENERATED,' , TIMER * 0.001 : 6 : 2 ,
+            ' BYTES OF CODE GENERATED,' , TIMER * 0.001 : 7 : 2 ,
             ' SECONDS IN POST_PROCESSING.' ) ;
   if S370CNT > 0 then
-    WRITELN ( OUTPUT , '****' : 7 , S370CNT : 8 ,
-              ' "370"-ONLY INSTRUCTION(S) ISSUED.' ) ;
+    if FALSE then
+      WRITELN ( OUTPUT , '****' : 7 , S370CNT : 8 ,
+                ' "370"-ONLY INSTRUCTION(S) ISSUED.' ) ;
   EXIT ( ERRORCNT ) ;
 end (* HAUPTPROGRAMM *) .

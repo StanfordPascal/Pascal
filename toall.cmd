@@ -1,34 +1,25 @@
+rem
+rem call toass pasmonn
+rem call toass pasmain
+rem
+rem call topas avltree
+rem call topas pascal1a
+rem call topas pascal2a
+rem call topas pasform
+rem call topas pasutils
+rem call topas primzerl
+rem call topas testavl
+rem call topas testc1
+rem call topas testc2
+rem call topas testcase
+rem call topas testopt
+rem call topas testp3
+rem call topas testr001
+rem call topas xcompn
+rem
 
-    call toass pasmonn
-    pause
-    call toass pasmain
-    pause
-
-    call topas paslibx
-    pause
-    call topas pascal1a
-    pause
-    call topas pascal2a
-    pause
-    call topas passcan
-    pause
-    call topas teststr3
-    pause
-    call topas testmcmp
-    pause
-    call topas testlit
-    pause
-    call topas testlitf
-    pause
     call topas pascal1
-    pause
     call topas pascal2
-    pause
-    call topas primzerl
-    pause
-
-    call topas avltree
-    pause
-    call topas testavl
-    pause
+    call topas paslibx
+    call topas passcan
 

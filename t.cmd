@@ -16,9 +16,18 @@ rem call x testmcmp.asmout
 rem call pas2 paslibx
 rem pause
 rem call x paslibx.asmout
-    call pasf avltree
-    call pasf testavl
-    call pp avltree
-    call pp testavl
-    call prun testavl avltree >xxx
-    call xa xxx
+rem ********************************************************
+rem call pasf avltree
+rem call pasf testavl
+rem call pp avltree
+rem call pp testavl
+rem call prun testavl avltree >xxx
+rem call xa xxx
+rem ********************************************************
+    call pasf xcompn
+    call pasf paslibx
+    call pp xcompn
+    call pp paslibx
+    call xcompn xcompn.pas xcompn.v1
+rem call xcompn AUSGABE.TFIN2002 AUSGABE.TFIN2202
+    call xcompn AUSGABE.TFUP2002 AUSGABE.TFUP2202

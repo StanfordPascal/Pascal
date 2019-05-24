@@ -222,7 +222,7 @@ procedure ASSIGNMEM ( var X : ANYFILE ; MEMBNAME : CHARPTR ; LEN :
        CHECK_PLATFORM ;
      if PLATF = PLATF_INTEL then
        begin
-
+         
        end (* then *)
      else
        begin
@@ -284,14 +284,14 @@ procedure MOVEPARM ( X : VOIDPTR ; LEN : INTEGER ) ;
          begin
            SX := 1 ;
            CP := X ;
-           while SX <= LENGTH do
+           while SX <= PLENGTH do
              begin
-               if STRING [ SX ] = ' ' then
+               if PSTRING [ SX ] = ' ' then
                  begin
                    SX := SX + 1 ;
                    continue ;
                  end (* then *) ;
-               CP -> := STRING [ SX ] ;
+               CP -> := PSTRING [ SX ] ;
                SX := SX + 1 ;
                CP := PTRADD ( CP , 1 ) ;
                if PTRDIFF ( CP , X ) >= LEN then
@@ -588,5 +588,5 @@ procedure READSYMB ( var F : TEXT ; X : VOIDPTR ; LEN : INTEGER ) ;
 
 
 begin (* HAUPTPROGRAMM *)
-
+  
 end (* HAUPTPROGRAMM *) .

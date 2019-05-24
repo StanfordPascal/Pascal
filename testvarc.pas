@@ -1,10 +1,10 @@
 program TESTVARC ( OUTPUT ) ;
 
 //**********************************************************************
-// Testprogramm fuer Strings bzw. VARCHARs
-//
-// Oppolzer - 02.2018
-//$A+
+// Testprogramm fuer Strings bzw. VARCHARs                              
+//                                                                      
+// Oppolzer - 02.2018                                                   
+//$A+                                                                   
 //**********************************************************************
 
 
@@ -217,7 +217,7 @@ procedure TESTSTR ( X : STRING ( 20 ) ; var Y : STRING ; const Z :
      WRITELN ( 'x [4]         = ' , X [ 4 ] ) ;
 
      //************************************************************
-     // y genauer anschauen
+     // y genauer anschauen                                        
      //************************************************************
 
      LF := ADDR ( Y ) ;
@@ -232,7 +232,7 @@ procedure TESTSTR ( X : STRING ( 20 ) ; var Y : STRING ; const Z :
      Y [ 5 ] := 'S' ;
 
      //************************************************************
-     // z genauer anschauen
+     // z genauer anschauen                                        
      //************************************************************
 
      LF := ADDR ( Z ) ;
@@ -245,8 +245,8 @@ procedure TESTSTR ( X : STRING ( 20 ) ; var Y : STRING ; const Z :
      WRITELN ( 'z [4]         = ' , Z [ 4 ] ) ;
 
      //************************************************************
-     // Z := 'Oppolzer' ;
-     // Z [ 5 ] := 'S' ;
+     // Z := 'Oppolzer' ;                                          
+     // Z [ 5 ] := 'S' ;                                           
      //************************************************************
 
    end (* TESTSTR *) ;
@@ -277,7 +277,7 @@ function CHECKF : STRING ;
 function TESTCONST ( const S : STRING ) : STRING ;
 
 //**********************************************************************
-// checkout problem with const strings
+// checkout problem with const strings                                  
 //**********************************************************************
 
 
@@ -291,460 +291,502 @@ function TESTCONST ( const S : STRING ) : STRING ;
 
 
 
+procedure TEST1 ;
+
+   begin (* TEST1 *)
+     C1 := 'A' ;
+     C2 := C1 ;
+     C20 := 'Test' ;
+     VC20 := STR ( 'A' ) ;
+     WRITE ( 'VC20 nach Zuweisung STR (''A'') ........: ' ) ;
+     WRITELN ( '<' , VC20 , '>' ) ;
+     VC20 := STR ( C1 ) ;
+     WRITE ( 'VC20 nach Zuweisung STR (C1) .........: ' ) ;
+     WRITELN ( '<' , VC20 , '>' ) ;
+     VC20 := 'A' ;
+     WRITE ( 'VC20 nach Zuweisung ''A'' ..............: ' ) ;
+     WRITELN ( '<' , VC20 , '>' ) ;
+     VC20 := 'Test Varchar' ;
+     WRITE ( 'VC20 nach Zuweisung const char array .: ' ) ;
+     WRITELN ( '<' , VC20 , '>' ) ;
+
+     //*************************************************************
+     // ist nicht zulaessig, muss Konstante sein oder Funktion STR  
+     //*************************************************************
+     // VC20 := C20 ;  /* sollte Fehler sein */                     
+     //*************************************************************
+     // so korrekt                                                  
+     //*************************************************************
+
+     VC20 := STR ( C20 ) ;
+     WRITE ( 'VC20 nach Zuweisung STR (C20) ........: ' ) ;
+     WRITELN ( '<' , VC20 , '>' ) ;
+
+     //*************************************************************
+     // muss erlaubt sein, mit Blanks auffuellen wie gehabt ...     
+     //*************************************************************
+
+     VC20 := 'Bernd' ;
+     WRITE ( 'VC20 nach Zuweisung Bernd ............: ' ) ;
+     WRITELN ( '<' , VC20 , '>' ) ;
+     C20 := VC20 ;
+     WRITELN ( 'C20 nach Zuweisung VC20 ..............: ' , C20 ) ;
+     C20 := 'Bernd ' || 'Oppolzer' ;
+     WRITELN ( 'C20 nach Zuweisung String Expression .: ' , C20 ) ;
+
+     //*************************************************************
+     // Verkettung usw.                                             
+     //*************************************************************
+
+     VC200 := VC20 || VC20 ;
+     WRITE ( 'VC200 nach Verkettung ................: ' ) ;
+     WRITELN ( '<' , VC200 , '>' ) ;
+     VC200 := VC20 || ' Oppolzer' ;
+     WRITE ( 'VC200 nach Verkettung ................: ' ) ;
+     WRITELN ( '<' , VC200 , '>' ) ;
+     VC200 := VC20 || ' Oppolzer' || ' Leinfelden' ;
+     WRITE ( 'VC200 nach Verkettung ................: ' ) ;
+     WRITELN ( '<' , VC200 , '>' ) ;
+     VC200 := VC20 || ( ' Oppolzer' || ' Leinfelden' ) ;
+     WRITE ( 'VC200 nach Verkettung ................: ' ) ;
+     WRITELN ( '<' , VC200 , '>' ) ;
+     VC200 := ( VC20 || ' Oppolzer' ) || ' Leinfelden' ;
+     WRITE ( 'VC200 nach Verkettung ................: ' ) ;
+     WRITELN ( '<' , VC200 , '>' ) ;
+     VC200 := ( ( VC20 || ' Oppolzer' ) || ' Leinfelden' ) ;
+     WRITE ( 'VC200 nach Verkettung ................: ' ) ;
+     WRITELN ( '<' , VC200 , '>' ) ;
+     VC200 := VC20 || STR ( ' Oppolzer' ) || STR ( ' Leinfelden' ) ;
+     WRITE ( 'VC200 nach Verkettung ................: ' ) ;
+     WRITELN ( '<' , VC200 , '>' ) ;
+     VC200 := VC20 || ' ' || VC20 ;
+     WRITE ( 'VC200 nach Verkettung ................: ' ) ;
+     WRITELN ( '<' , VC200 , '>' ) ;
+     VC200 := VC20 || ' dazwischen ' || VC20 ;
+     WRITE ( 'VC200 nach Verkettung ................: ' ) ;
+     WRITELN ( '<' , VC200 , '>' ) ;
+     VC200 := VC20 || ' dazwischen ' || STR ( C20 ) ;
+     WRITE ( 'VC200 nach Verkettung ................: ' ) ;
+     WRITELN ( '<' , VC200 , '>' ) ;
+     VC200 := STR ( C20 ) || ' dazwischen ' || VC20 ;
+     WRITE ( 'VC200 nach Verkettung ................: ' ) ;
+     WRITELN ( '<' , VC200 , '>' ) ;
+   end (* TEST1 *) ;
+
+
+
+procedure TEST2 ;
+
+   begin (* TEST2 *)
+
+     //************************************************************
+     // Zuweisungen einfach oder Expression                        
+     //************************************************************
+
+     VC20 := 'Test-String' ;
+     WRITE ( 'VC20 nach Zuweisung Konstante ........: ' ) ;
+     WRITELN ( '<' , VC20 , '>' ) ;
+     VC200 := VC20 ;
+     WRITE ( 'VC200 nach Zuweisung VC20 ............: ' ) ;
+     WRITELN ( '<' , VC200 , '>' ) ;
+     VC200 := VC20 || ' mit Verkettung' ;
+     WRITE ( 'VC200 nach Zuweisung Expression ......: ' ) ;
+     WRITELN ( '<' , VC200 , '>' ) ;
+     VC20 := 'Bernd' ;
+
+     //*************************************************************
+     // Vergleiche von Strings                                      
+     //*************************************************************
+
+     X := VC20 = 'Bernd' ;
+     WRITELN ( 'vc20 = ''Bernd'' .......................: ' , X ) ;
+     X := ( VC20 = 'Bernd' ) ;
+     WRITELN ( 'vc20 = ''Bernd'' .......................: ' , X ) ;
+     X := VC20 || ' ' = 'Bernd' || ' ' ;
+     WRITELN ( 'vc20 = ''Bernd'' .......................: ' , X ) ;
+     X := VC20 = 'Bernd ' ;
+     WRITELN ( 'vc20 = ''Bernd '' ......................: ' , X ) ;
+     X := C20 = 'Bernd' ;
+     WRITELN ( 'c20 = ''Bernd'' ........................: ' , X ) ;
+     X := C20 = 'Bernd      ' ;
+     WRITELN ( 'c20 = ''Bernd      '' ..................: ' , X ) ;
+     C20A := 'Oppolzer' ;
+     WRITELN ( 'c20 = ................................: ' , C20 ) ;
+     WRITELN ( 'c20A = ...............................: ' , C20A ) ;
+     WRITELN ( 'VC20 = ...............................: ' , VC20 ) ;
+     X := C20A > C20 ;
+     WRITELN ( 'c20a > c20 ...........................: ' , X ) ;
+     X := C20A < C20 ;
+     WRITELN ( 'c20a < c20 ...........................: ' , X ) ;
+     X := STR ( C20 ) > VC20 ;
+     WRITELN ( 'c20 > vc20 ...........................: ' , X ) ;
+     X := STR ( C20 ) < VC20 ;
+     WRITELN ( 'c20 < vc20 ...........................: ' , X ) ;
+     X := VC20 < C20 ;
+     WRITELN ( 'c20 > vc20 ...........................: ' , X ) ;
+     X := VC20 > C20 ;
+     WRITELN ( 'c20 < vc20 ...........................: ' , X ) ;
+     X := VC20 = C20 ;
+     WRITELN ( 'c20 = vc20 ...........................: ' , X ) ;
+     X := STR ( C20A ) > VC20 ;
+     WRITELN ( 'c20a > vc20 ..........................: ' , X ) ;
+     X := STR ( C20A ) < VC20 ;
+     WRITELN ( 'c20a < vc20 ..........................: ' , X ) ;
+     X := VC20 < C20A ;
+     WRITELN ( 'c20a > vc20 ..........................: ' , X ) ;
+     X := VC20 > C20A ;
+     WRITELN ( 'c20a < vc20 ..........................: ' , X ) ;
+     if VC20 || ' ' = 'Bernd' || ' ' then
+       WRITELN ( 'success !!' ) ;
+
+     //*************************************************************
+     // verkettung direkt in Writeln ...                            
+     //*************************************************************
+
+     VC200 := VC20 || VC20 ;
+     WRITE ( 'VC200 nach Verkettung ................: ' ) ;
+     WRITELN ( '<' , VC200 , '>' ) ;
+     WRITE ( 'Verkettung direkt ausgeben ...........: ' ) ;
+     WRITELN ( '<' , VC20 || VC20 , '>' ) ;
+     WRITE ( 'Verkettung nochmal direkt ausgeben ...: ' ) ;
+     WRITELN ( '<' , VC20 || ' ' || C20A , '>' ) ;
+   end (* TEST2 *) ;
+
+
+
+procedure TEST3 ;
+
+   begin (* TEST3 *)
+
+     //************************************************************
+     // tests mit prozeduren, call by value und by reference       
+     //************************************************************
+
+     WRITELN ( 'Aufruf STRPROC' ) ;
+     STRPROC ( 'Bernd' , P1 , 'xxxxxxxxxxxxxxx' , P2 ) ;
+     WRITELN ( 'zur…k von STRPROC' ) ;
+     WRITE ( 'P1 nach STRPROC ......................: ' ) ;
+     WRITELN ( '<' , P1 , '>' ) ;
+     WRITE ( 'P2 nach STRPROC ......................: ' ) ;
+     WRITELN ( '<' , P2 , '>' ) ;
+
+     //*************************************************************
+     // noch ein Test, unpassende var-Parameter                     
+     //*************************************************************
+
+     WRITELN ( 'Aufruf STRPROC' ) ;
+     STRPROC ( 'Bernd' , P2 , 'xxxxxxxxxxxxxxx' , P1 ) ;
+     WRITELN ( 'zur…k von STRPROC' ) ;
+     WRITE ( 'P1 nach STRPROC ......................: ' ) ;
+     WRITELN ( '<' , P1 , '>' ) ;
+     WRITE ( 'P2 nach STRPROC ......................: ' ) ;
+     WRITELN ( '<' , P2 , '>' ) ;
+
+     //*************************************************************
+     // length und maxlength ausprobieren                           
+     //*************************************************************
+
+     WRITE ( 'maxlength von einfachem char .........: ' ) ;
+     WRITELN ( MAXLENGTH ( 'a' ) ) ;
+     WRITE ( 'maxlength von char-Konstante .........: ' ) ;
+     WRITELN ( MAXLENGTH ( 'Bernd' ) ) ;
+     WRITE ( 'maxlength von char-Variable ..........: ' ) ;
+     WRITELN ( MAXLENGTH ( C1 ) ) ;
+     WRITE ( 'maxlength von char-array .............: ' ) ;
+     WRITELN ( MAXLENGTH ( C20A ) ) ;
+     WRITE ( 'maxlength von string .................: ' ) ;
+     WRITELN ( MAXLENGTH ( VC20 ) ) ;
+     WRITE ( 'maxlength von string-Expression ......: ' ) ;
+     WRITELN ( MAXLENGTH ( VC20 || ' ' || VC20 ) ) ;
+     WRITE ( 'length von einfachem char ............: ' ) ;
+     WRITELN ( LENGTH ( 'a' ) ) ;
+     WRITE ( 'length von char-konstante ............: ' ) ;
+     WRITELN ( LENGTH ( 'bernd' ) ) ;
+     WRITE ( 'length von char-variable .............: ' ) ;
+     WRITELN ( LENGTH ( C1 ) ) ;
+     WRITE ( 'length von char-array ................: ' ) ;
+     WRITELN ( LENGTH ( C20A ) ) ;
+     WRITE ( 'length von string ....................: ' ) ;
+     WRITELN ( LENGTH ( VC20 ) ) ;
+     WRITE ( 'length von string-expression .........: ' ) ;
+     WRITELN ( LENGTH ( VC20 || ' ' || VC20 ) ) ;
+
+     //*************************************************************
+     // Funktion mit string ergebnis ausprobieren                   
+     //*************************************************************
+
+     P1 := 'Oppolzer' ;
+     I := IFUNC ( VC20 , P1 ) ;
+     WRITE ( 'funktion mit Integer Ergebnis ........: ' ) ;
+     WRITELN ( I ) ;
+     P1 := 'Oppolzer' ;
+     P2 := STRFUNC ( VC20 , P1 ) ;
+     WRITE ( 'p2 = funktion mit String Ergebnis ....: ' ) ;
+     WRITELN ( '<' , P2 , '>' ) ;
+     P2 := 'Test ' || STRFUNC ( VC20 , P1 ) || ' nochmal Test' ;
+     WRITE ( 'p2 = kombiniert mit Funktion .........: ' ) ;
+     WRITELN ( '<' , P2 , '>' ) ;
+     WRITE ( 'String Ergebnis direkt ...............: ' ) ;
+     WRITELN ( '<' , STRFUNC ( VC20 , P1 ) , '>' ) ;
+     WRITE ( 'String Ergebnis mit Konstanten .......: ' ) ;
+     WRITELN ( '<' , STRFUNC ( 'Bernd ' , ' Oppolzer' ) , '>' ) ;
+   end (* TEST3 *) ;
+
+
+
+procedure TEST4 ;
+
+   begin (* TEST4 *)
+
+     //************************************************************
+     // test Funktion mit const String parametern                  
+     //************************************************************
+
+     P1 := 'Oppolzer' ;
+     P2 := STRFUNC3 ( VC20 , P1 ) ;
+     WRITE ( 'p2 = funktion mit var String .........: ' ) ;
+     WRITELN ( '<' , P2 , '>' ) ;
+     P1 := 'Oppolzer' ;
+     P2 := STRFUNC5 ( VC20 , P1 ) ;
+     WRITE ( 'p2 = funktion mit var String (2 mal) .: ' ) ;
+     WRITELN ( '<' , P2 , '>' ) ;
+     P1 := 'Oppolzer' ;
+     P2 := STRFUNC2 ( VC20 , P1 ) ;
+     WRITE ( 'p2 = funktion mit const String .......: ' ) ;
+     WRITELN ( '<' , P2 , '>' ) ;
+     P1 := 'Oppolzer' ;
+     P2 := STRFUNC2 ( VC20 || ' ' , ' Oppolzer' ) ;
+     WRITE ( 'p2 = funktion mit const String .......: ' ) ;
+     WRITELN ( '<' , P2 , '>' ) ;
+
+     //*************************************************************
+     // test SUBSTR1 - einfache Variante                            
+     //*************************************************************
+
+     P1 := 'Oppolzer' ;
+     P2 := 'Oppolzer' ;
+     TESTSTR ( P1 , P2 , 'Oppolzer' ) ;
+     WRITE ( 'P1 nach Aufruf TESTSTR ...............: ' ) ;
+     WRITELN ( '<' , P1 , '>' ) ;
+     WRITE ( 'P2 nach Aufruf TESTSTR ...............: ' ) ;
+     WRITELN ( '<' , P2 , '>' ) ;
+     P1 := 'Oppolzer' ;
+     WRITE ( 'Zugriff auf String ueber Index .......: ' ) ;
+     WRITELN ( P1 [ 1 ] ) ;
+     WRITE ( 'Zugriff auf String ueber Index .......: ' ) ;
+     WRITELN ( P1 [ 5 ] ) ;
+     P2 := SUBSTR1 ( P1 , 3 , 4 ) ;
+     WRITE ( 'p2 = Ergebnis von SUBSTR1 ............: ' ) ;
+     WRITELN ( '<' , P2 , '>' ) ;
+     P2 := SUBSTR1 ( 'Bernd ' || 'Oppolzer' , 5 , 7 ) ;
+     WRITE ( 'p2 = Ergebnis von SUBSTR1 ............: ' ) ;
+     WRITELN ( '<' , P2 , '>' ) ;
+     P2 := SUBSTR1 ( 'Bernd ' || 'Oppolzer' , 5 , - 1 ) ;
+     WRITE ( 'p2 = Ergebnis von SUBSTR1 ............: ' ) ;
+     WRITELN ( '<' , P2 , '>' ) ;
+
+     //*************************************************************
+     // ... geht nur in Funktion mit String Result !!               
+     // WRITE ( 'Testausgabe STRRESULT ................: ' ) ;      
+     // WRITELN ( STRRESULT ) ;                                     
+     // WRITE ( 'Testausgabe STRRESULTP ...............: ' ) ;      
+     // WRITELN ( STRRESULTP ) ;                                    
+     //*************************************************************
+
+     VC2000 := CHECKF ;
+     WRITE ( 'Laenge des Ergebnisses von CHECKF ....: ' ) ;
+     WRITELN ( LENGTH ( VC2000 ) ) ;
+     WRITE ( 'Test REPEATSTR .......................: ' ) ;
+     WRITELN ( REPEATSTR ( 'Bernd ' , 5 ) ) ;
+
+     //*************************************************************
+     // test SUBSTR2 - korrekte Variante mit STRRESULTP usw.        
+     //*************************************************************
+
+     P1 := 'Oppolzer' ;
+     P2 := SUBSTR2 ( P1 , 3 , 4 ) ;
+     WRITE ( 'p2 = Ergebnis von SUBSTR2 ............: ' ) ;
+     WRITELN ( '<' , P2 , '>' ) ;
+     P2 := SUBSTR2 ( 'Bernd ' || 'Oppolzer' , 5 , 7 ) ;
+     WRITE ( 'p2 = Ergebnis von SUBSTR2 ............: ' ) ;
+     WRITELN ( '<' , P2 , '>' ) ;
+     P2 := SUBSTR2 ( 'Bernd ' || 'Oppolzer' , 5 , - 1 ) ;
+     WRITE ( 'p2 = Ergebnis von SUBSTR2 ............: ' ) ;
+     WRITELN ( '<' , P2 , '>' ) ;
+
+     //*************************************************************
+     // test SUBSTR                                                 
+     //*************************************************************
+
+     P1 := 'Oppolzer' ;
+     P2 := SUBSTR ( P1 , 3 , 4 ) ;
+     WRITE ( 'p2 = Ergebnis von SUBSTR .............: ' ) ;
+     WRITELN ( '<' , P2 , '>' ) ;
+     WRITE ( 'P1 nach SUBSTR (should not change) ...: ' ) ;
+     WRITELN ( '<' , P1 , '>' ) ;
+     P2 := SUBSTR ( 'Bernd ' || 'Oppolzer' , 5 , 7 ) ;
+     WRITE ( 'p2 = Ergebnis von SUBSTR .............: ' ) ;
+     WRITELN ( '<' , P2 , '>' ) ;
+     P2 := SUBSTR ( 'Bernd ' || 'Oppolzer' , 5 ) ;
+     WRITE ( 'p2 = Ergebnis von SUBSTR .............: ' ) ;
+     WRITELN ( '<' , P2 , '>' ) ;
+   end (* TEST4 *) ;
+
+
+
+procedure TEST5 ;
+
+   begin (* TEST5 *)
+
+     //************************************************************
+     // test DELETE                                                
+     //************************************************************
+
+     P1 := 'Oppolzer' ;
+     P2 := DELETE ( P1 , 3 , 4 ) ;
+     WRITE ( 'p2 = Ergebnis von DELETE .............: ' ) ;
+     WRITELN ( '<' , P2 , '>' ) ;
+     WRITE ( 'P1 nach DELETE (should not change) ...: ' ) ;
+     WRITELN ( '<' , P1 , '>' ) ;
+     P2 := DELETE ( 'Bernd ' || 'Oppolzer' , 5 , 7 ) ;
+     WRITE ( 'p2 = Ergebnis von DELETE .............: ' ) ;
+     WRITELN ( '<' , P2 , '>' ) ;
+     P2 := DELETE ( 'Bernd ' || 'Oppolzer' , 5 ) ;
+     WRITE ( 'p2 = Ergebnis von DELETE .............: ' ) ;
+     WRITELN ( '<' , P2 , '>' ) ;
+
+     //*************************************************************
+     // test RTRIM und LTRIM, TRIM und COMPRESS                     
+     //*************************************************************
+
+     P1 := '  Bernd Oppolzer    ' ;
+     P2 := RTRIM ( P1 ) ;
+     WRITE ( 'p2 = Ergebnis von RTRIM ..............: ' ) ;
+     WRITELN ( '<' , P2 , '>' ) ;
+     WRITE ( 'P1 nach RTRIM (should not change) ....: ' ) ;
+     WRITELN ( '<' , P1 , '>' ) ;
+     WRITE ( 'p2 = Ergebnis von RTRIM ..............: ' ) ;
+     WRITELN ( '<' , RTRIM ( '  a  b  ' ) , '>' ) ;
+     WRITE ( 'p2 = Ergebnis von RTRIM ..............: ' ) ;
+     WRITELN ( '<' , RTRIM ( '    ' ) , '>' ) ;
+     P1 := '  Bernd Oppolzer    ' ;
+     P2 := LTRIM ( P1 ) ;
+     WRITE ( 'p2 = Ergebnis von LTRIM ..............: ' ) ;
+     WRITELN ( '<' , P2 , '>' ) ;
+     WRITE ( 'P1 nach LTRIM (should not change) ....: ' ) ;
+     WRITELN ( '<' , P1 , '>' ) ;
+     WRITE ( 'p2 = Ergebnis von LTRIM ..............: ' ) ;
+     WRITELN ( '<' , LTRIM ( '  a  b  ' ) , '>' ) ;
+     WRITE ( 'p2 = Ergebnis von LTRIM ..............: ' ) ;
+     WRITELN ( '<' , LTRIM ( '    ' ) , '>' ) ;
+     P1 := '  Bernd Oppolzer    ' ;
+     P2 := TRIM ( P1 ) ;
+     WRITE ( 'p2 = Ergebnis von TRIM ...............: ' ) ;
+     WRITELN ( '<' , P2 , '>' ) ;
+     WRITE ( 'P1 nach TRIM (should not change) .....: ' ) ;
+     WRITELN ( '<' , P1 , '>' ) ;
+     WRITE ( 'p2 = Ergebnis von TRIM ...............: ' ) ;
+     WRITELN ( '<' , TRIM ( '  a  b  ' ) , '>' ) ;
+     WRITE ( 'p2 = Ergebnis von TRIM ...............: ' ) ;
+     WRITELN ( '<' , TRIM ( '    ' ) , '>' ) ;
+   end (* TEST5 *) ;
+
+
+
+procedure TEST6 ;
+
+   begin (* TEST6 *)
+
+     //************************************************************
+     // XP := RESULTP ;  ... not allowed here                      
+     //************************************************************
+
+     P1 := '  Bernd Oppolzer    ' ;
+     P2 := COMPRESS ( P1 ) ;
+     WRITE ( 'p2 = Ergebnis von COMPRESS ...........: ' ) ;
+     WRITELN ( '<' , P2 , '>' ) ;
+     WRITE ( 'P1 nach COMPRESS (should not change) .: ' ) ;
+     WRITELN ( '<' , P1 , '>' ) ;
+     WRITE ( 'p2 = Ergebnis von COMPRESS ...........: ' ) ;
+     WRITELN ( '<' , COMPRESS ( '  a  b  ' ) , '>' ) ;
+     WRITE ( 'p2 = Ergebnis von COMPRESS ...........: ' ) ;
+     WRITELN ( '<' , COMPRESS ( '    ' ) , '>' ) ;
+
+     //*************************************************************
+     // test INDEX                                                  
+     //*************************************************************
+
+     P1 := '  Bernd Oppolzer    ' ;
+     I := INDEX ( P1 , 'pol' ) ;
+     WRITE ( 'Ergebnis von INDEX ...................: ' ) ;
+     WRITELN ( I : 5 ) ;
+     P1 := '  Bernd Oppolzer    ' ;
+     I := INDEX ( TRIM ( P1 ) , 'pol' ) ;
+     WRITE ( 'Ergebnis von INDEX ...................: ' ) ;
+     WRITELN ( I : 5 ) ;
+     WRITE ( 'P1 nach TRIM (should not change) .....: ' ) ;
+     WRITELN ( '<' , P1 , '>' ) ;
+     WRITE ( 'Ergebnis von INDEX (3) ...............: ' ) ;
+     WRITELN ( INDEX ( 'Oppolzer' , 'pol' ) : 5 ) ;
+     WRITE ( 'Ergebnis von INDEX (0) ...............: ' ) ;
+     WRITELN ( INDEX ( 'Oppolzer' , 'polizei' ) : 5 ) ;
+     WRITE ( 'Ergebnis von INDEX (1) ...............: ' ) ;
+     WRITELN ( INDEX ( 'Oppolzer' , 'Oppolzer' ) : 5 ) ;
+     WRITE ( 'Ergebnis von INDEX (0) ...............: ' ) ;
+     WRITELN ( INDEX ( 'Oppolzer' , 'Oppolzer1' ) : 5 ) ;
+     WRITE ( 'Ergebnis von INDEX (1) ...............: ' ) ;
+     WRITELN ( INDEX ( 'Oppolzer' , 'Oppo' ) : 5 ) ;
+     WRITE ( 'Ergebnis von INDEX (6) ...............: ' ) ;
+     WRITELN ( INDEX ( 'Oppolzer' , 'zer' ) : 5 ) ;
+
+     //*************************************************************
+     // test VERIFY                                                 
+     //*************************************************************
+
+     P1 := '  Bernd Oppolzer    ' ;
+     I := VERIFY ( P1 , 'Berndpol ' ) ;
+     WRITE ( 'Ergebnis von VERIFY (9) ..............: ' ) ;
+     WRITELN ( I : 5 ) ;
+     P1 := '1256735473645' ;
+     I := VERIFY ( P1 , '0123456789' ) ;
+     WRITE ( 'Ergebnis von VERIFY (0) ..............: ' ) ;
+     WRITELN ( I : 5 ) ;
+     P1 := '125673547E645' ;
+     I := VERIFY ( P1 , '0123456789' ) ;
+     WRITE ( 'Ergebnis von VERIFY (10) .............: ' ) ;
+     WRITELN ( I : 5 ) ;
+     P1 := '125 73547E645' ;
+     I := VERIFY ( P1 , '0123456789' ) ;
+     WRITE ( 'Ergebnis von VERIFY (4) ..............: ' ) ;
+     WRITELN ( I : 5 ) ;
+     P1 := '1234567890123456789 ' ;
+     I := VERIFY ( P1 , '0123456789' ) ;
+     WRITE ( 'Ergebnis von VERIFY (20) .............: ' ) ;
+     WRITELN ( I : 5 ) ;
+   end (* TEST6 *) ;
+
+
+
 begin (* HAUPTPROGRAMM *)
-  if TRUE then
-    begin
-      C1 := 'A' ;
-      C2 := C1 ;
-      C20 := 'Test' ;
-      VC20 := STR ( 'A' ) ;
-      WRITE ( 'VC20 nach Zuweisung STR (''A'') ........: ' ) ;
-      WRITELN ( '<' , VC20 , '>' ) ;
-      VC20 := STR ( C1 ) ;
-      WRITE ( 'VC20 nach Zuweisung STR (C1) .........: ' ) ;
-      WRITELN ( '<' , VC20 , '>' ) ;
-      VC20 := 'A' ;
-      WRITE ( 'VC20 nach Zuweisung ''A'' ..............: ' ) ;
-      WRITELN ( '<' , VC20 , '>' ) ;
-      VC20 := 'Test Varchar' ;
-      WRITE ( 'VC20 nach Zuweisung const char array .: ' ) ;
-      WRITELN ( '<' , VC20 , '>' ) ;
+  TEST1 ;
+  TEST2 ;
+  TEST3 ;
+  TEST4 ;
+  TEST5 ;
+  TEST6 ;
 
   //******************************************************************
-  // ist nicht zulaessig, muss Konstante sein oder Funktion STR
-  //******************************************************************
-  // VC20 := C20 ;  /* sollte Fehler sein */
-  //******************************************************************
-  // so korrekt
-  //******************************************************************
-
-      VC20 := STR ( C20 ) ;
-      WRITE ( 'VC20 nach Zuweisung STR (C20) ........: ' ) ;
-      WRITELN ( '<' , VC20 , '>' ) ;
-
-  //******************************************************************
-  // muss erlaubt sein, mit Blanks auffuellen wie gehabt ...
-  //******************************************************************
-
-      VC20 := 'Bernd' ;
-      WRITE ( 'VC20 nach Zuweisung Bernd ............: ' ) ;
-      WRITELN ( '<' , VC20 , '>' ) ;
-      C20 := VC20 ;
-      WRITELN ( 'C20 nach Zuweisung VC20 ..............: ' , C20 ) ;
-      C20 := 'Bernd ' || 'Oppolzer' ;
-      WRITELN ( 'C20 nach Zuweisung String Expression .: ' , C20 ) ;
-
-  //******************************************************************
-  // Verkettung usw.
-  //******************************************************************
-
-      VC200 := VC20 || VC20 ;
-      WRITE ( 'VC200 nach Verkettung ................: ' ) ;
-      WRITELN ( '<' , VC200 , '>' ) ;
-      VC200 := VC20 || ' Oppolzer' ;
-      WRITE ( 'VC200 nach Verkettung ................: ' ) ;
-      WRITELN ( '<' , VC200 , '>' ) ;
-      VC200 := VC20 || ' Oppolzer' || ' Leinfelden' ;
-      WRITE ( 'VC200 nach Verkettung ................: ' ) ;
-      WRITELN ( '<' , VC200 , '>' ) ;
-      VC200 := VC20 || ( ' Oppolzer' || ' Leinfelden' ) ;
-      WRITE ( 'VC200 nach Verkettung ................: ' ) ;
-      WRITELN ( '<' , VC200 , '>' ) ;
-      VC200 := ( VC20 || ' Oppolzer' ) || ' Leinfelden' ;
-      WRITE ( 'VC200 nach Verkettung ................: ' ) ;
-      WRITELN ( '<' , VC200 , '>' ) ;
-      VC200 := ( ( VC20 || ' Oppolzer' ) || ' Leinfelden' ) ;
-      WRITE ( 'VC200 nach Verkettung ................: ' ) ;
-      WRITELN ( '<' , VC200 , '>' ) ;
-      VC200 := VC20 || STR ( ' Oppolzer' ) || STR ( ' Leinfelden' ) ;
-      WRITE ( 'VC200 nach Verkettung ................: ' ) ;
-      WRITELN ( '<' , VC200 , '>' ) ;
-      VC200 := VC20 || ' ' || VC20 ;
-      WRITE ( 'VC200 nach Verkettung ................: ' ) ;
-      WRITELN ( '<' , VC200 , '>' ) ;
-      VC200 := VC20 || ' dazwischen ' || VC20 ;
-      WRITE ( 'VC200 nach Verkettung ................: ' ) ;
-      WRITELN ( '<' , VC200 , '>' ) ;
-      VC200 := VC20 || ' dazwischen ' || STR ( C20 ) ;
-      WRITE ( 'VC200 nach Verkettung ................: ' ) ;
-      WRITELN ( '<' , VC200 , '>' ) ;
-      VC200 := STR ( C20 ) || ' dazwischen ' || VC20 ;
-      WRITE ( 'VC200 nach Verkettung ................: ' ) ;
-      WRITELN ( '<' , VC200 , '>' ) ;
-
-  //******************************************************************
-  // Zuweisungen einfach oder Expression
-  //******************************************************************
-
-      VC20 := 'Test-String' ;
-      WRITE ( 'VC20 nach Zuweisung Konstante ........: ' ) ;
-      WRITELN ( '<' , VC20 , '>' ) ;
-      VC200 := VC20 ;
-      WRITE ( 'VC200 nach Zuweisung VC20 ............: ' ) ;
-      WRITELN ( '<' , VC200 , '>' ) ;
-      VC200 := VC20 || ' mit Verkettung' ;
-      WRITE ( 'VC200 nach Zuweisung Expression ......: ' ) ;
-      WRITELN ( '<' , VC200 , '>' ) ;
-      VC20 := 'Bernd' ;
-
-  //******************************************************************
-  // Vergleiche von Strings
-  //******************************************************************
-
-      X := VC20 = 'Bernd' ;
-      WRITELN ( 'vc20 = ''Bernd'' .......................: ' , X ) ;
-      X := ( VC20 = 'Bernd' ) ;
-      WRITELN ( 'vc20 = ''Bernd'' .......................: ' , X ) ;
-      X := VC20 || ' ' = 'Bernd' || ' ' ;
-      WRITELN ( 'vc20 = ''Bernd'' .......................: ' , X ) ;
-      X := VC20 = 'Bernd ' ;
-      WRITELN ( 'vc20 = ''Bernd '' ......................: ' , X ) ;
-      X := C20 = 'Bernd' ;
-      WRITELN ( 'c20 = ''Bernd'' ........................: ' , X ) ;
-      X := C20 = 'Bernd      ' ;
-      WRITELN ( 'c20 = ''Bernd      '' ..................: ' , X ) ;
-      C20A := 'Oppolzer' ;
-      WRITELN ( 'c20 = ................................: ' , C20 ) ;
-      WRITELN ( 'c20A = ...............................: ' , C20A ) ;
-      WRITELN ( 'VC20 = ...............................: ' , VC20 ) ;
-      X := C20A > C20 ;
-      WRITELN ( 'c20a > c20 ...........................: ' , X ) ;
-      X := C20A < C20 ;
-      WRITELN ( 'c20a < c20 ...........................: ' , X ) ;
-      X := STR ( C20 ) > VC20 ;
-      WRITELN ( 'c20 > vc20 ...........................: ' , X ) ;
-      X := STR ( C20 ) < VC20 ;
-      WRITELN ( 'c20 < vc20 ...........................: ' , X ) ;
-      X := VC20 < C20 ;
-      WRITELN ( 'c20 > vc20 ...........................: ' , X ) ;
-      X := VC20 > C20 ;
-      WRITELN ( 'c20 < vc20 ...........................: ' , X ) ;
-      X := VC20 = C20 ;
-      WRITELN ( 'c20 = vc20 ...........................: ' , X ) ;
-      X := STR ( C20A ) > VC20 ;
-      WRITELN ( 'c20a > vc20 ..........................: ' , X ) ;
-      X := STR ( C20A ) < VC20 ;
-      WRITELN ( 'c20a < vc20 ..........................: ' , X ) ;
-      X := VC20 < C20A ;
-      WRITELN ( 'c20a > vc20 ..........................: ' , X ) ;
-      X := VC20 > C20A ;
-      WRITELN ( 'c20a < vc20 ..........................: ' , X ) ;
-      if VC20 || ' ' = 'Bernd' || ' ' then
-        WRITELN ( 'success !!' ) ;
-
-  //******************************************************************
-  // verkettung direkt in Writeln ...
-  //******************************************************************
-
-      VC200 := VC20 || VC20 ;
-      WRITE ( 'VC200 nach Verkettung ................: ' ) ;
-      WRITELN ( '<' , VC200 , '>' ) ;
-      WRITE ( 'Verkettung direkt ausgeben ...........: ' ) ;
-      WRITELN ( '<' , VC20 || VC20 , '>' ) ;
-      WRITE ( 'Verkettung nochmal direkt ausgeben ...: ' ) ;
-      WRITELN ( '<' , VC20 || ' ' || C20A , '>' ) ;
-
-  //******************************************************************
-  // tests mit prozeduren, call by value und by reference
-  //******************************************************************
-
-      WRITELN ( 'Aufruf STRPROC' ) ;
-      STRPROC ( 'Bernd' , P1 , 'xxxxxxxxxxxxxxx' , P2 ) ;
-      WRITELN ( 'zur…k von STRPROC' ) ;
-      WRITE ( 'P1 nach STRPROC ......................: ' ) ;
-      WRITELN ( '<' , P1 , '>' ) ;
-      WRITE ( 'P2 nach STRPROC ......................: ' ) ;
-      WRITELN ( '<' , P2 , '>' ) ;
-
-  //******************************************************************
-  // noch ein Test, unpassende var-Parameter
-  //******************************************************************
-
-      WRITELN ( 'Aufruf STRPROC' ) ;
-      STRPROC ( 'Bernd' , P2 , 'xxxxxxxxxxxxxxx' , P1 ) ;
-      WRITELN ( 'zur…k von STRPROC' ) ;
-      WRITE ( 'P1 nach STRPROC ......................: ' ) ;
-      WRITELN ( '<' , P1 , '>' ) ;
-      WRITE ( 'P2 nach STRPROC ......................: ' ) ;
-      WRITELN ( '<' , P2 , '>' ) ;
-
-  //******************************************************************
-  // length und maxlength ausprobieren
-  //******************************************************************
-
-      WRITE ( 'maxlength von einfachem char .........: ' ) ;
-      WRITELN ( MAXLENGTH ( 'a' ) ) ;
-      WRITE ( 'maxlength von char-Konstante .........: ' ) ;
-      WRITELN ( MAXLENGTH ( 'Bernd' ) ) ;
-      WRITE ( 'maxlength von char-Variable ..........: ' ) ;
-      WRITELN ( MAXLENGTH ( C1 ) ) ;
-      WRITE ( 'maxlength von char-array .............: ' ) ;
-      WRITELN ( MAXLENGTH ( C20A ) ) ;
-      WRITE ( 'maxlength von string .................: ' ) ;
-      WRITELN ( MAXLENGTH ( VC20 ) ) ;
-      WRITE ( 'maxlength von string-Expression ......: ' ) ;
-      WRITELN ( MAXLENGTH ( VC20 || ' ' || VC20 ) ) ;
-      WRITE ( 'length von einfachem char ............: ' ) ;
-      WRITELN ( LENGTH ( 'a' ) ) ;
-      WRITE ( 'length von char-konstante ............: ' ) ;
-      WRITELN ( LENGTH ( 'bernd' ) ) ;
-      WRITE ( 'length von char-variable .............: ' ) ;
-      WRITELN ( LENGTH ( C1 ) ) ;
-      WRITE ( 'length von char-array ................: ' ) ;
-      WRITELN ( LENGTH ( C20A ) ) ;
-      WRITE ( 'length von string ....................: ' ) ;
-      WRITELN ( LENGTH ( VC20 ) ) ;
-      WRITE ( 'length von string-expression .........: ' ) ;
-      WRITELN ( LENGTH ( VC20 || ' ' || VC20 ) ) ;
-
-  //******************************************************************
-  // Funktion mit string ergebnis ausprobieren
-  //******************************************************************
-
-      P1 := 'Oppolzer' ;
-      I := IFUNC ( VC20 , P1 ) ;
-      WRITE ( 'funktion mit Integer Ergebnis ........: ' ) ;
-      WRITELN ( I ) ;
-      P1 := 'Oppolzer' ;
-      P2 := STRFUNC ( VC20 , P1 ) ;
-      WRITE ( 'p2 = funktion mit String Ergebnis ....: ' ) ;
-      WRITELN ( '<' , P2 , '>' ) ;
-      P2 := 'Test ' || STRFUNC ( VC20 , P1 ) || ' nochmal Test' ;
-      WRITE ( 'p2 = kombiniert mit Funktion .........: ' ) ;
-      WRITELN ( '<' , P2 , '>' ) ;
-      WRITE ( 'String Ergebnis direkt ...............: ' ) ;
-      WRITELN ( '<' , STRFUNC ( VC20 , P1 ) , '>' ) ;
-      WRITE ( 'String Ergebnis mit Konstanten .......: ' ) ;
-      WRITELN ( '<' , STRFUNC ( 'Bernd ' , ' Oppolzer' ) , '>' ) ;
-
-  //******************************************************************
-  // test Funktion mit const String parametern
-  //******************************************************************
-
-      P1 := 'Oppolzer' ;
-      P2 := STRFUNC3 ( VC20 , P1 ) ;
-      WRITE ( 'p2 = funktion mit var String .........: ' ) ;
-      WRITELN ( '<' , P2 , '>' ) ;
-      P1 := 'Oppolzer' ;
-      P2 := STRFUNC5 ( VC20 , P1 ) ;
-      WRITE ( 'p2 = funktion mit var String (2 mal) .: ' ) ;
-      WRITELN ( '<' , P2 , '>' ) ;
-      P1 := 'Oppolzer' ;
-      P2 := STRFUNC2 ( VC20 , P1 ) ;
-      WRITE ( 'p2 = funktion mit const String .......: ' ) ;
-      WRITELN ( '<' , P2 , '>' ) ;
-      P1 := 'Oppolzer' ;
-      P2 := STRFUNC2 ( VC20 || ' ' , ' Oppolzer' ) ;
-      WRITE ( 'p2 = funktion mit const String .......: ' ) ;
-      WRITELN ( '<' , P2 , '>' ) ;
-    end (* then *) ;
-
-  //******************************************************************
-  // test SUBSTR1 - einfache Variante
-  //******************************************************************
-
-  P1 := 'Oppolzer' ;
-  P2 := 'Oppolzer' ;
-  TESTSTR ( P1 , P2 , 'Oppolzer' ) ;
-  WRITE ( 'P1 nach Aufruf TESTSTR ...............: ' ) ;
-  WRITELN ( '<' , P1 , '>' ) ;
-  WRITE ( 'P2 nach Aufruf TESTSTR ...............: ' ) ;
-  WRITELN ( '<' , P2 , '>' ) ;
-  P1 := 'Oppolzer' ;
-  WRITE ( 'Zugriff auf String ueber Index .......: ' ) ;
-  WRITELN ( P1 [ 1 ] ) ;
-  WRITE ( 'Zugriff auf String ueber Index .......: ' ) ;
-  WRITELN ( P1 [ 5 ] ) ;
-  P2 := SUBSTR1 ( P1 , 3 , 4 ) ;
-  WRITE ( 'p2 = Ergebnis von SUBSTR1 ............: ' ) ;
-  WRITELN ( '<' , P2 , '>' ) ;
-  P2 := SUBSTR1 ( 'Bernd ' || 'Oppolzer' , 5 , 7 ) ;
-  WRITE ( 'p2 = Ergebnis von SUBSTR1 ............: ' ) ;
-  WRITELN ( '<' , P2 , '>' ) ;
-  P2 := SUBSTR1 ( 'Bernd ' || 'Oppolzer' , 5 , - 1 ) ;
-  WRITE ( 'p2 = Ergebnis von SUBSTR1 ............: ' ) ;
-  WRITELN ( '<' , P2 , '>' ) ;
-
-  //******************************************************************
-  // ... geht nur in Funktion mit String Result !!
-  // WRITE ( 'Testausgabe STRRESULT ................: ' ) ;
-  // WRITELN ( STRRESULT ) ;
-  // WRITE ( 'Testausgabe STRRESULTP ...............: ' ) ;
-  // WRITELN ( STRRESULTP ) ;
-  //******************************************************************
-
-  VC2000 := CHECKF ;
-  WRITE ( 'Laenge des Ergebnisses von CHECKF ....: ' ) ;
-  WRITELN ( LENGTH ( VC2000 ) ) ;
-  WRITE ( 'Test REPEATSTR .......................: ' ) ;
-  WRITELN ( REPEATSTR ( 'Bernd ' , 5 ) ) ;
-
-  //******************************************************************
-  // test SUBSTR2 - korrekte Variante mit STRRESULTP usw.
-  //******************************************************************
-
-  P1 := 'Oppolzer' ;
-  P2 := SUBSTR2 ( P1 , 3 , 4 ) ;
-  WRITE ( 'p2 = Ergebnis von SUBSTR2 ............: ' ) ;
-  WRITELN ( '<' , P2 , '>' ) ;
-  P2 := SUBSTR2 ( 'Bernd ' || 'Oppolzer' , 5 , 7 ) ;
-  WRITE ( 'p2 = Ergebnis von SUBSTR2 ............: ' ) ;
-  WRITELN ( '<' , P2 , '>' ) ;
-  P2 := SUBSTR2 ( 'Bernd ' || 'Oppolzer' , 5 , - 1 ) ;
-  WRITE ( 'p2 = Ergebnis von SUBSTR2 ............: ' ) ;
-  WRITELN ( '<' , P2 , '>' ) ;
-
-  //******************************************************************
-  // test SUBSTR
-  //******************************************************************
-
-  P1 := 'Oppolzer' ;
-  P2 := SUBSTR ( P1 , 3 , 4 ) ;
-  WRITE ( 'p2 = Ergebnis von SUBSTR .............: ' ) ;
-  WRITELN ( '<' , P2 , '>' ) ;
-  WRITE ( 'P1 nach SUBSTR (should not change) ...: ' ) ;
-  WRITELN ( '<' , P1 , '>' ) ;
-  P2 := SUBSTR ( 'Bernd ' || 'Oppolzer' , 5 , 7 ) ;
-  WRITE ( 'p2 = Ergebnis von SUBSTR .............: ' ) ;
-  WRITELN ( '<' , P2 , '>' ) ;
-  P2 := SUBSTR ( 'Bernd ' || 'Oppolzer' , 5 ) ;
-  WRITE ( 'p2 = Ergebnis von SUBSTR .............: ' ) ;
-  WRITELN ( '<' , P2 , '>' ) ;
-
-  //******************************************************************
-  // test DELETE
-  //******************************************************************
-
-  P1 := 'Oppolzer' ;
-  P2 := DELETE ( P1 , 3 , 4 ) ;
-  WRITE ( 'p2 = Ergebnis von DELETE .............: ' ) ;
-  WRITELN ( '<' , P2 , '>' ) ;
-  WRITE ( 'P1 nach DELETE (should not change) ...: ' ) ;
-  WRITELN ( '<' , P1 , '>' ) ;
-  P2 := DELETE ( 'Bernd ' || 'Oppolzer' , 5 , 7 ) ;
-  WRITE ( 'p2 = Ergebnis von DELETE .............: ' ) ;
-  WRITELN ( '<' , P2 , '>' ) ;
-  P2 := DELETE ( 'Bernd ' || 'Oppolzer' , 5 ) ;
-  WRITE ( 'p2 = Ergebnis von DELETE .............: ' ) ;
-  WRITELN ( '<' , P2 , '>' ) ;
-
-  //******************************************************************
-  // test RTRIM und LTRIM, TRIM und COMPRESS
+  // test TRANSLATE                                                   
   //******************************************************************
 
   P1 := '  Bernd Oppolzer    ' ;
-  P2 := RTRIM ( P1 ) ;
-  WRITE ( 'p2 = Ergebnis von RTRIM ..............: ' ) ;
+  WRITE ( 'P1 before testconst ..................: ' ) ;
+  WRITELN ( '<' , P1 , '>' ) ;
+  P2 := TESTCONST ( P1 ) ;
+  WRITE ( 'P2 after testconst ...................: ' ) ;
   WRITELN ( '<' , P2 , '>' ) ;
-  WRITE ( 'P1 nach RTRIM (should not change) ....: ' ) ;
+  WRITE ( 'P1 after testconst (should not change): ' ) ;
   WRITELN ( '<' , P1 , '>' ) ;
-  WRITE ( 'p2 = Ergebnis von RTRIM ..............: ' ) ;
-  WRITELN ( '<' , RTRIM ( '  a  b  ' ) , '>' ) ;
-  WRITE ( 'p2 = Ergebnis von RTRIM ..............: ' ) ;
-  WRITELN ( '<' , RTRIM ( '    ' ) , '>' ) ;
-  P1 := '  Bernd Oppolzer    ' ;
-  P2 := LTRIM ( P1 ) ;
-  WRITE ( 'p2 = Ergebnis von LTRIM ..............: ' ) ;
-  WRITELN ( '<' , P2 , '>' ) ;
-  WRITE ( 'P1 nach LTRIM (should not change) ....: ' ) ;
-  WRITELN ( '<' , P1 , '>' ) ;
-  WRITE ( 'p2 = Ergebnis von LTRIM ..............: ' ) ;
-  WRITELN ( '<' , LTRIM ( '  a  b  ' ) , '>' ) ;
-  WRITE ( 'p2 = Ergebnis von LTRIM ..............: ' ) ;
-  WRITELN ( '<' , LTRIM ( '    ' ) , '>' ) ;
-  P1 := '  Bernd Oppolzer    ' ;
-  P2 := TRIM ( P1 ) ;
-  WRITE ( 'p2 = Ergebnis von TRIM ...............: ' ) ;
-  WRITELN ( '<' , P2 , '>' ) ;
-  WRITE ( 'P1 nach TRIM (should not change) .....: ' ) ;
-  WRITELN ( '<' , P1 , '>' ) ;
-  WRITE ( 'p2 = Ergebnis von TRIM ...............: ' ) ;
-  WRITELN ( '<' , TRIM ( '  a  b  ' ) , '>' ) ;
-  WRITE ( 'p2 = Ergebnis von TRIM ...............: ' ) ;
-  WRITELN ( '<' , TRIM ( '    ' ) , '>' ) ;
-
-  //******************************************************************
-  // XP := RESULTP ;  ... not allowed here
-  //******************************************************************
-
-  P1 := '  Bernd Oppolzer    ' ;
-  P2 := COMPRESS ( P1 ) ;
-  WRITE ( 'p2 = Ergebnis von COMPRESS ...........: ' ) ;
-  WRITELN ( '<' , P2 , '>' ) ;
-  WRITE ( 'P1 nach COMPRESS (should not change) .: ' ) ;
-  WRITELN ( '<' , P1 , '>' ) ;
-  WRITE ( 'p2 = Ergebnis von COMPRESS ...........: ' ) ;
-  WRITELN ( '<' , COMPRESS ( '  a  b  ' ) , '>' ) ;
-  WRITE ( 'p2 = Ergebnis von COMPRESS ...........: ' ) ;
-  WRITELN ( '<' , COMPRESS ( '    ' ) , '>' ) ;
-
-  //******************************************************************
-  // test INDEX
-  //******************************************************************
-
-  P1 := '  Bernd Oppolzer    ' ;
-  I := INDEX ( P1 , 'pol' ) ;
-  WRITE ( 'Ergebnis von INDEX ...................: ' ) ;
-  WRITELN ( I : 5 ) ;
-  P1 := '  Bernd Oppolzer    ' ;
-  I := INDEX ( TRIM ( P1 ) , 'pol' ) ;
-  WRITE ( 'Ergebnis von INDEX ...................: ' ) ;
-  WRITELN ( I : 5 ) ;
-  WRITE ( 'P1 nach TRIM (should not change) .....: ' ) ;
-  WRITELN ( '<' , P1 , '>' ) ;
-  WRITE ( 'Ergebnis von INDEX (3) ...............: ' ) ;
-  WRITELN ( INDEX ( 'Oppolzer' , 'pol' ) : 5 ) ;
-  WRITE ( 'Ergebnis von INDEX (0) ...............: ' ) ;
-  WRITELN ( INDEX ( 'Oppolzer' , 'polizei' ) : 5 ) ;
-  WRITE ( 'Ergebnis von INDEX (1) ...............: ' ) ;
-  WRITELN ( INDEX ( 'Oppolzer' , 'Oppolzer' ) : 5 ) ;
-  WRITE ( 'Ergebnis von INDEX (0) ...............: ' ) ;
-  WRITELN ( INDEX ( 'Oppolzer' , 'Oppolzer1' ) : 5 ) ;
-  WRITE ( 'Ergebnis von INDEX (1) ...............: ' ) ;
-  WRITELN ( INDEX ( 'Oppolzer' , 'Oppo' ) : 5 ) ;
-  WRITE ( 'Ergebnis von INDEX (6) ...............: ' ) ;
-  WRITELN ( INDEX ( 'Oppolzer' , 'zer' ) : 5 ) ;
-
-  //******************************************************************
-  // test VERIFY
-  //******************************************************************
-
-  P1 := '  Bernd Oppolzer    ' ;
-  I := VERIFY ( P1 , 'Berndpol ' ) ;
-  WRITE ( 'Ergebnis von VERIFY (9) ..............: ' ) ;
-  WRITELN ( I : 5 ) ;
-  P1 := '1256735473645' ;
-  I := VERIFY ( P1 , '0123456789' ) ;
-  WRITE ( 'Ergebnis von VERIFY (0) ..............: ' ) ;
-  WRITELN ( I : 5 ) ;
-  P1 := '125673547E645' ;
-  I := VERIFY ( P1 , '0123456789' ) ;
-  WRITE ( 'Ergebnis von VERIFY (10) .............: ' ) ;
-  WRITELN ( I : 5 ) ;
-  P1 := '125 73547E645' ;
-  I := VERIFY ( P1 , '0123456789' ) ;
-  WRITE ( 'Ergebnis von VERIFY (4) ..............: ' ) ;
-  WRITELN ( I : 5 ) ;
-  P1 := '1234567890123456789 ' ;
-  I := VERIFY ( P1 , '0123456789' ) ;
-  WRITE ( 'Ergebnis von VERIFY (20) .............: ' ) ;
-  WRITELN ( I : 5 ) ;
-
-  //******************************************************************
-  // test TRANSLATE
-  //******************************************************************
-
-  if TRUE then
-    begin
-      P1 := '  Bernd Oppolzer    ' ;
-      WRITE ( 'P1 before testconst ..................: ' ) ;
-      WRITELN ( '<' , P1 , '>' ) ;
-      P2 := TESTCONST ( P1 ) ;
-      WRITE ( 'P2 after testconst ...................: ' ) ;
-      WRITELN ( '<' , P2 , '>' ) ;
-      WRITE ( 'P1 after testconst (should not change): ' ) ;
-      WRITELN ( '<' , P1 , '>' ) ;
-    end (* then *) ;
   P1 := '  Bernd Oppolzer    ' ;
   P2 := TRANSLATE ( P1 , 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' ,
         'abcdefghijklmnopqrstuvwxyz' ) ;
@@ -777,7 +819,7 @@ begin (* HAUPTPROGRAMM *)
   WRITELN ( '<' , P1 , '>' ) ;
 
   //******************************************************************
-  // Ende aller Tests
+  // Ende aller Tests                                                 
   //******************************************************************
 
 end (* HAUPTPROGRAMM *) .

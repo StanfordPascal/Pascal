@@ -1,0 +1,62 @@
+
+* TESTP5: Schleife zeigt Strings und Ergebnis nicht an
+* TESTP5: Schleife zeigt Uebereinstimmung nicht an
+* TESTP3: Testcase 04 bringt 5 Zeichen statt 9 bei SUBSTR (Win)
+* TESTP3: Testcase 06 bringt falsches Ergebnis (VM)
+* TESTP4: kann nicht uebersetzt werden (VM)
+* TESTP4: Testcase 03/04: falsches Ergebnis bei SUBSTR (VM)
+* TESTP3: Testcase 04 kann nicht uebersetzt werden (VM)
+* Fehler bei TESTVARC auf VM (SUBSTR1 und SUBSTR)
+* FILEDEF PRD fuer PASCAL MESSAGES mit Filemode * (installieren)
+* Abbruch S0C1 bei Compile TESTVARC (PASCAL2) in WORK_VST - nur sporadisch (VM)
+* eine Zeile weniger innerhalb Code Section
+* korrekte Ueberschrift bei STATIC CSECT
+* Offset auf Null nach STATIC CSECT
+* LOC ausgeben vor PROGRAM CSECT
+* falsche Einrueckung bei langen Konstanten
+* Tables of Offsets and Statement Numbers
+* Pruefen, wie es bei NOASM aussieht
+
+- XBG/XEN in PCINT aufnehmen
+- Fehler bei String-Programm von Ed. Lott
+- Abbrueche bei TESTVARC (VM)
+- Compiler publizieren
+- Warnung statt Fehler bei nicht benutztem Label
+- Warnung bei unbenutzten Variablen
+
+************************************************************
+
+- Bug 1 bei TESTP5: der Fehler war, dass LOADFCBADDRESS die
+  neue Funktion WRV nicht mit in der Liste der relevanten
+  Funktionen drin hatte, deshalb wurde die FCB-Adresse bei
+  WRV nicht korrekt gesetzt
+
+- Bug 2 bei TESTP5: der Offset fuer die statischen Strings
+  (d.h. Strings aus der statischen CSECT) wurde nicht gesetzt;
+  neue Funktion GEN_STRING_ADDRESS fixt das (evtl. an anderer
+  Stelle auch noetig)
+
+- Bug 3 bei TESTP3: das war ein Fehler im Source,
+  SUBSTR (x, 1, 5)
+
+- Bug 4 bei TESTP3: falsche Codegenerierung fuer Zugriff auf
+  Laengenfeld des Sendefeldes bei String-Zuweisung mit Quelle
+  = Vektorelement; Abhilfe = Einsatz von GETADR2
+
+- Bug 5 bei TESTP4: falsche Codegenerierung bei Funktion
+  LENGTH bei CHAR mit fester Laenge (LENGTH liefert Konstante)
+  Korrigiert mit XBG/XEN Unterdrueckung
+
+- Bug 6 bei TESTP4: falsche Codegenerierung bei WORK_VST
+  fuer VST 1,-1 ... d.h. Uebergabe eines String-Vektorelements
+  an eine Prozedur (Parameter) / Abhilfe = Einsatz von GETADR2
+
+- Bug 7 bei TESTP3: das Register 2 fuer die Indexberechnung
+  wird nicht freigegeben; der generierte Code scheint aber auch
+  sonst noch falsch zu sein / Abhilfe = Einsatz von GETADR2
+  und Korrekturen bei der Literalverarbeitung
+
+- Abbruch 0C4 bei TESTVARC: trat nicht mehr auf
+
+- FILEDEF mit * fuer PASCAL MESSAGES wurde ueberall installiert
+

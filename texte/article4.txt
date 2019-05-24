@@ -1,0 +1,67 @@
+I am currently working on a new version of my comparison tool XCOMP
+and I decided to do it in Pascal, because I've got the impression
+that, given the power of the language and recent improvements
+esspecially on string handling
+(compared to C, for example), I will be able to do the proof of
+concepts etc. faster this way.
+
+A minor sub-topic is some changes in the decoding of the command
+line parameters, which are keyword parameters in the C variant of
+XCOMP.
+
+I used the following definition in Pascal:
+
+   const ANZKEYWORDS = 10 ;
+         PARMKEYWORDS : array [ 1 .. ANZKEYWORDS ] of STRING ( 20 ) =
+         ( 'TAGNEW=' ,        // tag for new file (3 letters)
+           'TAGOLD=' ,        // tag for old file
+           'INPMODE=' ,       // b or t (binary or text)
+           'COLS=' ,          // cols for comparison (two integers)
+           'IGNCOLS=' ,       // cols to ignore (two integers)
+           'ENV=' ,           // environment to show (number of lines)
+           'BUFSIZE=' ,       // bufsize (number of lines)
+           'IGNCASE=' ,       // y if case is to be ignored
+           'IGNTRAILB=' ,     // y if trailing blanks should be ignored
+           'IGNWHITE=' ) ;    // y if white space is to be ignored
+
+that is, an array of constant strings (keywords).
+
+The following loop checks if a given parm starts with
+one of those keywords (using the builtin functions
+SUBSTR and LENGTH, and the BREAK statement):
+
+  KWPOS := 0 ;
+  for I := 1 to ANZKEYWORDS do
+    begin
+      if SUBSTR ( PARM , 1 , LENGTH ( PARMKEYWORDS [ I ] ) ) =
+      PARMKEYWORDS [ I ] then
+        begin
+          KWPOS := I ;
+          POS := LENGTH ( PARMKEYWORDS [ I ] ) + 1 ;
+          break ;
+        end (* then *) ;
+    end (* for *) ;
+
+after that, KWPOS is zero, if no match has been found,
+or the index of the keyword in PARMKEYWORDS otherwise
+(can be used in a case statement). POS is the position
+where the value of the keyword parameter starts in the
+PARM string (or char array).
+
+BTW:
+
+the new beta version of the Pascal compiler is 02.2019;
+it will be available soon.
+
+It contains the following minor change:
+
+there is a builtin pointer OSPARM which is set at program start
+and is either NIL or points to a structure containing two elements;
+a length and a char array. The length was named LENGTH and the
+char array was named STRING. I changed the names of the components
+to PLENGTH and PSTRING, respectively, to avoid name conflicts with
+the (new) builtin functions.
+
+Maybe there will be further changes added to the 02.2019
+version of the compiler.
+

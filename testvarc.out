@@ -1,0 +1,182 @@
+
+c:\work\pascal\work>pcint prr=testvarc.prr inc=paslibx,pasutils, pas=testvarc.pas out=testvarc.prrlis 
+
+PCINT (Build 1.0 Feb  8 2019 16:12:53)
+
+VC20 nach Zuweisung STR ('A') ........: <A>
+VC20 nach Zuweisung STR (C1) .........: <A>
+VC20 nach Zuweisung 'A' ..............: <A>
+VC20 nach Zuweisung const char array .: <Test Varchar>
+VC20 nach Zuweisung STR (C20) ........: <Test                >
+VC20 nach Zuweisung Bernd ............: <Bernd>
+C20 nach Zuweisung VC20 ..............: Bernd               
+C20 nach Zuweisung String Expression .: Bernd Oppolzer      
+VC200 nach Verkettung ................: <BerndBernd>
+VC200 nach Verkettung ................: <Bernd Oppolzer>
+VC200 nach Verkettung ................: <Bernd Oppolzer Leinfelden>
+VC200 nach Verkettung ................: <Bernd Oppolzer Leinfelden>
+VC200 nach Verkettung ................: <Bernd Oppolzer Leinfelden>
+VC200 nach Verkettung ................: <Bernd Oppolzer Leinfelden>
+VC200 nach Verkettung ................: <Bernd Oppolzer Leinfelden>
+VC200 nach Verkettung ................: <Bernd Bernd>
+VC200 nach Verkettung ................: <Bernd dazwischen Bernd>
+VC200 nach Verkettung ................: <Bernd dazwischen Bernd Oppolzer      >
+VC200 nach Verkettung ................: <Bernd Oppolzer       dazwischen Bernd>
+VC20 nach Zuweisung Konstante ........: <Test-String>
+VC200 nach Zuweisung VC20 ............: <Test-String>
+VC200 nach Zuweisung Expression ......: <Test-String mit Verkettung>
+vc20 = 'Bernd' .......................:  TRUE
+vc20 = 'Bernd' .......................:  TRUE
+vc20 = 'Bernd' .......................:  TRUE
+vc20 = 'Bernd ' ......................:  TRUE
+c20 = 'Bernd' ........................: FALSE
+c20 = 'Bernd      ' ..................: FALSE
+c20 = ................................: Bernd Oppolzer      
+c20A = ...............................: Oppolzer            
+VC20 = ...............................: Bernd
+c20a > c20 ...........................:  TRUE
+c20a < c20 ...........................: FALSE
+c20 > vc20 ...........................:  TRUE
+c20 < vc20 ...........................: FALSE
+c20 > vc20 ...........................:  TRUE
+c20 < vc20 ...........................: FALSE
+c20 = vc20 ...........................: FALSE
+c20a > vc20 ..........................:  TRUE
+c20a < vc20 ..........................: FALSE
+c20a > vc20 ..........................:  TRUE
+c20a < vc20 ..........................: FALSE
+success !!
+VC200 nach Verkettung ................: <BerndBernd>
+Verkettung direkt ausgeben ...........: <BerndBernd>
+Verkettung nochmal direkt ausgeben ...: <Bernd Oppolzer            >
+Aufruf STRPROC
+maxlength (x) =           20
+maxlength (y) =           20
+maxlength (a) =          200
+maxlength (b) =          200
+In STRPROC - X = <Bernd>
+In STRPROC - Y = <xxxxxxxxxxxxxxx>
+In STRPROC - A = <xxxxxxxxxxxxxxx>
+In STRPROC - B = <Bernd Oppolzer>
+zurÅck von STRPROC
+P1 nach STRPROC ......................: <xxxxxxxxxxxxxxx>
+P2 nach STRPROC ......................: <Bernd Oppolzer>
+Aufruf STRPROC
+maxlength (x) =           20
+maxlength (y) =          200
+maxlength (a) =          200
+maxlength (b) =           20
+In STRPROC - X = <Bernd>
+In STRPROC - Y = <xxxxxxxxxxxxxxx>
+In STRPROC - A = <xxxxxxxxxxxxxxx>
+In STRPROC - B = <Bernd Oppolzer>
+zurÅck von STRPROC
+P1 nach STRPROC ......................: <Bernd Oppolzer>
+P2 nach STRPROC ......................: <xxxxxxxxxxxxxxx>
+maxlength von einfachem char .........:            1
+maxlength von char-Konstante .........:            5
+maxlength von char-Variable ..........:            1
+maxlength von char-array .............:           20
+maxlength von string .................:           20
+maxlength von string-Expression ......:           11
+length von einfachem char ............:            1
+length von char-konstante ............:            5
+length von char-variable .............:            1
+length von char-array ................:           20
+length von string ....................:            5
+length von string-expression .........:           11
+funktion mit Integer Ergebnis ........:           14
+p2 = funktion mit String Ergebnis ....: <Bernd/Oppolzer>
+p2 = kombiniert mit Funktion .........: <Test Bernd/Oppolzer nochmal Test>
+String Ergebnis direkt ...............: <Bernd/Oppolzer>
+String Ergebnis mit Konstanten .......: <Bernd / Oppolzer>
+p2 = funktion mit var String .........: <Bernd/Oppolzer>
+p2 = funktion mit var String (2 mal) .: <Bernd/Oppolzer>
+p2 = funktion mit const String .......: <Bernd/Oppolzer>
+p2 = funktion mit const String .......: <Bernd / Oppolzer>
+lf 1 von x    =           20
+lf 2 von x    =            8
+1. byte von x =           79
+x [1]         = O
+x [4]         = o
+lf 1 von y    =          200
+lf 2 von y    =            8
+1. byte von y =           79
+y [1]         = O
+y [4]         = o
+lf 1 von z    =           -1
+lf 2 von z    =            8
+1. byte von z =            0
+z [1]         = O
+z [4]         = o
+P1 nach Aufruf TESTSTR ...............: <Oppolzer>
+P2 nach Aufruf TESTSTR ...............: <OppoSzer>
+Zugriff auf String ueber Index .......: O
+Zugriff auf String ueber Index .......: l
+p2 = Ergebnis von SUBSTR1 ............: <polz>
+p2 = Ergebnis von SUBSTR1 ............: <d Oppol>
+p2 = Ergebnis von SUBSTR1 ............: <d Oppolzer>
+strresultp      =      nil
+strresultp      =      nil
+strresultp      = 024e6f30
+length (result) =           14
+strresultp      = 024e6f3e
+length (result) =           28
+strresultp      = 024e6f31
+length (result) =         1000
+Laenge des Ergebnisses von CHECKF ....:         1000
+Test REPEATSTR .......................: Bernd Bernd Bernd Bernd Bernd 
+p2 = Ergebnis von SUBSTR2 ............: <polz>
+p2 = Ergebnis von SUBSTR2 ............: <d Oppol>
+p2 = Ergebnis von SUBSTR2 ............: <d Oppolzer>
+p2 = Ergebnis von SUBSTR .............: <polz>
+P1 nach SUBSTR (should not change) ...: <Oppolzer>
+p2 = Ergebnis von SUBSTR .............: <d Oppol>
+p2 = Ergebnis von SUBSTR .............: <d Oppolzer>
+p2 = Ergebnis von DELETE .............: <Oper>
+P1 nach DELETE (should not change) ...: <Oppolzer>
+p2 = Ergebnis von DELETE .............: <Bernzer>
+p2 = Ergebnis von DELETE .............: <Bern>
+p2 = Ergebnis von RTRIM ..............: <  Bernd Oppolzer>
+P1 nach RTRIM (should not change) ....: <  Bernd Oppolzer    >
+p2 = Ergebnis von RTRIM ..............: <  a  b>
+p2 = Ergebnis von RTRIM ..............: <>
+p2 = Ergebnis von LTRIM ..............: <Bernd Oppolzer    >
+P1 nach LTRIM (should not change) ....: <  Bernd Oppolzer    >
+p2 = Ergebnis von LTRIM ..............: <a  b  >
+p2 = Ergebnis von LTRIM ..............: <>
+p2 = Ergebnis von TRIM ...............: <Bernd Oppolzer>
+P1 nach TRIM (should not change) .....: <  Bernd Oppolzer    >
+p2 = Ergebnis von TRIM ...............: <a  b>
+p2 = Ergebnis von TRIM ...............: <>
+p2 = Ergebnis von COMPRESS ...........: < Bernd Oppolzer >
+P1 nach COMPRESS (should not change) .: <  Bernd Oppolzer    >
+p2 = Ergebnis von COMPRESS ...........: < a b >
+p2 = Ergebnis von COMPRESS ...........: < >
+Ergebnis von INDEX ...................:    11
+Ergebnis von INDEX ...................:     9
+P1 nach TRIM (should not change) .....: <  Bernd Oppolzer    >
+Ergebnis von INDEX (3) ...............:     3
+Ergebnis von INDEX (0) ...............:     0
+Ergebnis von INDEX (1) ...............:     1
+Ergebnis von INDEX (0) ...............:     0
+Ergebnis von INDEX (1) ...............:     1
+Ergebnis von INDEX (6) ...............:     6
+Ergebnis von VERIFY (9) ..............:     9
+Ergebnis von VERIFY (0) ..............:     0
+Ergebnis von VERIFY (10) .............:    10
+Ergebnis von VERIFY (4) ..............:     4
+Ergebnis von VERIFY (20) .............:    20
+P1 before testconst ..................: <  Bernd Oppolzer    >
+P2 after testconst ...................: <A Bernd Oppolzer    >
+P1 after testconst (should not change): <  Bernd Oppolzer    >
+Ergebnis von TRANSLATE ...............: <  BERND OPPOLZER    >
+P1 nach TRANSLATE (should not change) : <  Bernd Oppolzer    >
+Ergebnis von TRANSLATE ...............: <  Bernd Oppolyer    >
+P1 nach TRANSLATE (should not change) : <  Bernd Oppolzer    >
+Ergebnis von TRANSLATE ...............: <  Cxrnd Appolyxr    >
+P1 nach TRANSLATE (should not change) : <  Bernd Oppolzer    >
+Ergebnis von TRANSLATE ...............: <xxBerndxOppolzerxxxx>
+P1 nach TRANSLATE ....................: <  Bernd Oppolzer    >
+Ergebnis von TRANSLATE ...............: <yyBerndyOppolzeryyyy>
+P1 nach TRANSLATE (should not change) : <  Bernd Oppolzer    >

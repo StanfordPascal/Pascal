@@ -1,6 +1,9 @@
 /**********************************************************************/
 /*                                                                    */
-/*  P-Code Interpreter                                                */
+/*  P-Code Interpreter - secure variant                               */
+/*                                                                    */
+/*  excessive runtime checks to protect the most relevant areas       */
+/*  of the interpreter from accidential overwriting                   */
 /*                                                                    */
 /*  first to do:                                                      */
 /*                                                                    */
@@ -8127,6 +8130,35 @@ static void store_cmdline (global_store *gs, char *user_cmdline)
 
 
 
+static int check (global_store *gs)
+
+/**********************************************************/
+/*                                                        */
+/*   runtime checks of global store                       */
+/*                                                        */
+/**********************************************************/
+
+{
+   int rc = 0;
+   int i;
+
+   if (gs -> display != ADDRSTOR (80))
+      rc = 1;
+
+   for (i = 0; i < 10; i ++)
+      if (gs -> display [i] < 0 ||
+          gs -> display [i] > gs -> start_const)
+      {
+         rc = 2;
+         break;
+      }
+
+   return rc;
+}
+
+
+
+
 static void interpreter (global_store *gs)
 
 /**********************************************************/
@@ -8600,6 +8632,28 @@ static void interpreter (global_store *gs)
 
             for (;;)
             {
+               int xx;
+
+               if ((xx = check (gs)) != 0)
+               {
+                  fprintf (stderr, "+++++ Konsistenzfehler %d\n", xx);
+                  if (protfile != NULL)
+                     fprintf (protfile,
+                              "+++++ Konsistenzfehler %d\n", xx);
+
+                  exit (16);
+
+                  show (stderr, gs, 0);
+
+                  if (protfile != NULL)
+                  {
+                     show (protfile, gs, 0);
+                     fflush (protfile);
+                  }
+
+                  break;
+               }
+
                int1 (gs);
                (gs -> stepanz) --;
                if (gs -> stepanz <= 0)
@@ -8620,6 +8674,28 @@ static void interpreter (global_store *gs)
 
             for (;;)
             {
+               int xx;
+
+               if ((xx = check (gs)) != 0)
+               {
+                  fprintf (stderr, "+++++ Konsistenzfehler %d\n", xx);
+                  if (protfile != NULL)
+                     fprintf (protfile,
+                              "+++++ Konsistenzfehler %d\n", xx);
+
+                  exit (16);
+
+                  show (stderr, gs, 0);
+
+                  if (protfile != NULL)
+                  {
+                     show (protfile, gs, 0);
+                     fflush (protfile);
+                  }
+
+                  break;
+               }
+
                int1 (gs);
                if (gs -> stepanz <= 0)
                   break;

@@ -16,13 +16,13 @@
 * falsche Einrueckung bei langen Konstanten
 * Tables of Offsets and Statement Numbers
 * Pruefen, wie es bei NOASM aussieht
+* Fehler bei String-Programm von Ed. Lott
+* Abbrueche bei TESTVARC (VM)
+* XBG/XEN in PCINT aufnehmen
 
-- XBG/XEN in PCINT aufnehmen
-- Fehler bei String-Programm von Ed. Lott
-- Abbrueche bei TESTVARC (VM)
-- Compiler publizieren
 - Warnung statt Fehler bei nicht benutztem Label
 - Warnung bei unbenutzten Variablen
+- Compiler erneut publizieren (2019.06)
 
 ************************************************************
 

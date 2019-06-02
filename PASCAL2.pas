@@ -121,6 +121,34 @@ program PCODE_TRANSLATOR ( INPUT , OUTPUT , OBJCODE , LIST002 , TRACEF
 (*                                                                  *)
 (********************************************************************)
 (*                                                                  *)
+(*  Jun 2019 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*             (berndoppolzer@yahoo.com)                            *)
+(*                                                                  *)
+(*  - Code generation errors with a combination of SUBSTR and       *)
+(*    concatenation, when inside WRITELN ... example:               *)
+(*                                                                  *)
+(*    WRITELN ( 'stab/5  = <' ,                                     *)
+(*              SUBSTR ( STAB [ N - 1 ] , 1 , 1 ) ||                *)
+(*              STAB [ N ] ||                                       *)
+(*              SUBSTR ( STAB [ N ] , 1 , 1 ) , '>' ) ;             *)
+(*                                                                  *)
+(*    it turned out, that the WRITELN instruction took the          *)
+(*    registers 8 and 9 from the beginning, so that not             *)
+(*    enough register pairs could be found to do the                *)
+(*    complicated string concatenation, hence the error 259         *)
+(*    in PASCAL2. I allowed the procedure FINDRP (find              *)
+(*    register pair) to take the CSP registers 8 and 9,             *)
+(*    if needed, which may leed to subsequent load instructions     *)
+(*    (when the WRITE CSP has to be finally executed).              *)
+(*                                                                  *)
+(*    The concatenation was successful, if coded outside the        *)
+(*    WRITE :-) after this modification, it worked inside the       *)
+(*    WRITE, too.                                                   *)
+(*                                                                  *)
+(*  - Other errors with concatenation (P-Code VCC) repaired         *)
+(*                                                                  *)
+(********************************************************************)
+(*                                                                  *)
 (*  May 2019 - Extensions to the Compiler by Bernd Oppolzer         *)
 (*             (berndoppolzer@yahoo.com)                            *)
 (*                                                                  *)
@@ -1247,31 +1275,6 @@ var GS : GLOBAL_STATE ;
     (* DWRD ALIGNMENT NEEDED, OPT. IN EFFECT   *)
     (*******************************************)
 
-    FILREGACTIVE : BOOLEAN ;
-
-    (*******************************************)
-    (* FILE ADDRESS REG. ACTIVE                *)
-    (*******************************************)
-
-    CSPREGACTIVE : BOOLEAN ;
-
-    (*******************************************)
-    (* I/O REGISTERS ACTIVE                    *)
-    (* if true, r15 points to $PASCSP entry    *)
-    (* and needs not be loaded before csp      *)
-    (* call. set to false on lab processing    *)
-    (*******************************************)
-
-    PROCOFFSET_OLD : INTEGER ;
-
-    (*******************************************)
-    (* old procoffset                          *)
-    (* r1 is set to this value during          *)
-    (* csp processing; if new procoffset       *)
-    (* is equal, r1 needs not be reset         *)
-    (* again. set to 0 on lab processing       *)
-    (*******************************************)
-
     CSTBLK , MUSIC : BOOLEAN ;
 
     (*******************************************)
@@ -1393,11 +1396,18 @@ var GS : GLOBAL_STATE ;
     (* EXPRESSION STACK              *)
     (*********************************)
 
+    PROCOFFSET_OLD : INTEGER ;
+    CSPACTIVE : array [ 0 .. 15 ] of BOOLEAN ;
     AVAIL : array [ 0 .. RGCNT ] of BOOLEAN ;
 
-    (*********************************)
-    (*AVAILABLE REGISTERS            *)
-    (*********************************)
+    (*****************************************)
+    (* AVAIL = AVAILABLE REGISTERS           *)
+    (* CSPACTIVE = REGS ARE ACTIVE FOR CSP   *)
+    (* r15 = csp entry                       *)
+    (* r9 = filadr                           *)
+    (* r8 = call stack adr                   *)
+    (* r1 = proc offset = csp number         *)
+    (*****************************************)
 
     AVAILFP : array [ 0 .. FPCNT ] of BOOLEAN ;
 
@@ -2077,6 +2087,20 @@ function FLDW ( NUM : INTEGER ) : INTEGER ;
 
 
 
+procedure DUMPAVAIL ;
+
+   var I : INTEGER ;
+
+   begin (* DUMPAVAIL *)
+     WRITE ( TRACEF , 'Available Regs: ' ) ;
+     for I := 1 to 9 do
+       if AVAIL [ I ] then
+         WRITE ( TRACEF , I : 3 ) ;
+     WRITELN ( TRACEF ) ;
+   end (* DUMPAVAIL *) ;
+
+
+
 procedure DUMPSTKELEM ( STK : DATUM ) ;
 
    const TYPNAME : array [ BOOL .. VARC ] of array [ 1 .. 4 ] of CHAR =
@@ -2119,11 +2143,7 @@ procedure DUMPSTK ( STP1 , STP2 : STKPTR ) ;
    var I : STKPTR ;
 
    begin (* DUMPSTK *)
-     WRITE ( TRACEF , 'Available Regs: ' ) ;
-     for I := 1 to 7 do
-       if AVAIL [ I ] then
-         WRITE ( TRACEF , I : 3 ) ;
-     WRITELN ( TRACEF ) ;
+     DUMPAVAIL ;
      for I := STP1 to STP2 do
        begin
          WRITE ( TRACEF , ' +++ DEPTH=' , I : 2 ) ;
@@ -5232,9 +5252,9 @@ procedure ASMNXTINST ;
 
    procedure FINDRP ;
 
-   (********************)
-   (*FIND REGISTER PAIR*)
-   (********************)
+   (****************************************************************)
+   (* FIND REGISTER PAIR                                           *)
+   (****************************************************************)
 
 
       var I : RGRNG ;
@@ -5245,7 +5265,29 @@ procedure ASMNXTINST ;
           I := I - 2
         until ( I < 4 ) or ( AVAIL [ I ] and AVAIL [ I + 1 ] ) ;
         if not ( AVAIL [ I ] and AVAIL [ I + 1 ] ) then
-          ERROR ( 259 ) ;
+          begin
+
+        //******************************************************
+        // trial - opp - 02.06.2019:                            
+        // if filadr (r9) occupied, free it and                 
+        // signal that filreg has to be                         
+        // loaded again later                                   
+        // same for callstackadr (r8)                           
+        //******************************************************
+
+            if CSPACTIVE [ FILADR ] and CSPACTIVE [ CALLSTACKADR ] then
+              begin
+                AVAIL [ FILADR ] := TRUE ;
+                CSPACTIVE [ FILADR ] := FALSE ;
+                AVAIL [ CALLSTACKADR ] := TRUE ;
+                CSPACTIVE [ CALLSTACKADR ] := FALSE ;
+                I := CALLSTACKADR ;
+              end (* then *)
+            else
+              begin
+                ERROR ( 259 ) ;
+              end (* else *)
+          end (* then *) ;
         AVAIL [ I ] := FALSE ;
         AVAIL [ I + 1 ] := FALSE ;
         NXTRG := I
@@ -6478,8 +6520,8 @@ procedure ASMNXTINST ;
             until FPR >= FPCNT ;
           end (* then *) ;
         CLEAR_REG := TRUE ;
-        CSPREGACTIVE := FALSE ;
-        OLDCSP := PSIO ;
+        CSPACTIVE [ TRG15 ] := FALSE ;
+        CSPACTIVE [ TRG1 ] := FALSE ;
 
         (***************)
         (* R1,R15 USED *)
@@ -6493,7 +6535,7 @@ procedure ASMNXTINST ;
       var OPC : BYTE ;
 
       begin (* LOADFCBADDRESS *)
-        if not FILREGACTIVE then
+        if not CSPACTIVE [ FILADR ] then
           if CSP in [ PRES , PREW , PGET , PPUT , PRLN , PWLN , PPAG ,
           PSKP , PLIM , PRDB , PWRB , PRDH , PRDY , PEOL , PEOT , PEOF
           , PELN , PRDC , PWRC , PRDI , PWRI , PRDS , PWRS , PWRV ,
@@ -6520,7 +6562,7 @@ procedure ASMNXTINST ;
                   end (* with *) ;
                 BASE ( Q1 , P1 , B1 ) ;
                 GENRX ( OPC , FILADR , Q1 , B1 , P1 ) ;
-                FILREGACTIVE := TRUE ;
+                CSPACTIVE [ FILADR ] := TRUE ;
               end (* with *) ;
       end (* LOADFCBADDRESS *) ;
 
@@ -6535,12 +6577,13 @@ procedure ASMNXTINST ;
         /* (RE)LOAD PROCADR, if necessary */
         /**********************************/
 
-        if not CSPREGACTIVE then
+        if not CSPACTIVE [ TRG15 ] then
           begin
             LBL_WORK . NAM := '$PASCSP' ;
             LBL_WORK . LEN := 7 ;
             GENRXLAB ( XL , TRG15 , LBL_WORK , - 3 ) ;
           end (* then *) ;
+        CSPACTIVE [ TRG15 ] := TRUE ;
 
         /*************************************************/
         /* load new stackaddr, if necessary (if changed) */
@@ -6548,29 +6591,39 @@ procedure ASMNXTINST ;
 
         if PROCOFFSET <> 0 then
           begin
-            if PROCOFFSET_OLD <> PROCOFFSET then
+            if ( PROCOFFSET_OLD <> PROCOFFSET ) or not CSPACTIVE [
+            CALLSTACKADR ] then
               begin
                 if PROCOFFSET <= 4095 then
                   begin
                     GENRX ( XLA , CALLSTACKADR , PROCOFFSET , 13 , 0 )
                             ;
                     AVAIL [ CALLSTACKADR ] := FALSE ;
+                    CSPACTIVE [ CALLSTACKADR ] := TRUE ;
                   end (* then *)
                 else
                   begin
                     GENRR ( XLR , CALLSTACKADR , 13 ) ;
                     GENRXLIT ( XA , CALLSTACKADR , PROCOFFSET , 0 ) ;
                     AVAIL [ CALLSTACKADR ] := FALSE ;
+                    CSPACTIVE [ CALLSTACKADR ] := TRUE ;
                   end (* else *)
               end (* then *) ;
+            PROCOFFSET_OLD := PROCOFFSET ;
           end (* then *) ;
 
         /************************/
         /* proc number in reg 1 */
         /************************/
 
+        if not CSPACTIVE [ TRG1 ] then
+          OLDCSP := PSIO ;
         if CSP <> OLDCSP then
-          GENRX ( XLA , TRG1 , ORD ( CSP ) * 4 , 0 , 0 ) ;
+          begin
+            GENRX ( XLA , TRG1 , ORD ( CSP ) * 4 , 0 , 0 ) ;
+            OLDCSP := CSP ;
+            CSPACTIVE [ TRG1 ] := TRUE ;
+          end (* then *) ;
 
         /**************************************/
         /* see if filaddress has to be loaded */
@@ -6588,9 +6641,6 @@ procedure ASMNXTINST ;
         /* save some values for next call */
         /**********************************/
 
-        PROCOFFSET_OLD := PROCOFFSET ;
-        CSPREGACTIVE := TRUE ;
-        OLDCSP := CSP ;
         LAST_FILE . LPC := PCOUNTER ;
       end (* GOTOCSP *) ;
 
@@ -6807,7 +6857,7 @@ procedure ASMNXTINST ;
         /* r1 beim naechsten mal neu laden */
         /***********************************/
 
-                   OLDCSP := PSIO ;
+                   CSPACTIVE [ TRG1 ] := FALSE ;
                  end (* tag/ca *) ;
           PRND : begin
                    with STK [ TOP ] do
@@ -6834,7 +6884,7 @@ procedure ASMNXTINST ;
         /* r1 beim naechsten mal neu laden */
         /***********************************/
 
-                   OLDCSP := PSIO ;
+                   CSPACTIVE [ TRG1 ] := FALSE ;
                  end (* tag/ca *) ;
           PFLR : begin
                    with STK [ TOP ] do
@@ -6861,7 +6911,7 @@ procedure ASMNXTINST ;
         /* r1 beim naechsten mal neu laden */
         /***********************************/
 
-                   OLDCSP := PSIO ;
+                   CSPACTIVE [ TRG1 ] := FALSE ;
                  end (* tag/ca *) ;
           PTIM : begin
                    GOTOCSP ;
@@ -6878,7 +6928,7 @@ procedure ASMNXTINST ;
                      GOTOCSP ;
                      GENRR ( XLR , RGADR , 0 ) ;
                      TOP := TOP + 1 ;
-                     OLDCSP := PSIO ;
+                     CSPACTIVE [ TRG1 ] := FALSE ;
                    end (* with *) ;
           PMSG : begin
                    LOAD ( STK [ TOP - 1 ] ) ;
@@ -6915,7 +6965,7 @@ procedure ASMNXTINST ;
                            ERROR ( 259 ) ;
                      end (* with *) ;
                    GOTOCSP ;
-                   OLDCSP := PSIO ;
+                   CSPACTIVE [ TRG1 ] := FALSE ;
                    AVAIL [ 2 ] := TRUE ;
                    AVAIL [ 3 ] := TRUE ;
                    TOP := TOP - 1 ;
@@ -6996,17 +7046,18 @@ procedure ASMNXTINST ;
                      if FILECNT = 0 then
                        ERROR ( 259 ) ;
                    AVAIL [ FILADR ] := FALSE ;
-                   FILREGACTIVE := FALSE ;
+                   CSPACTIVE [ FILADR ] := FALSE ;
                    FILECNT := FILECNT + 1 ;
                    with LAST_FILE do
                      if LPC = PCOUNTER then
                        with STK [ TOP ] do
                          if VRBL then
-                           FILREGACTIVE := LFV and ( LFOPND = MEMADR )
+                           CSPACTIVE [ FILADR ] := LFV and ( LFOPND =
+                                                   MEMADR )
                          else
-                           FILREGACTIVE := ( not LFV ) and ( LFOPND =
-                                           FPA ) ;
-                   OLDCSP := PSIO ;
+                           CSPACTIVE [ FILADR ] := ( not LFV ) and (
+                                                   LFOPND = FPA ) ;
+                   CSPACTIVE [ TRG1 ] := FALSE ;
                    TOP := TOP + 1 ;
 
         (*********************************************)
@@ -7023,8 +7074,8 @@ procedure ASMNXTINST ;
                    FILECNT := FILECNT - 1 ;
                    if FILECNT = 0 then
                      AVAIL [ FILADR ] := TRUE ;
-                   FILREGACTIVE := FALSE ;
-                   OLDCSP := PEIO ;
+                   CSPACTIVE [ FILADR ] := FALSE ;
+                   CSPACTIVE [ TRG1 ] := FALSE ;
                    LAST_FILE . LPC := PCOUNTER ;
 
         (************************************************)
@@ -7301,8 +7352,8 @@ procedure ASMNXTINST ;
                 if P < 0 then
                   RTA := PTACHK ;
                 GENRX ( XBAL , RTREG , RTA , GBR , 0 ) ;
-                CSPREGACTIVE := FALSE ;
-                OLDCSP := PSIO ;
+                CSPACTIVE [ TRG15 ] := FALSE ;
+                CSPACTIVE [ TRG1 ] := FALSE ;
 
         (********************)
         (* R1,R15 DESTROYED *)
@@ -7480,7 +7531,7 @@ procedure ASMNXTINST ;
                   TXRG := TRG14 ;
                   GENSS ( XMVC , PLEN , Q1 , P1 , Q2 , P2 ) ;
                 end (* else *) ;
-        OLDCSP := PSIO ;
+        CSPACTIVE [ TRG1 ] := FALSE ;
 
         (**************************)
         (* INDICATE LOSS OF REG 1 *)
@@ -7929,7 +7980,7 @@ procedure ASMNXTINST ;
            (* OI 0(1),0 *)
            (*************)
 
-               CSPREGACTIVE := FALSE ;
+               CSPACTIVE [ TRG15 ] := FALSE ;
 
            (***************************)
            (* INDICATE LOSS OF REG 15 *)
@@ -8603,7 +8654,7 @@ procedure ASMNXTINST ;
           PASE : ASE_OP ;
         end (* case *) ;
         STK [ TOP - 1 ] := L ;
-        OLDCSP := PSIO ;
+        CSPACTIVE [ TRG1 ] := FALSE ;
 
         (***********************************)
         (* INDICATE POSSIBLE LOSS OF REG 1 *)
@@ -8802,7 +8853,7 @@ procedure ASMNXTINST ;
                      VRBL := TRUE ;
                      VPA := RGS ;
                      RGADR := NXTRG ;
-                     CSPREGACTIVE := FALSE ;
+                     CSPACTIVE [ TRG15 ] := FALSE ;
 
         (***************************)
         (* INDICATE LOSS OF REG 15 *)
@@ -8977,7 +9028,7 @@ procedure ASMNXTINST ;
                    FREEREG ( R ) ;
                  end (* tag/ca *) ;
         end (* case *) ;
-        OLDCSP := PSIO ;
+        CSPACTIVE [ TRG1 ] := FALSE ;
 
         (**************************)
         (* INDICATE LOSS OF REG 1 *)
@@ -9149,8 +9200,8 @@ procedure ASMNXTINST ;
         // indicate loss of reg 1 and reg 15                    
         //******************************************************
 
-        CSPREGACTIVE := FALSE ;
-        OLDCSP := PSIO ;
+        CSPACTIVE [ TRG15 ] := FALSE ;
+        CSPACTIVE [ TRG1 ] := FALSE ;
 
         //******************************************************
         // set the condition mask for the following branch      
@@ -9557,7 +9608,7 @@ procedure ASMNXTINST ;
             CODE . H [ FIXUPLOC ] := TO_HINT ( BASE_DSPLMT ( PCOUNTER )
                                      ) ;
           end (* then *) ;
-        OLDCSP := PSIO ;
+        CSPACTIVE [ TRG1 ] := FALSE ;
 
         (**************************)
         (* INDICATE LOSS OF REG 1 *)
@@ -10044,13 +10095,13 @@ procedure ASMNXTINST ;
               while TRUE do
                 begin
                   LIMIT := TOS_COUNT ;
-                  if LIMIT - K + 1 > 14 then
-                    LIMIT := K + 13 ;
-                  WRITE ( LIST002 , ' STMT = ' ) ;
+                  if LIMIT - K + 1 > 12 then
+                    LIMIT := K + 11 ;
+                  WRITE ( LIST002 , ' STMT =' ) ;
                   for I := K to LIMIT do
-                    WRITE ( LIST002 , TOS [ I ] . STMT : 6 ) ;
+                    WRITE ( LIST002 , ' ' , TOS [ I ] . STMT : 5 ) ;
                   LIST002_NEWLINE ;
-                  WRITE ( LIST002 , ' OFFS = ' ) ;
+                  WRITE ( LIST002 , ' OFFS =' ) ;
                   for I := K to LIMIT do
                     begin
                       HEXHW ( TOS [ I ] . OFFS * 2 , HEXPC ) ;
@@ -10751,7 +10802,7 @@ procedure ASMNXTINST ;
                          GENRR ( XMVCL , TRG14 , TRG0 ) ;
                        end (* then *) ;
                  end (* then *) ;
-               CSPREGACTIVE := FALSE ;
+               CSPACTIVE [ TRG15 ] := FALSE ;
                PROCOFFSET_OLD := 0 ;
              end (* then *)
            else
@@ -11186,7 +11237,7 @@ procedure ASMNXTINST ;
            (* some inits         *)
            (**********************)
 
-           CSPREGACTIVE := FALSE ;
+           CSPACTIVE [ TRG15 ] := FALSE ;
            PROCOFFSET_OLD := 0 ;
            TXR_CONTENTS . VALID := FALSE ;
            LAST_CC . LPC := 0 ;
@@ -11717,8 +11768,8 @@ procedure ASMNXTINST ;
                    else
                      if CKMODE then
                        CHECKFREEREGS ;
-                   CSPREGACTIVE := FALSE ;
-                   OLDCSP := PSIO ;
+                   CSPACTIVE [ TRG15 ] := FALSE ;
+                   CSPACTIVE [ TRG1 ] := FALSE ;
                  end (* tag/ca *) ;
           PENT , PRET :
             begin
@@ -12230,7 +12281,7 @@ procedure ASMNXTINST ;
 
         GENRXLIT ( XL , NXTRG , IVAL , 0 ) ;
         GENRR ( XBALR , TRG1 , 0 ) ;
-        OLDCSP := PSIO ;
+        CSPACTIVE [ TRG1 ] := FALSE ;
         if P = 1 then
           XOPC := XIC
         else
@@ -12567,7 +12618,7 @@ procedure ASMNXTINST ;
         // TO AVOID REASSIGNM. OF THE SAME BASE REG             
         //******************************************************
 
-        OLDCSP := PSIO ;  // INDICATES LOSS OF TRG1
+        CSPACTIVE [ TRG1 ] := FALSE ;// INDICATES LOSS OF TRG1
 
         //******************************************************
         // get address of right operand                         
@@ -12884,7 +12935,7 @@ procedure ASMNXTINST ;
         // TO AVOID REASSIGNM. OF THE SAME BASE REG             
         //******************************************************
 
-        OLDCSP := PSIO ;  // INDICATES LOSS OF TRG1
+        CSPACTIVE [ TRG1 ] := FALSE ;// INDICATES LOSS OF TRG1
 
         //******************************************************
         // get address of right operand                         
@@ -13061,7 +13112,7 @@ procedure ASMNXTINST ;
         // TO AVOID REASSIGNM. OF THE SAME BASE REG             
         //******************************************************
 
-        OLDCSP := PSIO ;  // INDICATES LOSS OF TRG1
+        CSPACTIVE [ TRG1 ] := FALSE ;// INDICATES LOSS OF TRG1
 
         //******************************************************
         // get address of right operand                         
@@ -13146,7 +13197,7 @@ procedure ASMNXTINST ;
               GENRR ( XLR , B2 , B1 ) ;
 
         //******************************************************
-        // generate MVCL instruction                            
+        // generate CLCL instruction                            
         //******************************************************
 
               GENRR ( XCLCL , P1 , P2 ) ;
@@ -13287,7 +13338,7 @@ procedure ASMNXTINST ;
         // TO AVOID REASSIGNM. OF THE SAME BASE REG             
         //******************************************************
 
-        OLDCSP := PSIO ;  // INDICATES LOSS OF TRG1
+        CSPACTIVE [ TRG1 ] := FALSE ;// INDICATES LOSS OF TRG1
 
         //******************************************************
         // get address of right operand                         
@@ -13502,7 +13553,7 @@ procedure ASMNXTINST ;
         // TO AVOID REASSIGNM. OF THE SAME BASE REG             
         //******************************************************
 
-        OLDCSP := PSIO ;  // INDICATES LOSS OF TRG1
+        CSPACTIVE [ TRG1 ] := FALSE ;// INDICATES LOSS OF TRG1
 
         //******************************************************
         // get address of right operand                         
@@ -13637,7 +13688,7 @@ procedure ASMNXTINST ;
             FINDRG ;
             TARGET_REG := NXTRG
           end (* then *) ;
-        if TRUE then
+        if FALSE then
           begin
             WRITELN ( TRACEF , 'start STRING_GET_ACTLEN, linecnt = ' ,
                       LINECNT : 1 ) ;
@@ -13647,7 +13698,7 @@ procedure ASMNXTINST ;
         with S do
           begin
             GETADR2 ( S , Q2 , P2 , B2 ) ;
-            if TRUE then
+            if FALSE then
               begin
                 WRITELN ( TRACEF , 'after getadr2' ) ;
                 WRITELN ( TRACEF , 'p2      = ' , P2 : 4 ) ;
@@ -13693,14 +13744,11 @@ procedure ASMNXTINST ;
              DO_STATICWORK : BOOLEAN ;
 
          begin (* WORK_VCC *)
-           if TRUE then
+           if FALSE then
              begin
                WRITELN ( TRACEF , 'start WORK_VCC, linecnt = ' ,
                          LINECNT : 1 ) ;
-               WRITE ( TRACEF , 'STK -1' ) ;
-               DUMPSTKELEM ( STK [ TOP - 1 ] ) ;
-               WRITE ( TRACEF , 'STK -2' ) ;
-               DUMPSTKELEM ( STK [ TOP - 2 ] ) ;
+               DUMPSTK ( TOP - 2 , TOP - 1 ) ;
              end (* then *) ;
            DO_STATICWORK := TRUE ;
 
@@ -13848,21 +13896,18 @@ procedure ASMNXTINST ;
                          GENRX ( XL , TRG1 , STRCURR , 12 , 0 ) ;
 
            //************************************************
-           // maybe wrong                                    
+           // again: error solved by using getadr2           
            //************************************************
 
-                         with STK [ TOP - 2 ] do
-                           if VPA = RGS then
-                             begin
-                               GENLA_LR ( TXRG , 0 , RGADR , 0 )
-                             end (* then *)
-                           else
-                             begin
-                               P2 := FPA . LVL ;
-                               Q2 := FPA . DSPLMT + 2 ;
-                               BASE ( Q2 , P2 , B2 ) ;
-                               GENLA_LR ( TXRG , Q2 , B2 , P2 ) ;
-                             end (* else *) ;
+                         if FALSE then
+                           begin
+                             WRITELN ( TRACEF , 'VCC - linecnt = ' ,
+                                       LINECNT : 1 ) ;
+                             WRITE ( TRACEF , 'STK -2' ) ;
+                             DUMPSTKELEM ( STK [ TOP - 2 ] )
+                           end (* then *) ;
+                         GETADR2 ( STK [ TOP - 2 ] , Q2 , P2 , B2 ) ;
+                         GENLA_LR ( TXRG , Q2 , B2 , P2 ) ;
 
            //************************************************
            // store adr of first string to                   
@@ -13872,21 +13917,18 @@ procedure ASMNXTINST ;
                          GENRX ( XST , TXRG , 0 , TRG1 , 0 ) ;
 
            //************************************************
-           // maybe wrong                                    
+           // again: error solved by using getadr2           
            //************************************************
 
-                         with STK [ TOP - 1 ] do
-                           if VPA = RGS then
-                             begin
-                               GENLA_LR ( TXRG , 0 , RGADR , 0 )
-                             end (* then *)
-                           else
-                             begin
-                               P2 := FPA . LVL ;
-                               Q2 := FPA . DSPLMT + 2 ;
-                               BASE ( Q2 , P2 , B2 ) ;
-                               GENLA_LR ( TXRG , Q2 , B2 , P2 ) ;
-                             end (* else *) ;
+                         if FALSE then
+                           begin
+                             WRITELN ( TRACEF , 'VCC - linecnt = ' ,
+                                       LINECNT : 1 ) ;
+                             WRITE ( TRACEF , 'STK -1' ) ;
+                             DUMPSTKELEM ( STK [ TOP - 1 ] )
+                           end (* then *) ;
+                         GETADR2 ( STK [ TOP - 1 ] , Q2 , P2 , B2 ) ;
+                         GENLA_LR ( TXRG , Q2 , B2 , P2 ) ;
 
            //************************************************
            // store adr of second string to                  
@@ -13916,8 +13958,8 @@ procedure ASMNXTINST ;
            // indicate loss of reg 1 and reg 15                    
            //******************************************************
 
-                         CSPREGACTIVE := FALSE ;
-                         OLDCSP := PSIO ;
+                         CSPACTIVE [ TRG15 ] := FALSE ;
+                         CSPACTIVE [ TRG1 ] := FALSE ;
 
            //******************************************************
            // load result string address in target reg             
@@ -14419,6 +14461,7 @@ procedure ASMNXTINST ;
                                      LINECNT : 1 ) ;
                            WRITELN ( TRACEF , 'VST - p = ' , P ) ;
                            WRITELN ( TRACEF , 'VST - q = ' , Q ) ;
+                           WRITE ( TRACEF , 'STK -2' ) ;
                            DUMPSTKELEM ( STK [ TOP - 2 ] ) ;
                            WRITELN ( TRACEF , 'scnstno = ' , SCNSTNO :
                                      1 ) ;
@@ -14464,7 +14507,8 @@ procedure ASMNXTINST ;
                                        ;
                              if FALSE then
                                begin
-                                 WRITELN ( TRACEF , 'after getadr2' ) ;
+                                 WRITELN ( TRACEF , 'after getadr2 '
+                                           'for STK-2' ) ;
                                  WRITELN ( TRACEF , 'p2      = ' , P2 :
                                            4 ) ;
                                  WRITELN ( TRACEF , 'q2      = ' , Q2 :
@@ -14502,8 +14546,18 @@ procedure ASMNXTINST ;
                                        end (* else *) ;
                                    end (* then *)
                                end (* then *)
+
+           //*********************************************
+           // error fixed 26.05.2019:                     
+           // offset must be 4 in case of VARC, but       
+           // zero in case of CARR (no length fields)     
+           //*********************************************
+
                              else
-                               GENLA_LR ( 14 , Q2 + 4 , B2 , P2 ) ;
+                               if DTYPE = CARR then
+                                 GENLA_LR ( 14 , Q2 , B2 , P2 )
+                               else
+                                 GENLA_LR ( 14 , Q2 + 4 , B2 , P2 ) ;
                              GENRX ( XST , 14 , 4 , NXTRG , 0 ) ;
                            end (* then *)
                          else
@@ -14717,7 +14771,7 @@ procedure ASMNXTINST ;
                              MEMADR := ZEROBL ;
                              RGADR := NXTRG ;
                              VRBL := TRUE ;
-                             if TRUE then
+                             if FALSE then
                                begin
                                  WRITELN ( TRACEF , 'VLD - linecnt = '
                                            , LINECNT : 1 ) ;
@@ -15199,10 +15253,10 @@ procedure ASMNXTINST ;
         // q1 = length of char string                           
         // q2 = length of char string                           
         // rgwork = count                                       
-        // CSPREGACTIVE ... indicate loss of reg 15             
+        // CSPACTIVE [trg15] ... indicate loss of reg trg15     
         //******************************************************
 
-                           CSPREGACTIVE := FALSE ;
+                           CSPACTIVE [ TRG15 ] := FALSE ;
                            GENRR ( XLR , 14 , Q1 ) ;
                            GENRR ( XLR , 15 , P1 ) ;
                            GENRR ( XMVCL , P2 , P1 ) ;
@@ -15857,7 +15911,7 @@ procedure ASMNXTINST ;
                          end (* with *) ;
                 CARR : begin
                          SOPERATION ( L , R , PCODE , Q ) ;
-                         OLDCSP := PSIO ;
+                         CSPACTIVE [ TRG1 ] := FALSE ;
                        end (* tag/ca *)
               end (* case *) ;
               BRCND := BRMSK [ PCODE ] ;
@@ -16826,7 +16880,7 @@ procedure SETUP ;
      NEG_CND := FALSE ;
      TRACE := FALSE ;
      OLDPCODE := PBGN ;
-     OLDCSP := PSIO ;
+     CSPACTIVE [ TRG1 ] := FALSE ;
      MDTAG := PBGN ;
      TXRG := TRG14 ;
      MUSIC := FALSE ;
@@ -16857,7 +16911,23 @@ procedure SETUP ;
      HEXCHARS := '0123456789ABCDEF' ;
      TESTCNT := 0 ;
      PDEF_CNT := 0 ;
-     CSPREGACTIVE := FALSE ;
+     CSPACTIVE [ 0 ] := FALSE ;
+     CSPACTIVE [ 1 ] := FALSE ;
+     CSPACTIVE [ 2 ] := FALSE ;
+     CSPACTIVE [ 3 ] := FALSE ;
+     CSPACTIVE [ 4 ] := FALSE ;
+     CSPACTIVE [ 5 ] := FALSE ;
+     CSPACTIVE [ 6 ] := FALSE ;
+     CSPACTIVE [ 7 ] := FALSE ;
+     CSPACTIVE [ 8 ] := FALSE ;
+     CSPACTIVE [ 9 ] := FALSE ;
+     CSPACTIVE [ 10 ] := FALSE ;
+     CSPACTIVE [ 11 ] := FALSE ;
+     CSPACTIVE [ 12 ] := FALSE ;
+     CSPACTIVE [ 13 ] := FALSE ;
+     CSPACTIVE [ 14 ] := FALSE ;
+     CSPACTIVE [ 15 ] := FALSE ;
+     OLDCSP := PSIO ;
      PROCOFFSET_OLD := 0 ;
      PCOUNTER := 0 ;
      TOS_COUNT := 0 ;

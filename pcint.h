@@ -408,6 +408,9 @@ typedef struct
                                   /* nur tempor. waehrend assembly: */
    int pcode_ent_akt;             /* pcode-Nummer aktueller Entry   */
    int local_error;               /* lokaler Fehler bei assembler   */
+   int xbg_xen_count;             /* Anzahl belegte XBG/XEN         */
+   int xbg_xen_tag [10];          /* XBG/XEN-Tags                   */
+   int xbg_xen_codeptr [10];      /* XBG/XEN-Codepointer            */
 }                                 /**********************************/
 global_store;
 
@@ -565,10 +568,12 @@ static const filecb nullfcb_bin =
 #define XXX_VRP    94
 #define XXX_VSM    95
 #define XXX_VST    96
-#define XXX_XJP    97
-#define XXX_XLB    98
-#define XXX_XOR    99
-#define XXX_XPO   100
+#define XXX_XBG    97
+#define XXX_XEN    98
+#define XXX_XJP    99
+#define XXX_XLB   100
+#define XXX_XOR   101
+#define XXX_XPO   102
 
 
 
@@ -581,6 +586,7 @@ static const filecb nullfcb_bin =
 /*   C = Konstante, wie bei LDC                           */
 /*   D = Typ, Adresse (wie bei DEC und INC z.B.)          */
 /*   E = fuer LCA (Adressen von Strings usw.)             */
+/*   F = Adresse und Bedingung (1,0) - fuer XEN           */
 /*   J = Sprungziel sichern (Operand bei FJP und UJP)     */
 /*   K = fuer DEF (Typ und Konstante)                     */
 /*   L = Label (Offset uebernehmen)                       */
@@ -591,7 +597,7 @@ static const filecb nullfcb_bin =
 /*   V = Vergleich, also Typ und bei M noch Anzahl        */
 /*   X = Sprungziel sichern bei XJP (Case)                */
 /*   Y = Call Standard Function                           */
-/*   0 = hat keine Operanden                              */
+/*   0 = hat keine Operanden (auch Blank)                 */
 /*   1 = CST (sozusagen statische CSECT)                  */
 /*   2 = DFC (Definition in statischer CSECT)             */
 /*   3 = BGN (Programmheader und Startposition)           */
@@ -602,42 +608,42 @@ static const filecb nullfcb_bin =
 static opctab ot [] =
 
 {
-   { "ABI", XXX_ABI, 0, '0' },
-   { "ABR", XXX_ABR, 0, '0' },
-   { "ADA", XXX_ADA, 0, '0' },    /* neu Opp 2016 */
-   { "ADI", XXX_ADI, 0, '0' },
-   { "ADR", XXX_ADR, 0, '0' },
+   { "ABI", XXX_ABI, 0, ' ' },
+   { "ABR", XXX_ABR, 0, ' ' },
+   { "ADA", XXX_ADA, 0, ' ' },    /* neu Opp 2016 */
+   { "ADI", XXX_ADI, 0, ' ' },
+   { "ADR", XXX_ADR, 0, ' ' },
    { "AND", XXX_AND, 0, 'W' },    /* Typ Kennz neu / Opp 2016 */
    { "ASE", XXX_ASE, 0, 'A' },    /* neu McGill: Add to Set */
    { "BGN", XXX_BGN, 0, '3' },
    { "CHK", XXX_CHK, 0, 'S' },
-   { "CHR", XXX_CHR, 0, '0' },
-   { "CRD", XXX_CRD, 0, '0' },    /* nicht in Stanford-Papier */
+   { "CHR", XXX_CHR, 0, ' ' },
+   { "CRD", XXX_CRD, 0, ' ' },    /* nicht in Stanford-Papier */
    { "CSP", XXX_CSP, 0, 'Y' },
    { "CST", XXX_CST, 0, '1' },    /* neu McGill: STATIC CSECT */
-   { "CTI", XXX_CTI, 0, '0' },    /* nicht in Stanford-Papier */
-   { "CTS", XXX_CTS, 0, '0' },
+   { "CTI", XXX_CTI, 0, ' ' },    /* nicht in Stanford-Papier */
+   { "CTS", XXX_CTS, 0, ' ' },
    { "CUP", XXX_CUP, 0, 'U' },
    { "DBG", XXX_DBG, 0, 'A' },    /* neu 2017: Debug Instrukt. */
    { "DEC", XXX_DEC, 0, 'D' },
    { "DEF", XXX_DEF, 0, 'K' },
    { "DFC", XXX_DFC, 0, '2' },    /* neu McGill: Def Constant */
-   { "DIF", XXX_DIF, 0, '0' },
-   { "DVI", XXX_DVI, 0, '0' },
-   { "DVR", XXX_DVR, 0, '0' },
-   { "END", XXX_END, 0, '0' },    /* nicht in Stanford-Papier */
+   { "DIF", XXX_DIF, 0, ' ' },
+   { "DVI", XXX_DVI, 0, ' ' },
+   { "DVR", XXX_DVR, 0, ' ' },
+   { "END", XXX_END, 0, ' ' },    /* nicht in Stanford-Papier */
    { "ENT", XXX_ENT, 0, '4' },
    { "EQU", XXX_EQU, 0, 'V' },
    { "FJP", XXX_FJP, 0, 'J' },
-   { "FLO", XXX_FLO, 0, '0' },
-   { "FLR", XXX_FLR, 0, '0' },
-   { "FLT", XXX_FLT, 0, '0' },
+   { "FLO", XXX_FLO, 0, ' ' },
+   { "FLR", XXX_FLR, 0, ' ' },
+   { "FLT", XXX_FLT, 0, ' ' },
    { "GEQ", XXX_GEQ, 0, 'V' },
    { "GRT", XXX_GRT, 0, 'V' },
    { "INC", XXX_INC, 0, 'D' },
    { "IND", XXX_IND, 0, 'D' },
-   { "INN", XXX_INN, 0, '0' },
-   { "INT", XXX_INT, 0, '0' },
+   { "INN", XXX_INN, 0, ' ' },
+   { "INT", XXX_INT, 0, ' ' },
    { "IOR", XXX_IOR, 0, 'W' },    /* Typ Kennz neu / Opp 2016 */
    { "IXA", XXX_IXA, 0, 'A' },
    { "LAB", XXX_LAB, 0, 'L' },
@@ -649,43 +655,43 @@ static opctab ot [] =
    { "LOC", XXX_LOC, 0, 'M' },
    { "LOD", XXX_LOD, 0, 'S' },
    { "MCC", XXX_MCC, 0, 'A' },    /* neu 2018: Memcmp Instrukt.*/
-   { "MCP", XXX_MCP, 0, '0' },    /* neu 2017: Memcpy Instrukt.*/
-   { "MCV", XXX_MCV, 0, '0' },    /* neu 2018: Memcmp Instrukt.*/
+   { "MCP", XXX_MCP, 0, ' ' },    /* neu 2017: Memcpy Instrukt.*/
+   { "MCV", XXX_MCV, 0, ' ' },    /* neu 2018: Memcmp Instrukt.*/
    { "MFI", XXX_MFI, 0, 'A' },    /* neu 2017: Mem Fill fest.L.*/
-   { "MOD", XXX_MOD, 0, '0' },
+   { "MOD", XXX_MOD, 0, ' ' },
    { "MOV", XXX_MOV, 0, 'A' },
-   { "MPI", XXX_MPI, 0, '0' },
-   { "MPR", XXX_MPR, 0, '0' },
+   { "MPI", XXX_MPI, 0, ' ' },
+   { "MPR", XXX_MPR, 0, ' ' },
    { "MSE", XXX_MSE, 0, 'A' },    /* neu 2017: Memset Instrukt.*/
    { "MST", XXX_MST, 0, 'B' },
    { "MZE", XXX_MZE, 0, 'A' },    /* neu 2017: Mem Zero fest.L.*/
    { "NEQ", XXX_NEQ, 0, 'V' },
    { "NEW", XXX_NEW, 0, 'B' },
-   { "NGI", XXX_NGI, 0, '0' },
-   { "NGR", XXX_NGR, 0, '0' },
+   { "NGI", XXX_NGI, 0, ' ' },
+   { "NGR", XXX_NGR, 0, ' ' },
    { "NOT", XXX_NOT, 0, 'W' },    /* Typ Kennz neu / Opp 2016 */
-   { "ODD", XXX_ODD, 0, '0' },
-   { "ORD", XXX_ORD, 0, '0' },
-   { "PAK", XXX_PAK, 0, '0' },    /* nicht in Stanford-Papier */
-   { "POP", XXX_POP, 0, '0' },    /* nicht in Stanford-Papier */
+   { "ODD", XXX_ODD, 0, ' ' },
+   { "ORD", XXX_ORD, 0, ' ' },
+   { "PAK", XXX_PAK, 0, ' ' },    /* nicht in Stanford-Papier */
+   { "POP", XXX_POP, 0, ' ' },    /* nicht in Stanford-Papier */
    { "RET", XXX_RET, 0, 'R' },
-   { "RND", XXX_RND, 0, '0' },    /* gibt's nicht mehr, ist CSP */
-   { "RST", XXX_RST, 0, '0' },
-   { "SAV", XXX_SAV, 0, '0' },
-   { "SBA", XXX_SBA, 0, '0' },    /* neu Opp 2016 */
-   { "SBI", XXX_SBI, 0, '0' },
-   { "SBR", XXX_SBR, 0, '0' },
+   { "RND", XXX_RND, 0, ' ' },    /* gibt's nicht mehr, ist CSP */
+   { "RST", XXX_RST, 0, ' ' },
+   { "SAV", XXX_SAV, 0, ' ' },
+   { "SBA", XXX_SBA, 0, ' ' },    /* neu Opp 2016 */
+   { "SBI", XXX_SBI, 0, ' ' },
+   { "SBR", XXX_SBR, 0, ' ' },
    { "SCL", XXX_SCL, 0, 'B' },    /* neu McGill: Set Clear */
    { "SLD", XXX_SLD, 0, 'B' },    /* neu McGill: Set Load */
    { "SMV", XXX_SMV, 0, 'B' },    /* neu McGill: Set Move */
-   { "SQI", XXX_SQI, 0, '0' },
-   { "SQR", XXX_SQR, 0, '0' },
+   { "SQI", XXX_SQI, 0, ' ' },
+   { "SQR", XXX_SQR, 0, ' ' },
    { "STO", XXX_STO, 0, 'T' },
-   { "STP", XXX_STP, 0, '0' },
+   { "STP", XXX_STP, 0, ' ' },
    { "STR", XXX_STR, 0, 'S' },
-   { "TRC", XXX_TRC, 0, '0' },    /* gibt's nicht mehr, ist CSP */
+   { "TRC", XXX_TRC, 0, ' ' },    /* gibt's nicht mehr, ist CSP */
    { "UJP", XXX_UJP, 0, 'J' },
-   { "UNI", XXX_UNI, 0, '0' },
+   { "UNI", XXX_UNI, 0, ' ' },
    { "UXJ", XXX_UXJ, 0, 'J' },    /* neu McGill: Long Jump */
 
    { "VC1", XXX_VC1, 0, ' ' },    /* varchar convert 1 */
@@ -701,10 +707,12 @@ static opctab ot [] =
    { "VSM", XXX_VSM, 0, 'A' },    /* varchar set maxlength */
    { "VST", XXX_VST, 0, 'B' },    /* varchar store */
 
+   { "XBG", XXX_XBG, 0, 'A' },    /* bedingte Codeseq. Anfang */
+   { "XEN", XXX_XEN, 0, 'F' },    /* bedingte Codeseq. Ende */
    { "XJP", XXX_XJP, 0, 'X' },
    { "XLB", XXX_XLB, 0, 'L' },    /* neu McGill: Long Jump Target */
    { "XOR", XXX_XOR, 0, 'W' },    /* neu Opp 2017 */
-   { "XPO", XXX_XPO, 0, '0' },    /* nicht in Stanford-Papier */
+   { "XPO", XXX_XPO, 0, ' ' },    /* nicht in Stanford-Papier */
    { NULL,  -1, 0, ' ' }
 };
 

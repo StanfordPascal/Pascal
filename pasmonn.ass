@@ -876,8 +876,16 @@ OSPARM2  ST    R1,NEWPTR
          MVC   FL4OLD,=X'4F08000000000000'
 *
          MVC   CHKSUBS(L'CALLSUBS),CALLSUBS  INIT. RUN TIME CHECK AREA
+*
          MVC   CLOCK,EXECTIME                SET THE ALARM CLOCK
          STIMER  TASK,$TIMEOUT,TUINTVL=CLOCK
+*
+*        UNPK  TRTIME+16(9),EXECTIME(5)
+*        TR    TRTIME+16(8),TABHEXB-C'0'
+*        MVI   TRTIME+24,C' '
+*        LA    R3,TRTIME
+*        L     R15,=A(PTRACE)
+*        BALR  R14,R15
 *
 **********************************************************************
 *        INITIALIZE DATE/TIME PREDEFINED VARIABLES
@@ -918,8 +926,10 @@ STRWTEMP DS    A
 SAVETEMP DS    18F
 SAVEPRM  DS    2A
 TRGETM4  DC    CL80'TRACE:   free = XXXXXXXXX'
+TRTIME   DC    CL80'TRACE:   time = XXXXXXXX'
 DOWO1    DS    D
 WORKR1   DS    F
+TABHEXB  DC    C'0123456789ABCDEF'
 *
 *
 *
@@ -1090,7 +1100,6 @@ OLDDATE  DS    F
 *
 *
 ***********************************************************************
-*
 *
 *        INTERRRUPT PROCCESSING FOR PASCAL PROGRAMS
 *
@@ -1776,17 +1785,28 @@ $CSPERR  BAL   R3,RUNMSG
 *
 *        ASSUMES THAT R10 POINTS TO THE CURR PROC ENTRY POINT
 *        THIS MAY NOT BE TRUE UNDER MFT OR SOME OTHER VARIANTS
-*        OF THE OPERATING SYSTEM. ( 'STIMER' PECULIARITY )
+*        OF THE OPERATING SYSTEM. ('STIMER' PECULIARITY)
 *
 **********************************************************************
 *
 $TIMEOUT DS    0H
          BALR  R15,0
          USING *,R15
+*
          L     R12,=A(ALOSTORE)    RESTORE STACK POINTER IN CASE !
          L     R12,0(R12)
          LA    R12,STACK-DYNSTORE(R12)
          LR    R13,R12
+*
+*        ST    R10,TIMOENT
+*        UNPK  TRTIMO+16(9),TIMOENT(5)
+*        TR    TRTIMO+16(8),TABHEXA-C'0'
+*        MVI   TRTIMO+24,C' '
+*        LA    R3,TRTIMO
+*        LR    R2,R15
+*        L     R15,=A(PTRACE)
+*        BALR  R14,R15
+*        LR    R15,R2
 *
          L     R14,=A(SCHCSP)
          CLI   0(R14),X'00'        SEE IF TIMER WENT OFF IN '$PASCSP'
@@ -1800,6 +1820,13 @@ $TIMEOUT DS    0H
          B     TIMEOUT4
 *
 TIMEOUT1 DS    0H                  NEW STACK
+*
+*        LA    R3,TRTIMO1
+*        LR    R2,R15
+*        L     R15,=A(PTRACE)
+*        BALR  R14,R15
+*        LR    R15,R2
+*
          L     R14,=A(SPUSERSA)
          L     R1,0(R14)
          L     R14,12(R1)
@@ -1808,6 +1835,13 @@ TIMEOUT1 DS    0H                  NEW STACK
          B     TIMEOUT4
 *
 TIMEOUT2 DS    0H
+*
+*        LA    R3,TRTIMO2
+*        LR    R2,R15
+*        L     R15,=A(PTRACE)
+*        BALR  R14,R15
+*        LR    R15,R2
+*
          L     R1,16               LOAD CVT ADDR
          L     R1,0(,R1)           LOAD TCB WORDS ADDR
          L     R1,4(,R1)           ADDR OF CURRENT TCB
@@ -1826,6 +1860,10 @@ TIMEOUT4 DS    0H
          BAL   R3,RUNMSG
          DC    AL2(30,TIMERR),CL30'TIME LIMIT EXCEEDED'
 *
+TIMOENT  DS    A
+TRTIMO   DC    CL80'TRACE:   timo  (xxxxxxxx = reg 10)'
+TRTIMO1  DC    CL80'TRACE:   timo1'
+TRTIMO2  DC    CL80'TRACE:   timo2'
 *
 *
 **********************************************************************

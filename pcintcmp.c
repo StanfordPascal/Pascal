@@ -830,6 +830,30 @@ static void load (void *vgs,
          break;
 
       /**********************************************************/
+      /*   F = Level und Bedingung, z.B. XEN                    */
+      /**********************************************************/
+
+      case 'F':
+         cp = poper;
+         do
+         {
+            while (*cp == ' ' && *cp != 0x00)
+               cp ++;
+            if (*cp == 0x00)
+               break;
+            pcode -> q = atoi (cp);
+            while (*cp != ',' && *cp != 0x00)
+               cp ++;
+            while (*cp == ',' && *cp != 0x00)
+               cp ++;
+            if (*cp == 0x00)
+               break;
+            pcode -> p = (atoi (cp) != 0);
+         }
+         while (0);
+         break;
+
+      /**********************************************************/
       /*   J = Sprungziel sichern (Operand bei FJP und UJP)     */
       /**********************************************************/
 
@@ -1588,9 +1612,9 @@ static void load (void *vgs,
 
 
 static void assemble (global_store *gs,
-                      char *plabel,
-                      char *pcode,
-                      char *poper)
+                      char *cplabel,
+                      char *cpcode,
+                      char *cpoper)
 
 /**********************************************************/
 /*                                                        */
@@ -1600,19 +1624,88 @@ static void assemble (global_store *gs,
 
 {
    opctab *pot;
+   sc_code *pcode;
+   int x;
+   int gefunden;
 
    for (pot = gs -> ot; pot -> opcode != NULL; pot ++)
    {
-      if (memcmp (pot -> opcode, pcode, 3) == 0)
+      if (memcmp (pot -> opcode, cpcode, 3) == 0)
       {
-         load (gs, pot, plabel, poper);
+         load (gs, pot, cplabel, cpoper);
+
+         if (memcmp (cpcode, "XBG", 3) == 0)
+         {
+            gs -> code_used --;
+            pcode = gs -> code0 + gs -> code_used;
+
+#if 0
+            printf ("XBG mit p = %d und q = %d\n",
+                     pcode -> p, pcode -> q);
+#endif
+
+            if (gs -> xbg_xen_count >= 10)
+            {
+               fprintf (stderr, "XBG: xbg nesting >= 10 "
+                                "not supported\n");
+            }
+            else
+            {
+               x = gs -> xbg_xen_count;
+               gs -> xbg_xen_count ++;
+               gs -> xbg_xen_tag [x] = pcode -> q;
+               gs -> xbg_xen_codeptr [x] = gs -> code_used;
+            }
+         }
+         else if (memcmp (cpcode, "XEN", 3) == 0)
+         {
+            gs -> code_used --;
+            pcode = gs -> code0 + gs -> code_used;
+
+#if 0
+            printf ("XEN mit p = %d und q = %d\n",
+                     pcode -> p, pcode -> q);
+#endif
+
+            gefunden = 0;
+
+            for (x = 0; x < gs -> xbg_xen_count; x ++)
+            {
+               if (gs -> xbg_xen_tag [x] == pcode -> q)
+               {
+                  gefunden = 1;
+                  break;
+               }
+            }
+
+            if (! gefunden)
+            {
+               fprintf (stderr, "XEN: matching XBG not found\n");
+            }
+            else
+            {
+               if (! (pcode -> p))
+                  gs -> code_used = gs -> xbg_xen_codeptr [x];
+
+               gs -> xbg_xen_count --;
+
+               for (; x < gs -> xbg_xen_count; x ++)
+               {
+                  gs -> xbg_xen_tag [x] =
+                     gs -> xbg_xen_tag [x + 1];
+                  gs -> xbg_xen_codeptr [x] =
+                     gs -> xbg_xen_codeptr [x + 1];
+               }
+            }
+         }
+
          break;
       }
    }
 
    if (pot -> opcode == NULL)
    {
-      fprintf (stderr, "opcode %s not in opctab\n", pcode);
+      fprintf (stderr, "opcode %s not in opctab\n", cpcode);
    }
 }
 

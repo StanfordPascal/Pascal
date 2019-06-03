@@ -377,7 +377,6 @@ local procedure SCAN_FEHLER_AUSGEBEN ( var SCANOUT : TEXT ; var SCB :
        L : INTEGER ;
        I : INTEGER ;
        INFO_POS : INTEGER ;
-       CP : -> CHAR ;
 
    begin (* SCAN_FEHLER_AUSGEBEN *)
      ERRCLASS := FELAUF -> . ERRCLASS ;
@@ -678,10 +677,7 @@ procedure PASSCANL ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB
 (************************************************)
 
 
-   var PL : INTEGER ;
-       FESAVE : SCANF_PTR ;
-       ZEILE_ENTH_FEHLER : BOOLEAN ;
-       PO : OPTIONS_PTR ;
+   var PO : OPTIONS_PTR ;
 
    begin (* PASSCANL *)
      RESET ( SCANINP ) ;

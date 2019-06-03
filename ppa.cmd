@@ -1,7 +1,7 @@
 @echo off
 set dd_input=%1.pas
 set dd_listing=%1.lis
-set dd_prr=%1.prr
+set dd_pcode=%1.prr
 set dd_dbginfo=%1.dbginfo
 set dd_prd=pascal.messages
 set dd_tracef=*stdout*

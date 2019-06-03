@@ -18,14 +18,11 @@ var C1 : CHAR ;
     C20A : CHAR ( 20 ) ;
     VC20 : STRING ( 20 ) ;
     VC200 : STRING ( 200 ) ;
-    VC1 : STRING ( 1 ) ;
     VC2000 : STRING ( 2000 ) ;
-    LIMIT : INTEGER ;
     X : BOOLEAN ;
     P1 : STRING ( 20 ) ;
     P2 : STRING ( 200 ) ;
     I : INTEGER ;
-    XP : -> CHAR ;
     TTAB : STRING ( 256 ) ;
 
 

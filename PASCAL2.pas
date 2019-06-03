@@ -1178,12 +1178,9 @@ var GS : GLOBAL_STATE ;
     (* CURRENT INPUT CHARACTER                 *)
     (*******************************************)
 
-    BVAL : BOOLEAN ;
-    CHVAL : CHAR ;
     IVAL : INTEGER ;
     RVAL : REAL ;
     PSVAL : LARGE_SET ;
-    STRPTR : SPTR ;
     PSLNGTH : 0 .. MXPLNGTH ;
     SVAL : STRNG ;
     SLNGTH : 0 .. MAXSTRL ;
@@ -1205,9 +1202,8 @@ var GS : GLOBAL_STATE ;
     (* PROC. CALL NESTING                      *)
     (*******************************************)
 
-    LASTLN , NXTLNP , LASTPC , LASTPCDIF : INTEGER ;
+    LASTLN , NXTLNP , LASTPC : INTEGER ;
     LBL1 , LBL2 : PLABEL ;
-    STATCSECT : PLABEL ;
 
     (*******************************************)
     (* LEFT AND RIGHT LABELS OF INSTRUCTIONS   *)
@@ -1221,7 +1217,7 @@ var GS : GLOBAL_STATE ;
     (* TYPE OF OPERAND OF INSTRUCTION          *)
     (*******************************************)
 
-    P , Q , R : INTEGER ;
+    P , Q : INTEGER ;
 
     (*******************************************)
     (* P_Q FIELDS OF INSTRUCTION               *)
@@ -1229,9 +1225,6 @@ var GS : GLOBAL_STATE ;
     (*******************************************)
     (* LOC. OF STRUCT. CONSTANT ITEM           *)
     (*******************************************)
-
-    SP : ADRRNG ;
-
     (*******************************************)
     (* MEMORY STACK POINTER, NOT USED          *)
     (*******************************************)
@@ -1309,8 +1302,8 @@ var GS : GLOBAL_STATE ;
     (* VARIOUS OPTIONS                         *)
     (*******************************************)
 
-    TRACE , NEWLINE : BOOLEAN ;
-    RUNPROFILE , CKMODE , FLOW_TRACE : BOOLEAN ;
+    TRACE : BOOLEAN ;
+    CKMODE , FLOW_TRACE : BOOLEAN ;
 
     (*******************************************)
     (* OBJ LISTING, FLOW-TRACING FLAGS         *)
@@ -1319,12 +1312,6 @@ var GS : GLOBAL_STATE ;
     (*******************************************)
     (*******************************************)
     (* CURRENTLY UNUSED                        *)
-    (*******************************************)
-
-    CURLINE : LINE_NUM ;
-
-    (*******************************************)
-    (* CURRENT SOURCE LINE NUMBER              *)
     (*******************************************)
 
     POOL_SIZE : ICRNG ;
@@ -2190,16 +2177,13 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
    const SL16 = 65536 ;
 
    var I , J , K : INTEGER ;
-       DUMMYCH , CH1 : CHAR ;
-       TEMPLBL : array [ 1 .. IDLNGTH ] of CHAR ;
+       CH1 : CHAR ;
        HEX_PCOUNTER : HEX4 ;
        LEN : INTEGER ;
        BUFFER : CHAR80 ;
        OUTPOS : INTEGER ;
        BUF20 : CHAR80 ;
        LSTART : INTEGER ;
-       CP1 : -> CHAR ;
-       CP2 : -> CHAR ;
        X1 : INTEGER ;
        DUMMYNAME : array [ 1 .. IDLNGTH ] of CHAR ;
        DUMMYINT : INTEGER ;
@@ -3600,12 +3584,9 @@ procedure ASMNXTINST ;
          SL16 = 65536 ;       //            16
          SL24 = 16777216 ;    //            24
 
-   var OP : BYTE ;
-       P1 , P2 , B1 , B2 : LVLRNG ;
+   var P1 , P2 , B1 , B2 : LVLRNG ;
        Q1 , Q2 : ADRRNG ;
        I , J : INTEGER ;
-       LEFTDEC , NEGATE : BOOLEAN ;
-       POWER10 : REAL ;
        OPPTR : STKPTR ;
        RGADR1 : RGRNG ;
        RGADR2 : RGRNG ;
@@ -4151,8 +4132,7 @@ procedure ASMNXTINST ;
    (********************************************************)
 
 
-      var I : LBLRNG ;
-          TPC , QPC : INTEGER ;
+      var TPC , QPC : INTEGER ;
 
       begin (* UPD_LBLTBL *)
         if FALSE then
@@ -4256,7 +4236,7 @@ procedure ASMNXTINST ;
 
    procedure PRINT_SET ( S : LARGE_SET ; LNGTH : BYTE ) ;
 
-      var I , INDNT : INTEGER ;
+      var I : INTEGER ;
           DELIM : CHAR ;
           C , C1 , C2 : CHAR ;
           COL : INTEGER ;
@@ -4299,7 +4279,7 @@ procedure ASMNXTINST ;
 
    procedure TRACE_SET ( S : LARGE_SET ; LNGTH : BYTE ) ;
 
-      var I , INDNT : INTEGER ;
+      var I : INTEGER ;
           DELIM : CHAR ;
           C , C1 , C2 : CHAR ;
           COL : INTEGER ;
@@ -4604,8 +4584,6 @@ procedure ASMNXTINST ;
 
 
    procedure GENRXDLIT ( OP : BYTE ; R : RGRNG ; VAL : REAL ) ;
-
-      var I : INTEGER ;
 
       begin (* GENRXDLIT *)
         if OP = XLD then
@@ -5538,8 +5516,7 @@ procedure ASMNXTINST ;
 
       var P : LVLRNG ;
           Q : ADRRNG_EXT ;
-          B , R : RGRNG ;
-          OP : BYTE ;
+          B : RGRNG ;
           LBL_WORK : PLABEL ;
 
 
@@ -7549,11 +7526,10 @@ procedure ASMNXTINST ;
 
       var L , R : DATUM ;
           Q1 , Q2 : ADRRNG ;
-          P1 , P2 , B1 , B2 : RGRNG ;
-          I , J , K , STKADRX : INTEGER ;
+          P1 , P2 , B2 : RGRNG ;
+          I , J , STKADRX : INTEGER ;
           MIN , LEN : PLNRNG ;
           LR : BOOLEAN ;
-          OP : BYTE ;
           RNG : array [ 1 .. 6 ] of ADRRNG ;
 
 
@@ -9976,8 +9952,6 @@ procedure ASMNXTINST ;
       (************************************************)
 
 
-         label 10 ;
-
          const XESD = 46523076 ;
 
                (**********************)
@@ -10013,9 +9987,8 @@ procedure ASMNXTINST ;
                BLNK4 = 1077952576 ;
 
          var I , J , K : INTEGER ;
-             TPC , QPC , OBJEND : INTEGER ;
+             TPC , QPC : INTEGER ;
              LNGTH : STRLRNG ;
-             VSL16 : INTEGER ;
              BLNK80 : array [ 1 .. 80 ] of CHAR ;
              BLNK64 : array [ 1 .. 64 ] of CHAR ;
              CODESIZE : INTEGER ;
@@ -10537,8 +10510,6 @@ procedure ASMNXTINST ;
                WRITELN ( OUTPUT ) ;
              end (* then *) ;
            TOTALBYTES := TOTALBYTES + QPC ;
-           10 :
-           
          end (* GEN_CSECT *) ;
 
 
@@ -12324,7 +12295,7 @@ procedure ASMNXTINST ;
 
 
       var P1 , B1 , P2 , B2 , PX , BX : LVLRNG ;
-          Q1 , Q2 , QX : ADRRNG ;
+          Q1 , QX : ADRRNG ;
 
       begin (* MFIOPERATION *)
         if LEN > 0 then
@@ -12749,7 +12720,7 @@ procedure ASMNXTINST ;
 
 
       var P1 , B1 , P2 , B2 , PX , BX : LVLRNG ;
-          Q1 , Q2 , QX : ADRRNG ;
+          Q1 , QX : ADRRNG ;
           BPC : ICRNG ;
           XPAT , XLEN : DATUM ;
 
@@ -12912,7 +12883,6 @@ procedure ASMNXTINST ;
 
       var P1 , B1 , P2 , B2 , PX , BX : LVLRNG ;
           Q1 , Q2 , QX : ADRRNG ;
-          BPC : ICRNG ;
           TARGET_REG : RGRNG ;
 
       begin (* MCVOPERATION *)
@@ -13087,9 +13057,8 @@ procedure ASMNXTINST ;
    //****************************************************************
 
 
-      var P1 , B1 , P2 , B2 , PX , BX : LVLRNG ;
-          Q1 , Q2 , QX : ADRRNG ;
-          BPC : ICRNG ;
+      var P1 , B1 , P2 , B2 : LVLRNG ;
+          Q1 , Q2 : ADRRNG ;
           TARGET_REG : RGRNG ;
 
       begin (* MCCOPERATION *)
@@ -13254,7 +13223,6 @@ procedure ASMNXTINST ;
 
       var P1 , B1 : LVLRNG ;
           Q1 : ADRRNG ;
-          XOPC : BYTE ;
 
       begin (* STROPERATION_MVI *)
 
@@ -13285,7 +13253,6 @@ procedure ASMNXTINST ;
 
       var P1 , B1 : LVLRNG ;
           Q1 : ADRRNG ;
-          XOPC : BYTE ;
 
       begin (* STROPERATION_MVC1 *)
 
@@ -13727,7 +13694,6 @@ procedure ASMNXTINST ;
           RGWORK1 : RGRNG ;
           RGWORK2 : RGRNG ;
           PATBLANK : DATUM ;
-          DATLEN : DATUM ;
           LITVALUE : INTEGER ;
           DATWORKAREA : DATUM ;
           LEN1 , LEN2 : INTEGER ;
@@ -15319,12 +15285,6 @@ procedure ASMNXTINST ;
           (*STACK INDEX OF LEFT AND RIGHT OPERANDS*)
           (****************************************)
 
-          LRG : RGRNG ;
-
-          (*******************************)
-          (*REGISTER HOLDING LEFT OPERAND*)
-          (*******************************)
-
           OP1 , OP2 : BYTE ;
           LR : BOOLEAN ;
 
@@ -15332,8 +15292,8 @@ procedure ASMNXTINST ;
           (*LEFT/RIGHT INTERCHANGE FLAG*)
           (*****************************)
 
-          Q1 , Q2 : ADRRNG ;
-          P1 , P2 , B1 : LVLRNG ;
+          Q1 : ADRRNG ;
+          P1 , B1 : LVLRNG ;
 
       begin (* BOPERATION *)
 

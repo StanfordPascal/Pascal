@@ -467,8 +467,6 @@ local procedure MODIFY_TREE ( MODUS : CHAR ; HANC_ACT : PHANC ; SIZE :
 
    var PNACHB : PHFRE ;
        PFREEN : PHFRE ;
-       PLAUFF : PHFRE ;
-       PFIRST : PHFRE ;
        SIZE_ALT : INTEGER ;
        VORG_MODUS : CHAR ;
        PLAUFALT : PHFRE ;
@@ -2077,8 +2075,6 @@ function $PASMAT ( FUNCCODE : INTEGER ; I : INTEGER ; X : REAL ) : REAL
 (*************************************)
 
 
-   var CH : CHAR ;
-
    begin (* $PASMAT *)
      case FUNCCODE of
 
@@ -2317,7 +2313,6 @@ function $PASSTR1 ( FUNCCODE : INTEGER ; const S1 : STRING ; I1 :
        LF : -> LENGTHF ;
        CP : -> CHAR ;
        CP2 : -> CHAR ;
-       CPS1 : -> CHAR ;
        C : CHAR ;
        BLANK : INTEGER ;
 

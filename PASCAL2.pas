@@ -480,9 +480,9 @@ program PCODE_TRANSLATOR ( INPUT , OUTPUT , OBJCODE , LIST002 , TRACEF
 
 
 
-const VERSION = '2019.06' ;        // Version for display message
-      VERSION2 = 0x1906 ;          // Version for load module
-      VERSION3 = 'XL2''1906''' ;   // Version for LIST002 listing
+const VERSION = '2019.07' ;        // Version for display message
+      VERSION2 = 0x1907 ;          // Version for load module
+      VERSION3 = 'XL2''1907''' ;   // Version for LIST002 listing
       MXADR = 65535 ;
       SHRTINT = 4095 ;
       HALFINT = 32700 ;
@@ -908,7 +908,6 @@ type OPTYPE = ( PCTS , PCTI , PLOD , PSTR , PLDA , PLOC , PSTO , PLDC ,
      HINTEGER = - 32768 .. 32767 ;
      STRNG = packed array [ 1 .. MAXSTRL ] of CHAR ;
      ALFA = packed array [ 1 .. 8 ] of CHAR ;
-     IDTYPE = packed array [ 1 .. IDLNGTH ] of CHAR ;
      CHAR80 = packed array [ 1 .. 80 ] of CHAR ;
      ADRRNG = 0 .. MXADR ;
      LVLRNG = - 2 .. MXLVL ;
@@ -938,7 +937,6 @@ type OPTYPE = ( PCTS , PCTI , PLOD , PSTR , PLDA , PLOC , PSTO , PLDC ,
 
      BYTE = 0 .. 255 ;
      BYTE_PLUS_ONE = 1 .. 256 ;
-     LINE_NUM = 0 .. 10000 ;
      STKPTR = 0 .. STKDPTH ;
 
      (********************************************)
@@ -954,7 +952,6 @@ type OPTYPE = ( PCTS , PCTI , PLOD , PSTR , PLDA , PLOC , PSTO , PLDC ,
      (* WHERE ABOUT OF THE OPERAND *)
      (******************************)
 
-     SPTR = -> STRNG ;
      ICRNG = 0 .. MXCODE1 ;
      ICRNG_EXT = - 100 .. MXCODE1 ;
      ADRRNG_EXT = - 100 .. MXADR ;

@@ -244,27 +244,6 @@ local procedure WRITEPTR_LEN ( var F : TEXT ; CPSTART : VOIDPTR ; LEN :
 
 
 
-local function TOUPPER ( C : CHAR ) : CHAR ;
-
-   begin (* TOUPPER *)
-     if C in [ 'a' .. 'i' , 'j' .. 'r' , 's' .. 'z' ] then
-       C := CHR ( ORD ( C ) - ORD ( 'a' ) + ORD ( 'A' ) ) ;
-     TOUPPER := C ;
-   end (* TOUPPER *) ;
-
-
-
-local procedure SCAN_TOUPPER ( var SCB : SCAN_BLOCK ) ;
-
-   var I : INTEGER ;
-
-   begin (* SCAN_TOUPPER *)
-     for I := 1 to SCB . LSYMBOL do
-       SCB . SYMBOL [ I ] := TOUPPER ( SCB . SYMBOL [ I ] ) ;
-   end (* SCAN_TOUPPER *) ;
-
-
-
 local procedure INIT_SCAN_CODE ;
 
    type TRANSLATE_TAB = array [ CHAR ] of INTEGER ;

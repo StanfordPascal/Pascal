@@ -2,6 +2,11 @@
 
 PROGRAM PASCALCOMPILER(INPUT, OUTPUT, PRR, QRR);
 
+ (* minor change to allow compile of PAS1982 by
+    new Stanford Pascal: fields of builtin structure
+    OSPARM changed their names: length -> plength and
+    string -> pstring / opp / 2019.06 *)
+
  (******************************************************************
   *                                                                *
   *         S T A N F O R D   P A S C A L   C O M P I L E R        *
@@ -5653,12 +5658,12 @@ BEGIN  (*PASCALCOMPILER*)
     WITH  OSPARM@  DO
       BEGIN
 "DE"  CH "LINEBUF[1]" := CHLBRACE;  LINEBUF[2] := '$';
-      IF LENGTH > 64 THEN LENGTH := 64;
-      FOR CHCNT := 1 TO LENGTH DO  LINEBUF[CHCNT+2] := STRING[CHCNT];
+      IF pLENGTH > 64 THEN pLENGTH := 64;
+      FOR CHCNT := 1 TO pLENGTH DO  LINEBUF[CHCNT+2] := pSTRING[CHCNT];
       (*THE REST OF THE LINE DOES NOT HAVE TO BE CLEARED BUT...*)
-      FOR CHCNT := LENGTH TO 77 DO   LINEBUF[CHCNT+3] := ' ';
-"DE"  LINEBUF[LENGTH+3] := CHRBRACE;  LINEBUF[LENGTH+4] := '#';
-      EOL := FALSE;  CHCNT := 1;  LASTCOL := LENGTH+3;
+      FOR CHCNT := pLENGTH TO 77 DO   LINEBUF[CHCNT+3] := ' ';
+"DE"  LINEBUF[pLENGTH+3] := CHRBRACE;  LINEBUF[pLENGTH+4] := '#';
+      EOL := FALSE;  CHCNT := 1;  LASTCOL := pLENGTH+3;
       END (*WITH OSPARM .., IF OSPARM ...*);
 
   (*COMPILE:*)

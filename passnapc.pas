@@ -406,7 +406,7 @@ procedure $PASSNAP ( LEVEL : INTEGER ; DUMPPTR : VOIDPTR ) ;
 
        DMPKIND : INTEGER ;
        VARTARY : packed array [ 'A' .. 'Z' ] of VARTYPE ;
-       DEPTH , MAXDEPTH , I , J , UID , PLEN : INTEGER ;
+       DEPTH , MAXDEPTH , UID , PLEN : INTEGER ;
        CH : CHAR ;
        DONE : BOOLEAN ;
        TOPSTK , BOTSTK , TMPSTK , STATICP : FRM_PTR ;
@@ -422,8 +422,6 @@ procedure $PASSNAP ( LEVEL : INTEGER ; DUMPPTR : VOIDPTR ) ;
        SOURCENAME : CHAR8 ;
        QRD_IS_OPEN : BOOLEAN ;
        DP : -> DUMPPARM ;
-       X : INTEGER ;
-       ERRMS : MSGTYPE ;
 
 
    procedure DUMPSTOR ( PVON : VOIDPTR ; PBIS : VOIDPTR ) ;
@@ -540,8 +538,6 @@ procedure $PASSNAP ( LEVEL : INTEGER ; DUMPPTR : VOIDPTR ) ;
                           var ISDEBUG : BOOLEAN ; var SOURCENAME :
                           CHAR8 ) ;
 
-      type INTPTR = -> INTEGER ;
-
       var TP : record
                  case INTEGER of
                    1 :
@@ -622,7 +618,6 @@ procedure $PASSNAP ( LEVEL : INTEGER ; DUMPPTR : VOIDPTR ) ;
           TN , NXT , NUM , J , LINELEN : INTEGER ;
           INDRCT : BOOLEAN ;
           SPKLASSE : CHAR ;
-          H : array [ 1 .. 6 ] of CHAR ;
           SB : record
                  case INTEGER of
                    1 :
@@ -638,8 +633,6 @@ procedure $PASSNAP ( LEVEL : INTEGER ; DUMPPTR : VOIDPTR ) ;
           SSIZE : -> HINTEGER ;
           OFFS : HINTEGER ;
           AKT_PROC : PROC_PTR ;
-          FCB : VOIDPTR ;
-          CPT : CHARPTR ;
 
 
       procedure INS_SOURCENAME ( var CMD : CHAR80 ; SOURCENAME : CHAR8
@@ -726,7 +719,6 @@ procedure $PASSNAP ( LEVEL : INTEGER ; DUMPPTR : VOIDPTR ) ;
                      end ;
              TBOL : BOOLEAN ;
              TCH : CHAR ;
-             H : array [ 1 .. 6 ] of CHAR ;
              IDNAME : array [ 1 .. PNAMLN ] of CHAR ;
              VTY : VARTYPE ;
              S_I : record
@@ -1820,7 +1812,7 @@ procedure $PASSNAP ( LEVEL : INTEGER ; DUMPPTR : VOIDPTR ) ;
 
       type CODE_AT_PSW = array [ 1 .. 3 ] of VOIDPTR ;
 
-      var I , J , K : INTEGER ;
+      var I , J : INTEGER ;
           TPROCN : PROCNAME ;
           CODE : 0 .. 23 ;
           DUMMYST : FRM_PTR ;

@@ -1,4 +1,12 @@
 
+* bei Modulen muessen Prozeduren aussen nicht verwendet werden
+* Warnung fuer unbenutzte Parameter von Prozeduren und Funktionen
+* Funktionen werden nie als unbenutzt gekennzeichnet wg. Funktionsergebnis
+- Compiler erneut publizieren (2019.07)
+- Compiler auch fuer VM und MVS
+
+************************************************************
+
 * TESTP5: Schleife zeigt Strings und Ergebnis nicht an
 * TESTP5: Schleife zeigt Uebereinstimmung nicht an
 * TESTP3: Testcase 04 bringt 5 Zeichen statt 9 bei SUBSTR (Win)
@@ -21,8 +29,7 @@
 * XBG/XEN in PCINT aufnehmen
 * Warnung statt Fehler bei nicht benutztem Label
 * Warnung bei unbenutzten Variablen
-
-- Compiler erneut publizieren (2019.06)
+* Compiler erneut publizieren (2019.06)
 
 ************************************************************
 

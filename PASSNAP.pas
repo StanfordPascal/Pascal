@@ -278,7 +278,6 @@ procedure $PASSNAP ( LEVEL : INTEGER ; DUMPPTR : VOIDPTR ) ;
          STKTRACE = 1 ;
 
    type CHAR8 = array [ 1 .. 8 ] of CHAR ;
-        CHAR80 = array [ 1 .. 80 ] of CHAR ;
         INT2PTR = record
                     case INTEGER of
                       0 :
@@ -400,7 +399,7 @@ procedure $PASSNAP ( LEVEL : INTEGER ; DUMPPTR : VOIDPTR ) ;
 
        DMPKIND : INTEGER ;
        VARTARY : packed array [ 'A' .. 'Z' ] of VARTYPE ;
-       DEPTH , MAXDEPTH , I , J , UID , PLEN : INTEGER ;
+       DEPTH , MAXDEPTH , UID , PLEN : INTEGER ;
        CH : CHAR ;
        DONE : BOOLEAN ;
        TOPSTK , BOTSTK , TMPSTK , STATICP : FRM_PTR ;
@@ -416,8 +415,6 @@ procedure $PASSNAP ( LEVEL : INTEGER ; DUMPPTR : VOIDPTR ) ;
        SOURCENAME : CHAR8 ;
        QRD_IS_OPEN : BOOLEAN ;
        DP : -> DUMPPARM ;
-       X : INTEGER ;
-       ERRMS : MSGTYPE ;
 
 
    procedure DUMPSTOR ( PVON : VOIDPTR ; PBIS : VOIDPTR ) ;
@@ -534,8 +531,6 @@ procedure $PASSNAP ( LEVEL : INTEGER ; DUMPPTR : VOIDPTR ) ;
                           var ISDEBUG : BOOLEAN ; var SOURCENAME :
                           CHAR8 ) ;
 
-      type INTPTR = -> INTEGER ;
-
       var TP : record
                  case INTEGER of
                    1 :
@@ -616,7 +611,6 @@ procedure $PASSNAP ( LEVEL : INTEGER ; DUMPPTR : VOIDPTR ) ;
           TN , NXT , NUM , J , LINELEN : INTEGER ;
           INDRCT : BOOLEAN ;
           SPKLASSE : CHAR ;
-          H : array [ 1 .. 6 ] of CHAR ;
           SB : record
                  case INTEGER of
                    1 :
@@ -624,9 +618,6 @@ procedure $PASSNAP ( LEVEL : INTEGER ; DUMPPTR : VOIDPTR ) ;
                    2 :
                      ( P : FRM_PTR )
                end ;
-          CMSCMD : CHAR80 ;
-          RC : INTEGER ;
-          STATERC : INTEGER ;
           PSTATNAME : -> CHAR8 ;
           PSTATLEN : -> HINTEGER ;
           SSIZE : -> HINTEGER ;
@@ -634,18 +625,6 @@ procedure $PASSNAP ( LEVEL : INTEGER ; DUMPPTR : VOIDPTR ) ;
           AKT_PROC : PROC_PTR ;
           FCB : VOIDPTR ;
           CPT : CHARPTR ;
-
-
-      procedure INS_SOURCENAME ( var CMD : CHAR80 ; SOURCENAME : CHAR8
-                               ; STARTPOS : INTEGER ) ;
-
-         begin (* INS_SOURCENAME *)
-           for I := 1 to 8 do
-             begin
-               CMD [ STARTPOS ] := SOURCENAME [ I ] ;
-               STARTPOS := STARTPOS + 1 ;
-             end (* for *)
-         end (* INS_SOURCENAME *) ;
 
 
       procedure ALIGN ( var OFFSET : INTEGER ; ALN : INTEGER ) ;
@@ -720,7 +699,6 @@ procedure $PASSNAP ( LEVEL : INTEGER ; DUMPPTR : VOIDPTR ) ;
                      end ;
              TBOL : BOOLEAN ;
              TCH : CHAR ;
-             H : array [ 1 .. 6 ] of CHAR ;
              IDNAME : array [ 1 .. PNAMLN ] of CHAR ;
              VTY : VARTYPE ;
              S_I : record
@@ -1796,7 +1774,7 @@ procedure $PASSNAP ( LEVEL : INTEGER ; DUMPPTR : VOIDPTR ) ;
 
       type CODE_AT_PSW = array [ 1 .. 3 ] of VOIDPTR ;
 
-      var I , J , K : INTEGER ;
+      var I , J : INTEGER ;
           TPROCN : PROCNAME ;
           CODE : 0 .. 23 ;
           DUMMYST : FRM_PTR ;

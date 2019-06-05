@@ -32,7 +32,6 @@ type CHARPTR = -> CHAR ;
      CHAR128 = array [ 1 .. 128 ] of CHAR ;
      TOKEN = array [ 1 .. 8 ] of CHAR ;
      CHAR4 = array [ 1 .. 4 ] of CHAR ;
-     CHAR8 = array [ 1 .. 8 ] of CHAR ;
 
      (****************************************************)
      (*  HFRE: Free Element innerhalb HANC               *)
@@ -1870,8 +1869,7 @@ local procedure FREE_AREA ( PTR : VOIDPTR ) ;
 
 
 
-function $PASMEM ( FUNCCODE : INTEGER ; X : VOIDPTR ; Y : VOIDPTR ) :
-                 VOIDPTR ;
+function $PASMEM ( FUNCCODE : INTEGER ; X : VOIDPTR ) : VOIDPTR ;
 
 (**************************************)
 (*  Verteiler fuer Memory-Funktionen  *)
@@ -1950,17 +1948,6 @@ function $PASMEM ( FUNCCODE : INTEGER ; X : VOIDPTR ; Y : VOIDPTR ) :
          $PASMEM := NIL
      end (* case *) ;
    end (* $PASMEM *) ;
-
-
-
-function $PASLIB ( FUNCCODE : INTEGER ; X : VOIDPTR ; Y : VOIDPTR ) :
-                 VOIDPTR ;
-
-   begin (* $PASLIB *)
-     if FUNCCODE = 10 then
-       FUNCCODE := 7 ;
-     $PASLIB := $PASMEM ( FUNCCODE , X , Y ) ;
-   end (* $PASLIB *) ;
 
 
 
@@ -2245,58 +2232,6 @@ procedure WINX ( CMD : CHARPTR ; var RETCODE : INTEGER ) ;
 
 
 
-procedure $PASMMM ( FUNCCODE : INTEGER ; X1 : CHARPTR ; X2 : CHARPTR ;
-                  L : INTEGER ) ;
-
-(**************************************)
-(*  Verteiler fuer Memory-Funktionen  *)
-(**************************************)
-
-
-   var CH : CHAR ;
-
-   begin (* $PASMMM *)
-     case FUNCCODE of
-
-     /*********************************/
-     /* MEMSET                        */
-     /*********************************/
-
-       1 : begin
-             CH := CHR ( PTR2INT ( X2 ) ) ;
-             while L > 0 do
-               begin
-                 X1 -> := CH ;
-                 L := L - 1 ;
-                 X1 := PTRADD ( X1 , 1 )
-               end (* while *)
-           end (* tag/ca *) ;
-
-     /*********************************/
-     /* MEMCPY                        */
-     /*********************************/
-
-       2 : begin
-             while L > 0 do
-               begin
-                 X1 -> := X2 -> ;
-                 L := L - 1 ;
-                 X1 := PTRADD ( X1 , 1 ) ;
-                 X2 := PTRADD ( X2 , 1 )
-               end (* while *)
-           end (* tag/ca *) ;
-
-     /*********************************/
-     /* unknown subfunction           */
-     /*********************************/
-
-       otherwise
-         EXIT ( 1120 ) ;
-     end (* case *) ;
-   end (* $PASMMM *) ;
-
-
-
 function $PASSTR1 ( FUNCCODE : INTEGER ; const S1 : STRING ; I1 :
                   INTEGER ; I2 : INTEGER ) : STRING ;
 
@@ -2516,8 +2451,6 @@ function $PASSTR1 ( FUNCCODE : INTEGER ; const S1 : STRING ; I1 :
 
 function $PASSTR2 ( FUNCCODE : INTEGER ; const S1 : STRING ; const S2 :
                   STRING ) : INTEGER ;
-
-   type LENGTHF = 0 .. 32767 ;
 
    var LS1 : INTEGER ;
        LS2 : INTEGER ;

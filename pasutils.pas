@@ -2,7 +2,6 @@ module $PASUTIL ;
 
 
 type PLATFORM = ( PLATF_UNKNOWN , PLATF_INTEL , PLATF_MAINFRAME ) ;
-     CHAR4 = array [ 1 .. 4 ] of CHAR ;
      CHAR8 = array [ 1 .. 8 ] of CHAR ;
      CHAR10 = array [ 1 .. 10 ] of CHAR ;
      CHAR80 = array [ 1 .. 80 ] of CHAR ;
@@ -176,7 +175,6 @@ procedure ASSIGN ( var X : ANYFILE ; FNAME : CHARPTR ; LEN : INTEGER )
    var FCB : VOIDPTR ;
        PDDN : -> CHAR8 ;
        PFN : -> CHAR ;
-       PTERM : -> CHAR ;
        CMSCMD : CHAR80 ;
        CPT : -> CHAR ;
        RC : INTEGER ;

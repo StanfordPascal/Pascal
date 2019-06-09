@@ -39338,6 +39338,11 @@ BEGIN  (*PASCALCOMPILER*)
 
 PROGRAM PASCALCOMPILER(INPUT, OUTPUT, PRR, QRR);
 
+ (* minor change to allow compile of PAS1982 by
+    new Stanford Pascal: fields of builtin structure
+    OSPARM changed their names: length -> plength and
+    string -> pstring / opp / 2019.06 *)
+
  (******************************************************************
   *                                                                *
   *         S T A N F O R D   P A S C A L   C O M P I L E R        *
@@ -44921,7 +44926,7 @@ PROCEDURE ENDOFLINE ;
       SOP[';']  := SPECH ;
       SOP['@']  := SPECH ;
       SOP['[']  := SPECH ;
-      SOP['Ý']  := SPECH ;
+      SOP['|']  := SPECH ;
       SOP[']']  := SPECH ;
       SOP['^']  := SPECH ;
       SOP['_']  := UNDSCH ;
@@ -44929,7 +44934,7 @@ PROCEDURE ENDOFLINE ;
       SOP['*'] := MUL;  SOP['/'] := RDIV;
       SOP['='] := EQOP;
       SOP['<'] := LTOP; SOP['>'] := GTOP;
-#     SOP['Ý'] := OROP ;  SOP['&'] := ANDOP ;
+#     SOP['|'] := OROP ;  SOP['&'] := ANDOP ;
 "DE" (* Note: SSY array should be defined as full range of
         characters, but it's ok as is for now because it is
         currently indexed only for specific characters.
@@ -44942,7 +44947,7 @@ PROCEDURE ENDOFLINE ;
 "&&" SSY(/'('/) := LPARENT;      SSY(/')'/) := RPARENT;
 "&&" SSY(/'['/) := LBRACK;       SSY(/']'/) := RBRACK;                  (*opp*)
 "&&" SSY(/','/) := COMMA;        SSY(/':'/) := COLON;
-"&&" SSY(/'Ý'/) := ADDOP;        SSY(/'&'/) := MULOP;
+"&&" SSY(/'|'/) := ADDOP;        SSY(/'&'/) := MULOP;
 "&&" SSY(/'<'/) := RELOP;        SSY(/'>'/) := RELOP;
 "&&" SSY(/'='/) := RELOP;        SSY(/'@'/) := ARROW;
 "&&" (*SSY(/CHR(74)/) := ARROW;*)                                       (*opp*)
@@ -44989,12 +44994,12 @@ BEGIN  (*PASCALCOMPILER*)
     WITH  OSPARM@  DO
       BEGIN
 "DE"  CH "LINEBUF[1]" := CHLBRACE;  LINEBUF[2] := '$';
-      IF LENGTH > 64 THEN LENGTH := 64;
-      FOR CHCNT := 1 TO LENGTH DO  LINEBUF[CHCNT+2] := STRING[CHCNT];
+      IF pLENGTH > 64 THEN pLENGTH := 64;
+      FOR CHCNT := 1 TO pLENGTH DO  LINEBUF[CHCNT+2] := pSTRING[CHCNT];
       (*THE REST OF THE LINE DOES NOT HAVE TO BE CLEARED BUT...*)
-      FOR CHCNT := LENGTH TO 77 DO   LINEBUF[CHCNT+3] := ' ';
-"DE"  LINEBUF[LENGTH+3] := CHRBRACE;  LINEBUF[LENGTH+4] := '#';
-      EOL := FALSE;  CHCNT := 1;  LASTCOL := LENGTH+3;
+      FOR CHCNT := pLENGTH TO 77 DO   LINEBUF[CHCNT+3] := ' ';
+"DE"  LINEBUF[pLENGTH+3] := CHRBRACE;  LINEBUF[pLENGTH+4] := '#';
+      EOL := FALSE;  CHCNT := 1;  LASTCOL := pLENGTH+3;
       END (*WITH OSPARM .., IF OSPARM ...*);
 
   (*COMPILE:*)

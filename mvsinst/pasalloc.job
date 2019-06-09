@@ -15,102 +15,102 @@
 //CREATE  EXEC PGM=IEFBR14
 //*
 //FILE001  DD  DISP=(,CATLG),DSN=PASCALN.COMPILER.CNTL,
-//             UNIT=TSO,
+//             UNIT=3350,VOL=SER=PASC01,
 //             SPACE=(CYL,(1,1,20)),
 //             DCB=(RECFM=FB,LRECL=80,BLKSIZE=19040)
 //*
 //FILE002  DD  DISP=(,CATLG),DSN=PASCALN.COMPILER.LOAD,
-//             UNIT=TSO,
+//             UNIT=3350,VOL=SER=PASC01,
 //             SPACE=(CYL,(2,2,20)),
 //             DCB=(RECFM=U,BLKSIZE=19069)
 //*
 //FILE003  DD  DISP=(,CATLG),DSN=PASCALN.COMPILER.MESSAGES,
-//             UNIT=TSO,
+//             UNIT=3350,VOL=SER=PASC01,
 //             SPACE=(CYL,(1,1,20)),
 //             DCB=(RECFM=FB,LRECL=80,BLKSIZE=19040)
 //*
 //FILE004  DD  DISP=(,CATLG),DSN=PASCALN.COMPILER.PAS,
-//             UNIT=TSO,
+//             UNIT=3350,VOL=SER=PASC01,
 //             SPACE=(CYL,(10,10,20)),
 //             DCB=(RECFM=FB,LRECL=80,BLKSIZE=19040)
 //*
 //FILE005  DD  DISP=(,CATLG),DSN=PASCALN.COMPILER.PROCLIB,
-//             UNIT=TSO,
+//             UNIT=3350,VOL=SER=PASC01,
 //             SPACE=(CYL,(1,1,20)),
 //             DCB=(RECFM=FB,LRECL=80,BLKSIZE=19040)
 //*
 //FILE006  DD  DISP=(,CATLG),DSN=PASCALN.COMPILER.TEXT,
-//             UNIT=TSO,
+//             UNIT=3350,VOL=SER=PASC01,
 //             SPACE=(CYL,(2,2,20)),
 //             DCB=(RECFM=FB,LRECL=80,BLKSIZE=19040)
 //*
 //FILE007  DD  DISP=(,CATLG),DSN=PASCALN.DBGINFO,
-//             UNIT=TSO,
+//             UNIT=3350,VOL=SER=PASC01,
 //             SPACE=(CYL,(2,2,20)),
 //             DCB=(RECFM=FB,LRECL=80,BLKSIZE=19040)
 //*
 //FILE008  DD  DISP=(,CATLG),DSN=PASCALN.RUNTIME.ASM,
-//             UNIT=TSO,
+//             UNIT=3350,VOL=SER=PASC01,
 //             SPACE=(CYL,(1,1,20)),
 //             DCB=(RECFM=FB,LRECL=80,BLKSIZE=19040)
 //*
 //FILE009  DD  DISP=(,CATLG),DSN=PASCALN.RUNTIME.LOAD,
-//             UNIT=TSO,
+//             UNIT=3350,VOL=SER=PASC01,
 //             SPACE=(CYL,(2,2,20)),
 //             DCB=(RECFM=U,BLKSIZE=19069)
 //*
 //FILE010  DD  DISP=(,CATLG),DSN=PASCALN.RUNTIME.TEXT,
-//             UNIT=TSO,
+//             UNIT=3350,VOL=SER=PASC01,
 //             SPACE=(CYL,(2,2,20)),
 //             DCB=(RECFM=FB,LRECL=80,BLKSIZE=19040)
 //*
 //FILE011  DD  DISP=(,CATLG),DSN=PASCALN.RUNTIME.MATHTEXT,
-//             UNIT=TSO,
+//             UNIT=3350,VOL=SER=PASC01,
 //             SPACE=(CYL,(2,2,20)),
 //             DCB=(RECFM=FB,LRECL=80,BLKSIZE=19040)
 //*
 //FILE012  DD  DISP=(,CATLG),DSN=PASCALN.RUNTIME.MATHLIB,
-//             UNIT=TSO,
+//             UNIT=3350,VOL=SER=PASC01,
 //             SPACE=(CYL,(2,2,20)),
 //             DCB=(RECFM=U,BLKSIZE=19069)
 //*
 //FILE013  DD  DISP=(,CATLG),DSN=PASCALN.TESTPGM.ASM,
-//             UNIT=TSO,
+//             UNIT=3350,VOL=SER=PASC01,
 //             SPACE=(CYL,(5,5,20)),
 //             DCB=(RECFM=FB,LRECL=80,BLKSIZE=19040)
 //*
 //FILE014  DD  DISP=(,CATLG),DSN=PASCALN.TESTPGM.CNTL,
-//             UNIT=TSO,
+//             UNIT=3350,VOL=SER=PASC01,
 //             SPACE=(CYL,(5,5,20)),
 //             DCB=(RECFM=FB,LRECL=80,BLKSIZE=19040)
 //*
 //FILE015  DD  DISP=(,CATLG),DSN=PASCALN.TESTPGM.LOAD,
-//             UNIT=TSO,
+//             UNIT=3350,VOL=SER=PASC01,
 //             SPACE=(CYL,(5,5,20)),
 //             DCB=(RECFM=U,BLKSIZE=19069)
 //*
 //FILE016  DD  DISP=(,CATLG),DSN=PASCALN.TESTPGM.PAS,
-//             UNIT=TSO,
+//             UNIT=3350,VOL=SER=PASC01,
 //             SPACE=(CYL,(5,5,20)),
 //             DCB=(RECFM=FB,LRECL=80,BLKSIZE=19040)
 //*
 //FILE017  DD  DISP=(,CATLG),DSN=PASCALN.TESTPGM.TEXT,
-//             UNIT=TSO,
+//             UNIT=3350,VOL=SER=PASC01,
 //             SPACE=(CYL,(5,5,20)),
 //             DCB=(RECFM=FB,LRECL=80,BLKSIZE=19040)
 //*
 //FILE018  DD  DISP=(,CATLG),DSN=PASCALN.OLDCOMP.CNTL,
-//             UNIT=TSO,
+//             UNIT=3350,VOL=SER=PASC01,
 //             SPACE=(CYL,(5,5,20)),
 //             DCB=(RECFM=FB,LRECL=80,BLKSIZE=19040)
 //*
 //FILE019  DD  DISP=(,CATLG),DSN=PASCALN.OLDCOMP.SAMPLE,
-//             UNIT=TSO,
+//             UNIT=3350,VOL=SER=PASC01,
 //             SPACE=(CYL,(5,5,20)),
 //             DCB=(RECFM=FB,LRECL=80,BLKSIZE=19040)
 //*
 //FILE020  DD  DISP=(,CATLG),DSN=PASCALN.OLDCOMP.SOURCE,
-//             UNIT=TSO,
+//             UNIT=3350,VOL=SER=PASC01,
 //             SPACE=(CYL,(5,5,20)),
 //             DCB=(RECFM=FB,LRECL=80,BLKSIZE=19040)
 //*

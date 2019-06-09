@@ -6036,20 +6036,50 @@ procedure ASMNXTINST ;
         // if reg, simple copy register                         
         // if mem, load register from storage                   
         // if mem and char type, use XR and IC                  
+        // if mem and indirect, load address before             
         // if neither, source was constant, use LA              
         //******************************************************
 
             case VPA of
               RGS : GENRR ( XLR , TXRG , RGADR ) ;
               MEM : begin
-                      P1 := MEMADR . LVL ;
-                      Q1 := MEMADR . DSPLMT ;
-                      BASE ( Q1 , P1 , B1 ) ;
+                      if not DRCT then
+                        begin
+                          P1 := MEMADR . LVL ;
+                          Q1 := MEMADR . DSPLMT ;
+                          BASE ( Q1 , P1 , B1 ) ;
+                          GENRX ( XL , TXRG , Q1 , B1 , P1 ) ;
+                          P1 := TXRG ;
+                          Q1 := 0 ;
+                          B1 := 0 ;
+                        end (* then *)
+                      else
+                        begin
+                          P1 := MEMADR . LVL ;
+                          Q1 := MEMADR . DSPLMT ;
+                          BASE ( Q1 , P1 , B1 )
+                        end (* else *) ;
                       case DTYPE of
                         CHRC : begin
-                                 if INIT_ON_CHAR then
-                                   GENRR ( XXR , TXRG , TXRG ) ;
-                                 GENRX ( XIC , TXRG , Q1 , B1 , P1 )
+                                 if DRCT then
+                                   begin
+                                     if INIT_ON_CHAR then
+                                       GENRR ( XXR , TXRG , TXRG ) ;
+                                     GENRX ( XIC , TXRG , Q1 , B1 , P1
+                                             )
+                                   end (* then *)
+                                 else
+                                   begin
+                                     GENRX ( XIC , TXRG , Q1 , B1 , P1
+                                             ) ;
+                                     if INIT_ON_CHAR then
+                                       begin
+                                         GENRS ( XSLL , TXRG , 0 , 24 ,
+                                                 0 ) ;
+                                         GENRS ( XSRL , TXRG , 0 , 24 ,
+                                                 0 ) ;
+                                       end (* then *)
+                                   end (* else *)
                                end (* tag/ca *) ;
                         HINT : GENRX ( XLH , TXRG , Q1 , B1 , P1 ) ;
                         otherwise
@@ -7422,9 +7452,11 @@ procedure ASMNXTINST ;
                 CODE . H [ BPC - 1 ] := TO_HINT ( BASE_DSPLMT (
                                         PCOUNTER ) ) ;
                 if ASM then
-                  WRITE ( LIST002 , ' ' , '## ' , ' ' : SPACEASML ,
-                          '@OK    DS    0H' ) ;
-                LIST002_NEWLINE ;
+                  begin
+                    WRITE ( LIST002 , ' ' , '## ' , ' ' : SPACEASML ,
+                            '@OK    DS    0H' ) ;
+                    LIST002_NEWLINE ;
+                  end (* then *)
               end (* else *)
           else
 
@@ -12358,6 +12390,8 @@ procedure ASMNXTINST ;
 
               if FALSE then
                 begin
+                  WRITELN ( TRACEF , '--- vor getop_simple ---' ) ;
+                  WRITELN ( TRACEF , 'linecnt    = ' , LINECNT ) ;
                   WRITELN ( TRACEF , 'pat.drct   = ' , PAT . DRCT ) ;
                   WRITELN ( TRACEF , 'pat.vrbl   = ' , PAT . VRBL ) ;
                   WRITELN ( TRACEF , 'pat.dtype  = ' , PAT . DTYPE ) ;
@@ -12608,6 +12642,8 @@ procedure ASMNXTINST ;
 
         if FALSE then
           begin
+            WRITELN ( TRACEF , '--- vor getop_simple ---' ) ;
+            WRITELN ( TRACEF , 'linecnt    = ' , LINECNT ) ;
             WRITELN ( TRACEF , 'len.drct   = ' , LEN . DRCT ) ;
             WRITELN ( TRACEF , 'len.vrbl   = ' , LEN . VRBL ) ;
             WRITELN ( TRACEF , 'len.dtype  = ' , LEN . DTYPE ) ;
@@ -12757,6 +12793,8 @@ procedure ASMNXTINST ;
 
         if FALSE then
           begin
+            WRITELN ( TRACEF , '--- vor getop_simple ---' ) ;
+            WRITELN ( TRACEF , 'linecnt    = ' , LINECNT ) ;
             WRITELN ( TRACEF , 'pat.drct   = ' , XPAT . DRCT ) ;
             WRITELN ( TRACEF , 'pat.vrbl   = ' , XPAT . VRBL ) ;
             WRITELN ( TRACEF , 'pat.dtype  = ' , XPAT . DTYPE ) ;
@@ -12770,6 +12808,8 @@ procedure ASMNXTINST ;
 
         if FALSE then
           begin
+            WRITELN ( TRACEF , '--- vor getop_simple ---' ) ;
+            WRITELN ( TRACEF , 'linecnt    = ' , LINECNT ) ;
             WRITELN ( TRACEF , 'len.drct   = ' , XLEN . DRCT ) ;
             WRITELN ( TRACEF , 'len.vrbl   = ' , XLEN . VRBL ) ;
             WRITELN ( TRACEF , 'len.dtype  = ' , XLEN . DTYPE ) ;
@@ -12924,6 +12964,8 @@ procedure ASMNXTINST ;
 
         if FALSE then
           begin
+            WRITELN ( TRACEF , '--- vor getop_simple ---' ) ;
+            WRITELN ( TRACEF , 'linecnt    = ' , LINECNT ) ;
             WRITELN ( TRACEF , 'len.drct   = ' , LEN . DRCT ) ;
             WRITELN ( TRACEF , 'len.vrbl   = ' , LEN . VRBL ) ;
             WRITELN ( TRACEF , 'len.dtype  = ' , LEN . DTYPE ) ;

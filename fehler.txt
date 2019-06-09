@@ -2,7 +2,7 @@
 * bei Modulen muessen Prozeduren aussen nicht verwendet werden
 * Warnung fuer unbenutzte Parameter von Prozeduren und Funktionen
 * Funktionen werden nie als unbenutzt gekennzeichnet wg. Funktionsergebnis
-- Compiler erneut publizieren (2019.07)
+* Compiler erneut publizieren (2019.07)
 - Compiler auch fuer VM und MVS
 
 ************************************************************

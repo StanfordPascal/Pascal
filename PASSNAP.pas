@@ -152,12 +152,6 @@ type CHARPTR = -> CHAR ;
 
 
 
-function $PASLIB ( FUNCCODE : INTEGER ; X : CHARPTR ) : CHARPTR ;
-
-   EXTERNAL ;
-
-
-
 procedure $PASSNAP ( LEVEL : INTEGER ; DUMPPTR : VOIDPTR ) ;
 
 (****************************************************************)
@@ -959,7 +953,7 @@ procedure $PASSNAP ( LEVEL : INTEGER ; DUMPPTR : VOIDPTR ) ;
                                end (* then *) ;
                            break ;
                          end (* then *) ;
-                       if $PASLIB ( 6 , IP . P ) <> NIL then
+                       if CHKALLOC ( IP . P ) <> NIL then
                          begin
                            WRITE ( ' = ' , IP . P ) ;
                            WRITE ( ' (HEAP/ALLOC)' ) ;

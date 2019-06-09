@@ -198,6 +198,48 @@ Heap Data Types of INSERT_WORD
 ->001                                   pointer ->002
 ->002                                   integer
 
+
+
+Procedure TEST1               
+------------------------------------------------------------------------
+external = FALSE
+extlang  =  
+extname  =  
+forward  = FALSE
+level    =            1
+pfname   =           13
+cstname  = $PR#0013
+
+No Parameters for TEST1               
+
+
+
+Procedure TEST2               
+------------------------------------------------------------------------
+external = FALSE
+extlang  =  
+extname  =  
+forward  = FALSE
+level    =            1
+pfname   =           14
+cstname  = $PR#0014
+
+No Parameters for TEST2               
+
+
+
+Procedure TEST3               
+------------------------------------------------------------------------
+external = FALSE
+extlang  =  
+extname  =  
+forward  = FALSE
+level    =            1
+pfname   =           15
+cstname  = $PR#0015
+
+No Parameters for TEST3               
+
 **********************************
 *** End of List of Definitions ***
 **********************************

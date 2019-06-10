@@ -8729,6 +8729,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
 
 
             var CONFORMANT : BOOLEAN ;
+                LSIZE : ADDRRANGE ;
 
             begin (* OTHER_PARAMETER *)
               if SY = SYVAR then
@@ -8790,20 +8791,48 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
               if SY = SYCOLON then
                 begin
                   INSYMBOL ;
-                  if SY = IDENT then
+                  CONFORMANT := LKIND in [ VARPARM , CONSTPARM ] ;
+                  if not CONFORMANT then
                     begin
-                      SID_RC := SEARCHID ( SYID , TRUE , TRUE , [ TYPES
-                                ] , LCP4 ) ;
                       LEN := PTRSIZE ;
-                      LSP := LCP4 -> . IDTYPE ;
+                      LSP := NIL ;
                       LALN := PTRSIZE ;
+                      TYP ( FSYS + [ SYSEMICOLON , SYRPARENT ] , LSP ,
+                            LSIZE , FALSE ) ;
                       if LSP <> NIL then
-                        if LKIND = VALUEPARM then
-                          if LSP -> . FORM = FILES then
+                        begin
+                          LEN := LSIZE ;
+                          LALN := LSP -> . ALN
+                        end (* then *) ;
+                      LCP4 := LCP3 ;
+                      while LCP4 <> NIL do
+                        begin
+                          with LCP4 -> do
                             begin
-                              ERROR ( 121 ) ;
-                              LKIND := VARPARM
-                            end (* then *) ;
+                              IDTYPE := LSP ;
+                              ALIGN ( LCOUNTER , LALN ) ;
+                              VADDR := LCOUNTER ;
+                              LCOUNTER := LCOUNTER + LEN ;
+                            end (* with *) ;
+                          LCP4 := LCP4 -> . NEXT
+                        end (* while *) ;
+                    end (* then *)
+                  else
+                    begin
+                      if SY = IDENT then
+                        begin
+                          SID_RC := SEARCHID ( SYID , TRUE , TRUE , [
+                                    TYPES ] , LCP4 ) ;
+                          LEN := PTRSIZE ;
+                          LSP := LCP4 -> . IDTYPE ;
+                          LALN := PTRSIZE ;
+                          if LSP <> NIL then
+                            if LKIND = VALUEPARM then
+                              if LSP -> . FORM = FILES then
+                                begin
+                                  ERROR ( 121 ) ;
+                                  LKIND := VARPARM
+                                end (* then *) ;
 
               //************************************************
               // read next symbol                               
@@ -8823,38 +8852,55 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
               // 06.01.2018                                     
               //************************************************
 
-                      CONFORMANT := LKIND in [ VARPARM , CONSTPARM ] ;
-                      INSYMBOL ;
-                      TYPE_WITH_PARMS ( FSYS + [ SYSEMICOLON ,
-                                        SYRPARENT ] , SYID , LSP ,
-                                        CONFORMANT ) ;
-                      if LSP <> NIL then
-                        if LKIND = VALUEPARM then
-                          begin
-                            LEN := LSP -> . SIZE ;
-                            LALN := LSP -> . ALN
-                          end (* then *) ;
-                      LCP4 := LCP3 ;
-                      while LCP4 <> NIL do
-                        begin
-                          with LCP4 -> do
+                          INSYMBOL ;
+                          TYPE_WITH_PARMS ( FSYS + [ SYSEMICOLON ,
+                                            SYRPARENT ] , SYID , LSP ,
+                                            CONFORMANT ) ;
+                          if LSP <> NIL then
+                            if LKIND = VALUEPARM then
+                              begin
+                                LEN := LSP -> . SIZE ;
+                                LALN := LSP -> . ALN
+                              end (* then *) ;
+                          LCP4 := LCP3 ;
+                          while LCP4 <> NIL do
                             begin
-                              IDTYPE := LSP ;
-                              ALIGN ( LCOUNTER , LALN ) ;
-                              VADDR := LCOUNTER ;
-                              LCOUNTER := LCOUNTER + LEN ;
-                            end (* with *) ;
-                          LCP4 := LCP4 -> . NEXT
-                        end (* while *) ;
-                    end (* then *)
-                  else
-                    ERROR ( 2 ) ;
-                  if not ( SY in FSYS + [ SYSEMICOLON , SYRPARENT ] )
-                  then
-                    begin
-                      ERROR ( 352 ) ;
-                      SKIP ( FSYS + [ SYSEMICOLON , SYRPARENT ] )
-                    end (* then *)
+                              with LCP4 -> do
+                                begin
+                                  IDTYPE := LSP ;
+                                  ALIGN ( LCOUNTER , LALN ) ;
+                                  VADDR := LCOUNTER ;
+                                  LCOUNTER := LCOUNTER + LEN ;
+                                end (* with *) ;
+                              LCP4 := LCP4 -> . NEXT
+                            end (* while *) ;
+                        end (* then *)
+                      else
+                        begin
+                          ERROR ( 2 ) ;
+
+              //******************************************
+              // to prevent further errors                
+              //******************************************
+
+                          LCP4 := LCP3 ;
+                          while LCP4 <> NIL do
+                            begin
+                              with LCP4 -> do
+                                begin
+                                  IDTYPE := NIL ;
+                                  VADDR := LCOUNTER ;
+                                end (* with *) ;
+                              LCP4 := LCP4 -> . NEXT
+                            end (* while *) ;
+                        end (* else *) ;
+                      if not ( SY in FSYS + [ SYSEMICOLON , SYRPARENT ]
+                      ) then
+                        begin
+                          ERROR ( 352 ) ;
+                          SKIP ( FSYS + [ SYSEMICOLON , SYRPARENT ] )
+                        end (* then *)
+                    end (* else *)
                 end (* then *)
               else
                 ERROR ( 5 ) ;

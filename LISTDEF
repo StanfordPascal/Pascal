@@ -6,239 +6,77 @@
 
 Variables of Main Program
 ------------------------------------------------------------------------
-I                    auto     1    400  integer
-RC                   auto     1    404  integer
-PBAUM                auto     1    408  pointer
-PELEMENT             auto     1    412  pointer
-PLAUF                auto     1    416  pointer
-HCHANGED             auto     1    420  boolean
-GEFUNDEN             auto     1    421  boolean
-VVEKTOR              auto     1    424  array 1 20
-                             inxtype =  integer (2)
-                             aeltype =  integer
-KEYLEN               auto     1    504  integer
-POBJ                 auto     1    508  pointer
-OBJLEN               auto     1    512  integer
-POBJLEN              auto     1    516  pointer ->001
-PINT                 auto     1    520  pointer ->001
-S9                   auto     1    524  string (9)
-PS9                  auto     1    540  pointer ->002
-SEQKEY               auto     1    544  pointer
-PKEY                 auto     1    548  pointer
-LKEY                 auto     1    552  integer
-PDAT                 auto     1    556  pointer
-LDAT                 auto     1    560  integer
-CACHENAME            auto     1    564  array 1 8
-                             inxtype =  integer (2)
-                             aeltype =  char
-KEY                  auto     1    572  array 1 8
-                             inxtype =  integer (2)
-                             aeltype =  char
-DAT                  auto     1    580  array 1 12
-                             inxtype =  integer (2)
-                             aeltype =  char
-PCACHE               auto     1    592  pointer ->003
-PC12                 auto     1    596  pointer ->004
-DUMMYP               auto     1    600  pointer
-DUMMYI               auto     1    604  integer
+S                    auto     1    400  struct aln = 4
+  A                       field      0  integer
+  B                       field      4  pointer ->001
+  C                       field      8  integer
+                                        endstruct
 
 Heap Data Types of Main Program
 ------------------------------------------------------------------------
-->001                                   integer
-->002                                   string (9)
-->003                                   struct aln = 4
-  MAGIC                   field      0  array 1 8
+->001                                   struct aln = 8
+  X                       field      0  array 1 27
                              inxtype =  integer (2)
                              aeltype =  char
-  CNAME                   field      8  array 1 8
+                        variant     32  aln = 1
+                      variant-2      0  aln = 1
+  A2                      field     32  array 1 7
                              inxtype =  integer (2)
                              aeltype =  char
-  COUNT                   field     16  integer
-  PTREE                   field     20  pointer
+                      variant-2      0  aln = 1
+  A1                      field     32  array 1 5
+                             inxtype =  integer (2)
+                             aeltype =  char
+                        variant     32  aln = 1
+  Z                       field     32  char
+                        variant     32  aln = 1
+  W                       field     32  real
+                        variant     32  aln = 1
+  V                       field     32  integer
                                         endstruct
-->004                                   array 1 12
+
+
+
+Procedure WORK                
+------------------------------------------------------------------------
+external = FALSE
+extlang  =  
+extname  =  
+forward  = FALSE
+level    =            1
+pfname   =            1
+cstname  = $PR#0001
+
+Parameters for WORK                
+------------------------------------------------------------------------
+PARM                 varparm  2    112  struct aln = 4
+  A                       field      0  integer
+  B                       field      4  pointer ->001
+  C                       field      8  integer
+                                        endstruct
+
+Heap Data Types of WORK                
+------------------------------------------------------------------------
+->001                                   struct aln = 8
+  X                       field      0  array 1 27
                              inxtype =  integer (2)
                              aeltype =  char
-
-
-
-Function COMPARE             
-------------------------------------------------------------------------
-external = FALSE
-extlang  =  
-extname  =  
-forward  = FALSE
-level    =            1
-pfname   =            8
-cstname  = $PR#0008
-
-Parameters for COMPARE             
-------------------------------------------------------------------------
-X1                   auto     2    112  pointer
-L1                   auto     2    116  integer
-X2                   auto     2    120  pointer
-L2                   auto     2    124  integer
-
-Variables of COMPARE             
-------------------------------------------------------------------------
-I1                   auto     2    128  integer
-IP1                  auto     2    132  pointer ->001
-I2                   auto     2    136  integer
-IP2                  auto     2    140  pointer ->001
-
-Heap Data Types of COMPARE             
-------------------------------------------------------------------------
-->001                                   integer
-
-
-
-Procedure PRINTELEM           
-------------------------------------------------------------------------
-external = FALSE
-extlang  =  
-extname  =  
-forward  = FALSE
-level    =            1
-pfname   =            9
-cstname  = $PR#0009
-
-Parameters for PRINTELEM           
-------------------------------------------------------------------------
-F                    varparm  2    112  file
-                             element =  char
-X                    auto     2    116  pointer
-
-Variables of PRINTELEM           
-------------------------------------------------------------------------
-I1                   auto     2    120  integer
-IP1                  auto     2    124  pointer ->001
-
-Heap Data Types of PRINTELEM           
-------------------------------------------------------------------------
-->001                                   integer
-
-
-
-Function COMPARE_S9          
-------------------------------------------------------------------------
-external = FALSE
-extlang  =  
-extname  =  
-forward  = FALSE
-level    =            1
-pfname   =           10
-cstname  = $PR#0010
-
-Parameters for COMPARE_S9          
-------------------------------------------------------------------------
-X1                   auto     2    112  pointer
-L1                   auto     2    116  integer
-X2                   auto     2    120  pointer
-L2                   auto     2    124  integer
-
-Variables of COMPARE_S9          
-------------------------------------------------------------------------
-S1                   auto     2    128  string (9)
-SP1                  auto     2    144  pointer ->001
-S2                   auto     2    148  string (9)
-SP2                  auto     2    164  pointer ->001
-
-Heap Data Types of COMPARE_S9          
-------------------------------------------------------------------------
-->001                                   string (9)
-
-
-
-Procedure PRINT_S9            
-------------------------------------------------------------------------
-external = FALSE
-extlang  =  
-extname  =  
-forward  = FALSE
-level    =            1
-pfname   =           11
-cstname  = $PR#0011
-
-Parameters for PRINT_S9            
-------------------------------------------------------------------------
-F                    varparm  2    112  file
-                             element =  char
-X                    auto     2    116  pointer
-
-Variables of PRINT_S9            
-------------------------------------------------------------------------
-S1                   auto     2    120  string (9)
-SP1                  auto     2    136  pointer ->001
-
-Heap Data Types of PRINT_S9            
-------------------------------------------------------------------------
-->001                                   string (9)
-
-
-
-Procedure INSERT_WORD         
-------------------------------------------------------------------------
-external = FALSE
-extlang  =  
-extname  =  
-forward  = FALSE
-level    =            1
-pfname   =           12
-cstname  = $PR#0012
-
-No Parameters for INSERT_WORD         
-
-Variables of INSERT_WORD         
-------------------------------------------------------------------------
-PPINT                auto     2    112  pointer ->001
-PINT                 auto     2    116  pointer ->002
-
-Heap Data Types of INSERT_WORD         
-------------------------------------------------------------------------
-->001                                   pointer ->002
-->002                                   integer
-
-
-
-Procedure TEST1               
-------------------------------------------------------------------------
-external = FALSE
-extlang  =  
-extname  =  
-forward  = FALSE
-level    =            1
-pfname   =           13
-cstname  = $PR#0013
-
-No Parameters for TEST1               
-
-
-
-Procedure TEST2               
-------------------------------------------------------------------------
-external = FALSE
-extlang  =  
-extname  =  
-forward  = FALSE
-level    =            1
-pfname   =           14
-cstname  = $PR#0014
-
-No Parameters for TEST2               
-
-
-
-Procedure TEST3               
-------------------------------------------------------------------------
-external = FALSE
-extlang  =  
-extname  =  
-forward  = FALSE
-level    =            1
-pfname   =           15
-cstname  = $PR#0015
-
-No Parameters for TEST3               
+                        variant     32  aln = 1
+                      variant-2      0  aln = 1
+  A2                      field     32  array 1 7
+                             inxtype =  integer (2)
+                             aeltype =  char
+                      variant-2      0  aln = 1
+  A1                      field     32  array 1 5
+                             inxtype =  integer (2)
+                             aeltype =  char
+                        variant     32  aln = 1
+  Z                       field     32  char
+                        variant     32  aln = 1
+  W                       field     32  real
+                        variant     32  aln = 1
+  V                       field     32  integer
+                                        endstruct
 
 **********************************
 *** End of List of Definitions ***

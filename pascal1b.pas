@@ -58,6 +58,28 @@ program PASCALCOMPILER ( INPUT , OUTPUT , PCODE , LISTING , LISTDEF ,
 (*                                                                  *)
 (********************************************************************)
 (*                                                                  *)
+(*  Jun 2019 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*             (berndoppolzer@yahoo.com)                            *)
+(*                                                                  *)
+(*  - Labels which are defined but not used in the code now         *)
+(*    generate a warning message, not an error (P168)               *)
+(*                                                                  *)
+(*  - Labels which are defined and used but not referenced by       *)
+(*    a goto statement generate a new warning message (P183)        *)
+(*                                                                  *)
+(*  - Variables and procedures/functions which are not              *)
+(*    referenced generate new warning messages (P220 and P221)      *)
+(*                                                                  *)
+(*  - Types which are not                                           *)
+(*    referenced generate new warning messages (P222)               *)
+(*                                                                  *)
+(*  - Parameters of procedures and functions which are not          *)
+(*    referenced generate new warning messages (P223)               *)
+(*                                                                  *)
+(*  These extensions are published as release 2019.07               *)
+(*                                                                  *)
+(********************************************************************)
+(*                                                                  *)
 (*  May 2019 - Extensions to the Compiler by Bernd Oppolzer         *)
 (*             (berndoppolzer@yahoo.com)                            *)
 (*                                                                  *)
@@ -997,7 +1019,7 @@ program PASCALCOMPILER ( INPUT , OUTPUT , PCODE , LISTING , LISTDEF ,
 
 
 
-const VERSION = '2019.05' ;
+const VERSION = '2019.07' ;
       MAXLSIZE = 120 ;
       MAXERRNO = 999 ;
 
@@ -1468,7 +1490,7 @@ type ALPHA = array [ 1 .. IDLNGTH ] of CHAR ;
      (* types of parameters        *)
      (******************************)
 
-     IDKIND = ( NORMALVAR , VARPARM , CONSTPARM ) ;
+     IDKIND = ( NORMALVAR , VALUEPARM , VARPARM , CONSTPARM ) ;
 
      (******************************)
      (* storage classes            *)
@@ -1516,9 +1538,15 @@ type ALPHA = array [ 1 .. IDLNGTH ] of CHAR ;
      IDENTIFIER = record
                     NAME : ALPHA ;
                     IDTYPE : TTP ;
-                    NEXT_IN_BKT , NEXT : IDP ;
+                    NEXT_IN_BKT : IDP ;
+                    NEXT : IDP ;
+                    PREV_VAR_IN_BLOCK : IDP ;
+                    PREV_TYPE_IN_BLOCK : IDP ;
+                    PREV_PROC_IN_BLOCK : IDP ;
                     DECL_LEV : LEVRANGE ;
                     case KLASS : IDCLASS of
+                      TYPES :
+                        ( REFERENCET : CHAR ) ;
                       KONST :
                         ( VALUES : XCONSTANT ) ;
                       STRUCTKONST :
@@ -1528,6 +1556,7 @@ type ALPHA = array [ 1 .. IDLNGTH ] of CHAR ;
                         ( VKIND : IDKIND ;
                           VLEV : LEVRANGE ;
                           STKLASS : STORAGE_CLASS ;
+                          REFERENCE : CHAR ;
                           VOWNERPROC : EXTNAMTP ;
                           VADDR : ADDRRANGE ;
                           SPECIAL : INTEGER ;
@@ -1541,6 +1570,7 @@ type ALPHA = array [ 1 .. IDLNGTH ] of CHAR ;
                         ( EXTRN : BOOLEAN ;
                           EXTLANG : CHAR ;
                           EXTNAME : EXTNAMTP ;
+                          REFERENCEP : CHAR ;
                           case PFDECKIND : DECLKIND of
                             STANDARD :
                               ( KEY : INTEGER ;
@@ -1608,7 +1638,8 @@ type ALPHA = array [ 1 .. IDLNGTH ] of CHAR ;
               NEXTLAB : LBP ;
               LABVAL : INTEGER ;
               LABNAME , XNO : LABELRNG ;
-              DEFINED : BOOLEAN
+              DEFINED : BOOLEAN ;
+              REFERENCED : BOOLEAN
             end ;
      FRECPTR = -> FILEREC ;
      FILEREC = record
@@ -1630,18 +1661,6 @@ type ALPHA = array [ 1 .. IDLNGTH ] of CHAR ;
                  RETURNLABEL : LABELRNG ;
                  RETURNUSED : BOOLEAN ;
                end ;
-
-     (********************************************)
-     (* zum Anschauen von TYPECLASS Inhalten     *)
-     (********************************************)
-
-     FORMTEST = record
-                  case BOOLEAN of
-                    FALSE :
-                      ( X1 : 0 .. 32000 ) ;
-                    TRUE :
-                      ( X2 : TYPECLASS ) ;
-                end ;
 
      /***********************************/
      /* zentraler Scan-Block            */
@@ -2194,13 +2213,6 @@ procedure PASSCANS ( var SCANOUT : TEXT ; var SCB : SCAN_BLOCK ) ;
 
 
 
-procedure PASSCANL ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB
-                   : SCAN_BLOCK ; ALLES : BOOLEAN ) ;
-
-   EXTERNAL ;
-
-
-
 procedure PASSCANE ( var SCB : SCAN_BLOCK ; ERRLEVEL : CHAR ; ERRCLASS
                    : CHAR ; I : INTEGER ; INFO : CHAR32 ; ZEILNR :
                    INTEGER ; PLATZ : INTEGER ) ;
@@ -2236,18 +2248,6 @@ procedure DRUCKE_SYMSET ( T : CHAR32 ; S : SYMSET ) ;
      WRITELN ( TRACEF ) ;
      WRITELN ( TRACEF ) ;
    end (* DRUCKE_SYMSET *) ;
-
-
-
-procedure TOALFA ( var X : ALPHA ; Y : EXTNAMTP ) ;
-
-   var I : INTEGER ;
-
-   begin (* TOALFA *)
-     X := BLANKID ;
-     for I := 1 to EXTNAMSZ do
-       X [ I ] := Y [ I ]
-   end (* TOALFA *) ;
 
 
 
@@ -2385,8 +2385,6 @@ procedure ERROR ( FERRNR : ERRCODE ) ;
 (*  position aus scb (standard)                      *)
 (*****************************************************)
 
-
-   var PASSCAN_ERRTYPE : CHAR ;
 
    begin (* ERROR *)
 
@@ -3335,6 +3333,9 @@ procedure ENTERID ( FCP : IDP ) ;
      LCP := BUCKET [ K ] ;
      FCP -> . DECL_LEV := LEVEL ;
      FCP -> . NEXT_IN_BKT := LCP ;
+     FCP -> . PREV_VAR_IN_BLOCK := NIL ;
+     FCP -> . PREV_TYPE_IN_BLOCK := NIL ;
+     FCP -> . PREV_PROC_IN_BLOCK := NIL ;
      BUCKET [ K ] := FCP ;
 
      (***************************************)
@@ -3483,13 +3484,35 @@ function SEARCHID ( IDX : ALPHA ; PRTERR : BOOLEAN ; INSERT_ON_ERR :
          if PRTERR then
            ERROR ( 103 ) ;
        end (* then *) ;
+     if DISX >= 0 then
+       begin
+
+     /************************************************************/
+     /* bezeichner gefunden, ggf. reference-flag setzen          */
+     /************************************************************/
+
+         case FCP -> . KLASS of
+           VARS : begin
+                    FCP -> . REFERENCE := 'R' ;
+                  end (* tag/ca *) ;
+           TYPES : begin
+                     FCP -> . REFERENCET := 'R' ;
+                   end (* tag/ca *) ;
+           PROC , FUNC :
+             begin
+               FCP -> . REFERENCEP := 'R' ;
+             end (* tag/ca *) ;
+           otherwise
+             ;
+         end (* case *)
+       end (* then *)
+     else
+       begin
 
      /*****************************/
      /* bezeichner nicht gefunden */
      /*****************************/
 
-     if DISX < 0 then
-       begin
          SEARCHID := 104 ;
          if PRTERR then
            begin
@@ -3541,7 +3564,7 @@ function SEARCHID ( IDX : ALPHA ; PRTERR : BOOLEAN ; INSERT_ON_ERR :
                    OWNER := OPEN_RECORD ;
                end (* with *) ;
            end (* then *)
-       end (* then *) ;
+       end (* else *) ;
 
      /*****************************/
      /* statistikwerte ermitteln  */
@@ -4215,7 +4238,7 @@ procedure DEF_PRINTTYPE ( TYPP : TTP ; MODUS : CHAR ) ;
                             NXT : DEF_PRINTTYLISTP
                           end ;
 
-   var VP , LVP : IDP ;
+   var VP : IDP ;
        RMIN , RMAX : INTEGER ;
        TPT , LPT : DEF_PRINTTYLISTP ;
        TNO : 0 .. 999 ;
@@ -4229,7 +4252,6 @@ procedure DEF_PRINTTYPE ( TYPP : TTP ; MODUS : CHAR ) ;
    procedure DEF_PRINTVARIANTE ( VARP : TTP ) ;
 
       var VFIELD : IDP ;
-          LVP : IDP ;
 
       begin (* DEF_PRINTVARIANTE *)
         if VARP <> NIL then
@@ -4447,8 +4469,6 @@ procedure DEF_PRINTTYPE ( TYPP : TTP ; MODUS : CHAR ) ;
 
 procedure DEF_PRINTVAR ;
 
-   var I : 0 .. IDLNGTH ;
-
    begin (* DEF_PRINTVAR *)
      with VRP -> do
        begin
@@ -4560,17 +4580,81 @@ procedure PROC_TO_STATNAME ( PROCNAME : EXTNAMTP ; EXTRN : BOOLEAN ;
 
 
 
-procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
+procedure SEARCH_UNREFERENCED ( BLOCK_ID : IDP ; LAST_VAR : IDP ;
+                              LAST_TYPE : IDP ; LAST_PROC : IDP ) ;
+
+   var ERRINFO : CHAR32 ;
+
+   begin (* SEARCH_UNREFERENCED *)
+     if FALSE then
+       WRITELN ( TRACEF , '--- search_unreferenced in block ' ,
+                 BLOCK_ID -> . NAME , ' ---' ) ;
+     while LAST_VAR <> NIL do
+       with LAST_VAR -> do
+         begin
+           if FALSE then
+             if KLASS = VARS then
+               WRITELN ( 'found var: ' , NAME ) ;
+           if ( KLASS = VARS ) and ( REFERENCE = ' ' ) then
+             begin
+               ERRINFO := NAME ;
+               if VKIND = NORMALVAR then
+                 ERROR_POS ( 'W' , 220 , ERRINFO , SCB . LINENR , SCB .
+                             LINEPOS )
+               else
+                 ERROR_POS ( 'W' , 223 , ERRINFO , SCB . LINENR , SCB .
+                             LINEPOS ) ;
+             end (* then *) ;
+           LAST_VAR := PREV_VAR_IN_BLOCK ;
+         end (* with *) ;
+     while LAST_TYPE <> NIL do
+       with LAST_TYPE -> do
+         begin
+           if FALSE then
+             if KLASS = TYPES then
+               WRITELN ( 'found type: ' , NAME ) ;
+           if ( KLASS = TYPES ) and ( REFERENCET = ' ' ) then
+             begin
+               ERRINFO := NAME ;
+               ERROR_POS ( 'W' , 222 , ERRINFO , SCB . LINENR , SCB .
+                           LINEPOS ) ;
+             end (* then *) ;
+           LAST_TYPE := PREV_TYPE_IN_BLOCK ;
+         end (* with *) ;
+     while LAST_PROC <> NIL do
+       with LAST_PROC -> do
+         begin
+           if FALSE then
+             if KLASS in [ PROC , FUNC ] then
+               WRITELN ( 'found proc: ' , NAME ) ;
+           if ( KLASS in [ PROC , FUNC ] ) and ( REFERENCEP = ' ' )
+           then
+             if not EXTRN then
+               begin
+                 ERRINFO := NAME ;
+                 ERROR_POS ( 'W' , 221 , ERRINFO , SCB . LINENR , SCB .
+                             LINEPOS ) ;
+               end (* then *) ;
+           LAST_PROC := PREV_PROC_IN_BLOCK ;
+         end (* with *) ;
+   end (* SEARCH_UNREFERENCED *) ;
+
+
+
+procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
+                LAST_VAR : IDP ) ;
 
    var LSY : SYMB ;
        TEST : BOOLEAN ;
        SEGSIZE : LABELRNG ;
-       LCP , FWRDPRCL : IDP ;
+       FWRDPRCL : IDP ;
        DEC_ORDER : 0 .. 5 ;
        PLOCAL : BOOLEAN ;
        STATIC_VORHANDEN : BOOLEAN ;
        FUNCTYPE : TTP ;
        STRING_RESULT : BOOLEAN ;
+       LAST_TYPE : IDP ;
+       LAST_PROC : IDP ;
 
 
    procedure SKIP ( FSYS : SYMSET ) ;
@@ -4679,7 +4763,6 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
 
       var I : INTEGER ;
           CH : CHAR ;
-          CP : CONSTP ;
 
       begin (* MOD_STRCONST *)
         case CT_RESULT of
@@ -4975,7 +5058,6 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
       var LSP : TTP ;
           LCP : IDP ;
           SIGN : ( NONE , POS , NEG ) ;
-          LVP : CONSTP ;
           I : 2 .. REALLNGTH ;
           CONST_ERR : INTEGER ;
           LSTRING : INTEGER ;
@@ -5519,8 +5601,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
 
    procedure CHECKSTARTCST ;
 
-      var I : INTEGER ;
-          CSTEXTNAME : EXTNAMTP ;
+      var CSTEXTNAME : EXTNAMTP ;
 
       begin (* CHECKSTARTCST *)
         if CONSTLCOUNTER <= 0 then
@@ -6173,8 +6254,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                  ADDRRANGE ; CONFORMANT : BOOLEAN ) ;
 
       var LSP , LSP1 , LSP2 : TTP ;
-          OLDTOP : DISPRANGE ;
-          LCP , LCP2 : IDP ;
+          LCP : IDP ;
           LSIZE , DISPL : ADDRRANGE ;
           LMIN , LMAX : INTEGER ;
           ALNFCT : ALNRNG ;
@@ -7416,6 +7496,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
         (**********************************)
 
                         DEFINED := FALSE ;
+                        REFERENCED := FALSE ;
                         NEXTLAB := FLABEL ;
                         LABNAME := LBNAME
                       end (* with *) ;
@@ -7450,8 +7531,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
    /***********************************/
 
 
-      var LATTR : ATTR ;
-          OK : BOOLEAN ;
+      var OK : BOOLEAN ;
           TYP2 : TTP ;
           VAL2 : XCONSTANT ;
           I : INTEGER ;
@@ -7622,7 +7702,6 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
       label 10 ;
 
       var I , J , K , L : INTEGER ;
-          OK : BOOLEAN ;
           NOCHMAL : BOOLEAN ;
           PSI : PSETINFO ;
           LVALU : XCONSTANT ;
@@ -7631,11 +7710,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
           FLDPR : IDP ;
           LX : ADDRRANGE ;
           CT_RESULT : INTEGER ;
-          SIZE1 : INTEGER ;
-          SIZE2 : INTEGER ;
           TEST : BOOLEAN ;
           ERRFLAG : BOOLEAN ;
-          FSP2 : TTP ;
 
 
       procedure STOWCONST ( ELSP : TTP ) ;
@@ -7643,8 +7719,6 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
          var ELSIZE : INTEGER ;
              ELSP1 : TTP ;
              CT_RESULT : INTEGER ;
-             SIZE1 : ADDRRANGE ;
-             SIZE2 : ADDRRANGE ;
 
          begin (* STOWCONST *)
            ELSP1 := ELSP ;
@@ -7666,7 +7740,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
            CT_RESULT := COMPTYPES ( ELSP , ELSP1 ) ;
            if not ( CT_RESULT in [ 1 , 2 , 3 ] ) then
              begin
-               ERROR ( 740 ) ;
+               ERROR ( 80 ) ;
                ELSP1 := NIL
              end (* then *) ;
            if ELSP1 <> NIL then
@@ -7736,10 +7810,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
             else
               begin
                 if not LSP -> . ERRORFLAG then
-                  begin
-                    WRITE ( TRACEF , 'ct_result = ' , CT_RESULT ) ;
-                    ERROR ( 741 ) ;
-                  end (* then *) ;
+                  ERROR ( 81 ) ;
                 FSP := NIL
               end (* else *)
           end (* then *)
@@ -7761,7 +7832,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                 if LSP -> . FORM = POWER then
                   ELT := LSP -> . ELSET
                 else
-                  ERROR ( 742 ) ;
+                  ERROR ( 82 ) ;
               PSI := PSIGLOB ;
               PSI -> . ELEMCOUNT := 0 ;
               PSI -> . SETMIN := 0 ;
@@ -7776,7 +7847,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                   CONSTANT ( FSYS + [ SYRBRACK , SYCOMMA , SYDOTDOT ] ,
                              LSP1 , LVALU ) ;
                   if COMPTYPES ( LSP1 , ELT ) <> 1 then
-                    ERROR ( 743 ) ;
+                    ERROR ( 83 ) ;
                   ELT := LSP1 ;
                   NOCHMAL := SET_CONST_PART ( ELT , LVALU , PSI ) ;
                 until not NOCHMAL ;
@@ -7937,7 +8008,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                                                    LVALU ) ;
                                           if COMPTYPES ( IDTYPE , LSP1
                                           ) <> 1 then
-                                            ERROR ( 744 ) ;
+                                            ERROR ( 84 ) ;
                                         end (* else *) ;
                                       if SY = SYCOMMA then
                                         INSYMBOL
@@ -8098,7 +8169,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
       end (* CONSTDECLARATION *) ;
 
 
-   procedure TYPEDECLARATION ;
+   procedure TYPEDECLARATION ( var LAST_TYPE : IDP ) ;
 
       var LCP , LCP1 , LCP2 : IDP ;
           LSP : TTP ;
@@ -8118,7 +8189,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
               begin
                 NAME := SYID ;
                 IDTYPE := NIL ;
-                KLASS := TYPES
+                KLASS := TYPES ;
+                REFERENCET := ' ' ;
               end (* with *) ;
             INSYMBOL ;
             if SY = SYEQOP then
@@ -8127,10 +8199,14 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
               ERROR ( 16 ) ;
             TYP ( FSYS + [ SYSEMICOLON ] , LSP , LSIZE , FALSE ) ;
             ENTERID ( LCP ) ;
+            LCP -> . PREV_TYPE_IN_BLOCK := LAST_TYPE ;
+            LAST_TYPE := LCP ;
             LCP -> . IDTYPE := LSP ;
 
         (******************************************************)
         (* has ANY FORWARD REFERENCE BEEN SATISFIED ?         *)
+        (* if so, unchain lcp from fwptr queue                *)
+        (* and set referencet flag for new type (2019.06)     *)
         (******************************************************)
 
             LCP1 := FWPTR ;
@@ -8139,6 +8215,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                 if LCP1 -> . NAME = LCP -> . NAME then
                   begin
                     LCP1 -> . IDTYPE -> . ELTYPE := LCP -> . IDTYPE ;
+                    LCP -> . REFERENCET := 'F' ;
                     if LCP1 <> FWPTR then
                       LCP2 -> . NEXT := LCP1 -> . NEXT
                     else
@@ -8180,7 +8257,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
       end (* TYPEDECLARATION *) ;
 
 
-   procedure VARDECLARATION ;
+   procedure VARDECLARATION ( var LAST_VAR : IDP ) ;
 
       var LCP , NXT , NXT1 : IDP ;
           LSP : TTP ;
@@ -8218,10 +8295,13 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                     VKIND := NORMALVAR ;
                     VLEV := LEVEL ;
                     STKLASS := XAUTO ;
+                    REFERENCE := ' ' ;
                     VOWNERPROC := ' ' ;
                     SPECIAL := 0 ;
                   end (* with *) ;
                 ENTERID ( LCP ) ;
+                LCP -> . PREV_VAR_IN_BLOCK := LAST_VAR ;
+                LAST_VAR := LCP ;
                 if NXT1 = NIL then
                   NXT1 := LCP ;
 
@@ -8319,12 +8399,11 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
       end (* VARDECLARATION *) ;
 
 
-   procedure STATICDECLARATION ;
+   procedure STATICDECLARATION ( var LAST_VAR : IDP ) ;
 
       var LCP , NXT , NXT1 : IDP ;
           LSP : TTP ;
           LSIZE : ADDRRANGE ;
-          LFPTR : FRECPTR ;
           LVALU_DUMMY : XCONSTANT ;
           ELSIZE : INTEGER ;
           ERRINFO : CHAR32 ;
@@ -8349,10 +8428,13 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                     VKIND := NORMALVAR ;
                     VLEV := LEVEL ;
                     STKLASS := XSTATIC ;
+                    REFERENCE := ' ' ;
                     VOWNERPROC := FPROCP -> . CSTNAME ;
                     SPECIAL := 0 ;
                   end (* with *) ;
                 ENTERID ( LCP ) ;
+                LCP -> . PREV_VAR_IN_BLOCK := LAST_VAR ;
+                LAST_VAR := LCP ;
                 if NXT1 = NIL then
                   NXT1 := LCP ;
 
@@ -8515,7 +8597,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
       end (* MKPROCNAME *) ;
 
 
-   procedure PROCDECLARATION ( FSY : SYMB ; PLOCAL : BOOLEAN ) ;
+   procedure PROCDECLARATION ( FSY : SYMB ; PLOCAL : BOOLEAN ; var
+                             LAST_PROC : IDP ) ;
 
    //****************************************************************
    // a procedure or function declaration                            
@@ -8523,23 +8606,22 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
    //****************************************************************
 
 
-      var LSY : SYMB ;
-          LCP , LCP1 , LCP2 : IDP ;
-          LSP : TTP ;
+      var PROCID : IDP ;
+          LCP1 , LCP2 : IDP ;
           FORW : BOOLEAN ;
-          K , PARCNT : INTEGER ;
           OLDLABEL : LABELRNG ;
           LLC , LCM : ADDRRANGE ;
-          I , NAME : INTEGER ;
           MARKP : -> INTEGER ;
           OLD_HASH : HASH_TABLE ;
           INTERN : BOOLEAN ;
           CHECKID : ALPHA ;
           ERRINFO : CHAR32 ;
+          LIST_OF_VARS : IDP ;
 
 
       procedure PARAMETERLIST ( FSY : SYMSET ; FPAR : IDP ; FW :
-                              BOOLEAN ; PROCPARM : BOOLEAN ) ;
+                              BOOLEAN ; PROCPARM : BOOLEAN ; var
+                              LAST_PARM : IDP ) ;
 
       //**********************************************************
       // a parameter list of a procedure                          
@@ -8563,7 +8645,10 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
          //****************************************************
 
 
+            var DUMMY_LIST : IDP ;
+
             begin (* PROC_PARAMETER *)
+              DUMMY_LIST := NIL ;
               LSY := SY ;
 
               //******************************************
@@ -8620,10 +8705,10 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                   LLC := LCOUNTER ;
                   if LSY = SYPROC then
                     PARAMETERLIST ( [ SYSEMICOLON , SYRPARENT ] , LCP ,
-                                    FALSE , TRUE )
+                                    FALSE , TRUE , DUMMY_LIST )
                   else
                     PARAMETERLIST ( [ SYSEMICOLON , SYCOLON ] , LCP ,
-                                    FALSE , TRUE ) ;
+                                    FALSE , TRUE , DUMMY_LIST ) ;
                   LCOUNTER := LLC ;
                 end (* then *)
               else
@@ -8644,6 +8729,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
 
 
             var CONFORMANT : BOOLEAN ;
+                LSIZE : ADDRRANGE ;
 
             begin (* OTHER_PARAMETER *)
               if SY = SYVAR then
@@ -8658,12 +8744,13 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                     INSYMBOL
                   end (* then *)
                 else
-                  LKIND := NORMALVAR ;
+                  LKIND := VALUEPARM ;
               repeat
                 if SY = IDENT then
                   begin
                     NEW ( LCP , VARS ) ;
                     LCP -> . STKLASS := XAUTO ;
+                    LCP -> . REFERENCE := ' ' ;
                     LCP -> . VOWNERPROC := ' ' ;
                     LCP -> . SPECIAL := 0 ;
                     if LCP3 <> NIL then
@@ -8684,7 +8771,11 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                         VLEV := LEVEL ;
                       end (* with *) ;
                     if not PROCPARM then
-                      ENTERID ( LCP ) ;
+                      begin
+                        ENTERID ( LCP ) ;
+                        LCP -> . PREV_VAR_IN_BLOCK := LAST_PARM ;
+                        LAST_PARM := LCP ;
+                      end (* then *) ;
                     INSYMBOL ;
                   end (* then *) ;
                 if not ( SY in [ SYCOMMA , SYCOLON ] + FSYS ) then
@@ -8700,20 +8791,48 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
               if SY = SYCOLON then
                 begin
                   INSYMBOL ;
-                  if SY = IDENT then
+                  CONFORMANT := LKIND in [ VARPARM , CONSTPARM ] ;
+                  if not CONFORMANT then
                     begin
-                      SID_RC := SEARCHID ( SYID , TRUE , TRUE , [ TYPES
-                                ] , LCP4 ) ;
                       LEN := PTRSIZE ;
-                      LSP := LCP4 -> . IDTYPE ;
+                      LSP := NIL ;
                       LALN := PTRSIZE ;
+                      TYP ( FSYS + [ SYSEMICOLON , SYRPARENT ] , LSP ,
+                            LSIZE , FALSE ) ;
                       if LSP <> NIL then
-                        if ( LKIND = NORMALVAR ) then
-                          if LSP -> . FORM = FILES then
+                        begin
+                          LEN := LSIZE ;
+                          LALN := LSP -> . ALN
+                        end (* then *) ;
+                      LCP4 := LCP3 ;
+                      while LCP4 <> NIL do
+                        begin
+                          with LCP4 -> do
                             begin
-                              ERROR ( 121 ) ;
-                              LKIND := VARPARM
-                            end (* then *) ;
+                              IDTYPE := LSP ;
+                              ALIGN ( LCOUNTER , LALN ) ;
+                              VADDR := LCOUNTER ;
+                              LCOUNTER := LCOUNTER + LEN ;
+                            end (* with *) ;
+                          LCP4 := LCP4 -> . NEXT
+                        end (* while *) ;
+                    end (* then *)
+                  else
+                    begin
+                      if SY = IDENT then
+                        begin
+                          SID_RC := SEARCHID ( SYID , TRUE , TRUE , [
+                                    TYPES ] , LCP4 ) ;
+                          LEN := PTRSIZE ;
+                          LSP := LCP4 -> . IDTYPE ;
+                          LALN := PTRSIZE ;
+                          if LSP <> NIL then
+                            if LKIND = VALUEPARM then
+                              if LSP -> . FORM = FILES then
+                                begin
+                                  ERROR ( 121 ) ;
+                                  LKIND := VARPARM
+                                end (* then *) ;
 
               //************************************************
               // read next symbol                               
@@ -8733,38 +8852,55 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
               // 06.01.2018                                     
               //************************************************
 
-                      CONFORMANT := LKIND in [ VARPARM , CONSTPARM ] ;
-                      INSYMBOL ;
-                      TYPE_WITH_PARMS ( FSYS + [ SYSEMICOLON ,
-                                        SYRPARENT ] , SYID , LSP ,
-                                        CONFORMANT ) ;
-                      if LSP <> NIL then
-                        if ( LKIND = NORMALVAR ) then
-                          begin
-                            LEN := LSP -> . SIZE ;
-                            LALN := LSP -> . ALN
-                          end (* then *) ;
-                      LCP4 := LCP3 ;
-                      while LCP4 <> NIL do
-                        begin
-                          with LCP4 -> do
+                          INSYMBOL ;
+                          TYPE_WITH_PARMS ( FSYS + [ SYSEMICOLON ,
+                                            SYRPARENT ] , SYID , LSP ,
+                                            CONFORMANT ) ;
+                          if LSP <> NIL then
+                            if LKIND = VALUEPARM then
+                              begin
+                                LEN := LSP -> . SIZE ;
+                                LALN := LSP -> . ALN
+                              end (* then *) ;
+                          LCP4 := LCP3 ;
+                          while LCP4 <> NIL do
                             begin
-                              IDTYPE := LSP ;
-                              ALIGN ( LCOUNTER , LALN ) ;
-                              VADDR := LCOUNTER ;
-                              LCOUNTER := LCOUNTER + LEN ;
-                            end (* with *) ;
-                          LCP4 := LCP4 -> . NEXT
-                        end (* while *) ;
-                    end (* then *)
-                  else
-                    ERROR ( 2 ) ;
-                  if not ( SY in FSYS + [ SYSEMICOLON , SYRPARENT ] )
-                  then
-                    begin
-                      ERROR ( 352 ) ;
-                      SKIP ( FSYS + [ SYSEMICOLON , SYRPARENT ] )
-                    end (* then *)
+                              with LCP4 -> do
+                                begin
+                                  IDTYPE := LSP ;
+                                  ALIGN ( LCOUNTER , LALN ) ;
+                                  VADDR := LCOUNTER ;
+                                  LCOUNTER := LCOUNTER + LEN ;
+                                end (* with *) ;
+                              LCP4 := LCP4 -> . NEXT
+                            end (* while *) ;
+                        end (* then *)
+                      else
+                        begin
+                          ERROR ( 2 ) ;
+
+              //******************************************
+              // to prevent further errors                
+              //******************************************
+
+                          LCP4 := LCP3 ;
+                          while LCP4 <> NIL do
+                            begin
+                              with LCP4 -> do
+                                begin
+                                  IDTYPE := NIL ;
+                                  VADDR := LCOUNTER ;
+                                end (* with *) ;
+                              LCP4 := LCP4 -> . NEXT
+                            end (* while *) ;
+                        end (* else *) ;
+                      if not ( SY in FSYS + [ SYSEMICOLON , SYRPARENT ]
+                      ) then
+                        begin
+                          ERROR ( 352 ) ;
+                          SKIP ( FSYS + [ SYSEMICOLON , SYRPARENT ] )
+                        end (* then *)
+                    end (* else *)
                 end (* then *)
               else
                 ERROR ( 5 ) ;
@@ -8929,10 +9065,11 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
         (***************************)
 
         LCM := LCAFTMST ;
-        LCP := UPRCPTR ;
+        PROCID := UPRCPTR ;
 
         (*******************************)
-        (* TO INITIALIZE LCP IN CASE ! *)
+        (* TO INITIALIZE procid IN CAS *)
+        (*E !                          *)
         (*******************************)
 
         if SY = IDENT then
@@ -8943,33 +9080,34 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
         (**************************************)
 
             FORW := FALSE ;
-            LCP := FWRDPRCL ;
+            PROCID := FWRDPRCL ;
             LCP2 := NIL ;
-            while LCP <> NIL do
-              if LCP -> . NAME = SYID then
+            while PROCID <> NIL do
+              if PROCID -> . NAME = SYID then
                 begin
                   FORW := TRUE ;
                   if LCP2 <> NIL then
-                    LCP2 -> . NXTFWRD := LCP -> . NXTFWRD
+                    LCP2 -> . NXTFWRD := PROCID -> . NXTFWRD
                   else
-                    FWRDPRCL := LCP -> . NXTFWRD ;
+                    FWRDPRCL := PROCID -> . NXTFWRD ;
                   break
                 end (* then *)
               else
                 begin
-                  LCP2 := LCP ;
-                  LCP := LCP -> . NXTFWRD
+                  LCP2 := PROCID ;
+                  PROCID := PROCID -> . NXTFWRD
                 end (* else *) ;
             if not FORW then
               begin
                 if FSY = SYPROC then
-                  NEW ( LCP , PROC , DECLARED )
+                  NEW ( PROCID , PROC , DECLARED )
                 else
-                  NEW ( LCP , FUNC , DECLARED ) ;
-                with LCP -> do
+                  NEW ( PROCID , FUNC , DECLARED ) ;
+                with PROCID -> do
                   begin
                     NAME := SYID ;
                     IDTYPE := NIL ;
+                    REFERENCEP := ' ' ;
                     PFLEV := LEVEL ;
                     PROCLAB := PROCLAB + 1 ;
                     PFDECKIND := DECLARED ;
@@ -8990,7 +9128,9 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                     else
                       KLASS := FUNC
                   end (* with *) ;
-                ENTERID ( LCP ) ;
+                ENTERID ( PROCID ) ;
+                PROCID -> . PREV_PROC_IN_BLOCK := LAST_PROC ;
+                LAST_PROC := PROCID ;
                 OLD_HASH := BUCKET ;
 
         (*************************)
@@ -9000,8 +9140,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
               end (* then *)
             else
               begin
-                LCP1 := LCP -> . PRMPTR ;
-                LCP -> . FWDECL := FALSE ;
+                LCP1 := PROCID -> . PRMPTR ;
+                PROCID -> . FWDECL := FALSE ;
                 OLD_HASH := BUCKET ;
 
         (************************)
@@ -9052,12 +9192,21 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
           end (* with *) ;
         if OPT . GET_STAT then
           PROC_CNT [ LEVEL ] := PROC_CNT [ LEVEL ] + 1 ;
+
+        //******************************************************
+        // init list_of_vars here, because it needs to be       
+        // passed to parameterlist ... the parameters           
+        // need to be checked for usage, too                    
+        //******************************************************
+
+        LIST_OF_VARS := NIL ;
         if FSY = SYPROC then
-          PARAMETERLIST ( [ SYSEMICOLON ] , LCP , FORW , FALSE )
+          PARAMETERLIST ( [ SYSEMICOLON ] , PROCID , FORW , FALSE ,
+                          LIST_OF_VARS )
         else
-          PARAMETERLIST ( [ SYSEMICOLON , SYCOLON ] , LCP , FORW ,
-                          FALSE ) ;
-        LCP -> . FWDECL := FALSE ;
+          PARAMETERLIST ( [ SYSEMICOLON , SYCOLON ] , PROCID , FORW ,
+                          FALSE , LIST_OF_VARS ) ;
+        PROCID -> . FWDECL := FALSE ;
         if SY = SYSEMICOLON then
           INSYMBOL
         else
@@ -9068,14 +9217,14 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
               begin
                 if FORW then
                   ERROR ( 161 ) ;
-                LCP -> . FWDECL := TRUE ;
-                LCP -> . NXTFWRD := FWRDPRCL ;
+                PROCID -> . FWDECL := TRUE ;
+                PROCID -> . NXTFWRD := FWRDPRCL ;
 
         (*******************)
         (* LINK PROC. INTO *)
         (*******************)
 
-                FWRDPRCL := LCP ;
+                FWRDPRCL := PROCID ;
 
         (**********************)
         (* FORWARD PROC. LIST *)
@@ -9090,19 +9239,19 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
         (* SY MUST BE SYFRTRN OR SYEXTRN  *)
         (**********************************)
 
-                with LCP -> do
+                with PROCID -> do
                   begin
                     if SY = SYFRTRN then
-                      LCP -> . EXTLANG := 'F'
+                      PROCID -> . EXTLANG := 'F'
                     else
-                      LCP -> . EXTRN := TRUE ;
+                      PROCID -> . EXTRN := TRUE ;
                     INSYMBOL ;
                     if SY = SYFRTRN then
                       begin
-                        if LCP -> . EXTRN then
+                        if PROCID -> . EXTRN then
                           begin
-                            LCP -> . EXTRN := FALSE ;
-                            LCP -> . EXTLANG := 'F'
+                            PROCID -> . EXTRN := FALSE ;
+                            PROCID -> . EXTLANG := 'F'
                           end (* then *)
                         else
                           ERROR ( 14 ) ;
@@ -9111,14 +9260,14 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                     else
                       if SY = IDENT then
                         begin
-                          if LCP -> . EXTRN then
+                          if PROCID -> . EXTRN then
                             begin
                               CHECKID := SYID ;
                               if CHECKID = 'PASCAL' then
-                                LCP -> . EXTLANG := ' '
+                                PROCID -> . EXTLANG := ' '
                               else
                                 if CHECKID = 'ASSEMBLER' then
-                                  LCP -> . EXTLANG := 'A'
+                                  PROCID -> . EXTLANG := 'A'
                                 else
                                   begin
                                     ERRINFO := CHECKID ;
@@ -9165,9 +9314,9 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
         else
           begin
             if OPT . DEBUG_LEV > 0 then
-              DBG_PRINTSYMBOL ( LCP ) ;
+              DBG_PRINTSYMBOL ( PROCID ) ;
             if OPT . SHOW_LISTDEF then
-              DEF_PRINTSYMBOL ( LCP ) ;
+              DEF_PRINTSYMBOL ( PROCID ) ;
             MARK ( MARKP ) ;
 
         (*****************************)
@@ -9175,7 +9324,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
         (*****************************)
 
             repeat
-              BLOCK ( FSYS , SYSEMICOLON , LCP ) ;
+              BLOCK ( FSYS , SYSEMICOLON , PROCID , LIST_OF_VARS ) ;
               if SY = SYSEMICOLON then
                 begin
                   INSYMBOL ;
@@ -9189,12 +9338,20 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
               else
                 ERROR ( 14 )
             until SY in [ SYBEGIN , SYPROC , SYFUNC , SYLOCAL ] ;
+
+        //*****************************************
+        // RETURN LOCAL ENTRIES ON RUNTIME HEAP    
+        //*****************************************
+
             RELEASE ( MARKP ) ;
 
-        (****************************************)
-        (* RETURN LOCAL ENTRIES ON RUNTIME HEAP *)
-        (****************************************)
+        //*****************************************
+        // set proc/func reference to blank        
+        // internal and recursive references to    
+        // procedures don't count                  
+        //*****************************************
 
+            PROCID -> . REFERENCEP := ' ' ;
           end (* else *) ;
         LEVEL := LEVEL - 1 ;
         TOP := LEVEL ;
@@ -9244,19 +9401,10 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
 
    procedure BODY ( FSYS : SYMSET ; STRING_RESULT : BOOLEAN ) ;
 
-      type CALLED_PROC = record
-                           NAME : ALPHA ;
-                           LVL : LEVRANGE ;
-                           CNT : 1 .. 100 ;
-                           NXT : -> CALLED_PROC
-                         end ;
-
-      var CALL_HEAD , T2_CLIST , T_CLIST : -> CALLED_PROC ;
-          LOCAL_CALL , MODIFYING : BOOLEAN ;
+      var LOCAL_CALL : BOOLEAN ;
 
           (*********************************************)
           (* LOCAL_CALL = THIS PROC CALLS A LOCAL PROC *)
-          (* MODIFYING = A PROGRAM VAR BEING MODIFIED  *)
           (*********************************************)
 
           VAR_REF , VAR_MOD : INTEGER ;
@@ -9269,7 +9417,6 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
           CNSTPTR : CONSTP ;
           I : INTEGER ;
           LCMAX , LLC1 : ADDRRANGE ;
-          LCP , LLCP : IDP ;
           LLP : LBP ;
           FIRSTLN : INTEGER ;
           CTRNO : CTRRANGE ;
@@ -9300,8 +9447,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
            if OPT . PRCODE then
              begin
                PUTIC ;
-               WRITE ( PCODE , 'XEN' : 4 , ' ' , XBG_NUMBER : 1 , ',' )
-                       ;
+               WRITE ( PCODE , 'XEN' : 4 , ' ' , XBG_NO : 1 , ',' ) ;
                if DO_GEN then
                  WRITELN ( PCODE , '1' )
                else
@@ -9357,8 +9503,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
 
       procedure GEN1 ( FOP : OPRANGE ; FP2 : INTEGER ) ;
 
-         var K : INTEGER ;
-             LCCALLER : ADDRRANGE ;
+         var LCCALLER : ADDRRANGE ;
 
          begin (* GEN1 *)
            if OPT . PRCODE then
@@ -9399,7 +9544,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
 
       procedure GEN2 ( FOP : OPRANGE ; FP1 , FP2 : INTEGER ) ;
 
-         var I , J , K : INTEGER ;
+         var K : INTEGER ;
 
          begin (* GEN2 *)
            if OPT . PRCODE then
@@ -9775,6 +9920,15 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
          var LMIN , LMAX : INTEGER ;
 
          begin (* CHKBNDS *)
+           if FALSE then
+             if ASSIGN then
+               WRITELN ( 'what to do with assign?' ) ;
+
+           //************************************************
+           // assign is not used at the moment               
+           // this coding to avoid warning                   
+           //************************************************
+
            if FSP <> NIL then
              if FSP <> PTYPE_BOOL then
                if FSP <> PTYPE_INT then
@@ -9865,7 +10019,6 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
 
          var LCP : IDP ;
              LLP : LBP ;
-             TTOP : DISPRANGE ;
              XLABEL : ALPHA ;
              CTRNO : CTRRANGE ;
              SID_RC : INTEGER ;
@@ -9961,7 +10114,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
 
                     VARS : if STKLASS = XAUTO then
                              begin
-                               if VKIND = NORMALVAR then
+                               if VKIND in [ NORMALVAR , VALUEPARM ]
+                               then
                                  begin
                                    ACCESS := DRCT ;
                                    VLEVEL := VLEV ;
@@ -10779,7 +10933,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                   if GATTR . KIND = VARBL then
                     PARMKIND := VARPARM
                   else
-                    PARMKIND := NORMALVAR ;
+                    PARMKIND := VALUEPARM ;
                 end (* else *) ;
               if PARMTYPE = NIL then
                 return ;
@@ -10838,7 +10992,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
               // (true with fortran for every byvalue parm)       
               //**************************************************
 
-              if PARMKIND in [ NORMALVAR , CONSTPARM ] then
+              if PARMKIND in [ NORMALVAR , VALUEPARM , CONSTPARM ] then
                 begin
                   WORK_PARAM_BYVALUE ;
                   return ;
@@ -11480,7 +11634,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
 
                            begin
                              if COMPTYPES ( LSP , RWFILE ) <> 1 then
-                               ERROR ( 745 ) ;
+                               ERROR ( 85 ) ;
                              GEN2 ( PCODE_LDC , 1 , RWFILE -> . SIZE )
                                     ;
                              EXTUSED := TRUE ;
@@ -11753,8 +11907,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                label 1 ;
 
                var LSP , LSP1 : TTP ;
-                   VARTS , LMIN , LMAX : INTEGER ;
-                   LSIZE , LSZ : ADDRRANGE ;
+                   VARTS : INTEGER ;
+                   LSIZE : ADDRRANGE ;
                    LVAL : XCONSTANT ;
                    LALN : ALNRNG ;
 
@@ -13642,8 +13796,6 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
 
             procedure ALLOC1 ;
 
-               var LLC1 : ADDRRANGE ;
-
                begin (* ALLOC1 *)
                  EXPRESSION ( FSYS + [ SYRPARENT ] ) ;
 
@@ -13664,8 +13816,6 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
 
 
             procedure ALLOCX1 ;
-
-               var LLC1 : ADDRRANGE ;
 
                begin (* ALLOCX1 *)
                  EXPRESSION ( FSYS + [ SYRPARENT ] ) ;
@@ -13761,8 +13911,6 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
 
 
             procedure CHKALLOC1 ;
-
-               var LLC1 : ADDRRANGE ;
 
                begin (* CHKALLOC1 *)
                  EXPRESSION ( FSYS + [ SYRPARENT ] ) ;
@@ -14461,7 +14609,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
 
             procedure CARD1 ;
 
-               var LLC , LEN : ADDRRANGE ;
+               var LLC : ADDRRANGE ;
 
                begin (* CARD1 *)
                  LLC := LCOUNTER ;
@@ -14491,8 +14639,6 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
 
 
             procedure ORD1 ;
-
-               var X : FORMTEST ;
 
                begin (* ORD1 *)
                  if GATTR . TYPTR <> NIL then
@@ -14591,8 +14737,6 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                    LLC_FTN : ADDRRANGE ;
                    LLC_PARM : ADDRRANGE ;
                    LLC_PROC : ADDRRANGE ;
-                   I : INTEGER ;
-                   PROCNAME : ALPHA ;
 
 
                function COMPTLIST ( CALLLEVEL : INTEGER ; CP1 , CP2 :
@@ -14718,7 +14862,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                     //*******************************************
 
                             LSIZE := DISPAREA ;
-                            if LCP -> . PFKIND = NORMALVAR then
+                            if LCP -> . PFKIND in [ NORMALVAR ,
+                            VALUEPARM ] then
                               with LCP -> do
                                 begin
                                   if EXTLANG = 'F' then
@@ -14902,8 +15047,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                              LCP -> . DUMMYLEV := 0 ;
                              LCP -> . DUMMYADDR := 0 ;
                              if ( LCP -> . VKIND = CONSTPARM ) or ( (
-                             LCP -> . VKIND = NORMALVAR ) and ( FCP ->
-                             . EXTLANG = 'F' ) ) then
+                             LCP -> . VKIND in [ NORMALVAR , VALUEPARM
+                             ] ) and ( FCP -> . EXTLANG = 'F' ) ) then
                                begin
                                  if FALSE then
                                    begin
@@ -15363,13 +15508,10 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                          LSP : TTP ;
                          I , J : INTEGER ;
                          TS_LC : ADDRRANGE ;
-                         HEXORBIN : CHAR ;
-                         SETLOCAL_LC , SETVAR_SIZE : ADDRRANGE ;
+                         SETVAR_SIZE : ADDRRANGE ;
                          SETOFFS_LOCAL : INTEGER ;
                          NOCHMAL : BOOLEAN ;
                          PSI : PSETINFO ;
-                         SETMIN_DUMMY : INTEGER ;
-                         SETMAX_DUMMY : INTEGER ;
                          NOCHMALS : BOOLEAN ;
                          LSTRING : INTEGER ;
                          OK_SET : SYMSET ;
@@ -15448,8 +15590,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
 
                      function FACT_SET_UP : BOOLEAN ;
 
-                        var OK : BOOLEAN ;
-                            NOCHMAL : BOOLEAN ;
+                        var NOCHMAL : BOOLEAN ;
                             SETMIN_DUMMY : INTEGER ;
                             SETMAX_DUMMY : INTEGER ;
 
@@ -16662,11 +16803,9 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
             var LATTR : ATTR ;
                 RSIZE , LLC : ADDRRANGE ;
                 CT_RESULT : INTEGER ;
-                XSAVE : TYPECLASS ;
                 ADJUST_STRINGSIZE : BOOLEAN ;
                 STRINGSIZE_LEFT : 1 .. MAXSTRL ;
                 STRINGSIZE_RIGHT : 1 .. MAXSTRL ;
-                GATTR_SAVE : ATTR ;
                 TYPE_ERROR : INTEGER ;
                 IS_FUNCRES : BOOLEAN ;
 
@@ -17047,6 +17186,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                       with LLP -> do
                         if LABVAL = SYVAL . IVAL then
                           begin
+                            REFERENCED := TRUE ;
                             if TTOP = LEVEL then
                               GENUJPFJP ( PCODE_UJP , LABNAME )
                             else
@@ -17178,7 +17318,6 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                 TEMPLN : INTEGER ;
                 CTRCASES : INTEGER ;
                 CTRNO : CTRRANGE ;
-                STRT : CHAR ;
 
             begin (* CASESTATEMENT *)
               if CTLS . WATCH1 then
@@ -17626,7 +17765,6 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
          procedure FORSTATEMENT ;
 
             var LATTR : ATTR ;
-                LSP : TTP ;
                 LSY : SYMB ;
                 LOP : OPRANGE ;
                 XT , CV1 , CV2 : INTEGER ;
@@ -17656,7 +17794,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                       if TYPTR <> NIL then
                         if TYPTR -> . FORM = SUBRANGE then
                           TYPTR := TYPTR -> . RANGETYPE ;
-                      if VKIND = NORMALVAR then
+                      if VKIND in [ NORMALVAR , VALUEPARM ] then
                         begin
                           if STKLASS = XAUTO then
                             begin
@@ -17722,7 +17860,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                           STORE ( LATTR ) ;
                         end (* then *)
                       else
-                        ERROR ( 746 )
+                        ERROR ( 86 )
                 end (* then *)
               else
                 begin
@@ -17811,7 +17949,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                             end (* else *) ;
                         end (* then *)
                       else
-                        ERROR ( 747 )
+                        ERROR ( 87 )
                 end (* then *)
               else
                 begin
@@ -17910,7 +18048,6 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
          procedure WITHSTATEMENT ;
 
             var LCP : IDP ;
-                LCNT : DISPRANGE ;
                 LLC : ADDRRANGE ;
                 OLD_LEV : - 1 .. DISPLIMIT ;
                 REC_STR : TTP ;
@@ -18597,9 +18734,25 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
         (************************************************)
 
                   INTTOSTR ( ADDR ( ERRINFO ) , 32 , LABVAL , FALSE ) ;
-                  ERROR_POS ( 'E' , 168 , ERRINFO , SCB . LINENR , SCB
+                  ERROR_POS ( 'W' , 168 , ERRINFO , SCB . LINENR , SCB
                               . LINEPOS ) ;
-                end (* then *) ;
+                end (* then *)
+              else
+                if not REFERENCED then
+                  begin
+                    PLCNT := PLCNT + 1 ;
+
+        (************************************************)
+        (*   new error_pos call with parameter          *)
+        (*   labval is the unreferenced label which     *)
+        (*   should become part of the error message    *)
+        (************************************************)
+
+                    INTTOSTR ( ADDR ( ERRINFO ) , 32 , LABVAL , FALSE )
+                               ;
+                    ERROR_POS ( 'W' , 183 , ERRINFO , SCB . LINENR ,
+                                SCB . LINEPOS ) ;
+                  end (* then *) ;
               LLP := NEXTLAB
             end (* with *) ;
         CTREMIT ( CTRPROC , CTRNO , FIRSTLN , 0 , LINECNT ) ;
@@ -18669,6 +18822,10 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
    begin (* BLOCK *)
      if FALSE then
        DRUCKE_SYMSET ( 'START BLOCK ' , FSYS ) ;
+     if FALSE then
+       WRITELN ( TRACEF , 'start block ' , FPROCP -> . NAME ) ;
+     LAST_TYPE := NIL ;
+     LAST_PROC := NIL ;
      ICOUNTER := 0 ;
      GENLABEL ( SEGSIZE ) ;
      CONSTLCOUNTER := 0 ;
@@ -18705,20 +18862,20 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
                end (* tag/ca *) ;
              SYTYPE :
                begin
-                 TYPEDECLARATION ;
+                 TYPEDECLARATION ( LAST_TYPE ) ;
                  if DEC_ORDER >= 3 then
                    EXTUSED := TRUE ;
                  DEC_ORDER := 3 ;
                end (* tag/ca *) ;
              SYVAR : begin
-                       VARDECLARATION ;
+                       VARDECLARATION ( LAST_VAR ) ;
                        if DEC_ORDER >= 4 then
                          EXTUSED := TRUE ;
                        DEC_ORDER := 4 ;
                      end (* tag/ca *) ;
              SYSTATIC :
                begin
-                 STATICDECLARATION ;
+                 STATICDECLARATION ( LAST_VAR ) ;
                  EXTUSED := TRUE ;
                  DEC_ORDER := 5 ;
                end (* tag/ca *) ;
@@ -18757,7 +18914,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
              PLOCAL := FALSE ;
            LSY := SY ;
            INSYMBOL ;
-           PROCDECLARATION ( LSY , PLOCAL )
+           PROCDECLARATION ( LSY , PLOCAL , LAST_PROC ) ;
          end (* while *) ;
        if SY <> SYBEGIN then
          begin
@@ -18813,6 +18970,10 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ) ;
              SKIP ( FSYS + [ FSY ] )
            end (* then *)
        until ( SY = FSY ) or ( SY in BLOCKBEGSYS ) ;
+     if FALSE then
+       WRITELN ( TRACEF , 'ende block ' , FPROCP -> . NAME ) ;
+     SEARCH_UNREFERENCED ( FPROCP , LAST_VAR , LAST_TYPE , LAST_PROC )
+                           ;
    end (* BLOCK *) ;
 
 
@@ -18822,6 +18983,7 @@ procedure PROGRAMME ( FSYS : SYMSET ) ;
    var LFPTR : FRECPTR ;
        LCP : IDP ;
        I , J : INTEGER ;
+       LIST_OF_VARS : IDP ;
 
    begin (* PROGRAMME *)
      if FALSE then
@@ -18956,8 +19118,9 @@ procedure PROGRAMME ( FSYS : SYMSET ) ;
        end (* with *) ;
      if OPT . DEBUG_LEV > 0 then
        WRITELN ( DBGINFO , '% $PASMAIN  0' ) ;
+     LIST_OF_VARS := NIL ;
      repeat
-       BLOCK ( FSYS , SYPERIOD , MAINPROG ) ;
+       BLOCK ( FSYS , SYPERIOD , MAINPROG , LIST_OF_VARS ) ;
        if SY <> SYPERIOD then
          ERROR ( 21 )
      until SY = SYPERIOD ;
@@ -19053,19 +19216,22 @@ procedure ENTERSTDTYPES ;
          ( HINTSIZE , HINTSIZE , FALSE , SUBRANGE , NIL , ( ' ' , XINT
            , 1 ) , ( ' ' , XINT , ALFALNGTH ) ) ;
          UTYP : IDENTIFIER =
-         ( BLANKID , NIL , NIL , NIL , 0 , TYPES ) ;
+         ( BLANKID , NIL , NIL , NIL , NIL , NIL , NIL , 0 , TYPES ,
+           ' ' ) ;
          UCST : IDENTIFIER =
-         ( BLANKID , NIL , NIL , NIL , 0 , KONST , ( ' ' , XINT , 1 ) )
-           ;
+         ( BLANKID , NIL , NIL , NIL , NIL , NIL , NIL , 0 , KONST , (
+           ' ' , XINT , 1 ) ) ;
          UVAR : IDENTIFIER =
-         ( BLANKID , NIL , NIL , NIL , 0 , VARS , NORMALVAR , 0 , XAUTO
-           , ' ' , 0 , 0 , FALSE , 0 , 0 ) ;
+         ( BLANKID , NIL , NIL , NIL , NIL , NIL , NIL , 0 , VARS ,
+           NORMALVAR , 0 , XAUTO , ' ' , ' ' , 0 , 0 , FALSE , 0 , 0 )
+           ;
          UFLD : IDENTIFIER =
-         ( BLANKID , NIL , NIL , NIL , 0 , FIELD , 0 , NIL ) ;
+         ( BLANKID , NIL , NIL , NIL , NIL , NIL , NIL , 0 , FIELD , 0
+           , NIL ) ;
          UPF : IDENTIFIER =
-         ( BLANKID , NIL , NIL , NIL , 0 , PROC , FALSE , ' ' ,
-           '$UNK_PF ' , DECLARED , FALSE , 0 , 0 , NIL , NIL ,
-           NORMALVAR , FALSE , '$UNK_PF ' ) ;
+         ( BLANKID , NIL , NIL , NIL , NIL , NIL , NIL , 0 , PROC ,
+           FALSE , ' ' , '$UNK_PF ' , ' ' , DECLARED , FALSE , 0 , 0 ,
+           NIL , NIL , NORMALVAR , FALSE , '$UNK_PF ' ) ;
          UREC : TYPEREC =
          ( 1 , 1 , FALSE , RECORDS , NIL , NIL , 0 , 0 ) ;
 
@@ -19213,7 +19379,7 @@ procedure ENTSTDNAMES ;
                    end ;
 
    var CP , CP1 : IDP ;
-       I , J : INTEGER ;
+       I : INTEGER ;
        SP : STDPROC ;
        ESP : ESTDPROC ;
        XSP : XSTDPROC ;
@@ -19554,6 +19720,7 @@ procedure ENTSTDNAMES ;
              KLASS := VARS ;
              VKIND := NORMALVAR ;
              STKLASS := XAUTO ;
+             REFERENCE := 'P' ;
              VOWNERPROC := ' ' ;
              SPECIAL := 0 ;
              NEXT := NIL ;
@@ -19582,6 +19749,7 @@ procedure ENTSTDNAMES ;
              KLASS := VARS ;
              VKIND := NORMALVAR ;
              STKLASS := XAUTO ;
+             REFERENCE := 'P' ;
              VOWNERPROC := ' ' ;
              NEXT := NIL ;
              VLEV := 1 ;
@@ -19612,6 +19780,7 @@ procedure ENTSTDNAMES ;
          KLASS := VARS ;
          VKIND := NORMALVAR ;
          STKLASS := XAUTO ;
+         REFERENCE := 'P' ;
          VOWNERPROC := ' ' ;
          NEXT := NIL ;
          VLEV := 1 ;
@@ -19730,8 +19899,9 @@ procedure ENTSTDNAMES ;
          NAME := BLANKID ;
          IDTYPE := PTYPE_REAL ;
          KLASS := VARS ;
-         VKIND := NORMALVAR ;
+         VKIND := VALUEPARM ;
          STKLASS := XAUTO ;
+         REFERENCE := 'P' ;
          VOWNERPROC := ' ' ;
          SPECIAL := 0 ;
          NEXT := NIL ;
@@ -19848,8 +20018,9 @@ procedure ENTSTDNAMES ;
        begin
          IDTYPE := PTYPE_INT ;
          KLASS := VARS ;
-         VKIND := NORMALVAR ;
+         VKIND := VALUEPARM ;
          STKLASS := XAUTO ;
+         REFERENCE := 'P' ;
          VOWNERPROC := ' ' ;
          SPECIAL := 0 ;
          NEXT := NIL ;
@@ -19865,8 +20036,9 @@ procedure ENTSTDNAMES ;
        begin
          IDTYPE := PTYPE_INT ;
          KLASS := VARS ;
-         VKIND := NORMALVAR ;
+         VKIND := VALUEPARM ;
          STKLASS := XAUTO ;
+         REFERENCE := 'P' ;
          VOWNERPROC := ' ' ;
          NEXT := CP1 ;
          VLEV := 1 ;
@@ -20082,8 +20254,7 @@ procedure INITTABLES ;
 
    procedure RATORS ;
 
-      var I : INTEGER ;
-          CH : CHAR ;
+      var CH : CHAR ;
 
       begin (* RATORS *)
 

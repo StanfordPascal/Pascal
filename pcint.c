@@ -1134,8 +1134,11 @@ static void check_read (void *vgs, filecb *fcb)
 
 
 
+#define check_write(x,y)  check_write_mode ((x), (y), 0);
 
-static void check_write (void *vgs, filecb *fcb)
+
+
+static void check_write_mode (void *vgs, filecb *fcb, int append)
 
 {
    global_store *gs = vgs;
@@ -1150,13 +1153,19 @@ static void check_write (void *vgs, filecb *fcb)
 
          if (fcb -> textfile)
          {
-            fcb -> fhandle = file_open (fcb, "w");
+            if (append)
+               fcb -> fhandle = file_open (fcb, "a");
+            else
+               fcb -> fhandle = file_open (fcb, "w");
             fcb -> pfilvar = fcb -> pstore + 8;
             fcb -> status = '4';
          }
          else
          {
-            fcb -> fhandle = file_open (fcb, "wb");
+            if (append)
+               fcb -> fhandle = file_open (fcb, "ab");
+            else
+               fcb -> fhandle = file_open (fcb, "wb");
             fcb -> pfilvar = fcb -> pstore + 8;
             fcb -> status = '4';
          }
@@ -1172,13 +1181,19 @@ static void check_write (void *vgs, filecb *fcb)
 
          if (fcb -> textfile)
          {
-            fcb -> fhandle = file_open (fcb, "w");
+            if (append)
+               fcb -> fhandle = file_open (fcb, "a");
+            else
+               fcb -> fhandle = file_open (fcb, "w");
             fcb -> pfilvar = fcb -> pstore + 8;
             fcb -> status = '4';
          }
          else
          {
-            fcb -> fhandle = file_open (fcb, "wb");
+            if (append)
+               fcb -> fhandle = file_open (fcb, "ab");
+            else
+               fcb -> fhandle = file_open (fcb, "wb");
             fcb -> pfilvar = fcb -> pstore + 8;
             fcb -> status = '4';
          }
@@ -1487,6 +1502,36 @@ static void *cspf_res (void *vgs,
    fcb -> status = '0';
 
    check_read (gs, fcb);
+
+   return NULL;
+}
+
+
+
+
+static void *cspf_apn (void *vgs,
+                       int parm1,
+                       int parm2,
+                       int parm3,
+                       int parm4)
+
+{
+   global_store *gs = vgs;
+   filecb *fcb;
+
+#if 0
+
+   fprintf (stderr, "apn: parm1 = %d\n", parm1);
+
+#endif
+
+   STOR_FCB (parm1, fcb);
+
+   fcb -> status = '0';
+
+   check_write_mode (gs, fcb, 1);
+
+   fcb -> status = '2';
 
    return NULL;
 }
@@ -2952,6 +2997,7 @@ static void *cspf_rdc (void *vgs,
 #define CSP_TRC    52
 #define CSP_RND    53
 #define CSP_WRV    54
+#define CSP_APN    55
 
 
 static funtab ft [] =
@@ -3012,6 +3058,7 @@ static funtab ft [] =
    { "TRC", CSP_TRC, (cspfunc *) cspf_trc, -2, 0, 0, ' ' },
    { "RND", CSP_RND, (cspfunc *) cspf_rnd, -2, 0, 0, ' ' },
    { "WRV", CSP_WRV, cspf_wrv, 3, 2, 0, ' ' },
+   { "APN", CSP_APN, cspf_apn, 1, 0, 0, ' ' },
    {  NULL,      -1, NULL,     0, 0, 0, ' ' }
 };
 
@@ -3578,8 +3625,10 @@ static void int1 (global_store *gs)
                break;
 
             case 'A':
-               // if (wert1 == -1)
-               //    runtime_error (gs, NILPOINTER, NULL);
+               if (memcmp (intp, INIT_CHAR_4, 4) == 0)
+                  runtime_error (gs, UNDEFPOINTER, NULL);
+               else if (wert1 == -1 || wert1 == 0)
+                  runtime_error (gs, NILPOINTER, NULL);
                break;
 
             default:

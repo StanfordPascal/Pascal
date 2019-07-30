@@ -183,9 +183,9 @@ rem call copymvs pasutils.pas  compiler.pas
 
 rem call copymvs pas1982.pas   oldcomp.source
 
-    call copymvs avltree.pas   testpgm.pas
+rem call copymvs avltree.pas   testpgm.pas
 rem call copymvs primzerl.pas  testpgm.pas
-    call copymvs testavl.pas   testpgm.pas
+rem call copymvs testavl.pas   testpgm.pas
 rem call copymvs testc1.pas    testpgm.pas
 rem call copymvs testc2.pas    testpgm.pas
 rem call copymvs testcase.pas  testpgm.pas
@@ -201,6 +201,9 @@ rem call copymvs testsub.pas   testpgm.pas
 rem call copymvs testvarc.pas  testpgm.pas
 rem call copymvs testvc2.pas   testpgm.pas
 rem call copymvs xcompn.pas    testpgm.pas
+    call copymvs testptr.pas   testpgm.pas
+    call copymvs testptr2.pas  testpgm.pas
+    call copymvs testset5.pas  testpgm.pas
 
 rem call copymvs pasmonn.ass   runtime.asm
 

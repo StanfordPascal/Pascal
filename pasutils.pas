@@ -566,6 +566,83 @@ function IVALSTR ( CP : CHARPTR ; LEN : INTEGER ) : INTEGER ;
 
 
 
+function DVALSTR ( CP : CHARPTR ; LEN : INTEGER ) : REAL ;
+
+   var X : REAL ;
+       SCALE : REAL ;
+       STATUS : INTEGER ;
+       MINUS : BOOLEAN ;
+       COMMA_FOUND : BOOLEAN ;
+
+   begin (* DVALSTR *)
+     X := 0 ;
+     SCALE := 1.0 ;
+     STATUS := 1 ;
+     MINUS := FALSE ;
+     COMMA_FOUND := FALSE ;
+     while TRUE do
+       begin
+         if LEN <= 0 then
+           break ;
+         case STATUS of
+           1 : case CP -> of
+                 ' ' : begin
+                         CP := PTRADD ( CP , 1 ) ;
+                         LEN := LEN - 1 ;
+                       end (* tag/ca *) ;
+                 '+' , '-' :
+                   begin
+                     MINUS := ( CP -> = '-' ) ;
+                     CP := PTRADD ( CP , 1 ) ;
+                     LEN := LEN - 1 ;
+                     STATUS := 2 ;
+                   end (* tag/ca *) ;
+                 ',' , '.' :
+                   begin
+                     COMMA_FOUND := TRUE ;
+                     CP := PTRADD ( CP , 1 ) ;
+                     LEN := LEN - 1 ;
+                     STATUS := 2 ;
+                   end (* tag/ca *) ;
+                 '0' .. '9' :
+                   begin
+                     X := ORD ( CP -> ) - ORD ( '0' ) ;
+                     CP := PTRADD ( CP , 1 ) ;
+                     LEN := LEN - 1 ;
+                     STATUS := 2 ;
+                   end (* tag/ca *) ;
+                 otherwise
+                   break
+               end (* case *) ;
+           2 : case CP -> of
+                 '0' .. '9' :
+                   begin
+                     X := X * 10 + ORD ( CP -> ) - ORD ( '0' ) ;
+                     if COMMA_FOUND then
+                       SCALE := SCALE * 10.0 ;
+                     CP := PTRADD ( CP , 1 ) ;
+                     LEN := LEN - 1 ;
+                   end (* tag/ca *) ;
+                 ',' , '.' :
+                   begin
+                     COMMA_FOUND := TRUE ;
+                     CP := PTRADD ( CP , 1 ) ;
+                     LEN := LEN - 1 ;
+                   end (* tag/ca *) ;
+                 otherwise
+                   break
+               end (* case *)
+         end (* case *)
+       end (* while *) ;
+     if MINUS then
+       X := - X ;
+     if COMMA_FOUND then
+       X := X / SCALE ;
+     DVALSTR := X ;
+   end (* DVALSTR *) ;
+
+
+
 procedure READSYMB ( var F : TEXT ; X : VOIDPTR ; LEN : INTEGER ) ;
 
    var CP : CHARPTR ;

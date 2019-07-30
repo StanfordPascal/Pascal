@@ -1,4 +1,26 @@
 
+2019.08:
+
+- weiter siehe unten
+
+- evtl. andere Loesung fuer NESTED WITH
+- evtl. tauschen der Semantik: FIELDADDR und POINTER_OFFSET
+
+* Fehler bei Implentierung von WITH (in Records) und WITH-Statement
+* Fehler bei Implentierung von WITH: IND hat falschen Typ (nicht A)
+* Fields innerhalb Record kennzeichen: Original vs. WITH-induziert
+* relevant bei a) STRUCT_RECORDCONST - hier echter Fehler
+* relevant bei b) LISTDEF von Strukturen
+- relevant bei c) Debugging (evtl. spaeter)
+* was passiert, wenn keine Variante angegeben?
+* Fehler bei NEW, wenn nicht existente Variante angegeben
+* geloest: WITH mit Pointern geht nicht mit VAR-Parametern
+* geloest: NIL-Check aktiv :-)
+* hoffentlich auch auf dem Mainframe
+* geloest: endlich verstanden: Hash und Buckets
+
+=======================================================================================
+
 2018.06:
 
 * Cache-Funktionen analog OISCACH

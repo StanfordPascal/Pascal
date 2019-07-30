@@ -110,6 +110,7 @@
 /**********************************************************/
 
 #define INIT_PATTERN   0x81
+#define INIT_CHAR_4    "\x81\x81\x81\x81"
 #define IDSIZE         20
 #define CIXMAX         400
 #define SETLENMAX      256
@@ -135,6 +136,7 @@
 #define STRINGRANGE    17
 #define NILPOINTER     18
 #define FTNFUNCNDEF    19
+#define UNDEFPOINTER   20
 
 static const char *runtime_errmsg [] =
 
@@ -158,6 +160,7 @@ static const char *runtime_errmsg [] =
    "STRINGRANGE",
    "NILPOINTER",
    "FTNFUNCNDEF",
+   "UNDEFPOINTER",
    NULL
 };
 

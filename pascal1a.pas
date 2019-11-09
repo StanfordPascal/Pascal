@@ -1202,7 +1202,7 @@ const VERSION = '2019.08' ;
       (*******************************************)
 
       PORTABLE_BRANCHTABLE = TRUE ;
-      CIXMAX = 400 ;
+      CIXMAX = 405 ;
 
       (***************************************************)
       (* new set related constants                       *)
@@ -1631,7 +1631,8 @@ type ALPHA = array [ 1 .. IDLNGTH ] of CHAR ;
                           OWNER : TTP ;
                           TAGPOINTER : TTP ;
                           WITH_COPY : WITH_COPY_TYPE ;
-                          POINTER_OFFSET : ADDRRANGE ) ;
+                          POINTER_OFFSET : ADDRRANGE ;
+                          INSERTED_BY_WITH : BOOLEAN ) ;
                       PROC , FUNC :
                         ( EXTRN : BOOLEAN ;
                           EXTLANG : CHAR ;
@@ -1810,7 +1811,7 @@ type ALPHA = array [ 1 .. IDLNGTH ] of CHAR ;
                       ASSEMBLE : BOOLEAN ;   // show assembly
                       ASMVERB : BOOLEAN ;    // show verbose ass.
                       CTROPTION : BOOLEAN ;  // show counters
-                      SHOW_LISTDEF : BOOLEAN ;// show listdef
+                      SHOW_LISTDEF : BOOLEAN ; // show listdef
                     end ;
 
      /*****************************************************/
@@ -3809,7 +3810,7 @@ function GETTYPE ( OPERAND : TTP ) : INTEGER ;
            if OPERAND -> . FORM = POINTER then
              GETTYPE := ORD ( 'A' )
            else
-             if IS_STDTYPE ( OPERAND , 'R' ) then// ptype_real
+             if IS_STDTYPE ( OPERAND , 'R' ) then // ptype_real
                GETTYPE := ORD ( 'R' )
              else
                if OPERAND = PTYPE_BOOL then
@@ -4431,8 +4432,11 @@ procedure DEF_PRINTTYPE ( TYPP : TTP ; MODUS : CHAR ) ;
                   VFIELD := VARP -> . FIRSTSUBFIELD ;
                   while VFIELD <> NIL do
                     begin
-                      DEF_PRINTVAR ( VFIELD , FIELDLEVEL ) ;
-                      WRITELN ( LISTDEF ) ;
+                      if not VFIELD -> . INSERTED_BY_WITH then
+                        begin
+                          DEF_PRINTVAR ( VFIELD , FIELDLEVEL ) ;
+                          WRITELN ( LISTDEF )
+                        end (* then *) ;
                       VFIELD := VFIELD -> . NEXT
                     end (* while *) ;
                   DEF_VARIANTLEVEL := DEF_VARIANTLEVEL + 1 ;
@@ -4598,8 +4602,11 @@ procedure DEF_PRINTTYPE ( TYPP : TTP ; MODUS : CHAR ) ;
              VP := FIRSTFIELD ;
              while VP <> NIL do
                begin
-                 DEF_PRINTVAR ( VP , DEF_STRUCTLEVEL ) ;
-                 WRITELN ( LISTDEF ) ;
+                 if not VP -> . INSERTED_BY_WITH then
+                   begin
+                     DEF_PRINTVAR ( VP , DEF_STRUCTLEVEL ) ;
+                     WRITELN ( LISTDEF )
+                   end (* then *) ;
                  VP := VP -> . NEXT ;
                end (* while *) ;
              DEF_VARIANTLEVEL := DEF_VARIANTLEVEL + 1 ;
@@ -6939,6 +6946,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                   NEXT_IN_BKT := NIL ;
                   OWNER := FLDOWNER ;
                   KLASS := FIELD ;
+                  INSERTED_BY_WITH := TRUE ;
                   if PFLAG then
                     begin
                       WITH_COPY := WCPOINTER ;
@@ -7283,6 +7291,9 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                        OWNER := FLDOWNER ;
                        TAGPOINTER := FLDTAG ;
                        KLASS := FIELD ;
+                       INSERTED_BY_WITH := FALSE ;
+                       WITH_COPY := WCNONE ;
+                       POINTER_OFFSET := 0 ;
                        if OPT . GET_STAT then
                          FLDOWNER -> . NUMBER_OF_FIELDS := FLDOWNER ->
                                                    . NUMBER_OF_FIELDS +
@@ -7416,6 +7427,9 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                        NAME := SYID ;
                        IDTYPE := NIL ;
                        KLASS := FIELD ;
+                       INSERTED_BY_WITH := FALSE ;
+                       WITH_COPY := WCNONE ;
+                       POINTER_OFFSET := 0 ;
                        NEXT := NIL ;
 
            //*******************************************
@@ -8305,20 +8319,11 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                             : TTP ; var FVALU : XCONSTANT ; var SLC :
                             INTEGER ) ;
 
-      label 10 ;
-
-      var I , J , K , L : INTEGER ;
-          NOCHMAL : BOOLEAN ;
-          PSI : PSETINFO ;
+      var I : INTEGER ;
           LVALU : XCONSTANT ;
-          LSP , LSP1 , ELT , LRECTAGTYPE : TTP ;
+          LSP : TTP ;
           DUMMY_TYP : TTP ;
-          FLDPR : IDP ;
-          LX : ADDRRANGE ;
           CT_RESULT : INTEGER ;
-          TEST : BOOLEAN ;
-          ERRFLAG : BOOLEAN ;
-          CONSTL_WORK : -> CONSTLIST ;
 
 
       procedure STOWCONST ( ELSP : TTP ) ;
@@ -8385,22 +8390,305 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
          end (* STOWCONST *) ;
 
 
+      procedure STRUCT_ARRAYCONST ;
+
+         var I , J , K , L : INTEGER ;
+             LX : ADDRRANGE ;
+             DONE : BOOLEAN ;
+             ERRFLAG : BOOLEAN ;
+
+         begin (* STRUCT_ARRAYCONST *)
+           K := 0 ;
+           with LSP -> do
+             begin
+               ALIGN ( CONSTLCOUNTER , ALN ) ;
+               SLC := CONSTLCOUNTER ;
+               J := SLC ;
+               if AELTYPE <> NIL then
+                 L := AELTYPE -> . SIZE
+               else
+                 L := 1 ;
+               LX := L ;
+               ALIGN ( LX , ALN ) ;
+               L := LX ;
+               DONE := FALSE ;
+               repeat
+                 K := K + 1 ;
+                 STOWCONST ( AELTYPE ) ;
+                 if SY = SYCOMMA then
+                   begin
+                     INSYMBOL ;
+                     J := J + L ;
+                     CONSTLCOUNTER := J
+                   end (* then *)
+                 else
+                   DONE := TRUE
+               until DONE ;
+               if SY = SYRPARENT then
+                 INSYMBOL
+               else
+                 ERROR ( 4 ) ;
+               ERRFLAG := FALSE ;
+               if INXTYPE <> NIL then
+                 begin
+                   ERRFLAG := INXTYPE -> . ERRORFLAG ;
+                   GETBOUNDS ( INXTYPE , I , J ) ;
+                   J := J - I + 1
+                 end (* then *)
+               else
+                 J := SIZE DIV L ;
+               if K <> J then
+                 if K > J then
+                   begin
+                     if not ERRFLAG then
+                       ERROR ( 207 )
+                   end (* then *)
+                 else
+                   begin
+                     ERRKIND := 'W' ;
+                     ERROR ( 306 ) ;
+                     if OPT . PRCODE then
+                       WRITELN ( PCODE , SLC + SIZE - 1 : 1 , MN [ 70 ]
+                                 , ' B,0' ) ;
+
+           (********)
+           (*DFC   *)
+           (********)
+
+                   end (* else *) ;
+               CONSTLCOUNTER := SLC + SIZE ;
+             end (* with *)
+         end (* STRUCT_ARRAYCONST *) ;
+
+
+      procedure STRUCT_RECORDCONST ;
+
+         label 10 ;
+
+         var L_WORK : INTEGER ;
+             WEITER : BOOLEAN ;
+             FLDPR : IDP ;
+             LSP_WORK : TTP ;
+             LRECTAGTYPE : TTP ;
+             CONSTL_WORK : -> CONSTLIST ;
+
+         begin (* STRUCT_RECORDCONST *)
+           WEITER := TRUE ;
+           if FALSE then
+             begin
+               WRITELN ( TRACEF ) ;
+               WRITELN ( TRACEF , 'Start STRUCT_RECORDCONST' ) ;
+               WRITELN ( TRACEF , 'linecnt = ' , LINECNT : 1 ) ;
+               WRITELN ( TRACEF , 'counter = ' , CONSTLCOUNTER ) ;
+               WRITELN ( TRACEF , 'size    = ' , LSP -> . SIZE ) ;
+             end (* then *) ;
+           with LSP -> do
+             begin
+               ALIGN ( CONSTLCOUNTER , ALN ) ;
+               SLC := CONSTLCOUNTER ;
+               FLDPR := FIRSTFIELD ;
+
+           //************************************************
+           // default size = size of compete record          
+           //************************************************
+
+               L_WORK := SIZE ;
+               LRECTAGTYPE := RECTAGTYPE ;
+               10 :
+               while WEITER and ( FLDPR <> NIL ) do
+                 with FLDPR -> do
+                   begin
+                     if FALSE then
+                       begin
+                         WRITELN ( TRACEF ) ;
+                         WRITELN ( TRACEF , 'linecnt = ' , LINECNT : 1
+                                   ) ;
+                         WRITELN ( TRACEF , 'fldpr = ' , FLDPR ) ;
+                         WRITELN ( TRACEF , 'name  = ' , NAME ) ;
+                         WRITELN ( TRACEF , 'inserted_by_with = ' ,
+                                   INSERTED_BY_WITH ) ;
+                         WRITELN ( TRACEF , 'next = ' , NEXT ) ;
+                         if NEXT <> NIL then
+                           WRITELN ( TRACEF , 'next.name = ' , NEXT ->
+                                     . NAME )
+                       end (* then *) ;
+                     if INSERTED_BY_WITH then
+                       begin
+                         FLDPR := NEXT ;
+                         continue
+                       end (* then *) ;
+                     CONSTLCOUNTER := SLC + FIELDADDR ;
+                     STOWCONST ( IDTYPE ) ;
+                     FLDPR := NEXT ;
+                     if SY = SYCOMMA then
+                       INSYMBOL
+                     else
+                       WEITER := FALSE
+                   end (* with *) ;
+               if WEITER then
+                 if LRECTAGTYPE <> NIL then
+                   with LRECTAGTYPE -> do
+                     begin
+
+           //************************************************
+           // default size now = size without variant        
+           //************************************************
+
+                       L_WORK := VARIANT_OFFS ;
+                       if TAGFIELDP <> NIL then
+                         with TAGFIELDP -> do
+                           begin
+                             if NAME <> BLANKID then
+                               begin
+                                 CONSTLCOUNTER := SLC + FIELDADDR ;
+                                 STOWCONST ( IDTYPE )
+                               end (* then *)
+                             else
+                               begin
+                                 CONSTANT ( FSYS + [ SYCOMMA ,
+                                            SYRPARENT ] , LSP_WORK ,
+                                            LVALU ) ;
+                                 if COMPTYPES ( IDTYPE , LSP_WORK ) <>
+                                 1 then
+                                   ERROR ( 84 ) ;
+                               end (* else *) ;
+                             if SY = SYCOMMA then
+                               INSYMBOL
+                             else
+                               WEITER := FALSE ;
+                             LSP_WORK := FIRSTVARIANT ;
+                             L_WORK := SIZE ;
+                             while LSP_WORK <> NIL do
+                               with LSP_WORK -> do
+                                 begin
+                                   CONSTL_WORK := VARVALS ;
+                                   while CONSTL_WORK <> NIL do
+                                     if CONSTL_WORK -> . C . IVAL =
+                                     LVALU . IVAL then
+                                       break
+                                     else
+                                       CONSTL_WORK := CONSTL_WORK -> .
+                                                   NEXT ;
+                                   if CONSTL_WORK <> NIL then
+                                     begin
+                                       LRECTAGTYPE := SUBTAGTYPE ;
+                                       L_WORK := SIZE ;
+                                       FLDPR := FIRSTSUBFIELD ;
+                                       goto 10
+                                     end (* then *)
+                                   else
+                                     LSP_WORK := NEXTVARIANT ;
+                                 end (* with *)
+                           end (* with *)
+                     end (* with *)
+             end (* with *) ;
+
+           //************************************************
+           // L_WORK := LSP -> . SIZE ;                      
+           //************************************************
+
+           CONSTLCOUNTER := SLC + L_WORK ;
+           if FALSE then
+             begin
+               WRITELN ( TRACEF , 'l_work  = ' , L_WORK ) ;
+               WRITELN ( TRACEF , 'counter = ' , CONSTLCOUNTER ) ;
+               WRITELN ( TRACEF , 'Ende STRUCT_RECORDCONST' ) ;
+               WRITELN ( TRACEF ) ;
+             end (* then *)
+         end (* STRUCT_RECORDCONST *) ;
+
+
+      procedure STRUCT_SETCONST ;
+
+         var NOCHMAL : BOOLEAN ;
+             PSI : PSETINFO ;
+             LVALU : XCONSTANT ;
+             ELEMENTTYP : TTP ;
+             TYP_WORK : TTP ;
+
+         begin (* STRUCT_SETCONST *)
+           ELEMENTTYP := NIL ;
+           if LSP <> NIL then
+             if LSP -> . FORM = POWER then
+               ELEMENTTYP := LSP -> . ELSET
+             else
+               ERROR ( 82 ) ;
+           PSI := PSIGLOB ;
+           PSI -> . ELEMCOUNT := 0 ;
+           PSI -> . SETMIN := 0 ;
+           PSI -> . SETMAX := 0 ;
+           PSI -> . RANGEERR := 0 ;
+           PSI -> . CHARTYPE := FALSE ;
+           PSI -> . HEXORBIN := ' ' ;
+           PSI -> . CONST_IN_SET := 0 ;
+           PSI -> . VARS_IN_SET := 0 ;
+           if SY <> SYRBRACK then
+             repeat
+               CONSTANT ( FSYS + [ SYRBRACK , SYCOMMA , SYDOTDOT ] ,
+                          TYP_WORK , LVALU ) ;
+               if COMPTYPES ( TYP_WORK , ELEMENTTYP ) <> 1 then
+                 ERROR ( 83 ) ;
+               ELEMENTTYP := TYP_WORK ;
+               NOCHMAL := SET_CONST_PART ( ELEMENTTYP , LVALU , PSI ) ;
+             until not NOCHMAL ;
+           if SY = SYRBRACK then
+             INSYMBOL
+           else
+             ERROR ( 12 ) ;
+           if FALSE then
+             begin
+               WRITELN ( TRACEF ) ;
+               WRITELN ( TRACEF , 'linecnt = ' , LINECNT : 1 ) ;
+               WRITELN ( TRACEF , 'psi.elemcount = ' , PSI -> .
+                         ELEMCOUNT ) ;
+               WRITELN ( TRACEF , 'psi.setmin    = ' , PSI -> . SETMIN
+                         ) ;
+               WRITELN ( TRACEF , 'psi.setmax    = ' , PSI -> . SETMAX
+                         ) ;
+               WRITELN ( TRACEF , 'psi.rangeerr  = ' , PSI -> .
+                         RANGEERR ) ;
+               for I := 1 to SETMAXSIZE do
+                 if PSI -> . SETELEMS [ I ] then
+                   WRITELN ( TRACEF , 'in set        = ' , PSI -> .
+                             SETMIN + I - 1 ) ;
+             end (* then *) ;
+           if ELEMENTTYP = PTYPE_CHAR then
+             BUILD_SETCONST ( FVALU , PSI , ELEMENTTYP )
+           else
+             BUILD_SETCONST ( FVALU , PSI , NIL ) ;
+           if LSP = NIL then
+             begin
+               NEW ( LSP , POWER ) ;
+               with LSP -> do
+                 begin
+                   ERRORFLAG := FALSE ;
+                   ELSET := ELEMENTTYP ;
+                   FORM := POWER ;
+                   SIZE := FVALU . PVAL -> . LENGTH ;
+                   ALN := WORDSIZE
+                 end (* with *) ;
+               FSP := LSP
+             end (* then *) ;
+           FVALU . SETTYPE := LSP ;
+         end (* STRUCT_SETCONST *) ;
+
+
       begin (* STRUCTCONSTANT *)
         LSP := FSP ;
         FVALU . IVAL := 0 ;
         FVALU . STRTYPE := ' ' ;
         SLC := - 1 ;
+
+        //**********************************************
+        // simple constant is used here to recognize    
+        // for example the strings that are used inside 
+        // of complex structured constants, so the      
+        // return code 2 has to be accepted here;       
+        // it is checked again by the caller, which     
+        // takes then appropriate action                
+        //**********************************************
+
         if SY in CONSTBEGSYS then
-
-        (************************************************)
-        (* simple constant is used here to recognize    *)
-        (* for example the strings that are used inside *)
-        (* of complex structured constants, so the      *)
-        (* return code 2 has to be accepted here;       *)
-        (* it is checked again by the caller, which     *)
-        (* takes then appropriate action                *)
-        (************************************************)
-
           begin
             CONSTANT ( FSYS , FSP , FVALU ) ;
             CT_RESULT := COMPTYPES ( LSP , FSP ) ;
@@ -8419,251 +8707,56 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                 if not LSP -> . ERRORFLAG then
                   ERROR ( 81 ) ;
                 FSP := NIL
-              end (* else *)
-          end (* then *)
-        else
-          if SY = SYLBRACK then
-            begin
+              end (* else *) ;
+            return
+          end (* then *) ;
 
-        (**********************************************)
-        (* read set constant, that is:                *)
-        (* empty set or a sequence of set const parts *)
-        (* which consist of single constants or       *)
-        (* constant ranges, separated by commas       *)
-        (* see set const part                         *)
-        (**********************************************)
+        //********************************************
+        // read set constant, that is:                
+        // empty set or a sequence of set const parts 
+        // which consist of single constants or       
+        // constant ranges, separated by commas       
+        // see set const part                         
+        //********************************************
 
-              INSYMBOL ;
-              ELT := NIL ;
-              if LSP <> NIL then
-                if LSP -> . FORM = POWER then
-                  ELT := LSP -> . ELSET
+        if SY = SYLBRACK then
+          begin
+            INSYMBOL ;
+            STRUCT_SETCONST ;
+            return
+          end (* then *) ;
+
+        //***************************************
+        // ARRAY OR RECORD CONSTANT              
+        //***************************************
+
+        if SY = SYLPARENT then
+          begin
+            INSYMBOL ;
+            CHECKSTARTCST ;
+            if LSP <> NIL then
+              with LSP -> do
+                if FORM = ARRAYS then
+                  STRUCT_ARRAYCONST
                 else
-                  ERROR ( 82 ) ;
-              PSI := PSIGLOB ;
-              PSI -> . ELEMCOUNT := 0 ;
-              PSI -> . SETMIN := 0 ;
-              PSI -> . SETMAX := 0 ;
-              PSI -> . RANGEERR := 0 ;
-              PSI -> . CHARTYPE := FALSE ;
-              PSI -> . HEXORBIN := ' ' ;
-              PSI -> . CONST_IN_SET := 0 ;
-              PSI -> . VARS_IN_SET := 0 ;
-              if SY <> SYRBRACK then
-                repeat
-                  CONSTANT ( FSYS + [ SYRBRACK , SYCOMMA , SYDOTDOT ] ,
-                             LSP1 , LVALU ) ;
-                  if COMPTYPES ( LSP1 , ELT ) <> 1 then
-                    ERROR ( 83 ) ;
-                  ELT := LSP1 ;
-                  NOCHMAL := SET_CONST_PART ( ELT , LVALU , PSI ) ;
-                until not NOCHMAL ;
-              if SY = SYRBRACK then
-                INSYMBOL
-              else
-                ERROR ( 12 ) ;
-              if FALSE then
-                begin
-                  WRITELN ( TRACEF ) ;
-                  WRITELN ( TRACEF , 'linecnt = ' , LINECNT : 1 ) ;
-                  WRITELN ( TRACEF , 'psi.elemcount = ' , PSI -> .
-                            ELEMCOUNT ) ;
-                  WRITELN ( TRACEF , 'psi.setmin    = ' , PSI -> .
-                            SETMIN ) ;
-                  WRITELN ( TRACEF , 'psi.setmax    = ' , PSI -> .
-                            SETMAX ) ;
-                  WRITELN ( TRACEF , 'psi.rangeerr  = ' , PSI -> .
-                            RANGEERR ) ;
-                  for I := 1 to SETMAXSIZE do
-                    if PSI -> . SETELEMS [ I ] then
-                      WRITELN ( TRACEF , 'in set        = ' , PSI -> .
-                                SETMIN + I - 1 ) ;
-                end (* then *) ;
-              if ELT = PTYPE_CHAR then
-                BUILD_SETCONST ( FVALU , PSI , ELT )
-              else
-                BUILD_SETCONST ( FVALU , PSI , NIL ) ;
-              if LSP = NIL then
-                begin
-                  NEW ( LSP , POWER ) ;
-                  with LSP -> do
+                  if FORM = RECORDS then
                     begin
-                      ERRORFLAG := FALSE ;
-                      ELSET := ELT ;
-                      FORM := POWER ;
-                      SIZE := FVALU . PVAL -> . LENGTH ;
-                      ALN := WORDSIZE
-                    end (* with *) ;
-                  FSP := LSP
-                end (* then *) ;
-              FVALU . SETTYPE := LSP ;
-            end (* then *)
-          else
-            if SY = SYLPARENT then
-
-        (**************************)
-        (*ARRAY OR RECORD CONSTANT*)
-        (**************************)
-
-              begin
-                INSYMBOL ;
-                K := 0 ;
-                CHECKSTARTCST ;
-                if LSP <> NIL then
-                  with LSP -> do
-                    if FORM = ARRAYS then
-                      begin
-                        ALIGN ( CONSTLCOUNTER , ALN ) ;
-                        SLC := CONSTLCOUNTER ;
-                        J := SLC ;
-                        if AELTYPE <> NIL then
-                          L := AELTYPE -> . SIZE
-                        else
-                          L := 1 ;
-                        LX := L ;
-                        ALIGN ( LX , ALN ) ;
-                        L := LX ;
-                        TEST := FALSE ;
-                        repeat
-                          K := K + 1 ;
-                          STOWCONST ( AELTYPE ) ;
-                          if SY = SYCOMMA then
-                            begin
-                              INSYMBOL ;
-                              J := J + L ;
-                              CONSTLCOUNTER := J
-                            end (* then *)
-                          else
-                            TEST := TRUE
-                        until TEST ;
-                        if SY = SYRPARENT then
-                          INSYMBOL
-                        else
-                          ERROR ( 4 ) ;
-                        ERRFLAG := FALSE ;
-                        if INXTYPE <> NIL then
-                          begin
-                            ERRFLAG := INXTYPE -> . ERRORFLAG ;
-                            GETBOUNDS ( INXTYPE , I , J ) ;
-                            J := J - I + 1
-                          end (* then *)
-                        else
-                          J := SIZE DIV L ;
-                        if K <> J then
-                          if K > J then
-                            begin
-                              if not ERRFLAG then
-                                ERROR ( 207 )
-                            end (* then *)
-                          else
-                            begin
-                              ERRKIND := 'W' ;
-                              ERROR ( 306 ) ;
-                              if OPT . PRCODE then
-                                WRITELN ( PCODE , SLC + SIZE - 1 : 1 ,
-                                          MN [ 70 ] , ' B,0' ) ;
-
-        (********)
-        (*DFC   *)
-        (********)
-
-                            end (* else *) ;
-                        CONSTLCOUNTER := SLC + SIZE ;
-                      end (* then *)
-                    else
-                      if FORM = RECORDS then
-                        begin
-                          ALIGN ( CONSTLCOUNTER , ALN ) ;
-                          SLC := CONSTLCOUNTER ;
-                          L := SIZE ;
-                          LRECTAGTYPE := RECTAGTYPE ;
-                          TEST := TRUE ;
-                          FLDPR := FIRSTFIELD ;
-                          10 :
-                          while TEST and ( FLDPR <> NIL ) do
-                            with FLDPR -> do
-                              begin
-                                CONSTLCOUNTER := SLC + FIELDADDR ;
-                                STOWCONST ( IDTYPE ) ;
-                                FLDPR := NEXT ;
-                                if SY = SYCOMMA then
-                                  INSYMBOL
-                                else
-                                  TEST := FALSE
-                              end (* with *) ;
-                          if TEST then
-                            if LRECTAGTYPE <> NIL then
-
-        (****************************)
-        (* TAG FIELD VALUE IS NEXT  *)
-        (****************************)
-
-                              with LRECTAGTYPE -> do
-                                if TAGFIELDP <> NIL then
-                                  with TAGFIELDP -> do
-                                    begin
-                                      if NAME <> BLANKID then
-                                        begin
-                                          CONSTLCOUNTER := SLC +
-                                                   FIELDADDR ;
-                                          STOWCONST ( IDTYPE )
-                                        end (* then *)
-                                      else
-                                        begin
-                                          CONSTANT ( FSYS + [ SYCOMMA ,
-                                                   SYRPARENT ] , LSP1 ,
-                                                   LVALU ) ;
-                                          if COMPTYPES ( IDTYPE , LSP1
-                                          ) <> 1 then
-                                            ERROR ( 84 ) ;
-                                        end (* else *) ;
-                                      if SY = SYCOMMA then
-                                        INSYMBOL
-                                      else
-                                        TEST := FALSE ;
-                                      LSP1 := FIRSTVARIANT ;
-                                      L := SIZE ;
-                                      while LSP1 <> NIL do
-                                        with LSP1 -> do
-                                          begin
-                                            CONSTL_WORK := VARVALS ;
-                                            while CONSTL_WORK <> NIL do
-                                              if CONSTL_WORK -> . C .
-                                              IVAL = LVALU . IVAL then
-                                                break
-                                              else
-                                                CONSTL_WORK :=
-                                                   CONSTL_WORK -> .
-                                                   NEXT ;
-                                            if CONSTL_WORK <> NIL then
-                                              begin
-                                                LRECTAGTYPE :=
-                                                   SUBTAGTYPE ;
-                                                L := SIZE ;
-                                                FLDPR := FIRSTSUBFIELD
-                                                   ;
-                                                goto 10
-                                              end (* then *)
-                                            else
-                                              LSP1 := NEXTVARIANT ;
-                                          end (* with *)
-                                    end (* with *) ;
-                          CONSTLCOUNTER := SLC + L ;
-                          if SY <> SYRPARENT then
-                            ERROR ( 4 )
-                          else
-                            INSYMBOL ;
-                        end (* then *)
+                      STRUCT_RECORDCONST ;
+                      if SY <> SYRPARENT then
+                        ERROR ( 4 )
                       else
-                        ERROR ( 208 ) ;
+                        INSYMBOL ;
+                    end (* then *)
+                  else
+                    ERROR ( 208 ) ;
+            return
+          end (* then *) ;
 
-        (*************************)
-        (*WRONG FORM FOR CONSTANT*)
-        (*************************)
+        //***************************************
+        // WRONG FORM FOR CONSTANT               
+        //***************************************
 
-              end (* then *)
-            else
-              ERROR ( 50 ) ;
+        ERROR ( 50 ) ;
       end (* STRUCTCONSTANT *) ;
 
 
@@ -10260,7 +10353,6 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
            (*PAK   *)
            (********)
 
-
                then
                  WRITELN ( PCODE , MN [ FOP ] : 4 , ' ' , FP0 : 1 , ' '
                            , FP1 : 1 , ' ' , FP2 : 1 )
@@ -10569,8 +10661,9 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                      if FSP -> . FORM = POINTER then
                        begin
                          if not ( CALLNR in [ 3 , 6 ] ) then
-                           GEN3 ( PCODE_CHK , ORD ( 'A' ) , - 1 ,
-                                  CALLNR )
+                           if FALSE then
+                             GEN3 ( PCODE_CHK , ORD ( 'A' ) , - 1 ,
+                                    CALLNR )
                        end (* then *)
                      else
                        if FSP -> . FORM < POINTER then
@@ -10669,7 +10762,6 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
               (*REDUNDANT TEST?*)
               (*****************)
 
-
                   then
                     begin
                       if KIND = VARBL then
@@ -10697,6 +10789,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                 LCP : IDP ;
                 LMIN , LMAX : INTEGER ;
                 FACT_ERR : BOOLEAN ;
+                SAVE_TYP : TTP ;
 
             begin (* SELECTOR *)
               IS_FUNCRES := FALSE ;
@@ -10765,20 +10858,57 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
               //******************************************
 
                     FIELD : with DISPLAY [ DISX ] do
-                              if OCCUR = CREC then
-                                begin
-                                  ACCESS := DRCT ;
-                                  VLEVEL := CLEV ;
-                                  DPLMT := CDSPL + FIELDADDR
-                                end (* then *)
-                              else
-                                begin
-                                  if GEN then
-                                    GEN3 ( PCODE_LOD , ORD ( 'A' ) ,
-                                           LEVEL , VDSPL ) ;
-                                  ACCESS := INDRCT ;
-                                  IDPLMT := FIELDADDR
-                                end (* else *) ;
+                              begin
+                                if FALSE then
+                                  begin
+                                    WRITELN ( TRACEF ) ;
+                                    WRITELN ( TRACEF ,
+                                              'loc linecnt      = ' ,
+                                              LINECNT ) ;
+                                    WRITELN ( TRACEF ,
+                                             'selector field occur = '
+                                              , OCCUR ) ;
+                                    WRITELN ( TRACEF ,
+                                              'selector field crec = '
+                                              , CREC ) ;
+                                    WRITELN ( TRACEF ,
+                                         'selector field with_copy = '
+                                              , WITH_COPY ) ;
+                                    WRITELN ( TRACEF ,
+                                        'selector field ptr_offset = '
+                                              , POINTER_OFFSET ) ;
+                                    WRITELN ( TRACEF ,
+                                             'selector field vdspl = '
+                                              , VDSPL ) ;
+                                  end (* then *) ;
+                                if OCCUR = CREC then
+                                  begin
+                                    ACCESS := DRCT ;
+                                    VLEVEL := CLEV ;
+                                    DPLMT := CDSPL + FIELDADDR
+                                  end (* then *)
+                                else
+                                  begin
+                                    if GEN then
+                                      GEN3 ( PCODE_LOD , ORD ( 'A' ) ,
+                                             LEVEL , VDSPL ) ;
+                                    ACCESS := INDRCT ;
+                                    if WITH_COPY = WCPOINTER then
+                                      begin
+                                        SAVE_TYP := BTYPE ;
+                                        BTYPE := PTYPE_ANY ;
+                                        IDPLMT := POINTER_OFFSET ;
+                                        LOAD ;
+                                        if OPT . DEBUG then
+                                          CHKBNDS ( 1 , FALSE ,
+                                                   PTYPE_ANY ) ;
+                                        BTYPE := SAVE_TYP ;
+                                      end (* then *) ;
+                                    KIND := VARBL ;
+                                    ACCESS := INDRCT ;
+                                    IDPLMT := FIELDADDR ;
+                                  end (* else *)
+                              end (* with *) ;
 
               //******************************************
               // access to structured consts              
@@ -11040,6 +11170,16 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                                         if WITH_COPY = WCPOINTER then
                                           if ACCESS = DRCT then
                                             begin
+                                              if FALSE then
+                                                begin
+                                                  WRITELN ( TRACEF ) ;
+                                                  WRITELN ( TRACEF ,
+                                                 'loc linecnt      = '
+                                                   , LINECNT ) ;
+                                                  WRITELN ( TRACEF ,
+                                    'selector wcpointer access = drct'
+                                                   ) ;
+                                                end (* then *) ;
                                               DPLMT := DPLMT +
                                                    POINTER_OFFSET ;
                                               LOAD ;
@@ -11055,7 +11195,36 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                                                 end (* with *)
                                             end (* then *)
                                           else
-                                            ERROR ( 419 )
+                                            if ACCESS = INDRCT then
+                                              begin
+                                                if FALSE then
+                                                  begin
+                                                   WRITELN ( TRACEF ) ;
+                                                   WRITELN ( TRACEF ,
+                                                 'loc linecnt      = '
+                                                   , LINECNT ) ;
+                                                   WRITELN ( TRACEF ,
+                                  'selector wcpointer access = indrct'
+                                                   ) ;
+                                                  end (* then *) ;
+                                                IDPLMT :=
+                                                   POINTER_OFFSET ;
+                                                LOAD ;
+                                                if OPT . DEBUG then
+                                                  CHKBNDS ( 1 , FALSE ,
+                                                   PTYPE_ANY ) ;
+                                                GATTR . TYPTR := IDTYPE
+                                                   ;
+                                                with GATTR do
+                                                  begin
+                                                   KIND := VARBL ;
+                                                   ACCESS := INDRCT ;
+                                                   IDPLMT := FIELDADDR
+                                                   ;
+                                                  end (* with *)
+                                              end (* then *)
+                                            else
+                                              ERROR ( 419 )
                                         else
                                           begin
                                             TYPTR := IDTYPE ;
@@ -12208,32 +12377,33 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                          EXPRESSION ( FSYS + [ SYCOMMA , SYCOLON ,
                                       SYRPARENT ] ) ;
                          LSP := GATTR . TYPTR ;
-                         if LSP -> . FORM <= POINTER then
-                           LOAD
-                         else
-                           if LSP -> . FORM = CSTRING then
-                             begin
-                               if GATTR . KIND = VARBL then
-                                 LOADADDRESS
-                               else
-                                 begin
+                         if LSP <> NIL then
+                           if LSP -> . FORM <= POINTER then
+                             LOAD
+                           else
+                             if LSP -> . FORM = CSTRING then
+                               begin
+                                 if GATTR . KIND = VARBL then
+                                   LOADADDRESS
+                                 else
+                                   begin
 
                  //*****************************************************
                  // copy "string on stack" to free storage              
                  // and replace it by its address on the stack          
                  //*****************************************************
 
-                                   LLC := LCOUNTER ;
-                                   ALIGN ( LLC , PTRSIZE ) ;
-                                   LCOUNTER := LLC + STRSTACKSZ ;
-                                   if LCOUNTER > LCMAX then
-                                     LCMAX := LCOUNTER ;
-                                   GEN2 ( PCODE_LDA , LEVEL , LLC ) ;
-                                   GEN2 ( PCODE_VST , 1 , - 1 ) ;
-                                 end (* else *)
-                             end (* then *)
-                           else
-                             LOADADDRESS ;
+                                     LLC := LCOUNTER ;
+                                     ALIGN ( LLC , PTRSIZE ) ;
+                                     LCOUNTER := LLC + STRSTACKSZ ;
+                                     if LCOUNTER > LCMAX then
+                                       LCMAX := LCOUNTER ;
+                                     GEN2 ( PCODE_LDA , LEVEL , LLC ) ;
+                                     GEN2 ( PCODE_VST , 1 , - 1 ) ;
+                                   end (* else *)
+                               end (* then *)
+                             else
+                               LOADADDRESS ;
                          if RWFILE = NIL then
                            begin
                              DEFAULT := TRUE ;
@@ -12559,6 +12729,12 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                    CONSTL_WORK : -> CONSTLIST ;
 
                begin (* NEW1 *)
+                 if FALSE then
+                   begin
+                     WRITELN ;
+                     WRITELN ( 'start new1 - linecnt   = ' , LINECNT )
+                               ;
+                   end (* then *) ;
                  VARIABLE ( FSYS + [ SYCOMMA , SYRPARENT ] , TRUE ) ;
                  LOADADDRESS ;
                  LSP := NIL ;
@@ -12575,7 +12751,34 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                              if ELTYPE -> . ALN > INTSIZE then
                                LALN := REALSIZE ;
                              if ELTYPE -> . FORM = RECORDS then
-                               LSP := ELTYPE -> . RECTAGTYPE
+                               begin
+                                 LSP := ELTYPE -> . RECTAGTYPE ;
+                                 if LSP <> NIL then
+                                   begin
+                                     if FALSE then
+                                       begin
+                                         WRITELN ( 'record has variant'
+                                                   ) ;
+                                         WRITELN ( 'default lsize = ' ,
+                                                   LSIZE ) ;
+                                         LSIZE := LSP -> . VARIANT_OFFS
+                                                  ;
+                                         WRITELN ( 'reduced lsize = ' ,
+                                                   LSIZE ) ;
+                                       end (* then *)
+                                   end (* then *)
+                                 else
+                                   begin
+                                     if FALSE then
+                                       begin
+                                         WRITELN (
+                                             'record without variant '
+                                                   ) ;
+                                         WRITELN ( 'default lsize = ' ,
+                                                   LSIZE ) ;
+                                       end (* then *)
+                                   end (* else *)
+                               end (* then *)
                            end (* then *)
                        end (* then *)
                      else
@@ -12585,6 +12788,10 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                      INSYMBOL ;
                      CONSTANT ( FSYS + [ SYCOMMA , SYRPARENT ] , LSP1 ,
                                 LVAL ) ;
+                     if FALSE then
+                       begin
+                         WRITELN ( 'new with variant ' ) ;
+                       end (* then *) ;
                      VARTS := VARTS + 1 ;
 
                  (*****************************************)
@@ -12621,20 +12828,44 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                                        if CONSTL_WORK <> NIL then
                                          begin
                                            LSIZE := SIZE ;
+                                           if FALSE then
+                                             begin
+                                               WRITELN (
+                                               'variant found ival = '
+                                                   , LVAL . IVAL ) ;
+                                               WRITELN (
+                                              'variant found lsize = '
+                                                   , LSIZE ) ;
+                                             end (* then *) ;
                                            LSP := SUBTAGTYPE ;
                                            goto 1
                                          end (* then *)
                                        else
                                          LSP1 := NEXTVARIANT
                                      end (* with *) ;
-                                 LSIZE := LSP -> . SIZE ;
+
+                 //************************************
+                 // if variant not found,              
+                 // lsp is set to nil, so that         
+                 // further searches will fail         
+                 //************************************
+
                                  LSP := NIL ;
+                                 if FALSE then
+                                   begin
+                                     WRITELN ( 'lsize default used' ) ;
+                                     WRITELN ( 'lsize = ' , LSIZE ) ;
+                                   end (* then *) ;
                                end (* then *)
                              else
                                ERROR ( 116 ) ;
                      1 :
                      
                    end (* while *) ;
+                 if FALSE then
+                   begin
+                     WRITELN ( 'generate new with lsize = ' , LSIZE ) ;
+                   end (* then *) ;
                  ALIGN ( LSIZE , INTSIZE ) ;
                  GEN2 ( PCODE_NEW , LSIZE , LALN ) ;
                end (* NEW1 *) ;
@@ -12651,7 +12882,6 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                  (********)
                  (*MARK  *)
                  (********)
-
 
                      then
                        begin
@@ -16294,11 +16524,34 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                                   SETVAR_SIZE := MAXSETL ;
                                   if GATTR . TYPTR <> NIL then
                                     if GATTR . TYPTR <> PTYPE_INT then
-                                      CALC_SETTYPSIZE ( GATTR . TYPTR ,
-                                                   SETVAR_SIZE ,
+                                      begin
+                                        CALC_SETTYPSIZE ( GATTR . TYPTR
+                                                   , SETVAR_SIZE ,
                                                    SETMIN_DUMMY ,
                                                    SETMAX_DUMMY ,
                                                    SETOFFS_LOCAL ) ;
+                                      end (* then *) ;
+                                  if FALSE then
+                                    begin
+                                      WRITELN ( TRACEF ,
+                                                'line of code    = ' ,
+                                                LINECNT ) ;
+                                      WRITELN ( TRACEF ,
+                                                'gattr.typtr = ' ,
+                                                GATTR . TYPTR ) ;
+                                      WRITELN ( TRACEF ,
+                                                'setvar_size     = ' ,
+                                                SETVAR_SIZE ) ;
+                                      WRITELN ( TRACEF ,
+                                                'setmin_dummy    = ' ,
+                                                SETMIN_DUMMY ) ;
+                                      WRITELN ( TRACEF ,
+                                                'setmax_dummy    = ' ,
+                                                SETMAX_DUMMY ) ;
+                                      WRITELN ( TRACEF ,
+                                                'setoffs_local   = ' ,
+                                                SETOFFS_LOCAL ) ;
+                                    end (* then *) ;
                                   if SETVAR_SIZE > MAXSETL then
                                     SETVAR_SIZE := MAXSETL ;
                                   ALIGN ( LCOUNTER , WORDSIZE ) ;
@@ -16413,6 +16666,150 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                                            ;
                               end (* else *)
                         end (* FACTOR_IDENT *) ;
+
+
+                     procedure FACTOR_SET1 ;
+
+                        begin (* FACTOR_SET1 *)
+                          PSI := PSIGLOB ;
+                          PSI -> . ELEMCOUNT := 0 ;
+                          PSI -> . SETMIN := 0 ;
+                          PSI -> . SETMAX := 0 ;
+                          PSI -> . RANGEERR := 0 ;
+                          PSI -> . CHARTYPE := FALSE ;
+                          PSI -> . HEXORBIN := ' ' ;
+                          PSI -> . VARS_IN_SET := 0 ;
+                          PSI -> . CONST_IN_SET := 0 ;
+                          INSYMBOL ;
+
+                          /**********************************************/
+                          /* store set values in array of size          */
+                          /* setmaxsize                                 */
+                          /* compute setmin and setmax, while reading   */
+                          /* constant elements; offset at the end       */
+                          /* build set string at the end                */
+                          /**********************************************/
+
+                          NEW ( LSP , POWER ) ;
+                          with LSP -> do
+                            begin
+                              ERRORFLAG := FALSE ;
+                              ELSET := NIL ;
+                              SIZE := 0 ;
+                              SETMIN := 0 ;
+                              SETMAX := 0 ;
+                              SETOFFS := 0 ;
+                              FORM := POWER
+                            end (* with *) ;
+                          if SY = SYRBRACK then
+                            begin
+                              with GATTR do
+                                begin
+                                  TYPTR := LSP ;
+                                  KIND := CST
+                                end (* with *) ;
+                              INSYMBOL
+                            end (* then *)
+                          else
+                            begin
+                              repeat
+                                EXPRESSION ( FSYS + [ SYCOMMA ,
+                                             SYDOTDOT , SYRBRACK ] ) ;
+                                NOCHMAL := FALSE ;
+                                if GATTR . TYPTR <> NIL then
+                                  if GATTR . TYPTR -> . FORM <> SCALAR
+                                  then
+                                    begin
+                                      ERROR ( 136 ) ;
+                                      GATTR . TYPTR := NIL
+                                    end (* then *)
+                                  else
+                                    if COMPTYPES ( LSP -> . ELSET ,
+                                    GATTR . TYPTR ) = 1 then
+                                      NOCHMAL := FACT_SET_UP
+                                    else
+                                      ERROR ( 137 ) ;
+
+                          /*******************************/
+                          /* nochmal may already be true */
+                          /* and sy neq comma            */
+                          /* - set by fact_set_up        */
+                          /*******************************/
+
+                                if SY = SYCOMMA then
+                                  begin
+                                    INSYMBOL ;
+                                    NOCHMAL := TRUE ;
+                                  end (* then *)
+                              until not NOCHMAL ;
+                              if SY = SYRBRACK then
+                                INSYMBOL
+                              else
+                                ERROR ( 12 ) ;
+                              if FALSE then
+                                begin
+                                  WRITELN ( TRACEF ) ;
+                                  WRITELN ( TRACEF , 'linecnt = ' ,
+                                            LINECNT : 1 ) ;
+                                  WRITELN ( TRACEF , 'psi.elemcount = '
+                                            , PSI -> . ELEMCOUNT ) ;
+                                  WRITELN ( TRACEF , 'psi.setmin    = '
+                                            , PSI -> . SETMIN ) ;
+                                  WRITELN ( TRACEF , 'psi.setmax    = '
+                                            , PSI -> . SETMAX ) ;
+                                  WRITELN ( TRACEF , 'psi.rangeerr  = '
+                                            , PSI -> . RANGEERR ) ;
+                                  for I := 1 to SETMAXSIZE do
+                                    if PSI -> . SETELEMS [ I ] then
+                                      WRITELN ( TRACEF ,
+                                                'in set        = ' ,
+                                                PSI -> . SETMIN + I - 1
+                                                ) ;
+                                end (* then *) ;
+                            end (* else *) ;
+                          if PSI -> . VARS_IN_SET > 0 then
+                            begin
+                              if PSI -> . CONST_IN_SET > 0 then
+                                begin
+                                  if LSP -> . ELSET = PTYPE_CHAR then
+                                    BUILD_SETCONST ( SETVAL , PSI , LSP
+                                                   -> . ELSET )
+                                  else
+                                    BUILD_SETCONST ( SETVAL , PSI , NIL
+                                                   ) ;
+                                  LVP := SETVAL . PVAL ;
+                                  ALIGN ( LCOUNTER , WORDSIZE ) ;
+                                  GEN_LCA_S ( LSP -> . ELSET , SETVAL )
+                                              ;
+                                  GEN2 ( PCODE_SLD , LVP -> . LENGTH ,
+                                         LCOUNTER ) ;
+                                  GEN0 ( PCODE_UNI ) ;
+                                  if LVP -> . LENGTH > SETVAR_SIZE then
+                                    SETVAR_SIZE := LVP -> . LENGTH ;
+                                  if ( SETVAR_SIZE + LCOUNTER ) > LCMAX
+                                  then
+                                    LCMAX := SETVAR_SIZE + LCOUNTER ;
+                                end (* then *) ;
+                              GATTR . KIND := VARBL ;
+                              GATTR . ACCESS := STKEXPR ;
+                              GATTR . STKDPLMT := TS_LC ;
+                              GATTR . STKLEN := SETVAR_SIZE ;
+                              LSP -> . SIZE := SETVAR_SIZE ;
+                            end (* then *)
+                          else
+                            begin
+                              if LSP -> . ELSET = PTYPE_CHAR then
+                                BUILD_SETCONST ( SETVAL , PSI , LSP ->
+                                                 . ELSET )
+                              else
+                                BUILD_SETCONST ( SETVAL , PSI , NIL ) ;
+                              LVP := SETVAL . PVAL ;
+                              LSP -> . SIZE := LVP -> . LENGTH ;
+                              GATTR . KIND := CST ;
+                              GATTR . CVAL := SETVAL ;
+                            end (* else *) ;
+                          GATTR . TYPTR := LSP ;
+                        end (* FACTOR_SET1 *) ;
 
 
                      begin (* FACTOR *)
@@ -16558,166 +16955,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                                                end (* else *) ;
                                        end (* tag/ca *) ;
                                SYLBRACK :
-                                 begin
-                                   PSI := PSIGLOB ;
-                                   PSI -> . ELEMCOUNT := 0 ;
-                                   PSI -> . SETMIN := 0 ;
-                                   PSI -> . SETMAX := 0 ;
-                                   PSI -> . RANGEERR := 0 ;
-                                   PSI -> . CHARTYPE := FALSE ;
-                                   PSI -> . HEXORBIN := ' ' ;
-                                   PSI -> . VARS_IN_SET := 0 ;
-                                   PSI -> . CONST_IN_SET := 0 ;
-                                   INSYMBOL ;
-
-                       /**********************************************/
-                       /* store set values in array of size          */
-                       /* setmaxsize                                 */
-                       /* compute setmin and setmax, while reading   */
-                       /* constant elements; offset at the end       */
-                       /* build set string at the end                */
-                       /**********************************************/
-
-                                   NEW ( LSP , POWER ) ;
-                                   with LSP -> do
-                                     begin
-                                       ERRORFLAG := FALSE ;
-                                       ELSET := NIL ;
-                                       SIZE := 0 ;
-                                       SETMIN := 0 ;
-                                       SETMAX := 0 ;
-                                       SETOFFS := 0 ;
-                                       FORM := POWER
-                                     end (* with *) ;
-                                   if SY = SYRBRACK then
-                                     begin
-                                       with GATTR do
-                                         begin
-                                           TYPTR := LSP ;
-                                           KIND := CST
-                                         end (* with *) ;
-                                       INSYMBOL
-                                     end (* then *)
-                                   else
-                                     begin
-                                       repeat
-                                         EXPRESSION ( FSYS + [ SYCOMMA
-                                                   , SYDOTDOT ,
-                                                   SYRBRACK ] ) ;
-                                         NOCHMAL := FALSE ;
-                                         if GATTR . TYPTR <> NIL then
-                                           if GATTR . TYPTR -> . FORM
-                                           <> SCALAR then
-                                             begin
-                                               ERROR ( 136 ) ;
-                                               GATTR . TYPTR := NIL
-                                             end (* then *)
-                                           else
-                                             if COMPTYPES ( LSP -> .
-                                             ELSET , GATTR . TYPTR ) =
-                                             1 then
-                                               NOCHMAL := FACT_SET_UP
-                                             else
-                                               ERROR ( 137 ) ;
-
-                       /*******************************/
-                       /* nochmal may already be true */
-                       /* and sy neq comma            */
-                       /* - set by fact_set_up        */
-                       /*******************************/
-
-                                         if SY = SYCOMMA then
-                                           begin
-                                             INSYMBOL ;
-                                             NOCHMAL := TRUE ;
-                                           end (* then *)
-                                       until not NOCHMAL ;
-                                       if SY = SYRBRACK then
-                                         INSYMBOL
-                                       else
-                                         ERROR ( 12 ) ;
-                                       if FALSE then
-                                         begin
-                                           WRITELN ( TRACEF ) ;
-                                           WRITELN ( TRACEF ,
-                                                   'linecnt = ' ,
-                                                   LINECNT : 1 ) ;
-                                           WRITELN ( TRACEF ,
-                                                   'psi.elemcount = ' ,
-                                                   PSI -> . ELEMCOUNT )
-                                                   ;
-                                           WRITELN ( TRACEF ,
-                                                   'psi.setmin    = ' ,
-                                                   PSI -> . SETMIN ) ;
-                                           WRITELN ( TRACEF ,
-                                                   'psi.setmax    = ' ,
-                                                   PSI -> . SETMAX ) ;
-                                           WRITELN ( TRACEF ,
-                                                   'psi.rangeerr  = ' ,
-                                                   PSI -> . RANGEERR )
-                                                   ;
-                                           for I := 1 to SETMAXSIZE do
-                                             if PSI -> . SETELEMS [ I ]
-                                             then
-                                               WRITELN ( TRACEF ,
-                                                   'in set        = ' ,
-                                                   PSI -> . SETMIN + I
-                                                   - 1 ) ;
-                                         end (* then *) ;
-                                     end (* else *) ;
-                                   if PSI -> . VARS_IN_SET > 0 then
-                                     begin
-                                       if PSI -> . CONST_IN_SET > 0
-                                       then
-                                         begin
-                                           if LSP -> . ELSET =
-                                           PTYPE_CHAR then
-                                             BUILD_SETCONST ( SETVAL ,
-                                                   PSI , LSP -> . ELSET
-                                                   )
-                                           else
-                                             BUILD_SETCONST ( SETVAL ,
-                                                   PSI , NIL ) ;
-                                           LVP := SETVAL . PVAL ;
-                                           ALIGN ( LCOUNTER , WORDSIZE
-                                                   ) ;
-                                           GEN_LCA_S ( LSP -> . ELSET ,
-                                                   SETVAL ) ;
-                                           GEN2 ( PCODE_SLD , LVP -> .
-                                                  LENGTH , LCOUNTER ) ;
-                                           GEN0 ( PCODE_UNI ) ;
-                                           if LVP -> . LENGTH >
-                                           SETVAR_SIZE then
-                                             SETVAR_SIZE := LVP -> .
-                                                   LENGTH ;
-                                           if ( SETVAR_SIZE + LCOUNTER
-                                           ) > LCMAX then
-                                             LCMAX := SETVAR_SIZE +
-                                                   LCOUNTER ;
-                                         end (* then *) ;
-                                       GATTR . KIND := VARBL ;
-                                       GATTR . ACCESS := STKEXPR ;
-                                       GATTR . STKDPLMT := TS_LC ;
-                                       GATTR . STKLEN := SETVAR_SIZE ;
-                                       LSP -> . SIZE := SETVAR_SIZE ;
-                                     end (* then *)
-                                   else
-                                     begin
-                                       if LSP -> . ELSET = PTYPE_CHAR
-                                       then
-                                         BUILD_SETCONST ( SETVAL , PSI
-                                                   , LSP -> . ELSET )
-                                       else
-                                         BUILD_SETCONST ( SETVAL , PSI
-                                                   , NIL ) ;
-                                       LVP := SETVAL . PVAL ;
-                                       LSP -> . SIZE := LVP -> . LENGTH
-                                                   ;
-                                       GATTR . KIND := CST ;
-                                       GATTR . CVAL := SETVAL ;
-                                     end (* else *) ;
-                                   GATTR . TYPTR := LSP ;
-                                 end (* tag/ca *)
+                                 FACTOR_SET1 ;
                              end (* case *)
                            until not NOCHMALS ;
                            if not ( SY in FSYS ) then
@@ -20092,7 +20330,6 @@ procedure ENTSTDNAMES ;
          // new functions since compiler release 2018.01       
          //****************************************************
 
-
            ( 'DIGITSOF    ' , 78 , FUNC ) ,    // digits of decimal
            ( 'PRECISIONOF ' , 79 , FUNC ) ,    // precision of decimal
            ( 'STR         ' , 80 , FUNC ) ,    // convert to string
@@ -20476,6 +20713,7 @@ procedure ENTSTDNAMES ;
                      IDTYPE := PTYPE_INT ;
                      FIELDADDR := 0 ;
                      KLASS := FIELD ;
+                     INSERTED_BY_WITH := FALSE ;
                      WITH_COPY := WCNONE ;
                      POINTER_OFFSET := 0 ;
                      TOP := TOP + 1 ;
@@ -20494,6 +20732,7 @@ procedure ENTSTDNAMES ;
                          FIELDADDR := PTRSIZE ;
                          NEXT := NIL ;
                          KLASS := FIELD ;
+                         INSERTED_BY_WITH := FALSE ;
                          WITH_COPY := WCNONE ;
                          POINTER_OFFSET := 0 ;
                          NEW ( IDTYPE , ARRAYS ) ;

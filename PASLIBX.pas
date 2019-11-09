@@ -1944,6 +1944,16 @@ function $PASMEM ( FUNCCODE : INTEGER ; X : VOIDPTR ) : VOIDPTR ;
              X := PTRCAST ( $PASSYS ( 10 , X ) ) ;
              $PASMEM := X ;
            end (* tag/ca *) ;
+
+     /*********************************/
+     /* dispose does nothing          */
+     /*********************************/
+
+       8 : begin
+             WRITELN ( '*** DISPOSE has been called ***' ) ;
+             WRITELN ( '*** Argument for DISPOSE = ' , X ) ;
+             WRITELN ( '*** DISPOSE has no effect ***' ) ;
+           end (* tag/ca *) ;
        otherwise
          $PASMEM := NIL
      end (* case *) ;
@@ -2456,10 +2466,12 @@ function $PASSTR2 ( FUNCCODE : INTEGER ; const S1 : STRING ; const S2 :
        LS2 : INTEGER ;
        CP1 : -> CHAR ;
        CP1START : -> CHAR ;
+       CP1LIMIT : -> CHAR ;
+       CP1FOUND2 : -> CHAR ;
        CP2 : -> CHAR ;
+       CP2START : -> CHAR ;
        LFOUND : INTEGER ;
        I : INTEGER ;
-       RESTL : INTEGER ;
        OKSET : set of CHAR ;
 
    begin (* $PASSTR2 *)
@@ -2478,33 +2490,41 @@ function $PASSTR2 ( FUNCCODE : INTEGER ; const S1 : STRING ; const S2 :
              CP1 := ADDR ( S1 [ 1 ] ) ;
              CP1START := CP1 ;
              CP2 := ADDR ( S2 [ 1 ] ) ;
+             CP2START := CP2 ;
              LFOUND := 0 ;
-             RESTL := LS1 ;
-             for I := 1 to LS1 do
+             CP1LIMIT := PTRADD ( CP1 , LS1 ) ;
+             while PTRDIFF ( CP1LIMIT , CP1 ) > 0 do
                begin
                  if CP1 -> <> CP2 -> then
                    begin
                      if LFOUND > 0 then
                        begin
-                         CP2 := ADDR ( S2 [ 1 ] ) ;
+                         CP2 := CP2START ;
+                         if CP1FOUND2 <> NIL then
+                           CP1 := CP1FOUND2 ;
                          LFOUND := 0 ;
                        end (* then *)
                      else
                        begin
                          CP1 := PTRADD ( CP1 , 1 ) ;
-                         RESTL := RESTL - 1 ;
                        end (* else *) ;
-                     if RESTL < LS2 then
+                     if PTRDIFF ( CP1LIMIT , CP1 ) < LS2 then
                        break ;
-                     continue
-                   end (* then *) ;
-                 LFOUND := LFOUND + 1 ;
-                 if LFOUND >= LS2 then
-                   break ;
-                 CP2 := PTRADD ( CP2 , 1 ) ;
-                 CP1 := PTRADD ( CP1 , 1 ) ;
-                 RESTL := RESTL - 1 ;
-               end (* for *) ;
+                   end (* then *)
+                 else
+                   begin
+                     if LFOUND = 0 then
+                       CP1FOUND2 := NIL
+                     else
+                       if CP1 -> = CP2START -> then
+                         CP1FOUND2 := CP1 ;
+                     LFOUND := LFOUND + 1 ;
+                     if LFOUND >= LS2 then
+                       break ;
+                     CP2 := PTRADD ( CP2 , 1 ) ;
+                     CP1 := PTRADD ( CP1 , 1 ) ;
+                   end (* else *)
+               end (* while *) ;
              if LFOUND >= LS2 then
                $PASSTR2 := PTRDIFF ( CP1 , CP1START ) - LS2 + 2 ;
            end (* tag/ca *) ;

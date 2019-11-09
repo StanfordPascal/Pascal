@@ -48,46 +48,47 @@ procedure CHKPARMS ;
          with OSPARM -> do
            begin
              STATUS := 1 ;
-             for SX := 1 to LENGTH do
+             for SX := 1 to PLENGTH do
                begin
                  case STATUS of
-                   1 : if STRING [ SX ] = ' ' then
+                   1 : if PSTRING [ SX ] = ' ' then
                          STATUS := 1
                        else
-                         if STRING [ SX ] = '-' then
+                         if PSTRING [ SX ] = '-' then
                            STATUS := 2
                          else
                            begin
                              STATUS := 3 ;
                              PARM_FILENAME := ' ' ;
-                             PARM_FILENAME [ 1 ] := STRING [ SX ] ;
+                             PARM_FILENAME [ 1 ] := PSTRING [ SX ] ;
                              PARM_LF := 1 ;
                            end (* else *) ;
-                   2 : if STRING [ SX ] = ' ' then
+                   2 : if PSTRING [ SX ] = ' ' then
                          STATUS := 99
                        else
-                         if STRING [ SX ] = '-' then
+                         if PSTRING [ SX ] = '-' then
                            STATUS := 99
                          else
                            begin
                              STATUS := 4 ;
-                             if STRING [ SX ] = 'b' then
+                             if PSTRING [ SX ] = 'b' then
                                PARM_MODE := MODE_BINARY
                              else
-                               if STRING [ SX ] = 't' then
+                               if PSTRING [ SX ] = 't' then
                                  PARM_MODE := MODE_TEXT
                                else
                                  STATUS := 99 ;
                            end (* else *) ;
-                   3 : if STRING [ SX ] = ' ' then
+                   3 : if PSTRING [ SX ] = ' ' then
                          STATUS := 1
                        else
                          begin
                            PARM_LF := PARM_LF + 1 ;
-                           PARM_FILENAME [ PARM_LF ] := STRING [ SX ] ;
+                           PARM_FILENAME [ PARM_LF ] := PSTRING [ SX ]
+                                                   ;
                            STATUS := 3 ;
                          end (* else *) ;
-                   4 : if STRING [ SX ] = ' ' then
+                   4 : if PSTRING [ SX ] = ' ' then
                          STATUS := 1
                        else
                          STATUS := 99 ;

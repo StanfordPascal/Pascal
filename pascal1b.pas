@@ -58,6 +58,41 @@ program PASCALCOMPILER ( INPUT , OUTPUT , PCODE , LISTING , LISTDEF ,
 (*                                                                  *)
 (********************************************************************)
 (*                                                                  *)
+(*  Aug 2019 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*             (berndoppolzer@yahoo.com)                            *)
+(*                                                                  *)
+(*  - New procedure APPEND to open files to append data             *)
+(*    (implemented by a new CSP APN)                                *)
+(*                                                                  *)
+(*  - procedure FIELDLIST reworked completely                       *)
+(*    for better analysis and management of variant records         *)
+(*    and for more consistent computation of field offsets          *)
+(*                                                                  *)
+(*  - this is done to prepare the keyword WITH for use              *)
+(*    within record definitions ... to add fields of other          *)
+(*    records into the current record's namespace; even for         *)
+(*    records which are addressed by pointer                        *)
+(*                                                                  *)
+(*  - currently all fields of all records added via WITH            *)
+(*    must have unique names; there is no mechanism to              *)
+(*    change field names during insertion via WITH                  *)
+(*                                                                  *)
+(*  - see some YouTube videos on the WITH topic:                    *)
+(*    https://www.youtube.com/watch?v=ZHqFrNyLlpA                   *)
+(*    (on data orientation)                                         *)
+(*                                                                  *)
+(*  - this could also help to make the compiler more secure;        *)
+(*    by getting rid of some dangerours variant records and         *)
+(*    replace them by records with subrecords which are             *)
+(*    addressed by pointers (where only the pointer for             *)
+(*    the correct variant is different from nil)                    *)
+(*                                                                  *)
+(*  - the new WITH keyword allows for only minor source             *)
+(*    changes in this case; the changes are limited to the          *)
+(*    record (type) definition                                      *)
+(*                                                                  *)
+(********************************************************************)
+(*                                                                  *)
 (*  Jun 2019 - Extensions to the Compiler by Bernd Oppolzer         *)
 (*             (berndoppolzer@yahoo.com)                            *)
 (*                                                                  *)
@@ -1019,7 +1054,7 @@ program PASCALCOMPILER ( INPUT , OUTPUT , PCODE , LISTING , LISTDEF ,
 
 
 
-const VERSION = '2019.07' ;
+const VERSION = '2019.08' ;
       MAXLSIZE = 120 ;
       MAXERRNO = 999 ;
 
@@ -1073,7 +1108,7 @@ const VERSION = '2019.07' ;
       MAXSTRL = 254 ;
       MAXVARCHARSIZE = 32767 ;
       DISPLIMIT = 20 ;
-      MAX_BKT = 58 ;
+      MAX_BKT = 232 ;
 
       (******************************************)
       (* HASH TABLE SIZE                        *)
@@ -1296,8 +1331,8 @@ type ALPHA = array [ 1 .. IDLNGTH ] of CHAR ;
             SYBEGIN , SYIF , SYCASE , SYREPEAT , SYWHILE , SYFOR ,
             SYWITH , SYGOTO , SYEND , SYELSE , SYUNTIL , SYOF , SYDO ,
             SYTO , SYDOWNTO , SYTHEN , SYFRTRN , SYEXTRN , SYOTHERWISE
-            , SYOTHER , SYBREAK , SYCONTINUE , SYRETURN , SYMODULE ,
-            SYLOCAL , SYSTATIC , NOTUSED ) ;
+            , SYBREAK , SYCONTINUE , SYRETURN , SYMODULE , SYLOCAL ,
+            SYSTATIC , NOTUSED ) ;
      SYMSET = set of SYMB ;
 
      (***********************************)
@@ -1375,6 +1410,10 @@ type ALPHA = array [ 1 .. IDLNGTH ] of CHAR ;
      TYPECLASS = ( SCALAR , SUBRANGE , POINTER , POWER , CSTRING ,
                  ARRAYS , RECORDS , FILES , TAGFLD , VARIANT ) ;
      DECLKIND = ( STANDARD , DECLARED ) ;
+     CONSTLIST = record
+                   C : XCONSTANT ;
+                   NEXT : -> CONSTLIST
+                 end ;
      TYPEREC = record
                  SIZE : ADDRRANGE ;
 
@@ -1434,19 +1473,21 @@ type ALPHA = array [ 1 .. IDLNGTH ] of CHAR ;
                    ARRAYS :
                      ( AELTYPE , INXTYPE : TTP ) ;
                    RECORDS :
-                     ( FSTFLD : IDP ;
-                       RECVAR : TTP ;
-                       NO_FLDS : 0 .. 1000 ;
+                     ( FIRSTFIELD : IDP ;
+                       RECTAGTYPE : TTP ;
+                       NUMBER_OF_FIELDS : 0 .. 1000 ;
                        FLD_DISP_LEV : - 1 .. DISPLIMIT ) ;
                    FILES :
                      ( FILTYPE : TTP ) ;
                    TAGFLD :
                      ( TAGFIELDP : IDP ;
-                       FSTVAR : TTP ) ;
+                       FIRSTVARIANT : TTP ;
+                       VARIANT_OFFS : ADDRRANGE ) ;
                    VARIANT :
-                     ( NXTVAR , SUBVAR : TTP ;
-                       FSTSUBFLD : IDP ;
-                       VARVAL : XCONSTANT )
+                     ( FIRSTSUBFIELD : IDP ;    // firstfield of rec
+                       SUBTAGTYPE : TTP ;       // rectagtype of rec
+                       VARVALS : -> CONSTLIST ; // ptr to const lst
+                       NEXTVARIANT : TTP )      // ptr to nxt var
                end ;
 
      (**************************************************)
@@ -1484,7 +1525,8 @@ type ALPHA = array [ 1 .. IDLNGTH ] of CHAR ;
                , PRDY , PEOL , PEOT , PRDD , PWRD , PCLK , PWLN , PRLN
                , PRDI , PEOF , PELN , PRDS , PTRP , PXIT , PFDF , PSIO
                , PEIO , PMSG , PSKP , PLIM , PTRA , PWRP , PCLS , PDAT
-               , PTIM , PFLR , PTRC , PRND , PWRV , UNDEF_CSP ) ;
+               , PTIM , PFLR , PTRC , PRND , PWRV , PAPN , UNDEF_CSP )
+               ;
 
      (******************************)
      (* types of parameters        *)
@@ -1497,6 +1539,7 @@ type ALPHA = array [ 1 .. IDLNGTH ] of CHAR ;
      (******************************)
 
      STORAGE_CLASS = ( XAUTO , XSTATIC ) ;
+     WITH_COPY_TYPE = ( WCNONE , WCINCLUDE , WCPOINTER ) ;
 
      (******************************************************)
      (* identifier entries                                 *)
@@ -1533,6 +1576,26 @@ type ALPHA = array [ 1 .. IDLNGTH ] of CHAR ;
      (*       blank for Pascal or A / F for ASSEMBLER      *)
      (*       resp. FORTRAN. A and F generate different    *)
      (*       calling sequences.                           *)
+     (*                                                    *)
+     (* some comments on fields (extension 2019):          *)
+     (*                                                    *)
+     (* fieldaddr: offset of field within fieldlist        *)
+     (* owner: points to record type where field is        *)
+     (*       part of                                      *)
+     (* tagpointer: new in 2019, points to typerec         *)
+     (*       of tagfld type iff field in the actual       *)
+     (*       fieldlist is part of a set of variants       *)
+     (*       (in this case, the variants start at         *)
+     (*       a certain offset which will later be         *)
+     (*       recorded in the tagfld typerec)              *)
+     (* with_copy: tells if this field has been            *)
+     (*       entered into the fieldlist using a           *)
+     (*       with clause; may be wcnone, wcinclude,       *)
+     (*       wcpointer (scalar type)                      *)
+     (* pointer_offset: if with_copy = wcpointer, then     *)
+     (*       this is the offset where the field is        *)
+     (*       located in the referenced structure          *)
+     (*       (needs verification ...)                     *)
      (******************************************************)
 
      IDENTIFIER = record
@@ -1564,8 +1627,11 @@ type ALPHA = array [ 1 .. IDLNGTH ] of CHAR ;
                           DUMMYLEV : LEVRANGE ;
                           DUMMYADDR : ADDRRANGE ) ;
                       FIELD :
-                        ( FLDADDR : ADDRRANGE ;
-                          OWNER : TTP ) ;
+                        ( FIELDADDR : ADDRRANGE ;
+                          OWNER : TTP ;
+                          TAGPOINTER : TTP ;
+                          WITH_COPY : WITH_COPY_TYPE ;
+                          POINTER_OFFSET : ADDRRANGE ) ;
                       PROC , FUNC :
                         ( EXTRN : BOOLEAN ;
                           EXTLANG : CHAR ;
@@ -1589,6 +1655,7 @@ type ALPHA = array [ 1 .. IDLNGTH ] of CHAR ;
                   end ;
      DISPRANGE = 0 .. DISPLIMIT ;
      HASH_TABLE = array [ BKT_RNG ] of IDP ;
+     HASH_COUNT = array [ BKT_RNG ] of INTEGER ;
      WHERE = ( BLCK , CREC , VREC , REC ) ;
 
      (******************)
@@ -2021,6 +2088,7 @@ var MXINT2 : INTEGER ;
 
     UPSHIFT : array [ CHAR ] of CHAR ;
     BUCKET : HASH_TABLE ;
+    BUCKET_COUNT : HASH_COUNT ;
 
     (******************************************)
     (* SYMBOL TABLE USAGE STATISTICS          *)
@@ -2197,7 +2265,7 @@ const BLANKID : ALPHA = '            ' ;
         'RDY' , 'EOL' , 'EOT' , 'RDD' , 'WRD' , 'CLK' , 'WLN' , 'RLN' ,
         'RDI' , 'EOF' , 'ELN' , 'RDS' , 'TRP' , 'XIT' , 'FDF' , 'SIO' ,
         'EIO' , 'MSG' , 'SKP' , 'LIM' , 'TRA' , 'WRP' , 'CLS' , 'DAT' ,
-        'TIM' , 'FLR' , 'TRC' , 'RND' , 'WRV' , '   ' , '   ' , '   ' )
+        'TIM' , 'FLR' , 'TRC' , 'RND' , 'WRV' , 'APN' , '   ' , '   ' )
         ;
 
       (*********************************************************)
@@ -3302,22 +3370,41 @@ function HASH ( IDX : ALPHA ) : BKT_RNG ;
                 1 :
                   ( IDK : ALPHA ) ;
                 2 :
-                  ( INT1 , INT2 , INT3 : INTEGER )
+                  ( C1 , C2 , C3 , C4 , C5 , C6 , C7 , C8 , C9 , CA ,
+                    CB , CC , CD , CE , CF : CHAR )
             end ;
+       TEMP : INTEGER ;
 
    begin (* HASH *)
      with OL do
        begin
          IDK := IDX ;
 
-     (***********************************)
-     (* NO OVERFLOW CHECK FOR NEXT STMT *)
-     (***********************************)
+     //************************************************************
+     // temp := ord(c1) * 2 + ord(c3) * 3 ;                        
+     // temp := temp + ord(c5) * 5 + ord(c7) * 7;                  
+     // temp := temp + ord(c9) * 11 + ord(cb) * 13;                
+     // temp := temp + ord(cd) * 17 + ord(cf) * 19;                
+     //************************************************************
 
-         HASH := ABS ( ( INT1 * 2 + INT2 ) * 2 + INT3 ) MOD ( MAX_BKT +
-                 1 ) ;
+         TEMP := ( ( ORD ( C1 ) * 2 + ORD ( C3 ) ) * 2 + ORD ( C5 ) ) *
+                 2 + ORD ( C7 ) ;
+         HASH := TEMP MOD ( MAX_BKT + 1 ) ;
        end (* with *)
    end (* HASH *) ;
+
+
+
+procedure SHOW_BUCKET_COUNTS ;
+
+   var K : INTEGER ;
+
+   begin (* SHOW_BUCKET_COUNTS *)
+     WRITELN ;
+     for K := 0 to MAX_BKT do
+       WRITELN ( 'bucket_count [' , K : 1 , '] = ' , BUCKET_COUNT [ K ]
+                 ) ;
+   end (* SHOW_BUCKET_COUNTS *) ;
 
 
 
@@ -3326,10 +3413,21 @@ procedure ENTERID ( FCP : IDP ) ;
    var K : BKT_RNG ;
        NAM : ALPHA ;
        LCP : IDP ;
+       ERRINFO : CHAR32 ;
+       SHOW : BOOLEAN ;
+       K2 : BKT_RNG ;
 
    begin (* ENTERID *)
      NAM := FCP -> . NAME ;
      K := HASH ( NAM ) ;
+     SHOW := FALSE ;
+     if SHOW then
+       begin
+         WRITELN ;
+         WRITELN ( 'enterid: nam = ' , NAM , ' k = ' , K : 1 ) ;
+         WRITELN ( 'enterid: bucket [' , K : 1 , '] = ' , BUCKET [ K ]
+                   ) ;
+       end (* then *) ;
      LCP := BUCKET [ K ] ;
      FCP -> . DECL_LEV := LEVEL ;
      FCP -> . NEXT_IN_BKT := LCP ;
@@ -3337,6 +3435,10 @@ procedure ENTERID ( FCP : IDP ) ;
      FCP -> . PREV_TYPE_IN_BLOCK := NIL ;
      FCP -> . PREV_PROC_IN_BLOCK := NIL ;
      BUCKET [ K ] := FCP ;
+     BUCKET_COUNT [ K ] := BUCKET_COUNT [ K ] + 1 ;
+     if SHOW then
+       WRITELN ( 'enterid: bucket [' , K : 1 , '] = ' , BUCKET [ K ] )
+                 ;
 
      (***************************************)
      (* NOW CHECK FOR DUPLICATE DECLARATION *)
@@ -3345,6 +3447,12 @@ procedure ENTERID ( FCP : IDP ) ;
      while LCP <> NIL do
        with LCP -> do
          begin
+           if SHOW then
+             begin
+               K2 := HASH ( NAME ) ;
+               WRITELN ( 'enterid: name in bucket = ' , NAME , ' k2 = '
+                         , K2 : 1 ) ;
+             end (* then *) ;
            if NAME = NAM then
              if KLASS <> FIELD then
                begin
@@ -3362,7 +3470,9 @@ procedure ENTERID ( FCP : IDP ) ;
 
                if TOP = OWNER -> . FLD_DISP_LEV then
                  begin
-                   ERROR ( 101 ) ;
+                   ERRINFO := NAM ;
+                   ERROR_POS ( 'E' , 232 , ERRINFO , SCB . LINENR , SCB
+                               . LINEPOS ) ;
                    break ;
                  end (* then *) ;
            LCP := NEXT_IN_BKT ;
@@ -3386,24 +3496,35 @@ procedure SEARCHSECTION ( FSP : TTP ; var FCP : IDP ) ;
    var LCP : IDP ;
 
    begin (* SEARCHSECTION *)
+     if FALSE then
+       WRITELN ( 'searchsection ' , SYID ) ;
      LCP := BUCKET [ HASH ( SYID ) ] ;
      while LCP <> NIL do
        with LCP -> do
          begin
            if NAME = SYID then
              if KLASS = FIELD then
-               if OWNER = FSP then
-                 begin
-                   if OPT . GET_STAT then
-                     begin
-                       SF_CNT := SF_CNT + 1 ;
-                       SF_TOT := SF_TOT + FSP -> . NO_FLDS ;
-                     end (* then *) ;
-                   break ;
-                 end (* then *) ;
+               begin
+                 if FALSE then
+                   WRITELN ( 'fsp = ' , FSP , ' owner = ' , OWNER ) ;
+                 if OWNER = FSP then
+                   begin
+                     if OPT . GET_STAT then
+                       begin
+                         SF_CNT := SF_CNT + 1 ;
+                         SF_TOT := SF_TOT + FSP -> . NUMBER_OF_FIELDS ;
+                       end (* then *) ;
+                     break ;
+                   end (* then *)
+               end (* then *) ;
            LCP := NEXT_IN_BKT ;
          end (* with *) ;
      FCP := LCP ;
+     if FALSE then
+       begin
+         WRITELN ( 'fcp = ' , FCP ) ;
+         WRITELN ( 'ende searchsection ' , SYID )
+       end (* then *)
    end (* SEARCHSECTION *) ;
 
 
@@ -3433,14 +3554,23 @@ function SEARCHID ( IDX : ALPHA ; PRTERR : BOOLEAN ; INSERT_ON_ERR :
    var LCP : IDP ;
        DL , EL : - 1 .. DISPLIMIT ;
        K : BKT_RNG ;
+       SHOW : BOOLEAN ;
+       K2 : BKT_RNG ;
 
    begin (* SEARCHID *)
      SEARCHID := 0 ;
      K := HASH ( IDX ) ;
+     SHOW := FALSE ;
      LCP := BUCKET [ K ] ;
      FCP := NIL ;
      EL := - 1 ;
      DISX := EL ;
+     if SHOW then
+       begin
+         WRITELN ;
+         WRITELN ( 'searchid: idx = ' , IDX , ' lcp = ' , LCP , ' k = '
+                   , K : 1 ) ;
+       end (* then *) ;
 
      /************************************************************/
      /* der bezeichner wird in den entsprechenden listen gesucht */
@@ -3449,6 +3579,12 @@ function SEARCHID ( IDX : ALPHA ; PRTERR : BOOLEAN ; INSERT_ON_ERR :
      while LCP <> NIL do
        with LCP -> do
          begin
+           if SHOW then
+             begin
+               K2 := HASH ( NAME ) ;
+               WRITELN ( 'searchid: name in bucket = ' , NAME ,
+                         ' k2 = ' , K2 : 1 ) ;
+             end (* then *) ;
            if NAME = IDX then
              begin
                if KLASS <> FIELD then
@@ -3484,6 +3620,8 @@ function SEARCHID ( IDX : ALPHA ; PRTERR : BOOLEAN ; INSERT_ON_ERR :
          if PRTERR then
            ERROR ( 103 ) ;
        end (* then *) ;
+     if SHOW then
+       WRITELN ( 'searchid: disx = ' , DISX ) ;
      if DISX >= 0 then
        begin
 
@@ -3559,6 +3697,7 @@ function SEARCHID ( IDX : ALPHA ; PRTERR : BOOLEAN ; INSERT_ON_ERR :
                  DECL_LEV := LEVEL ;
                  NEXT_IN_BKT := BUCKET [ K ] ;
                  BUCKET [ K ] := LCP ;
+                 BUCKET_COUNT [ K ] := BUCKET_COUNT [ K ] + 1 ;
                  FCP := LCP ;
                  if KLASS = FIELD then
                    OWNER := OPEN_RECORD ;
@@ -3983,7 +4122,7 @@ procedure DBG_PRINTSYMBOL ( LCP : IDP ) ;
                       RECORDS :
                         begin
                           WRITE ( DBGINFO , 'D' , ALN : 1 , '(' ) ;
-                          VP := FSTFLD ;
+                          VP := FIRSTFIELD ;
                           LVP := VP ;
                           while VP <> NIL do
                             begin
@@ -3991,19 +4130,19 @@ procedure DBG_PRINTSYMBOL ( LCP : IDP ) ;
                               LVP := VP ;
                               VP := VP -> . NEXT ;
                             end (* while *) ;
-                          if RECVAR <> NIL then
+                          if RECTAGTYPE <> NIL then
                             begin
-                              if RECVAR -> . TAGFIELDP <> NIL then
-                                if RECVAR -> . TAGFIELDP -> . NAME <>
-                                BLANKID then
+                              if RECTAGTYPE -> . TAGFIELDP <> NIL then
+                                if RECTAGTYPE -> . TAGFIELDP -> . NAME
+                                <> BLANKID then
                                   begin
-                                    LVP := RECVAR -> . TAGFIELDP ;
+                                    LVP := RECTAGTYPE -> . TAGFIELDP ;
                                     DBG_PRINTVAR ( LVP ) ;
                                   end (* then *) ;
                               if LVP <> NIL then
                                 begin
                                   CHECKLN ( 12 ) ;
-                                  RMAX := SIZE - LVP -> . FLDADDR ;
+                                  RMAX := SIZE - LVP -> . FIELDADDR ;
                                   if LVP -> . IDTYPE <> NIL then
                                     RMAX := RMAX - LVP -> . IDTYPE -> .
                                             SIZE ;
@@ -4219,7 +4358,7 @@ procedure DEF_PRINTHEAD ( MODUS : INTEGER ; IDX : ALPHA ) ;
 
 
 
-procedure DEF_PRINTVAR ( VRP : IDP ) ;
+procedure DEF_PRINTVAR ( VRP : IDP ; FIELDLEVEL : INTEGER ) ;
 
    FORWARD ;
 
@@ -4249,11 +4388,12 @@ procedure DEF_PRINTTYPE ( TYPP : TTP ; MODUS : CHAR ) ;
           DEF_VARIANTLEVEL : INTEGER ;
 
 
-   procedure DEF_PRINTVARIANTE ( VARP : TTP ) ;
+   procedure DEF_PRINTVARIANT ( VARP : TTP ; TAGTYPE : TTP ; FIELDLEVEL
+                              : INTEGER ) ;
 
       var VFIELD : IDP ;
 
-      begin (* DEF_PRINTVARIANTE *)
+      begin (* DEF_PRINTVARIANT *)
         if VARP <> NIL then
           begin
             case VARP -> . FORM of
@@ -4265,35 +4405,44 @@ procedure DEF_PRINTTYPE ( TYPP : TTP ; MODUS : CHAR ) ;
                         WRITE ( LISTDEF , ' ' : SIZEOF ( ALPHA ) ,
                                 'tagfield' : 11 ) ;
                         WRITELN ( LISTDEF ) ;
-                        DEF_PRINTVAR ( VARP -> . TAGFIELDP ) ;
+                        DEF_PRINTVAR ( VARP -> . TAGFIELDP , FIELDLEVEL
+                                       ) ;
                         WRITELN ( LISTDEF ) ;
                       end (* then *) ;
-                  DEF_PRINTVARIANTE ( VARP -> . FSTVAR ) ;
+                  DEF_PRINTVARIANT ( VARP -> . FIRSTVARIANT , VARP ,
+                                     FIELDLEVEL ) ;
                 end (* tag/ca *) ;
               VARIANT :
                 begin
-                  DEF_PRINTVARIANTE ( VARP -> . NXTVAR ) ;
+                  DEF_PRINTVARIANT ( VARP -> . NEXTVARIANT , TAGTYPE ,
+                                     FIELDLEVEL ) ;
                   if DEF_VARIANTLEVEL > 1 then
                     WRITE ( LISTDEF , ' ' : SIZEOF ( ALPHA ) ,
-                            'variant (' , DEF_VARIANTLEVEL : 1 , ')' )
+                            '  variant-' , DEF_VARIANTLEVEL : 1 )
                   else
                     WRITE ( LISTDEF , ' ' : SIZEOF ( ALPHA ) ,
                             'variant' : 11 ) ;
+                  if TAGTYPE <> NIL then
+                    begin
+                      WRITE ( LISTDEF , TAGTYPE -> . VARIANT_OFFS : 7 ,
+                              '  aln = ' , TAGTYPE -> . ALN : 1 ) ;
+                    end (* then *) ;
                   WRITELN ( LISTDEF ) ;
-                  VFIELD := VARP -> . FSTSUBFLD ;
+                  VFIELD := VARP -> . FIRSTSUBFIELD ;
                   while VFIELD <> NIL do
                     begin
-                      DEF_PRINTVAR ( VFIELD ) ;
+                      DEF_PRINTVAR ( VFIELD , FIELDLEVEL ) ;
                       WRITELN ( LISTDEF ) ;
                       VFIELD := VFIELD -> . NEXT
                     end (* while *) ;
                   DEF_VARIANTLEVEL := DEF_VARIANTLEVEL + 1 ;
-                  DEF_PRINTVARIANTE ( VARP -> . SUBVAR ) ;
+                  DEF_PRINTVARIANT ( VARP -> . SUBTAGTYPE , TAGTYPE ,
+                                     FIELDLEVEL ) ;
                   DEF_VARIANTLEVEL := DEF_VARIANTLEVEL - 1 ;
                 end (* tag/ca *)
             end (* case *)
           end (* then *)
-      end (* DEF_PRINTVARIANTE *) ;
+      end (* DEF_PRINTVARIANT *) ;
 
 
    begin (* DEF_PRINTTYPE *)
@@ -4446,15 +4595,15 @@ procedure DEF_PRINTTYPE ( TYPP : TTP ; MODUS : CHAR ) ;
              WRITE ( LISTDEF , ' aln = ' , ALN : 1 ) ;
              WRITELN ( LISTDEF ) ;
              DEF_STRUCTLEVEL := DEF_STRUCTLEVEL + 1 ;
-             VP := FSTFLD ;
+             VP := FIRSTFIELD ;
              while VP <> NIL do
                begin
-                 DEF_PRINTVAR ( VP ) ;
+                 DEF_PRINTVAR ( VP , DEF_STRUCTLEVEL ) ;
                  WRITELN ( LISTDEF ) ;
                  VP := VP -> . NEXT ;
                end (* while *) ;
              DEF_VARIANTLEVEL := DEF_VARIANTLEVEL + 1 ;
-             DEF_PRINTVARIANTE ( RECVAR ) ;
+             DEF_PRINTVARIANT ( RECTAGTYPE , NIL , DEF_STRUCTLEVEL ) ;
              DEF_VARIANTLEVEL := DEF_VARIANTLEVEL - 1 ;
              WRITE ( LISTDEF , ' ' : LPREFIX ) ;
              WRITE ( LISTDEF , ' endstruct' ) ;
@@ -4487,8 +4636,12 @@ procedure DEF_PRINTVAR ;
                   end (* tag/ca *) ;
            FIELD : begin
                      WRITE ( LISTDEF , '  ' , NAME , ' ' ) ;
-                     WRITE ( LISTDEF , '   field ' ) ;
-                     WRITE ( LISTDEF , FLDADDR : 6 , ' ' ) ;
+                     if FIELDLEVEL <= 1 then
+                       WRITE ( LISTDEF , '   field ' )
+                     else
+                       WRITE ( LISTDEF , ' field-' , FIELDLEVEL : 1 ,
+                               ' ' ) ;
+                     WRITE ( LISTDEF , FIELDADDR : 6 , ' ' ) ;
                    end (* tag/ca *) ;
          end (* case *) ;
          DEF_PRINTTYPE ( IDTYPE , ' ' ) ;
@@ -4514,7 +4667,7 @@ procedure DEF_PRINTSYMBOL ( LCP : IDP ) ;
            begin
              if KLASS = VARS then
                begin
-                 DEF_PRINTVAR ( LCP ) ;
+                 DEF_PRINTVAR ( LCP , - 1 ) ;
                  WRITELN ( LISTDEF ) ;
                end (* then *)
              else
@@ -4645,7 +4798,6 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                 LAST_VAR : IDP ) ;
 
    var LSY : SYMB ;
-       TEST : BOOLEAN ;
        SEGSIZE : LABELRNG ;
        FWRDPRCL : IDP ;
        DEC_ORDER : 0 .. 5 ;
@@ -5444,9 +5596,10 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
               RECORDS :
                 begin
                   COMP := 0 ;
-                  NXT1 := FSP1 -> . FSTFLD ;
-                  NXT2 := FSP2 -> . FSTFLD ;
-                  if ( FSP1 -> . RECVAR = FSP2 -> . RECVAR ) then
+                  NXT1 := FSP1 -> . FIRSTFIELD ;
+                  NXT2 := FSP2 -> . FIRSTFIELD ;
+                  if ( FSP1 -> . RECTAGTYPE = FSP2 -> . RECTAGTYPE )
+                  then
                     COMP := 1 ;
                   while ( COMP = 1 ) and ( NXT1 <> NIL ) and ( NXT2 <>
                   NIL ) do
@@ -6255,11 +6408,11 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
 
       var LSP , LSP1 , LSP2 : TTP ;
           LCP : IDP ;
-          LSIZE , DISPL : ADDRRANGE ;
+          LSIZE : ADDRRANGE ;
           LMIN , LMAX : INTEGER ;
-          ALNFCT : ALNRNG ;
           OLDPACKST , PACKST2 : BOOLEAN ;
           ARRAY_ERROR : BOOLEAN ;
+          DONE : BOOLEAN ;
 
 
       procedure SIMPLETYPE ( FSYS : SYMSET ; var FSP : TTP ) ;
@@ -6738,189 +6891,597 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
          end (* SIMPLETYPE *) ;
 
 
-      procedure FIELDLIST ( FSYS : SYMSET ; var FRECVAR : TTP ; var
-                          RECALN : ALNRNG ; FLDOWNER : TTP ; var
-                          FIRSTFLD : IDP ) ;
+      procedure FIELDLIST_WITH ( WITHFIELD : IDP ; FLDOWNER : TTP ) ;
+
+      //**********************************************************
+      // this procedure is called when a fieldlist entry          
+      // has the WITH attribute                                   
+      // it copies an existing fieldlist into the actual          
+      // fieldlist, so that all the entries there become          
+      // available in the actual fieldlist                        
+      // subtype is the "foreign" fieldlist, it must be           
+      // a record or pointer to record type                       
+      //**********************************************************
+      // fieldlists that are entered into another fieldlist       
+      // using the WITH attribute may in turn have again          
+      // entries using the WITH attribute, but not with           
+      // pointer types; at the moment, WITH using pointer types   
+      // is only supported for the top level record type -        
+      // this is a compiler restriction. Otherwise in procedure   
+      // SELECTOR the access to the components would become       
+      // much more complicated                                    
+      //**********************************************************
+      // For WITH with record types, the resulting offsets for    
+      // the incorporated components are completely resolved      
+      // at compile time, no additional overhead - even when there
+      // are multiple levels of WITH                              
+      //**********************************************************
+
+
+         var PFLAG : BOOLEAN ;
+             SUBTYPE : TTP ;
+             STARTOFFS : ADDRRANGE ;
+
+         var ERROR233 : BOOLEAN ;
+
+
+         procedure ENTER_NEW_FIELD ( IDNEU : IDP ; IDCOPY : IDP ;
+                                   STARTOFFS : ADDRRANGE ; PFLAG :
+                                   BOOLEAN ; FLDOWNER : TTP ) ;
+
+            begin (* ENTER_NEW_FIELD *)
+              with IDNEU -> do
+                begin
+                  NAME := IDCOPY -> . NAME ;
+                  IDTYPE := IDCOPY -> . IDTYPE ;
+                  FIELDADDR := IDCOPY -> . FIELDADDR ;
+                  NEXT := NIL ;
+                  NEXT_IN_BKT := NIL ;
+                  OWNER := FLDOWNER ;
+                  KLASS := FIELD ;
+                  if PFLAG then
+                    begin
+                      WITH_COPY := WCPOINTER ;
+                      POINTER_OFFSET := STARTOFFS ;
+                      if FALSE then
+                        WRITELN ( 'insert idsub = ' , NAME , FIELDADDR
+                                  : 6 , WITH_COPY : 12 , ' ptr_offs = '
+                                  , POINTER_OFFSET : 6 ) ;
+                    end (* then *)
+                  else
+                    begin
+                      WITH_COPY := WCINCLUDE ;
+                      FIELDADDR := FIELDADDR + STARTOFFS ;
+                      POINTER_OFFSET := 0 ;
+                      if FALSE then
+                        WRITELN ( 'insert idsub = ' , NAME , FIELDADDR
+                                  : 6 , WITH_COPY : 12 , ' ptr_offs = '
+                                  , POINTER_OFFSET : 6 ) ;
+                    end (* else *) ;
+                  if OPT . GET_STAT then
+                    FLDOWNER -> . NUMBER_OF_FIELDS := FLDOWNER -> .
+                                                   NUMBER_OF_FIELDS + 1
+                                                   ;
+                end (* with *) ;
+              ENTERID ( IDNEU ) ;
+            end (* ENTER_NEW_FIELD *) ;
+
+
+         procedure INSERT_FIELDLIST ( FIRSTFIELD : IDP ; TAGTYPE : TTP
+                                    ; STARTOFFS : ADDRRANGE ; PFLAG :
+                                    BOOLEAN ; FLDOWNER : TTP ; var
+                                    ERROR233 : BOOLEAN ) ;
+
+            var IDNEU : IDP ;
+                IDSUB : IDP ;
+                TAGTYPESUB : TTP ;
+                TAGFIELD_ID : IDP ;
+                LIST_OF_VARIANTS : TTP ;
+
+            begin (* INSERT_FIELDLIST *)
+              IDNEU := FLDOWNER -> . FIRSTFIELD ;
+              IDSUB := FIRSTFIELD ;
+              TAGTYPESUB := TAGTYPE ;
+
+              //******************************************
+              // idneu = first field of current fieldlist 
+              // idsub = first field of foreign fieldlist 
+              //******************************************
+
+              if IDNEU = NIL then
+                return ;
+
+              //******************************************
+              // proceed to end of current fieldlist      
+              //******************************************
+
+              while IDNEU -> . NEXT <> NIL do
+                IDNEU := IDNEU -> . NEXT ;
+
+              //********************************************************
+              // enter all normal fields of foreign fieldlist           
+              //********************************************************
+
+              while IDSUB <> NIL do
+                begin
+                  if IDSUB -> . WITH_COPY = WCPOINTER then
+                    if not ERROR233 then
+                      begin
+                        ERROR_POS ( 'E' , 233 , ' ' , SCB . LINENR ,
+                                    SCB . LINEPOS ) ;
+                        ERROR233 := TRUE
+                      end (* then *) ;
+                  NEW ( IDNEU -> . NEXT , FIELD ) ;
+                  IDNEU := IDNEU -> . NEXT ;
+                  ENTER_NEW_FIELD ( IDNEU , IDSUB , STARTOFFS , PFLAG ,
+                                    FLDOWNER ) ;
+                  IDSUB := IDSUB -> . NEXT
+                end (* while *) ;
+
+              //******************************************
+              // check if foreign fieldlist has variants  
+              //******************************************
+
+              if TAGTYPESUB = NIL then
+                return ;
+
+              //******************************************
+              // enter tagfield (if there is one)         
+              //******************************************
+
+              TAGFIELD_ID := TAGTYPESUB -> . TAGFIELDP ;
+              if TAGFIELD_ID <> NIL then
+                with TAGFIELD_ID -> do
+                  if NAME <> BLANKID then
+                    begin
+                      NEW ( IDNEU -> . NEXT , FIELD ) ;
+                      IDNEU := IDNEU -> . NEXT ;
+                      ENTER_NEW_FIELD ( IDNEU , TAGFIELD_ID , STARTOFFS
+                                        , PFLAG , FLDOWNER ) ;
+                    end (* then *) ;
+
+              //******************************************
+              // run thru variants                        
+              //******************************************
+
+              LIST_OF_VARIANTS := TAGTYPESUB -> . FIRSTVARIANT ;
+              while LIST_OF_VARIANTS <> NIL do
+                begin
+                  INSERT_FIELDLIST ( LIST_OF_VARIANTS -> .
+                                     FIRSTSUBFIELD , LIST_OF_VARIANTS
+                                     -> . SUBTAGTYPE , STARTOFFS ,
+                                     PFLAG , FLDOWNER , ERROR233 ) ;
+                  LIST_OF_VARIANTS := LIST_OF_VARIANTS -> . NEXTVARIANT
+                                      ;
+                end (* while *) ;
+            end (* INSERT_FIELDLIST *) ;
+
+
+         begin (* FIELDLIST_WITH *)
+           SUBTYPE := WITHFIELD -> . IDTYPE ;
+           STARTOFFS := WITHFIELD -> . FIELDADDR ;
+           PFLAG := FALSE ;
+           if SUBTYPE -> . FORM = POINTER then
+             begin
+               PFLAG := TRUE ;
+               SUBTYPE := SUBTYPE -> . ELTYPE
+             end (* then *) ;
+           if SUBTYPE -> . FORM <> RECORDS then
+             begin
+               ERROR_POS ( 'W' , 231 , ' ' , SCB . LINENR , SCB .
+                           LINEPOS ) ;
+               return
+             end (* then *) ;
+
+           //************************************************
+           // show error 233 only once                       
+           // while working on with-fieldlist                
+           //************************************************
+
+           ERROR233 := FALSE ;
+           INSERT_FIELDLIST ( SUBTYPE -> . FIRSTFIELD , SUBTYPE -> .
+                              RECTAGTYPE , STARTOFFS , PFLAG , FLDOWNER
+                              , ERROR233 ) ;
+         end (* FIELDLIST_WITH *) ;
+
+
+      procedure MODIFY_FIELDLIST ( TAGTYPE : TTP ; TAGTYPE_OFFS :
+                                 ADDRRANGE ) ;
+
+         var LCP1 : IDP ;
+             LIST_OF_VARIANTS : TTP ;
+             SUBV : TTP ;
+             TAGFIELD_ID : IDP ;
+
+         begin (* MODIFY_FIELDLIST *)
+
+           //************************************************
+           // this loop walks all variants and               
+           // computes the final offsets of the fields       
+           // not really necessary, if tagtype_offs = zero   
+           //************************************************
+
+           if FALSE then
+             begin
+               WRITELN ;
+               WRITE ( 'walk thru variants - offs = ' , TAGTYPE_OFFS :
+                       1 , ' tag = ' ) ;
+               TAGFIELD_ID := TAGTYPE -> . TAGFIELDP ;
+               if TAGFIELD_ID <> NIL then
+                 with TAGFIELD_ID -> do
+                   begin
+                     if NAME <> BLANKID then
+                       WRITE ( '(' , NAME , ' offs = ' , FIELDADDR : 1
+                               , ')' )
+                     else
+                       WRITE ( '(no tagfield)' )
+                   end (* with *)
+               else
+                 WRITE ( '(tagfield_id is nil)' ) ;
+               WRITELN ;
+             end (* then *) ;
+           LIST_OF_VARIANTS := TAGTYPE -> . FIRSTVARIANT ;
+           while LIST_OF_VARIANTS <> NIL do
+             begin
+               if FALSE then
+                 WRITELN ( 'variant found,' , ' size = ' ,
+                           LIST_OF_VARIANTS -> . SIZE , ' aln = ' ,
+                           LIST_OF_VARIANTS -> . ALN ) ;
+               LIST_OF_VARIANTS -> . SIZE := LIST_OF_VARIANTS -> . SIZE
+                                             + TAGTYPE_OFFS ;
+               if FALSE then
+                 WRITELN ( 'variant newsize = ' , LIST_OF_VARIANTS -> .
+                           SIZE ) ;
+               LCP1 := LIST_OF_VARIANTS -> . FIRSTSUBFIELD ;
+               if FALSE then
+                 if LCP1 = NIL then
+                   WRITELN ( 'no subfields found' ) ;
+               while LCP1 <> NIL do
+                 begin
+                   LCP1 -> . FIELDADDR := LCP1 -> . FIELDADDR +
+                                          TAGTYPE_OFFS ;
+                   if FALSE then
+                     begin
+                       WRITE ( 'subfield ' , LCP1 -> . NAME ,
+                               ' found, fieldaddr = ' , LCP1 -> .
+                               FIELDADDR : 6 ) ;
+                       if LCP -> . IDTYPE <> NIL then
+                         WRITE ( ' aln = ' , LCP1 -> . IDTYPE -> . ALN
+                                 : 1 ) ;
+                       WRITELN ;
+                     end (* then *) ;
+                   LCP1 := LCP1 -> . NEXT ;
+                 end (* while *) ;
+               if LIST_OF_VARIANTS -> . SUBTAGTYPE <> NIL then
+                 begin
+                   if FALSE then
+                     WRITELN ( 'subtagtype exists' ) ;
+                   SUBV := LIST_OF_VARIANTS -> . SUBTAGTYPE ;
+                   TAGFIELD_ID := SUBV -> . TAGFIELDP ;
+                   if TAGFIELD_ID <> NIL then
+                     with TAGFIELD_ID -> do
+                       begin
+                         if NAME <> BLANKID then
+                           FIELDADDR := FIELDADDR + TAGTYPE_OFFS ;
+                       end (* with *) ;
+                   MODIFY_FIELDLIST ( SUBV , TAGTYPE_OFFS ) ;
+                 end (* then *) ;
+               LIST_OF_VARIANTS := LIST_OF_VARIANTS -> . NEXTVARIANT ;
+             end (* while *) ;
+         end (* MODIFY_FIELDLIST *) ;
+
+
+      procedure FIELDLIST ( FSYS : SYMSET ; FLDOWNER : TTP ; FLDTAG :
+                          TTP ; var FIELDLIST_RESULT : IDP ; var
+                          RECORD_TAGTYPE : TTP ; var SIZE_FL :
+                          ADDRRANGE ; var ALN_FL : ALNRNG ) ;
+
+      //************************************************************
+      // the procedure fieldlist reads and analyses                 
+      // a list of fields in a record definition                    
+      // - fsys is the list of terminating symbols, as usual        
+      // - fldowner is the type record of the record                
+      //   type to which the fieldlist belongs                      
+      //   this fldowner has to be recorded in the fieldlist items  
+      // - fieldlist_result is the first fieldlist item             
+      //   (the anchor of the fieldlist)                            
+      // - record_tagtype is the pointer to the record variant item,
+      //   or nil, if there are no variants                         
+      // - size_fl is the size of the fieldlist                     
+      //   starts from zero, see below                              
+      // - aln_fl is the alignment of the fieldlist                 
+      //   for example 8, if the fieldlist has to start at an       
+      //   address which is a multiple of 8                         
+      //************************************************************
+
 
          label 10 ;
 
-         var LCP , LCP1 , NXT , NXT1 : IDP ;
-             LSP , LSP1 , LSP2 , LSP3 , LSP4 : TTP ;
-             MINSIZE , MAXSIZE , LSIZE : ADDRRANGE ;
+         var FIELD_ID , TAGFIELD_ID , LCP1 : IDP ;
+             FIELDLIST_PREV : IDP ;
+             FIELDLIST_TEMP : IDP ;
+             FIELDLIST_1 : IDP ;
+             TAGTYPE : TTP ;
+             FIELDTYPE : TTP ;
+             TAGFIELD_TYPE : TTP ;
+             LIST_OF_VARIANTS : TTP ;
+             LSP1 , VWORK : TTP ;
+             TYPE_WORK : TTP ;
+             MAXSIZE : ADDRRANGE ;
+             SIZE_SUB : ADDRRANGE ;
              LVALU : XCONSTANT ;
-             LALNFCT : ALNRNG ;
+             LOCAL_SIZE : ADDRRANGE ;
+             LOCAL_ALN : ALNRNG ;
+             WITHFLAG : BOOLEAN ;
+             DONE : BOOLEAN ;
+             LIST_OF_CONSTS : -> CONSTLIST ;
+             CONSTL_WORK : -> CONSTLIST ;
 
          begin (* FIELDLIST *)
-           NXT := NIL ;
-           FIRSTFLD := NIL ;
-           LSP := NIL ;
-           RECALN := 1 ;
-           if not ( SY in FSYS + [ IDENT , SYCASE ] ) then
-             begin
-               ERROR ( 19 ) ;
-               SKIP ( FSYS + [ IDENT , SYCASE ] )
-             end (* then *) ;
-           while SY = IDENT do
-             begin
-               NXT1 := NIL ;
-               repeat
-                 if SY = IDENT then
-                   begin
-                     NEW ( LCP , FIELD ) ;
-                     with LCP -> do
-                       begin
-                         NAME := SYID ;
-                         IDTYPE := NIL ;
-                         NEXT := NIL ;
-                         OWNER := FLDOWNER ;
-                         KLASS := FIELD ;
-                         if OPT . GET_STAT then
-                           FLDOWNER -> . NO_FLDS := FLDOWNER -> .
-                                                   NO_FLDS + 1 ;
-                       end (* with *) ;
-                     if NXT1 = NIL then
-                       NXT1 := LCP ;
-                     if NXT <> NIL then
-                       NXT -> . NEXT := LCP ;
-                     NXT := LCP ;
-                     ENTERID ( LCP ) ;
-                     INSYMBOL
-                   end (* then *)
-                 else
-                   ERROR ( 2 ) ;
-                 if not ( SY in [ SYCOMMA , SYCOLON ] ) then
-                   begin
-                     ERROR ( 6 ) ;
-                     SKIP ( FSYS + [ SYCOMMA , SYCOLON , SYSEMICOLON ,
-                            SYCASE ] )
-                   end (* then *) ;
-                 TEST := SY <> SYCOMMA ;
-                 if not TEST then
-                   INSYMBOL
-               until TEST ;
-               if SY = SYCOLON then
+           FIELDLIST_PREV := NIL ;
+           FIELDTYPE := NIL ;
+           TAGFIELD_ID := NIL ;
+
+           //************************************************
+           // init result fields                             
+           //************************************************
+
+           FIELDLIST_RESULT := NIL ;
+           RECORD_TAGTYPE := NIL ;
+           SIZE_FL := 0 ;
+           ALN_FL := 1 ;
+
+           //************************************************
+           // work on fieldlist items, separated by comma    
+           //************************************************
+
+           repeat
+
+           //************************************************
+           // look for identifier or with in fieldlist       
+           //************************************************
+
+             if not ( SY in FSYS + [ IDENT , SYCASE , SYWITH ] ) then
+               begin
+                 ERROR ( 19 ) ;
+                 SKIP ( FSYS + [ IDENT , SYCASE , SYWITH ] )
+               end (* then *) ;
+             if not ( SY in [ IDENT , SYWITH ] ) then
+               break ;
+
+           //************************************************
+           // if with symbol, store information in withflag  
+           //************************************************
+
+             WITHFLAG := FALSE ;
+             if SY = SYWITH then
+               begin
+                 WITHFLAG := TRUE ;
                  INSYMBOL
-               else
-                 ERROR ( 5 ) ;
-               if FIRSTFLD = NIL then
-                 FIRSTFLD := NXT1 ;
-               TYP ( FSYS + [ SYCASE , SYSEMICOLON ] , LSP , LSIZE ,
-                     FALSE ) ;
-               LALNFCT := 1 ;
-               if LSP <> NIL then
-                 LALNFCT := LSP -> . ALN ;
-               while NXT1 <> NIL do
+               end (* then *) ;
+             FIELDLIST_1 := NIL ;
 
-           (******************************************)
-           (* ANY "FIELDS" DEFINED IN THIS ROUND ?   *)
-           (******************************************)
+           //************************************************
+           // store identifier of fieldlist type             
+           // more than one is possible, separated by comma  
+           //************************************************
 
+             repeat
+               if SY = IDENT then
                  begin
-                   with NXT1 -> do
+                   NEW ( FIELD_ID , FIELD ) ;
+                   if FIELDLIST_PREV <> NIL then
+                     FIELDLIST_PREV -> . NEXT := FIELD_ID ;
+                   if FIELDLIST_1 = NIL then
+                     FIELDLIST_1 := FIELD_ID ;
+                   FIELDLIST_PREV := FIELD_ID ;
+                   with FIELD_ID -> do
                      begin
-                       IDTYPE := LSP ;
-                       ALIGN ( DISPL , LALNFCT ) ;
-                       FLDADDR := DISPL ;
-                       DISPL := DISPL + LSIZE ;
-                       NXT1 := NEXT ;
+                       NAME := SYID ;
+                       IDTYPE := NIL ;
+                       NEXT := NIL ;
+                       OWNER := FLDOWNER ;
+                       TAGPOINTER := FLDTAG ;
+                       KLASS := FIELD ;
+                       if OPT . GET_STAT then
+                         FLDOWNER -> . NUMBER_OF_FIELDS := FLDOWNER ->
+                                                   . NUMBER_OF_FIELDS +
+                                                   1 ;
                      end (* with *) ;
-                 end (* while *) ;
-               if LALNFCT > RECALN then
-                 RECALN := LSP -> . ALN ;
-               if SY = SYSEMICOLON then
-                 begin
-                   INSYMBOL ;
-                   if not ( SY in [ IDENT , SYCASE , SYEND ] ) then
-
-           (**********************)
-           (* IGNOR EXTRA ;      *)
-           (**********************)
-
-                     begin
-                       ERROR ( 19 ) ;
-                       SKIP ( FSYS + [ IDENT , SYCASE ] )
-                     end (* then *)
+                   ENTERID ( FIELD_ID ) ;
+                   INSYMBOL
                  end (* then *)
-             end (* while *) ;
+               else
+                 ERROR ( 2 ) ;
+               if not ( SY in [ SYCOMMA , SYCOLON ] ) then
+                 begin
+                   ERROR ( 6 ) ;
+                   SKIP ( FSYS + [ SYCOMMA , SYCOLON , SYSEMICOLON ,
+                          SYCASE ] )
+                 end (* then *) ;
+
+           //************************************************
+           // with together with comma does not make sense,  
+           // because inherited fields cannot be unique      
+           //************************************************
+
+               if ( SY = SYCOMMA ) and WITHFLAG then
+                 ERROR ( 230 ) ;
+               DONE := SY <> SYCOMMA ;
+               if not DONE then
+                 INSYMBOL
+             until DONE ;
+             if SY = SYCOLON then
+               INSYMBOL
+             else
+               ERROR ( 5 ) ;
+             if FIELDLIST_RESULT = NIL then
+               FIELDLIST_RESULT := FIELDLIST_1 ;
+
+           //************************************************
+           // type of record field                           
+           //************************************************
+
+             TYP ( FSYS + [ SYCASE , SYSEMICOLON ] , FIELDTYPE ,
+                   LOCAL_SIZE , FALSE ) ;
+
+           //************************************************
+           // compute addresses of all new components        
+           //************************************************
+
+             LOCAL_ALN := 1 ;
+             if FIELDTYPE <> NIL then
+               LOCAL_ALN := FIELDTYPE -> . ALN ;
+
+           //****************************************
+           // ANY "FIELDS" DEFINED IN THIS ROUND ?   
+           //****************************************
+
+             FIELDLIST_TEMP := FIELDLIST_1 ;
+             while FIELDLIST_TEMP <> NIL do
+               begin
+                 with FIELDLIST_TEMP -> do
+                   begin
+                     IDTYPE := FIELDTYPE ;
+                     ALIGN ( SIZE_FL , LOCAL_ALN ) ;
+                     FIELDADDR := SIZE_FL ;
+                     if FALSE then
+                       WRITELN ( 'field ' , NAME ,
+                                 ' found, fieldaddr = ' , FIELDADDR : 6
+                                 , ' aln = ' , LOCAL_ALN : 1 ) ;
+                     SIZE_FL := SIZE_FL + LOCAL_SIZE ;
+                     FIELDLIST_TEMP := NEXT ;
+                   end (* with *) ;
+               end (* while *) ;
+             if LOCAL_ALN > ALN_FL then
+               ALN_FL := FIELDTYPE -> . ALN ;
+
+           //*****************************************************
+           // if withflag, then check if new type is record       
+           // or pointer type and enter fields of sub-record      
+           // into current fieldlist ... with proper information  
+           //*****************************************************
+
+             if WITHFLAG then
+               FIELDLIST_WITH ( FIELDLIST_1 , FLDOWNER ) ;
+
+           //************************************************
+           // advance fieldlist_prev, if needed              
+           //************************************************
+
+             while FIELDLIST_PREV -> . NEXT <> NIL do
+               FIELDLIST_PREV := FIELDLIST_PREV -> . NEXT ;
+
+           //************************************************
+           // end of new function                            
+           //************************************************
+
+             if SY = SYSEMICOLON then
+               INSYMBOL ;
+           until FALSE ;
+
+           //************************************************
+           // align size of fieldlist                        
+           //************************************************
+
+           ALIGN ( SIZE_FL , ALN_FL ) ;
+
+           //************************************************
+           // now variant parts of fieldlist                 
+           // first: create tagtype element (record_tagtype) 
+           // if real tagfield (and not only type)           
+           // create tagfield and link it to tagtype;        
+           // tagfield is also created, if no tagfield, but  
+           // then the name is blank                         
+           //************************************************
+
            if SY = SYCASE then
              begin
-               NEW ( LSP , TAGFLD ) ;
-               with LSP -> do
+               NEW ( TAGTYPE , TAGFLD ) ;
+               with TAGTYPE -> do
                  begin
                    ERRORFLAG := FALSE ;
+                   SIZE := 0 ;
                    TAGFIELDP := NIL ;
-                   FSTVAR := NIL ;
+                   FIRSTVARIANT := NIL ;
                    FORM := TAGFLD
                  end (* with *) ;
-               FRECVAR := LSP ;
+               RECORD_TAGTYPE := TAGTYPE ;
                INSYMBOL ;
                if SY = IDENT then
                  begin
-                   NEW ( LCP , FIELD ) ;
-                   with LCP -> do
+                   NEW ( TAGFIELD_ID , FIELD ) ;
+                   with TAGFIELD_ID -> do
                      begin
                        NAME := SYID ;
                        IDTYPE := NIL ;
                        KLASS := FIELD ;
                        NEXT := NIL ;
 
-           (****************************************)
-           (*FLDADDR WILL BE SET WHEN TYPE IS KNOWN*)
-           (****************************************)
+           //*******************************************
+           // FIELDADDR WILL BE SET WHEN TYPE IS KNOWN  
+           //*******************************************
 
                        OWNER := FLDOWNER ;
+                       TAGPOINTER := FLDTAG ;
                        if OPT . GET_STAT then
-                         FLDOWNER -> . NO_FLDS := FLDOWNER -> . NO_FLDS
-                                                  + 1 ;
+                         FLDOWNER -> . NUMBER_OF_FIELDS := FLDOWNER ->
+                                                   . NUMBER_OF_FIELDS +
+                                                   1 ;
                      end (* with *) ;
                    INSYMBOL ;
                    if SY = SYCOLON then
 
-           (**********************)
-           (* EXPLICIT TAG FIELD *)
-           (**********************)
+           //***********************
+           // EXPLICIT TAG FIELD    
+           //***********************
 
                      begin
-                       ENTERID ( LCP ) ;
+                       ENTERID ( TAGFIELD_ID ) ;
                        INSYMBOL ;
                        if SY <> IDENT then
                          goto 10
                      end (* then *)
                    else
                      begin
-                       SYID := LCP -> . NAME ;
-                       LCP -> . NAME := BLANKID ;
+                       SYID := TAGFIELD_ID -> . NAME ;
+                       TAGFIELD_ID -> . NAME := BLANKID ;
                      end (* else *) ;
+
+           //***********************
+           // look for tag type     
+           //***********************
+
                    SID_RC := SEARCHID ( SYID , TRUE , TRUE , [ TYPES ]
                              , LCP1 ) ;
-                   LSP1 := LCP1 -> . IDTYPE ;
-                   if LSP1 <> NIL then
-                     with LSP1 -> do
+                   TAGFIELD_TYPE := LCP1 -> . IDTYPE ;
+                   if TAGFIELD_TYPE <> NIL then
+                     with TAGFIELD_TYPE -> do
                        begin
-                         if LCP -> . NAME <> BLANKID then
+                         if TAGFIELD_ID -> . NAME <> BLANKID then
                            begin
-                             ALIGN ( DISPL , ALN ) ;
-                             if ALN > RECALN then
-                               RECALN := ALN ;
-                             LCP -> . FLDADDR := DISPL ;
-                             DISPL := DISPL + SIZE ;
+                             if ALN_FL < ALN then
+                               ALN_FL := ALN ;
+                             ALIGN ( SIZE_FL , ALN_FL ) ;
+                             TAGFIELD_ID -> . FIELDADDR := SIZE_FL ;
+                             SIZE_FL := SIZE_FL + SIZE ;
                            end (* then *) ;
-                         if ( FORM <= SUBRANGE ) or IS_CARRAY ( LSP1 )
-                         then
+                         if ( FORM <= SUBRANGE ) or IS_CARRAY (
+                         TAGFIELD_TYPE ) then
                            begin
-                             if COMPTYPES ( PTYPE_REAL , LSP1 ) = 1
-                             then
+                             if COMPTYPES ( PTYPE_REAL , TAGFIELD_TYPE
+                             ) = 1 then
                                ERROR ( 109 )
                              else
-                               if IS_CARRAY ( LSP1 ) then
+                               if IS_CARRAY ( TAGFIELD_TYPE ) then
                                  ERROR ( 398 ) ;
-                             LCP -> . IDTYPE := LSP1 ;
-                             LSP -> . TAGFIELDP := LCP ;
+                             TAGFIELD_ID -> . IDTYPE := TAGFIELD_TYPE ;
+                             TAGTYPE -> . TAGFIELDP := TAGFIELD_ID ;
                            end (* then *)
                          else
                            ERROR ( 110 ) ;
                        end (* with *) ;
-                   if LCP -> . NAME <> BLANKID then
+                   if TAGFIELD_ID -> . NAME <> BLANKID then
                      INSYMBOL ;
                  end (* then *)
                else
@@ -6929,39 +7490,67 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                    ERROR ( 2 ) ;
                    SKIP ( FSYS + [ SYOF , SYLPARENT ] )
                  end ;
-               LSP -> . SIZE := DISPL ;
+
+           //************************************************
+           // set size and aln of tagtype for now            
+           // fix later                                      
+           //************************************************
+
+               ALIGN ( SIZE_FL , ALN_FL ) ;
+               TAGTYPE -> . VARIANT_OFFS := SIZE_FL ;
+               TAGTYPE -> . ALN := ALN_FL ;
                if SY = SYOF then
                  INSYMBOL
                else
                  ERROR ( 8 ) ;
-               LSP1 := NIL ;
-               MINSIZE := DISPL ;
-               MAXSIZE := DISPL ;
+
+           //************************************************
+           // maxsize now refers to variant part             
+           //************************************************
+
+               MAXSIZE := 0 ;
+
+           //************************************************
+           // new in 07.2019: build list of variants         
+           // in order of definition (not reverse order)     
+           //************************************************
+           // new in 07.2019: const list for list of         
+           // constants instead of multiple variants         
+           //************************************************
+
+               LIST_OF_VARIANTS := NIL ;
                repeat
-                 LSP2 := NIL ;
+                 LIST_OF_CONSTS := NIL ;
                  repeat
                    CONSTANT ( FSYS + [ SYCOMMA , SYCOLON , SYLPARENT ]
-                              , LSP3 , LVALU ) ;
-                   if LSP -> . TAGFIELDP <> NIL then
-                     if COMPTYPES ( LSP -> . TAGFIELDP -> . IDTYPE ,
-                     LSP3 ) <> 1 then
+                              , TYPE_WORK , LVALU ) ;
+                   if TAGTYPE -> . TAGFIELDP <> NIL then
+                     if COMPTYPES ( TAGTYPE -> . TAGFIELDP -> . IDTYPE
+                     , TYPE_WORK ) <> 1 then
                        ERROR ( 111 ) ;
-                   NEW ( LSP3 , VARIANT ) ;
-                   with LSP3 -> do
-                     begin
-                       ERRORFLAG := FALSE ;
-                       NXTVAR := LSP1 ;
-                       SUBVAR := LSP2 ;
-                       VARVAL := LVALU ;
-                       FSTSUBFLD := NIL ;
-                       FORM := VARIANT
-                     end (* with *) ;
-                   LSP1 := LSP3 ;
-                   LSP2 := LSP3 ;
-                   TEST := SY <> SYCOMMA ;
-                   if not TEST then
+                   NEW ( CONSTL_WORK ) ;
+                   CONSTL_WORK -> . C := LVALU ;
+                   CONSTL_WORK -> . NEXT := LIST_OF_CONSTS ;
+                   LIST_OF_CONSTS := CONSTL_WORK ;
+                   DONE := SY <> SYCOMMA ;
+                   if not DONE then
                      INSYMBOL
-                 until TEST ;
+                 until DONE ;
+                 NEW ( VWORK , VARIANT ) ;
+                 with VWORK -> do
+                   begin
+                     ERRORFLAG := FALSE ;
+                     NEXTVARIANT := NIL ;
+                     SUBTAGTYPE := NIL ;
+                     VARVALS := LIST_OF_CONSTS ;
+                     FIRSTSUBFIELD := NIL ;
+                     FORM := VARIANT
+                   end (* with *) ;
+                 if LIST_OF_VARIANTS = NIL then
+                   TAGTYPE -> . FIRSTVARIANT := VWORK
+                 else
+                   LIST_OF_VARIANTS -> . NEXTVARIANT := VWORK ;
+                 LIST_OF_VARIANTS := VWORK ;
                  if SY = SYCOLON then
                    INSYMBOL
                  else
@@ -6970,21 +7559,26 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                    INSYMBOL
                  else
                    ERROR ( 9 ) ;
-                 FIELDLIST ( FSYS + [ SYRPARENT , SYSEMICOLON ] , LSP2
-                             , LALNFCT , FLDOWNER , LCP1 ) ;
-                 if LALNFCT > RECALN then
-                   RECALN := LALNFCT ;
-                 if DISPL > MAXSIZE then
-                   MAXSIZE := DISPL ;
-                 while LSP3 <> NIL do
-                   with LSP3 -> do
-                     begin
-                       LSP4 := SUBVAR ;
-                       SUBVAR := LSP2 ;
-                       SIZE := DISPL ;
-                       FSTSUBFLD := LCP1 ;
-                       LSP3 := LSP4
-                     end (* with *) ;
+
+           //************************************************
+           // start new fieldlist with offset zero           
+           // and alignment 1 - fix later                    
+           //************************************************
+
+                 FIELDLIST ( FSYS + [ SYRPARENT , SYSEMICOLON ] ,
+                             FLDOWNER , TAGTYPE , LCP1 , LSP1 ,
+                             SIZE_SUB , LOCAL_ALN ) ;
+                 if ALN_FL < LOCAL_ALN then
+                   ALN_FL := LOCAL_ALN ;
+                 if MAXSIZE < SIZE_SUB then
+                   MAXSIZE := SIZE_SUB ;
+                 with VWORK -> do
+                   begin
+                     SUBTAGTYPE := LSP1 ;
+                     SIZE := SIZE_SUB ;
+                     ALN := LOCAL_ALN ;
+                     FIRSTSUBFIELD := LCP1 ;
+                   end (* with *) ;
                  if SY = SYRPARENT then
                    begin
                      INSYMBOL ;
@@ -6996,24 +7590,31 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                    end (* then *)
                  else
                    ERROR ( 4 ) ;
-                 TEST := SY <> SYSEMICOLON ;
-                 if not TEST then
+                 DONE := SY <> SYSEMICOLON ;
+                 if not DONE then
                    begin
-                     DISPL := MINSIZE ;
                      INSYMBOL ;
-                     TEST := SY = SYEND ;
+                     DONE := SY = SYEND ;
 
-           (*****************)
-           (* IGNORE EXTRA ;*)
-           (*****************)
+           //*******************************************
+           // IGNORE EXTRA semicolon                    
+           //*******************************************
 
                    end (* then *)
-               until TEST ;
-               DISPL := MAXSIZE ;
-               LSP -> . FSTVAR := LSP1 ;
+               until DONE ;
+
+           //************************************************
+           // maybe the variants made a higher recaln        
+           // adjust size of tagtype                         
+           // according to highest recaln                    
+           //************************************************
+
+               ALIGN ( TAGTYPE -> . VARIANT_OFFS , ALN_FL ) ;
+               ALIGN ( MAXSIZE , ALN_FL ) ;
+               MODIFY_FIELDLIST ( TAGTYPE , TAGTYPE -> . VARIANT_OFFS )
+                                  ;
+               SIZE_FL := TAGTYPE -> . VARIANT_OFFS + MAXSIZE ;
              end (* then *)
-           else
-             FRECVAR := NIL
          end (* FIELDLIST *) ;
 
 
@@ -7171,10 +7772,10 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                                 ERROR ( 113 ) ;
                                 LSP2 := NIL
                               end (* else *) ;
-                          TEST := SY <> SYCOMMA ;
-                          if not TEST then
+                          DONE := SY <> SYCOMMA ;
+                          if not DONE then
                             INSYMBOL
-                        until TEST ;
+                        until DONE ;
                         if SY = SYRBRACK then
                           INSYMBOL
                         else
@@ -7311,26 +7912,30 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                           end (* then *)
                         else
                           FATALERROR ( 250 ) ;
-                        DISPL := 0 ;
+                        if FALSE then
+                          begin
+                            WRITELN ;
+                            WRITELN (
+                                   'new record definition starts ... '
+                                      )
+                          end (* then *) ;
                         NEW ( LSP , RECORDS ) ;
                         with LSP -> do
                           begin
                             ERRORFLAG := FALSE ;
-                            ALN := 1 ;
                             FLD_DISP_LEV := TOP ;
-                            FSTFLD := NIL ;
-                            NO_FLDS := 0 ;
-                            FIELDLIST ( FSYS - [ SYSEMICOLON ] + [
-                                        SYEND ] , LSP1 , ALNFCT , LSP ,
-                                        FSTFLD ) ;
-                            RECVAR := LSP1 ;
-                            SIZE := DISPL ;
+                            NUMBER_OF_FIELDS := 0 ;
                             FORM := RECORDS ;
-                            ALN := ALNFCT ;
+                            FIELDLIST ( FSYS - [ SYSEMICOLON ] + [
+                                        SYEND ] , LSP , NIL ,
+                                        FIRSTFIELD , RECTAGTYPE , SIZE
+                                        , ALN ) ;
                             FLD_DISP_LEV := - 1 ;
                           end (* with *) ;
                         if TOP >= 0 then
                           TOP := TOP - 1 ;
+                        if FALSE then
+                          WRITELN ( 'end of record definition' ) ;
                         if SY = SYEND then
                           INSYMBOL
                         else
@@ -7466,6 +8071,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
       var LLP : LBP ;
           REDEF : BOOLEAN ;
           LBNAME : LABELRNG ;
+          DONE : BOOLEAN ;
 
       begin (* LABELDECLARATION *)
         repeat
@@ -7511,10 +8117,10 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
               ERROR ( 6 ) ;
               SKIP ( FSYS + [ SYCOMMA , SYSEMICOLON ] )
             end (* then *) ;
-          TEST := SY <> SYCOMMA ;
-          if not TEST then
+          DONE := SY <> SYCOMMA ;
+          if not DONE then
             INSYMBOL
-        until TEST ;
+        until DONE ;
         if SY = SYSEMICOLON then
           INSYMBOL
         else
@@ -7705,13 +8311,14 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
           NOCHMAL : BOOLEAN ;
           PSI : PSETINFO ;
           LVALU : XCONSTANT ;
-          LSP , LSP1 , ELT , LRECVAR : TTP ;
+          LSP , LSP1 , ELT , LRECTAGTYPE : TTP ;
           DUMMY_TYP : TTP ;
           FLDPR : IDP ;
           LX : ADDRRANGE ;
           CT_RESULT : INTEGER ;
           TEST : BOOLEAN ;
           ERRFLAG : BOOLEAN ;
+          CONSTL_WORK : -> CONSTLIST ;
 
 
       procedure STOWCONST ( ELSP : TTP ) ;
@@ -7969,14 +8576,14 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                           ALIGN ( CONSTLCOUNTER , ALN ) ;
                           SLC := CONSTLCOUNTER ;
                           L := SIZE ;
-                          LRECVAR := RECVAR ;
+                          LRECTAGTYPE := RECTAGTYPE ;
                           TEST := TRUE ;
-                          FLDPR := FSTFLD ;
+                          FLDPR := FIRSTFIELD ;
                           10 :
                           while TEST and ( FLDPR <> NIL ) do
                             with FLDPR -> do
                               begin
-                                CONSTLCOUNTER := SLC + FLDADDR ;
+                                CONSTLCOUNTER := SLC + FIELDADDR ;
                                 STOWCONST ( IDTYPE ) ;
                                 FLDPR := NEXT ;
                                 if SY = SYCOMMA then
@@ -7985,20 +8592,20 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                                   TEST := FALSE
                               end (* with *) ;
                           if TEST then
-                            if LRECVAR <> NIL then
+                            if LRECTAGTYPE <> NIL then
 
         (****************************)
         (* TAG FIELD VALUE IS NEXT  *)
         (****************************)
 
-                              with LRECVAR -> do
+                              with LRECTAGTYPE -> do
                                 if TAGFIELDP <> NIL then
                                   with TAGFIELDP -> do
                                     begin
                                       if NAME <> BLANKID then
                                         begin
                                           CONSTLCOUNTER := SLC +
-                                                   FLDADDR ;
+                                                   FIELDADDR ;
                                           STOWCONST ( IDTYPE )
                                         end (* then *)
                                       else
@@ -8014,22 +8621,34 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                                         INSYMBOL
                                       else
                                         TEST := FALSE ;
-                                      LSP1 := FSTVAR ;
+                                      LSP1 := FIRSTVARIANT ;
                                       L := SIZE ;
                                       while LSP1 <> NIL do
                                         with LSP1 -> do
-                                          if VARVAL . IVAL = LVALU .
-                                          IVAL then
-                                            begin
-                                              LRECVAR := SUBVAR ;
-                                              L := SIZE ;
-                                              FLDPR := FSTSUBFLD ;
-                                              goto 10
-                                            end (* then *)
-                                          else
-                                            LSP1 := NXTVAR ;
+                                          begin
+                                            CONSTL_WORK := VARVALS ;
+                                            while CONSTL_WORK <> NIL do
+                                              if CONSTL_WORK -> . C .
+                                              IVAL = LVALU . IVAL then
+                                                break
+                                              else
+                                                CONSTL_WORK :=
+                                                   CONSTL_WORK -> .
+                                                   NEXT ;
+                                            if CONSTL_WORK <> NIL then
+                                              begin
+                                                LRECTAGTYPE :=
+                                                   SUBTAGTYPE ;
+                                                L := SIZE ;
+                                                FLDPR := FIRSTSUBFIELD
+                                                   ;
+                                                goto 10
+                                              end (* then *)
+                                            else
+                                              LSP1 := NEXTVARIANT ;
+                                          end (* with *)
                                     end (* with *) ;
-                          CONSTLCOUNTER := SLC + L ;
+                          CONSTLCOUNTER := SLC + LSP -> . SIZE ;
                           if SY <> SYRPARENT then
                             ERROR ( 4 )
                           else
@@ -8264,6 +8883,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
           LSIZE : ADDRRANGE ;
           LFPTR : FRECPTR ;
           ERRINFO : CHAR32 ;
+          DONE : BOOLEAN ;
 
       begin (* VARDECLARATION *)
         if IS_MODULE and ( LEVEL <= 1 ) then
@@ -8328,10 +8948,10 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                 SKIP ( FSYS + [ SYCOMMA , SYCOLON , SYSEMICOLON ] +
                        TYPEDELS )
               end (* then *) ;
-            TEST := SY <> SYCOMMA ;
-            if not TEST then
+            DONE := SY <> SYCOMMA ;
+            if not DONE then
               INSYMBOL
-          until TEST ;
+          until DONE ;
           if SY = SYCOLON then
             INSYMBOL
           else
@@ -8407,6 +9027,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
           LVALU_DUMMY : XCONSTANT ;
           ELSIZE : INTEGER ;
           ERRINFO : CHAR32 ;
+          DONE : BOOLEAN ;
 
       begin (* STATICDECLARATION *)
         LVALU_DUMMY . IVAL := 0 ;
@@ -8461,10 +9082,10 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                 SKIP ( FSYS + [ SYCOMMA , SYCOLON , SYSEMICOLON ] +
                        TYPEDELS )
               end (* then *) ;
-            TEST := SY <> SYCOMMA ;
-            if not TEST then
+            DONE := SY <> SYCOMMA ;
+            if not DONE then
               INSYMBOL
-          until TEST ;
+          until DONE ;
           if SY = SYCOLON then
             INSYMBOL
           else
@@ -8613,6 +9234,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
           LLC , LCM : ADDRRANGE ;
           MARKP : -> INTEGER ;
           OLD_HASH : HASH_TABLE ;
+          OLD_COUNT : HASH_COUNT ;
           INTERN : BOOLEAN ;
           CHECKID : ALPHA ;
           ERRINFO : CHAR32 ;
@@ -8730,6 +9352,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
 
             var CONFORMANT : BOOLEAN ;
                 LSIZE : ADDRRANGE ;
+                DONE : BOOLEAN ;
 
             begin (* OTHER_PARAMETER *)
               if SY = SYVAR then
@@ -8784,10 +9407,10 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                     SKIP ( FSYS + [ SYCOMMA , SYSEMICOLON , SYRPARENT ]
                            )
                   end (* then *) ;
-                TEST := SY <> SYCOMMA ;
-                if not TEST then
+                DONE := SY <> SYCOMMA ;
+                if not DONE then
                   INSYMBOL
-              until TEST ;
+              until DONE ;
               if SY = SYCOLON then
                 begin
                   INSYMBOL ;
@@ -9067,10 +9690,9 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
         LCM := LCAFTMST ;
         PROCID := UPRCPTR ;
 
-        (*******************************)
-        (* TO INITIALIZE procid IN CAS *)
-        (*E !                          *)
-        (*******************************)
+        (************************************)
+        (* TO INITIALIZE procid IN CASE !   *)
+        (************************************)
 
         if SY = IDENT then
           begin
@@ -9132,6 +9754,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                 PROCID -> . PREV_PROC_IN_BLOCK := LAST_PROC ;
                 LAST_PROC := PROCID ;
                 OLD_HASH := BUCKET ;
+                OLD_COUNT := BUCKET_COUNT ;
 
         (*************************)
         (* NEW SCOPE BEGINS NEXT *)
@@ -9143,6 +9766,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                 LCP1 := PROCID -> . PRMPTR ;
                 PROCID -> . FWDECL := FALSE ;
                 OLD_HASH := BUCKET ;
+                OLD_COUNT := BUCKET_COUNT ;
 
         (************************)
         (* NEW SCOPE BEGINS NOW *)
@@ -9357,7 +9981,10 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
         TOP := LEVEL ;
         LCOUNTER := LLC ;
         INTLABEL := OLDLABEL ;
+        if FALSE then
+          SHOW_BUCKET_COUNTS ;
         BUCKET := OLD_HASH ;
+        BUCKET_COUNT := OLD_COUNT ;
 
         (**********************)
         (*RESTORE SYMBOL TABLE*)
@@ -9426,6 +10053,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
           CSTEXTNAME : EXTNAMTP ;
           XCSP : CSPTYPE ;
           ERRINFO : CHAR32 ;
+          DONE : BOOLEAN ;
 
 
       function GEN_XBG : INTEGER ;
@@ -9905,7 +10533,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
          end (* GENPROCINFO *) ;
 
 
-      procedure CHKBNDS ( ASSIGN : BOOLEAN ; FSP : TTP ) ;
+      procedure CHKBNDS ( CALLNR : INTEGER ; ASSIGN : BOOLEAN ; FSP :
+                        TTP ) ;
 
       //*****************************************************
       // grenzen abpruefen bei subranges und pointern        
@@ -9914,6 +10543,9 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
       // moeglich sind                                       
       // checks von pointern auf nil vor dereferenzierung    
       // sollten wieder reingenommen werden ...              
+      //*****************************************************
+      // callnr = 3: nil ist bei parameteruebergabe erlaubt  
+      // callnr = 6: nil ist bei zuweisungen erlaubt         
       //*****************************************************
 
 
@@ -9933,34 +10565,22 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
              if FSP <> PTYPE_BOOL then
                if FSP <> PTYPE_INT then
                  if not IS_STDTYPE ( FSP , 'R' ) then
-
-           //************************************************
-           // typ = voidptr rausnehmen                       
-           // opp 09.2016                                    
-           //************************************************
-
-                   if FSP <> PTYPE_ANY then
-                     if FSP -> . FORM <= POINTER then
-
-           //************************************************
-           // LMAX <= LMIN (?)                               
-           // diese checks nicht mehr, weil pointer          
-           // nicht nur heap-pointer sein koennen            
-           // siehe pasmonn / $ptrchk                        
-           // opp 09.2016                                    
-           //************************************************
-
-                       if FSP -> . FORM = POINTER then
-                         begin
+                   begin
+                     if FSP -> . FORM = POINTER then
+                       begin
+                         if not ( CALLNR in [ 3 , 6 ] ) then
                            if FALSE then
-                             GEN3 ( PCODE_CHK , ORD ( 'A' ) , - 1 , 0 )
-                         end (* then *)
-                       else
+                             GEN3 ( PCODE_CHK , ORD ( 'A' ) , - 1 ,
+                                    CALLNR )
+                       end (* then *)
+                     else
+                       if FSP -> . FORM < POINTER then
                          begin
                            GETBOUNDS ( FSP , LMIN , LMAX ) ;
                            GEN3 ( PCODE_CHK , ORD ( 'I' ) , LMIN , LMAX
                                   ) ;
-                         end (* else *) ;
+                         end (* then *)
+                   end (* then *)
          end (* CHKBNDS *) ;
 
 
@@ -10150,7 +10770,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                                 begin
                                   ACCESS := DRCT ;
                                   VLEVEL := CLEV ;
-                                  DPLMT := CDSPL + FLDADDR
+                                  DPLMT := CDSPL + FIELDADDR
                                 end (* then *)
                               else
                                 begin
@@ -10158,7 +10778,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                                     GEN3 ( PCODE_LOD , ORD ( 'A' ) ,
                                            LEVEL , VDSPL ) ;
                                   ACCESS := INDRCT ;
-                                  IDPLMT := FLDADDR
+                                  IDPLMT := FIELDADDR
                                 end (* else *) ;
 
               //******************************************
@@ -10418,18 +11038,38 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                                       end (* then *)
                                     else
                                       with LCP -> do
-                                        begin
-                                          TYPTR := IDTYPE ;
-                                          case ACCESS of
-                                            DRCT : DPLMT := DPLMT +
-                                                   FLDADDR ;
-                                            INDRCT :
-                                              IDPLMT := IDPLMT +
-                                                   FLDADDR ;
-                                            INXD , STKEXPR :
-                                              ERROR ( 419 )
-                                          end (* case *)
-                                        end (* with *)
+                                        if WITH_COPY = WCPOINTER then
+                                          if ACCESS = DRCT then
+                                            begin
+                                              DPLMT := DPLMT +
+                                                   POINTER_OFFSET ;
+                                              LOAD ;
+                                              if OPT . DEBUG then
+                                                CHKBNDS ( 1 , FALSE ,
+                                                   PTYPE_ANY ) ;
+                                              GATTR . TYPTR := IDTYPE ;
+                                              with GATTR do
+                                                begin
+                                                  KIND := VARBL ;
+                                                  ACCESS := INDRCT ;
+                                                  IDPLMT := FIELDADDR ;
+                                                end (* with *)
+                                            end (* then *)
+                                          else
+                                            ERROR ( 419 )
+                                        else
+                                          begin
+                                            TYPTR := IDTYPE ;
+                                            case ACCESS of
+                                              DRCT : DPLMT := DPLMT +
+                                                   FIELDADDR ;
+                                              INDRCT :
+                                                IDPLMT := IDPLMT +
+                                                   FIELDADDR ;
+                                              INXD , STKEXPR :
+                                                ERROR ( 419 )
+                                            end (* case *)
+                                          end (* else *)
                                   end (* then *) ;
                                 INSYMBOL
                               end (* then *)
@@ -10458,7 +11098,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                                   ERROR ( 187 ) ;
                                 LOAD ;
                                 if OPT . DEBUG then
-                                  CHKBNDS ( FALSE , GATTR . TYPTR ) ;
+                                  CHKBNDS ( 2 , FALSE , GATTR . TYPTR )
+                                            ;
                                 TYPTR := ELTYPE ;
                                 with GATTR do
                                   begin
@@ -10575,7 +11216,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                      begin
                        LOAD ;
                        if OPT . DEBUG then
-                         CHKBNDS ( TRUE , PARMTYPE ) ;
+                         CHKBNDS ( 3 , TRUE , PARMTYPE ) ;
                        if COMPTYPES ( PTYPE_REAL , PARMTYPE ) = 1 then
                          if ( GATTR . TYPTR = PTYPE_INT ) then
                            begin
@@ -10699,7 +11340,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                                          4 : begin
                                                LOAD ;
                                                if OPT . DEBUG then
-                                                 CHKBNDS ( TRUE ,
+                                                 CHKBNDS ( 4 , TRUE ,
                                                    PARMTYPE ) ;
                                                CTLS . VPO1_NEEDED :=
                                                    TRUE ;
@@ -10766,7 +11407,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                          4 : begin
                                LOAD ;
                                if OPT . DEBUG then
-                                 CHKBNDS ( TRUE , PARMTYPE ) ;
+                                 CHKBNDS ( 5 , TRUE , PARMTYPE ) ;
                                CTLS . VPO1_NEEDED := TRUE ;
                                GEN0 ( PCODE_VC1 ) ;
                              end (* tag/ca *) ;
@@ -11254,22 +11895,27 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
             procedure GETPUTRESETREWRITE ;
 
                begin (* GETPUTRESETREWRITE *)
-                 if LKEY = 46 then
-                   FILESETUP ( NIL , TRUE )
+                 if LKEY = 97 then
+                   FILESETUP ( OUTPUTPTR , TRUE )
                  else
-                   if ODD ( LKEY ) then
-                     FILESETUP ( INPUTPTR , TRUE )
+                   if LKEY = 46 then
+                     FILESETUP ( NIL , TRUE )
                    else
-                     FILESETUP ( OUTPUTPTR , TRUE ) ;
+                     if ODD ( LKEY ) then
+                       FILESETUP ( INPUTPTR , TRUE )
+                     else
+                       FILESETUP ( OUTPUTPTR , TRUE ) ;
                  case LKEY of
                    0 .. 4 :
                      GEN1 ( PCODE_CSP , LKEY ) ;
-                   46 : GEN1 ( PCODE_CSP , 38 ) ;
+                   46 : GEN1 ( PCODE_CSP , ORD ( PCLS ) ) ;
+                   97 : GEN1 ( PCODE_CSP , ORD ( PAPN ) ) ;
                  end (* case *) ;
 
                  (*****************************)
                  (*CSP - GET,PUT,RES,REW,PAG  *)
                  (*CSP - CLS                  *)
+                 (*CSP - APN                  *)
                  (*****************************)
 
                  GEN1 ( PCODE_CSP , ORD ( PEIO ) ) ;
@@ -11279,7 +11925,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
             procedure READ1 ;
 
                var XCSP : CSPTYPE ;
-                   TEST : BOOLEAN ;
+                   DONE : BOOLEAN ;
 
                begin (* READ1 *)
                  RWSETUP ( INPUTPTR , TRUE ) ;
@@ -11303,7 +11949,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
 
                        if SY <> IDENT then
                          ERROR ( 2 ) ;
-                     TEST := FALSE ;
+                     DONE := FALSE ;
                      if SY = IDENT then
                        repeat
                          VARIABLE ( FSYS + [ SYCOMMA , SYRPARENT ] ,
@@ -11370,8 +12016,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                          if SY = SYCOMMA then
                            INSYMBOL
                          else
-                           TEST := TRUE ;
-                       until TEST ;
+                           DONE := TRUE ;
+                       until DONE ;
                    end (* then *) ;
                  if LKEY = 11 then
                    GEN1 ( PCODE_CSP , ORD ( PRLN ) ) ;
@@ -11382,7 +12028,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
             procedure WRITE1 ;
 
                var LSP : TTP ;
-                   DEFAULT , DEFAULT1 , TEST : BOOLEAN ;
+                   DEFAULT , DEFAULT1 , DONE : BOOLEAN ;
                    LLKEY : INTEGER ;
                    LEN : ADDRRANGE ;
                    XCSP : CSPTYPE ;
@@ -11537,7 +12183,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                begin (* WRITE1 *)
                  XCSP := UNDEF_CSP ;
                  LLKEY := LKEY ;
-                 TEST := FALSE ;
+                 DONE := FALSE ;
                  RWSETUP ( OUTPUTPTR , TRUE ) ;
                  if RWFILE <> NIL then
                    if LLKEY = 12 then
@@ -11649,8 +12295,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                          if SY = SYCOMMA then
                            INSYMBOL
                          else
-                           TEST := TRUE ;
-                       until TEST ;
+                           DONE := TRUE ;
+                       until DONE ;
                    end (* then *) ;
 
                  (***********)
@@ -11911,6 +12557,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                    LSIZE : ADDRRANGE ;
                    LVAL : XCONSTANT ;
                    LALN : ALNRNG ;
+                   CONSTL_WORK : -> CONSTLIST ;
 
                begin (* NEW1 *)
                  VARIABLE ( FSYS + [ SYCOMMA , SYRPARENT ] , TRUE ) ;
@@ -11929,7 +12576,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                              if ELTYPE -> . ALN > INTSIZE then
                                LALN := REALSIZE ;
                              if ELTYPE -> . FORM = RECORDS then
-                               LSP := ELTYPE -> . RECVAR
+                               LSP := ELTYPE -> . RECTAGTYPE
                            end (* then *)
                        end (* then *)
                      else
@@ -11960,18 +12607,27 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                              if COMPTYPES ( LSP -> . TAGFIELDP -> .
                              IDTYPE , LSP1 ) = 1 then
                                begin
-                                 LSP1 := LSP -> . FSTVAR ;
+                                 LSP1 := LSP -> . FIRSTVARIANT ;
                                  while LSP1 <> NIL do
                                    with LSP1 -> do
-                                     if VARVAL . IVAL = LVAL . IVAL
-                                     then
-                                       begin
-                                         LSIZE := SIZE ;
-                                         LSP := SUBVAR ;
-                                         goto 1
-                                       end (* then *)
-                                     else
-                                       LSP1 := NXTVAR ;
+                                     begin
+                                       CONSTL_WORK := VARVALS ;
+                                       while CONSTL_WORK <> NIL do
+                                         if CONSTL_WORK -> . C . IVAL =
+                                         LVAL . IVAL then
+                                           break
+                                         else
+                                           CONSTL_WORK := CONSTL_WORK
+                                                   -> . NEXT ;
+                                       if CONSTL_WORK <> NIL then
+                                         begin
+                                           LSIZE := SIZE ;
+                                           LSP := SUBTAGTYPE ;
+                                           goto 1
+                                         end (* then *)
+                                       else
+                                         LSP1 := NEXTVARIANT
+                                     end (* with *) ;
                                  LSIZE := LSP -> . SIZE ;
                                  LSP := NIL ;
                                end (* then *)
@@ -15390,6 +16046,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                     94 : VERIFY1 ;
                     95 : TRANSLATE1 ;
                     96 : MEMCMP1 ;
+                    97 : GETPUTRESETREWRITE ;
                   end (* case *) ;
                   if LKEY in [ 16 .. 26 , 28 , 29 , 33 , 38 , 39 , 40 ,
                   41 , 42 , 43 , 44 , 47 , 63 , 64 , 78 , 79 ] then
@@ -17000,7 +17657,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                                         , GATTR . TYPTR -> . SIZE ) ;
                             end (* then *) ;
                           if OPT . DEBUG then
-                            CHKBNDS ( TRUE , LATTR . BTYPE ) ;
+                            CHKBNDS ( 6 , TRUE , LATTR . BTYPE ) ;
 
               //******************************************
               // assignment depending on target type class
@@ -17227,6 +17884,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
          procedure COMPOUNDSTATEMENT ;
 
             var ELSE_IN_FSYS : BOOLEAN ;
+                DONE : BOOLEAN ;
 
             begin (* COMPOUNDSTATEMENT *)
               ELSE_IN_FSYS := FALSE ;
@@ -17240,10 +17898,10 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                   STATEMENT ( FSYS + [ SYSEMICOLON , SYEND ] , LOOPC ,
                               SUBR ) ;
                 until not ( SY in STATBEGSYS ) ;
-                TEST := SY <> SYSEMICOLON ;
-                if not TEST then
+                DONE := SY <> SYSEMICOLON ;
+                if not DONE then
                   INSYMBOL
-              until TEST ;
+              until DONE ;
               if SY = SYEND then
                 INSYMBOL
               else
@@ -17318,6 +17976,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                 TEMPLN : INTEGER ;
                 CTRCASES : INTEGER ;
                 CTRNO : CTRRANGE ;
+                DONE : BOOLEAN ;
 
             begin (* CASESTATEMENT *)
               if CTLS . WATCH1 then
@@ -17338,7 +17997,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                   if COMPTYPES ( LSP , PTYPE_INT ) <> 1 then
                     GEN0 ( PCODE_ORD ) ;
               if OPT . DEBUG then
-                CHKBNDS ( FALSE , GATTR . TYPTR ) ;
+                CHKBNDS ( 7 , FALSE , GATTR . TYPTR ) ;
               if SY = SYOF then
                 INSYMBOL
               else
@@ -17473,10 +18132,10 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                               end (* then *)
                             else
                               ERROR ( 147 ) ;
-                          TEST := SY <> SYCOMMA ;
-                          if not TEST then
+                          DONE := SY <> SYCOMMA ;
+                          if not DONE then
                             INSYMBOL
-                        until TEST ;
+                        until DONE ;
                         if SY = SYCOLON then
                           INSYMBOL
                         else
@@ -17520,10 +18179,10 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                     CTREMIT ( CTRCASE , CTRNO , TEMPLN , 0 , LINECNT )
                               ;
                   end (* then *) ;
-                TEST := SY <> SYSEMICOLON ;
-                if not TEST then
+                DONE := SY <> SYSEMICOLON ;
+                if not DONE then
                   INSYMBOL ;
-              until TEST ;
+              until DONE ;
               if FSTPTR <> NIL then
                 begin
                   LMAX := FSTPTR -> . CSLAB2 . IVAL ;
@@ -17675,6 +18334,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                 FIRSTLN : INTEGER ;
                 CTRNO : CTRRANGE ;
                 LOOPR : LOOPCTL ;
+                DONE : BOOLEAN ;
 
             begin (* REPEATSTATEMENT *)
               GENLABEL ( LADDR ) ;
@@ -17698,10 +18358,10 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                   STATEMENT ( FSYS + [ SYSEMICOLON , SYUNTIL ] , LOOPR
                               , SUBR ) ;
                 until not ( SY in STATBEGSYS ) ;
-                TEST := SY <> SYSEMICOLON ;
-                if not TEST then
+                DONE := SY <> SYSEMICOLON ;
+                if not DONE then
                   INSYMBOL
-              until TEST ;
+              until DONE ;
               if SY = SYUNTIL then
                 begin
                   if LOOPR . CONTUSED then
@@ -18036,7 +18696,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
 
               GEN2 ( LOP , GETTYPE ( GATTR . TYPTR ) , 1 ) ;
               if OPT . DEBUG then
-                CHKBNDS ( FALSE , LATTR . TYPTR ) ;
+                CHKBNDS ( 8 , FALSE , LATTR . TYPTR ) ;
               STORE ( LATTR ) ;
               GENUJPFJP ( PCODE_UJP , LADDR ) ;
               PUTLABEL ( LCIX ) ;
@@ -18699,10 +19359,10 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
             STATEMENT ( FSYS + [ SYSEMICOLON , SYEND ] , LOOP0 , SUBR )
                         ;
           until not ( SY in STATBEGSYS ) ;
-          TEST := SY <> SYSEMICOLON ;
-          if not TEST then
+          DONE := SY <> SYSEMICOLON ;
+          if not DONE then
             INSYMBOL
-        until TEST ;
+        until DONE ;
         if SY = SYEND then
           INSYMBOL
         else
@@ -18717,7 +19377,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
           LLP := NIL ;
 
         (*****************************)
-        (* TEST FOR UNDEFINED LABELS *)
+        (* DONE FOR UNDEFINED LABELS *)
         (*****************************)
 
         while LLP <> NIL do
@@ -19352,6 +20012,7 @@ procedure ENTERSTDTYPES ;
      NEW ( SP ) ;
      SP -> := UREC ;
      UFLDPTR -> . OWNER := SP ;
+     UFLDPTR -> . TAGPOINTER := NIL ;
    end (* ENTERSTDTYPES *) ;
 
 
@@ -19443,7 +20104,7 @@ procedure ENTSTDNAMES ;
            ( 'REPEATSTR   ' , 85 , FUNC ) ,    // repeat str n times
            ( 'RESULTP     ' , 92 , FUNC ) ,    // ptr to result
            ( 'MEMCMP      ' , 96 , FUNC ) ,    // like C memcmp
-           ( '           ' , - 1 , PROC ) ,    //
+           ( 'APPEND      ' , 97 , PROC ) ,    // open file for append
            ( '           ' , - 1 , PROC ) ,    //
            ( '           ' , - 1 , PROC ) ,    //
            ( '           ' , - 1 , PROC ) ) ;  //
@@ -19806,31 +20467,36 @@ procedure ENTSTDNAMES ;
                  SIZE := INTSIZE + MAXSTRL * CHARSIZE ;
                  ALN := PTRSIZE ;
                  FORM := RECORDS ;
-                 RECVAR := NIL ;
+                 RECTAGTYPE := NIL ;
                  FLD_DISP_LEV := - 1 ;
-                 NO_FLDS := 2 ;
-                 NEW ( FSTFLD , FIELD ) ;
-                 with FSTFLD -> do
+                 NUMBER_OF_FIELDS := 2 ;
+                 NEW ( FIRSTFIELD , FIELD ) ;
+                 with FIRSTFIELD -> do
                    begin
                      NAME := 'PLENGTH' ;
                      IDTYPE := PTYPE_INT ;
-                     FLDADDR := 0 ;
+                     FIELDADDR := 0 ;
                      KLASS := FIELD ;
+                     WITH_COPY := WCNONE ;
+                     POINTER_OFFSET := 0 ;
                      TOP := TOP + 1 ;
 
      (**********************************)
      (* FIELDS ENTERED AT HIGHER SCOPE *)
      (**********************************)
 
-                     ENTERID ( FSTFLD ) ;
+                     ENTERID ( FIRSTFIELD ) ;
                      OWNER := CP -> . IDTYPE -> . ELTYPE ;
+                     TAGPOINTER := NIL ;
                      NEW ( NEXT , FIELD ) ;
                      with NEXT -> do
                        begin
                          NAME := 'PSTRING' ;
-                         FLDADDR := PTRSIZE ;
+                         FIELDADDR := PTRSIZE ;
                          NEXT := NIL ;
                          KLASS := FIELD ;
+                         WITH_COPY := WCNONE ;
+                         POINTER_OFFSET := 0 ;
                          NEW ( IDTYPE , ARRAYS ) ;
                          with IDTYPE -> do
                            begin
@@ -19854,6 +20520,7 @@ procedure ENTSTDNAMES ;
                        end (* with *) ;
                      ENTERID ( NEXT ) ;
                      NEXT -> . OWNER := CP -> . IDTYPE -> . ELTYPE ;
+                     NEXT -> . TAGPOINTER := NIL ;
                      if TOP >= 0 then
                        TOP := TOP - 1 ;
                    end (* with *) ;
@@ -20324,7 +20991,10 @@ procedure INITTABLES ;
      (*****************)
 
      for K := 0 to MAX_BKT do
-       BUCKET [ K ] := NIL ;
+       begin
+         BUCKET [ K ] := NIL ;
+         BUCKET_COUNT [ K ] := 0 ;
+       end (* for *) ;
      for I := 0 to MAXLEVEL do
        begin
          PROC_CNT [ I ] := 0 ;
@@ -20406,6 +21076,8 @@ begin (* HAUPTPROGRAMM *)
   (***********)
 
   PROGRAMME ( BLOCKBEGSYS + STATBEGSYS - [ SYCASE ] ) ;
+  if FALSE then
+    SHOW_BUCKET_COUNTS ;
 
   (*********************************************)
   (* goodbye = PRINT POST COMPILATION MESSAGES *)

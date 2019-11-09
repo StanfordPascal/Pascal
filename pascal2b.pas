@@ -480,9 +480,9 @@ program PCODE_TRANSLATOR ( INPUT , OUTPUT , OBJCODE , LIST002 , TRACEF
 
 
 
-const VERSION = '2019.07' ;        // Version for display message
-      VERSION2 = 0x1907 ;          // Version for load module
-      VERSION3 = 'XL2''1907''' ;   // Version for LIST002 listing
+const VERSION = '2019.08' ;        // Version for display message
+      VERSION2 = 0x1908 ;          // Version for load module
+      VERSION3 = 'XL2''1908''' ;   // Version for LIST002 listing
       MXADR = 65535 ;
       SHRTINT = 4095 ;
       HALFINT = 32700 ;

@@ -17,9 +17,9 @@ begin (* HAUPTPROGRAMM *)
   WRITELN ( 'SIN (1.0) = ' , SIN ( 1.0 ) : 15 : 7 ) ;
   WRITELN ( 'SIN (pi/2) = ' , SIN ( 3.141592654 / 2 ) : 15 : 7 ) ;
   X := 0 ;
-  while X < 5.0 do
+  while X <= 5.0 do
     begin
       WRITELN ( 'SIN (' , X : 1 : 1 , ') = ' , SIN ( X ) : 15 : 7 ) ;
-      X := X + 0.2
+      X := ROUNDX ( X + 0.2 , - 1 ) ;
     end (* while *)
 end (* HAUPTPROGRAMM *) .

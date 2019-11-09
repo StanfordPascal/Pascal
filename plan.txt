@@ -1,11 +1,46 @@
 
-2019.08:
+2019.09:
 
+* Structconst erzeugt andere Offsets bei PASCAL1 (vergl. mit PASCAL1A)
+* PASFORM verbessern wg. Zeilenende-Kommentaren
+* Fehler beim Uebersetzen von P5 klaeren (siehe TESTSET6.PAS)
+* Korrektur Laenge SCL und ASE - nein, ist schon korrekt
+* Erweiterung wg. TESTSET6
+* a) ASR mit weiterem Parameter wg. Anordnung der Parameter 1 und 2
+* b) Parameter entsprechend setzen in SET_PART
+* c) ASR implementieren, nichts machen, wenn Parameter falsch angeordnet
+* d) Test und dann ASR implementieren auf Mainframe (PASCAL2)
+* Dokumentation PCODE_2019
+* Varchar-Instruktionen und ASR (neu)
+* DISPOSE implementieren (mit Warnung, macht nix) in PASCAL1 als neue CSP
+* Fehler bei INDEX Funktion (korrigiert)
+* CSP RDD war in PCINT nicht implementiert (READ fuer Binaerfiles)
+- Fehler bei Structconst ist auch in PASCAL1N, d.h.:
+  PASCAL1N angleichen an PASCAL1, ausser WITH-Erweiterung
+- Einlesen STRING-Datentyp mit READLN
+- Funktionen LEFT und RIGHT bei Strings
+- Ausgabe Strings linksbuendig?
+- Fehler bei CONST-Parameter mit Struktur
+- Pointer-Konstruktor ist nicht ueberall in Funktionskopf zulaessig
+  (z.B. nicht bei var-Parameter, bei value schon)
+- Problem auf Mainframe, wenn PCODE_CHK fuer Pointer aktiv ist (NIL-Pointer-Check)
+  CHK N muss wohl neu implementiert werden
+- Auslieferung Compiler auf alle Plattformen - Version 2019.09
+
+- P5 testen, Compile klappt ja schon
+- Weiter mit PINT.PAS (von P5)
+- wenn OK auf Mainframe, abchecken, ob Ausgabe RECFM = V mit var. Records geht
+- PAS1976 weiter, damit es sich selbst uebersetzen kann
+- GETADR2 usw. erzeugt unnoetigen LA-Befehl z.B. bei VLD 0,0
 - weiter siehe unten
 
 - evtl. andere Loesung fuer NESTED WITH
 - evtl. tauschen der Semantik: FIELDADDR und POINTER_OFFSET
 
+* Fehler bei NEW mit leerer Variante, siehe PAS1976.PAS (NEW ... TYPES)
+* Fehler bei PASCAL2, wenn PASLIBX uebersetzt werden soll (auf VM)
+* Fehler 617 wegen falscher Offsets in Structured Constant (PASCAL2)
+* der Fehler muss aber in PASCAL1 irgendwo sein ...
 * Fehler bei Implentierung von WITH (in Records) und WITH-Statement
 * Fehler bei Implentierung von WITH: IND hat falschen Typ (nicht A)
 * Fields innerhalb Record kennzeichen: Original vs. WITH-induziert

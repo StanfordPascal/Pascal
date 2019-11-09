@@ -54,6 +54,7 @@
 /*  14.01.2019 ! Oppolzer    ! Korrektur bei XJP ohne DEFs            */
 /*  14.01.2019 ! Oppolzer    ! (d.h. leeres Case-Statement)           */
 /*  29.05.2019 ! Oppolzer    ! XBG/XEN eingebaut (Code-Seq. unterdr.) */
+/*  06.09.2019 ! Oppolzer    ! Kommentare korrig. wg. PCODE_2019.TXT  */
 /*  .......... ! ........    ! .....................................  */
 /*  .......... ! ........    ! .....................................  */
 /*  .......... ! ........    ! .....................................  */
@@ -1125,7 +1126,8 @@ static void check_read (void *vgs, filecb *fcb)
          int x;
 
          charp = ADDRSTOR (fcb -> pfilvar);
-         x = fread (charp, fcb -> freclen, 1, fcb -> fhandle);
+         memset (charp, 0x00, fcb -> freclen);
+         x = fread (charp, 1, fcb -> freclen, fcb -> fhandle);
          fcb -> eof = (x == 0);
          fcb -> status = '3';
       }
@@ -2192,7 +2194,8 @@ static void *cspf_get (void *vgs,
    else
    {
       charp = ADDRSTOR (fcb -> pfilvar);
-      x = fread (charp, fcb -> freclen, 1, fcb -> fhandle);
+      memset (charp, 0x00, fcb -> freclen);
+      x = fread (charp, 1, fcb -> freclen, fcb -> fhandle);
       if (x == 0)
          fcb -> eof = 1;
    }
@@ -2497,6 +2500,61 @@ static void *cspf_rln (void *vgs,
    {
       file_input (gs, fcb);
    }
+
+   return NULL;
+}
+
+
+
+
+static void *cspf_rdd (void *vgs,
+                       int parm1,
+                       int parm2,
+                       int parm3,
+                       int parm4)
+
+{
+   global_store *gs = vgs;
+   filecb *fcb;
+   char *charp;
+   char *charp2;
+   int x;
+
+#if 0
+
+   fprintf (stderr, "rds: parm1 = %d\n", parm1);
+   fprintf (stderr, "rds: parm2 = %d\n", parm2);
+   fprintf (stderr, "rds: parm3 = %d\n", parm3);
+
+#endif
+
+   //*************************************
+   // fcb = parm1
+   //*************************************
+
+   STOR_FCB (parm1, fcb);
+
+   check_read (gs, fcb);
+
+   if (fcb -> status != '3' || fcb -> eof)
+      runtime_error (gs, BADIO, fcb -> ddname);
+
+   //*************************************
+   // Pointer to target from parm2
+   //*************************************
+
+   charp = ADDRSTOR (parm2);
+   charp2 = ADDRSTOR (fcb -> pfilvar);
+
+   //*************************************
+   // length = parm3
+   //*************************************
+
+   memcpy (charp, charp2, parm3);
+
+   memset (charp2, 0x00, fcb -> freclen);
+   x = fread (charp2, 1, fcb -> freclen, fcb -> fhandle);
+   fcb -> eof = (x == 0);
 
    return NULL;
 }
@@ -3032,7 +3090,7 @@ static funtab ft [] =
    { "RDY", CSP_RDY, NULL,     0, 0, 0, ' ' },
    { "EOL", CSP_EOL, cspf_eol, 1, -1, 0, ' ' },
    { "EOT", CSP_EOT, cspf_eot, 1, -1, 0, ' ' },
-   { "RDD", CSP_RDD, NULL,     0, 0, 0, ' ' },
+   { "RDD", CSP_RDD, cspf_rdd, 3, 2, 0, ' ' },
    { "WRD", CSP_WRD, cspf_wrd, 3, 2, 0, ' ' },
    { "CLK", CSP_CLK, cspf_clk, 1, 0, 0, ' ' },
    { "WLN", CSP_WLN, cspf_wln, 1, 0, 0, ' ' },
@@ -3363,6 +3421,7 @@ static void int1 (global_store *gs)
    int wert;
    int wert1;
    int wert2;
+   int wertx;
    char bool;
    char bool1;
    char bool2;
@@ -3591,6 +3650,82 @@ static void int1 (global_store *gs)
             byte = 0x80;
             byte = byte >> byteoffs;
             setp [bytenr] |= byte;
+         }
+
+         break;
+
+      case XXX_ASR:
+
+         /************************************************/
+         /*   add set range (two elements)               */
+         /*   len1 = length of set                       */
+         /*   if len1 < 0:                               */
+         /*   different sequence of parameter on stack   */
+         /*   arg2 = if 1 then first element first       */
+         /*          if 2 then second element first      */
+         /************************************************/
+
+         len1 = pcode -> q;
+
+         if (len1 < 0)
+         {
+            len1 = - len1;
+
+            wert1 = STACK_I (gs -> sp - 8);
+            wert2 = STACK_I (gs -> sp - 4);
+            addr = STACK_I (gs -> sp);
+            intp = ADDRSTACK (gs -> sp - 8);
+            *intp = addr;
+         }
+         else
+         {
+            wert1 = STACK_I (gs -> sp - 4);
+            wert2 = STACK_I (gs -> sp);
+            addr = STACK_I (gs -> sp - 8);
+         }
+
+         if (pcode -> p > 1)
+         {
+            wertx = wert1;
+            wert1 = wert2;
+            wert2 = wertx;
+         }
+
+         (gs -> sp) -= 8;
+
+         setp = ADDRSTOR (SET_ADDR (addr));
+
+         if (wert1 < wert2 &&
+             wert2 < len1 * 8)
+         {
+            int bytenr1;
+            int bytenr2;
+            int bytenrx;
+            int byteoffs;
+            unsigned int byte;
+
+            bytenr1 = wert1 / 8;
+            bytenr2 = wert2 / 8;
+
+            for (wertx = wert1; wertx <= wert2; )
+            {
+               bytenrx = wertx / 8;
+               byteoffs = wertx % 8;
+
+               if (bytenrx == bytenr1 || bytenrx == bytenr2)
+               {
+                  byte = 0x80;
+                  byte = byte >> byteoffs;
+                  setp [bytenrx] |= byte;
+                  wertx += 1;
+               }
+               else
+               {
+                  byte = 0xFF;
+                  setp [bytenrx] = byte;
+                  wertx += 8;
+               }
+            }
          }
 
          break;
@@ -5598,28 +5733,13 @@ static void int1 (global_store *gs)
          }
          break;
 
-      case XXX_MOD:
-
-         /************************************************/
-         /*   <SP - 4> mod <SP>                          */
-         /************************************************/
-
-         wert1 = STACK_I (gs -> sp);
-         (gs -> sp) -= 4;
-         intp = ADDRSTACK (gs -> sp);
-         wert2 = *intp;
-
-         *intp = wert2 % wert1;
-
-         break;
-
       case XXX_MCC:
 
          /************************************************/
          /*   memcmp inline                              */
          /*   get arg2 address from SP                   */
          /*   get arg1 address from SP - 1               */
-         /*   pop all three items                        */
+         /*   pop addresses and push memcmp result       */
          /************************************************/
 
          intp = ADDRSTACK (gs -> sp);
@@ -5631,7 +5751,7 @@ static void int1 (global_store *gs)
 
          if (pcode -> q > 0)
          {
-            wert1 = memcmp (charp2, charp, pcode ->q);
+            wert1 = memcmp (charp2, charp, pcode -> q);
             *intp = wert1;
          }
 
@@ -5673,6 +5793,7 @@ static void int1 (global_store *gs)
          /*   get source address from SP - 1             */
          /*   get target address from SP - 2             */
          /*   pop all three items                        */
+         /*   push memcmp result                         */
          /************************************************/
 
          wert1 = STACK_I (gs -> sp);
@@ -5735,6 +5856,21 @@ static void int1 (global_store *gs)
 
          break;
 
+      case XXX_MOD:
+
+         /************************************************/
+         /*   <SP - 4> mod <SP>                          */
+         /************************************************/
+
+         wert1 = STACK_I (gs -> sp);
+         (gs -> sp) -= 4;
+         intp = ADDRSTACK (gs -> sp);
+         wert2 = *intp;
+
+         *intp = wert2 % wert1;
+
+         break;
+
       case XXX_MOV:
 
          /************************************************/
@@ -5783,7 +5919,6 @@ static void int1 (global_store *gs)
          break;
 
       case XXX_MPR:
-
 
          /************************************************/
          /*   multiply real values at top of stack       */
@@ -6819,6 +6954,7 @@ static void int1 (global_store *gs)
          break;
 
       case XXX_UJP:
+
          gs -> ip = pcode -> q;
          incr_ip = 0;
          break;

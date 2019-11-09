@@ -1,0 +1,24 @@
+program TEST ;
+
+
+var I : INTEGER ;     /* nice comment */
+    LIST , PRCODE , PRTABLES : BOOLEAN ; (*output options for
+                                                 -- source program listing
+                                                 -- printing symbolic code
+                                                 -- displaying ident and struct tables
+                                                 --> procedure option
+                                          *)
+
+
+begin (* HAUPTPROGRAMM *)
+  I := 12 ;
+
+  (******************************************************************)
+  (*output options for                                              *)
+  (*      -- source program listing                                 *)
+  (*      -- printing symbolic code                                 *)
+  (*      -- displaying ident and struct tables                     *)
+  (*      --> procedure option                                      *)
+  (******************************************************************)
+
+end (* HAUPTPROGRAMM *) .

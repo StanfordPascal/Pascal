@@ -1,0 +1,201 @@
+program TEST ;
+
+
+type
+     SCAN_BLOCK = record
+                    MODUS : INTEGER ;        // modus of scanner
+                    DATEIENDE : INTEGER ;    // end of file indicator
+                    ENDOFLINE : BOOLEAN ;    // end of line indicator
+                    SLINE : SOURCELINE ;     // stored source line
+                    LINENR : INTEGER ;       // line number of symbol
+                    LINEPOS : INTEGER ;      // line position of symb
+                    LINELEN : INTEGER ;      // line length
+                    LOOKAHEAD : CHAR ;    // lookahead character
+                    SYMBOLNR : SYMB ;        // symbol read
+                    SYMBOL : SOURCELINE ;    // characters of symb
+                    LSYMBOL : INTEGER ;      // no of chars in symb
+                    MAXLSYMBOL : INTEGER ;   //
+                    UFZAHL : INTEGER ;       // no of undef errors
+                    SFZAHL : INTEGER ;       // no of severe errors
+                    FEZAHL : INTEGER ;    // no of errors
+                    WAZAHL : INTEGER ;       // no of warnings
+                    INZAHL : INTEGER ;       // no of informations
+                    FEANFANG : ANYPTR ;      // anchor to err list
+                    FEAKT : ANYPTR ;         // actual err elem
+                    FTTAB : ANYPTR ;         // error text table
+                    FTTABA : ANYPTR ;        // same for applic.
+                    OPTLINE : SOURCELINE ;   // options line
+                    POPT : OPTIONS_PTR ;     // ptr to opt struct
+
+     /******************************************/
+     /* felder fuer sofortige Protokollausgabe */
+     /******************************************/
+
+                    PROTOUT : BOOLEAN ;        // switch for prot out
+                    TERMOUT : BOOLEAN ;        // switch for term out
+                    FEAKT_ALT : ANYPTR ;       // old feakt
+                    LINEINFO : CHAR32 ;        // line information
+                    LINEINFO_SIZE : INTEGER ;  // size of lineinfo
+
+     /******************************************/
+     /* felder fuer ueberschrift               */
+     /******************************************/
+
+                    LINECOUNT : INTEGER ;      // linecount f. heading
+                    HEADLINE : SOURCELINE ;    // header line
+                    HEADLINE_SIZE : INTEGER ;  // size of header line
+                    PAGENR : INTEGER ;         // page number
+                  end ;
+
+     /***********************************/
+     /* Optionen fuer Compiler          */
+     /***********************************/
+     /* muss mit Def. beim Scanner      */
+     /* uebereinstimmen                 */
+     /***********************************/
+
+     COMP_OPTIONS = record
+                      LMARGIN : INTEGER ;    // left margin
+                      RMARGIN : INTEGER ;    // right margin
+                      PAGESIZE : INTEGER ;   // pagesize of listing
+                      LIST : BOOLEAN ;       // write listing
+                      PRCODE : BOOLEAN ;     // print code
+                      GET_STAT : BOOLEAN ;   // get statistics
+                      SAVEREGS : BOOLEAN ;   // saveregs
+                      SAVEFPRS : BOOLEAN ;   // save fp regs
+                      DEBUG : BOOLEAN ;      // debug switch
+                      MWARN : BOOLEAN ;      //
+                      DEBUG_LEV : 0 .. 9 ;   // debug level
+                      NOPACKING : BOOLEAN ;  // no packing
+                      NESTCOMM : BOOLEAN ;   // nested comments
+                      WARNING : BOOLEAN ;    // show warnings
+                      ASSEMBLE : BOOLEAN ;   // show assembly
+                      ASMVERB : BOOLEAN ;    // show verbose ass.
+                      CTROPTION : BOOLEAN ;  // show counters
+                      SHOW_LISTDEF : BOOLEAN ;// show listdef
+                    end ;
+
+
+var I : INTEGER ;
+    LIST , PRCODE , PRTABLES : BOOLEAN ; (*output options for *)
+                                         (*                   *)
+                                         (* -- source program *)
+                                         (* listing           *)
+                                         (* -- printing symbo *)
+                                         (* lic code        *)
+                                         (* -- displaying ide *)
+                                         (* nt and struct tab *)
+                                         (* les               *)
+                                         (* -- procedure opti *)
+                                         (* ons             *)
+                                         (*...................*)
+
+
+  procedure searchid(fidcls: setofids; var fcp: ctp);
+    label 1;
+    var lcp: ctp;
+  begin
+    searchidne(fidcls, lcp); { perform no
+                               error search }
+    if lcp <> nil then goto 1; { found }
+    (*search not successful
+     --> procedure simpletype*)
+      error(104);
+      (*to avoid returning nil, reference an entry
+       for an undeclared id of appropriate class
+       --> procedure enterundecl*)
+      if types (* komm in line *) in fidcls then lcp := utypptr
+      else
+        if vars in fidcls then lcp := uvarptr
+        else
+          if field in fidcls then lcp := ufldptr
+          else
+            if konst in fidcls then lcp := ucstptr
+            else
+              if proc in fidcls (* long comment which does not fit in line *)
+              then lcp := uprcptr
+              else lcp := ufctptr;
+1:  fcp := lcp
+  end (*searchid*) ;
+
+
+    procedure followstp(fp: stp);
+    begin
+      if fp <> nil then
+        with fp^ do
+          if marked then
+            begin marked := false; write(output,' ':4,stptoint(*ord*)(fp):intsize(*6*),size:10);
+              case form of
+              scalar:   begin write(output,'scalar':10);
+                          if scalkind = standard then
+                            write(output,'standard':10)
+                          else write(output,'declared':10,' ':4,ctptoint(*ord*)(fconst):intsize(*6*));
+                          writeln(output)
+                        end;
+              subrange: begin
+                          write(output,'subrange':10,' ':4,stptoint(*ord*)(rangetype):6);
+                          if rangetype <> realptr then
+                            write(output,min.ival,max.ival)
+                          else
+                            if (min.valp <> nil) and (max.valp <> nil) then begin
+                              write(' '); writev(output, min.valp^.rval, 9);
+                              write(' '); writev(output, max.valp^.rval, 9)
+                            end;
+                          writeln(output); followstp(rangetype);
+                        end;
+              pointer:  writeln(output,'pointer':10,' ':4,stptoint(*ord*)(eltype):intsize(*6*));
+              power:    begin writeln(output,'set':10,' ':4,stptoint(*ord*)(elset):intsize(*6*));
+                          followstp(elset)
+                        end;
+              arrays:   begin
+                          writeln(output,'array':10,' ':4,stptoint(*ord*)(aeltype):intsize(*6*),' ':4,
+                            stptoint(*ord*)(inxtype):6);
+                          followstp(aeltype); followstp(inxtype)
+                        end;
+              records:  begin
+                          writeln(output,'record':10,' ':4,ctptoint(*ord*)(fstfld):intsize(*6*),' ':4,
+                            stptoint(*ord*)(recvar):intsize(*6*)); followctp(fstfld);
+                          followstp(recvar)
+                        end;
+              files:    begin write(output,'file':10,' ':4,stptoint(*ord*)(filtype):intsize(*6*));
+                          followstp(filtype)
+                        end;
+              tagfld:   begin writeln(output,'tagfld':10,' ':4,ctptoint(*ord*)(tagfieldp):intsize(*6*),
+                            ' ':4,stptoint(*ord*)(fstvar):intsize(*6*));
+                          followstp(fstvar)
+                        end;
+              variant:  begin writeln(output,'variant':10,' ':4,stptoint(*ord*)(nxtvar):intsize(*6*),
+                            ' ':4,stptoint(*ord*)(subvar):intsize(*6*),varval.ival);
+                          followstp(nxtvar); followstp(subvar)
+                        end
+              end (*case*)
+            end (*if marked*)
+    end (*followstp*);
+
+begin (* HAUPTPROGRAMM *)
+
+  //******************************************************************
+  // schauen, ob dieser Kommentar stehen bleibt
+  //******************************************************************
+
+  I := 11 ;
+
+  //******************************************************************
+  // test neuer kommentar
+  //******************************************************************
+
+  //******************************************************************
+  // test zwei kommentare
+  //******************************************************************
+
+  I := 12 ;
+
+  (******************************************************************)
+  (*output options for                                              *)
+  (*      -- source program listing                                 *)
+  (*      -- printing symbolic code                                 *)
+  (*      -- displaying ident and struct tables                     *)
+  (*      --> procedure option                                      *)
+  (******************************************************************)
+
+end (* HAUPTPROGRAMM *) .

@@ -1,29 +1,26 @@
 
 rem **********************************************************
-rem +++ Version 2018.02 +++
+rem +++ Version 2019.08 +++
 rem **********************************************************
 
-rem call topas pascal1
-rem call topas pascal1a
-rem call topas pascal1b
-rem call topas pascal2
-rem call topas pascal2a
-rem call topas pascal2b
-rem call topas paslibx
-rem call topas passcan
-
-rem call topas pas1979
-rem call topas pas1982
-rem call topas pas2012
-rem call topas pcod1979
-rem call topas pcod1982
-
-rem call topas manorboy
-rem call topas testfpar
-rem call topas testsin2
-rem call topas teststr1
-rem call topas teststr2
-rem call topas testvarc
+    call topas pascal2b
+    call topas testptr2
+    call topas pascal1b
+    call topas testset5
+    call topas testlstr
+    pause
+    call topas pasutils
+    call topas testwith
+    call topas pascal1a
+    call topas pascal2a
+    call topas testskon
+    pause
+    call topas testw2
+    call topas passcan
+    call topas paslibx
+    call topas pascal1
+    call topas pascal2
+    call topas pascal1n
 
 rem call copyrdr pasmonn.ass      pascomp pasmonn assemble
 
@@ -42,8 +39,8 @@ rem call topas pascal2b
 rem call topas paslibx
 rem call topas passcan
 
-    call topas paslibxa
-    call topas paslibxb
+rem call topas paslibxa
+rem call topas paslibxb
 
 rem call topas testx
 rem call topas splitmvs

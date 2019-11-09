@@ -1,0 +1,35 @@
+         L     r2,OP1
+         L     r3,OP2
+         BALR  r14,0
+         LA    r1,limit
+         CLR   r3,r1
+         BC    2,212(r12)
+*-----------------------------------------------------
+loop     DS    0H
+         CLR   r2,r3           compare actual value with op2
+         BH    fertig          if higher then ready
+         LA    r15,7
+         NR    r15,r2          reg15 = right 3 bits of act val
+         BNZ   normalb         if not zero go to normalb
+         LR    r4,r3
+         SR    r4,r2           if more than 8 values remaining
+         CH    r4,=H'8'        set bits on in complete byte
+         BL    normalb
+         LR    r4,r2
+         SRL   r4,3
+         LA    r1,448(r13,r4)
+         MVI   0(r1),x'ff'
+         LA    r2,8(r2)
+         b     loop
+*-----------------------------------------------------
+normalb  ds    0h
+         LR    r4,r2
+         SRL   r4,3
+         LA    r1,448(r13,r4)
+         LA    r4,128
+         SRL   r4,0(r15)
+         EX    R4,=F'-1778380800'      OI 0(R1),X'00'
+         LA    r2,1(r2)
+         b     loop
+*-----------------------------------------------------
+fertig   ds    0h

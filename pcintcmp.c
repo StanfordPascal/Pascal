@@ -854,6 +854,30 @@ static void load (void *vgs,
          break;
 
       /**********************************************************/
+      /*   G = Adresse und Modus (1,2,...)                      */
+      /**********************************************************/
+
+      case 'G':
+         cp = poper;
+         do
+         {
+            while (*cp == ' ' && *cp != 0x00)
+               cp ++;
+            if (*cp == 0x00)
+               break;
+            pcode -> q = atoi (cp);
+            while (*cp != ',' && *cp != 0x00)
+               cp ++;
+            while (*cp == ',' && *cp != 0x00)
+               cp ++;
+            if (*cp == 0x00)
+               break;
+            pcode -> p = atoi (cp);
+         }
+         while (0);
+         break;
+
+      /**********************************************************/
       /*   J = Sprungziel sichern (Operand bei FJP und UJP)     */
       /**********************************************************/
 

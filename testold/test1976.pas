@@ -1,9 +1,4 @@
-program TESTSIN ( OUTPUT ) ;
-
-(********)
-(*$A+   *)
-(********)
-
+program TESTSIN ( INPUT , OUTPUT ) ;
 
 
 var X : REAL ;
@@ -20,6 +15,6 @@ begin (* HAUPTPROGRAMM *)
   while X <= 5.0 do
     begin
       WRITELN ( 'SIN (' , X : 1 : 1 , ') = ' , SIN ( X ) : 15 : 7 ) ;
-      X := ROUNDX ( X + 0.2 , - 1 ) ;
+      X := X + 0.2 ;
     end (* while *)
 end (* HAUPTPROGRAMM *) .

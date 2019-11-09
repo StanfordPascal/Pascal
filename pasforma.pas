@@ -1,5 +1,7 @@
-program PASFORM ( OUTPUT , EINGABE , AUSGABE , TRACE ) ;
+program PASFORM ( OUTPUT , EINGABE , LISTING , AUSGABE , TRACEF ) ;
 
+(********************************************************************)
+(*$D+,U-                                                            *)
 (********************************************************************)
 (*                                                                  *)
 (*   PASCAL-FORMATIERER                                             *)
@@ -87,91 +89,452 @@ program PASFORM ( OUTPUT , EINGABE , AUSGABE , TRACE ) ;
 (*   Neuzeile bei komplexen consts (Stanford-Erweiterung)           *)
 (*                                                                  *)
 (********************************************************************)
+(*                                                                  *)
+(*   Neue Version im November 2017                                  *)
+(*                                                                  *)
+(*   * Verwendung des Scanners PASSCAN (analog Compiler)            *)
+(*                                                                  *)
+(*   * zusaetzlich werden hier die Symbole SQLBEGIN, SQLEND,        *)
+(*     SQLVAR und OVERLAY verarbeitet                               *)
+(*                                                                  *)
+(*   * Kommentarbearbeitung (fast) wie vorher                       *)
+(*                                                                  *)
+(*   * neu: C++ Kommentare werden unterstuetzt                      *)
+(*                                                                  *)
+(*   * neu: Korrekturen bei Kommentaren ueber mehrere Zeilen        *)
+(*                                                                  *)
+(*   * Ausgabe von Protokoll auf Datei LISTING                      *)
+(*                                                                  *)
+(*   * Korrektur: Blank eingefueht bei Symbol INTDOTDOT             *)
+(*                                                                  *)
+(*   - neu: Kommentare hinter Definitionen usw. bleiben stehen      *)
+(*     d.h.: Kommentare, denen in derselben Zeile ein anderes       *)
+(*     Symbol (ausser Separator) vorangeht, werden anders           *)
+(*     behandelt als bisher. Sie behalten idealerweise ihre         *)
+(*     Position. Wenn von der letzten Zeile her ein solcher         *)
+(*     Kommentar bereits vorhanden ist, wird versucht, den          *)
+(*     neuen Kommentar ebenfalls an dieser Position                 *)
+(*     auszurichten                                                 *)
+(*                                                                  *)
+(*   - kein Abbruch bei Fehler, idealerweise keine Endlos-          *)
+(*     schleife, sondern Diagnose wie beim Compiler und             *)
+(*     weiterarbeiten                                               *)
+(*                                                                  *)
+(********************************************************************)
 
 
 
-const VERKETT2 = '|' ;
+const VERSION = '11.2017' ;
+      VERKETT2 = '|' ;
+      MAXLSIZE = 120 ;
+      MAXWIDTH = 72 ;
       MAXLOUTPUT = 72 ;
       MAXLINPUT = 160 ;
       MAXEINR = 51 ;
       MAXIDSIZE = 20 ;
+      MAXSETL = 252 ;
+      MAXSTRL = 254 ;
+      REALLNGTH = 20 ;
+      MAXRW = 60 ;
+      MAXRWLEN = 9 ;
+
+      //**********************************************************
+      // longest reserved word has length = 9                     
+      // controls size of table frw                               
+      //**********************************************************
+
+      IDLNGTH = 20 ;
+      MAXINT = 2147483647 ;
+      DIGMAX = 19 ;
 
 
 type WORT = array [ 1 .. 100 ] of CHAR ;
+     ALPHA = array [ 1 .. IDLNGTH ] of CHAR ;
      SWORT = packed array [ 1 .. 10 ] of CHAR ;
      FELD6 = packed array [ 1 .. 6 ] of CHAR ;
+     SET_CHAR = set of CHAR ;
      PWORT = record
                NAME : packed array [ 1 .. MAXIDSIZE ] of CHAR ;
                LAENGE : INTEGER
              end ;
-     SYMBOL = ( EOFSY , IDENTIFIER , ZAHL , STRIPU , ZKETTE , SONDER ,
-              POINTERSY , ECKKLAMMAUF , ECKKLAMMZU , GLEICH , ZUWEISUNG
-              , KLAMMAUF , DOPU , KLAMMZU , ANDSY , ARRAYSY , BEGINSY ,
-              BREAKSY , CASESY , CONSTSY , CONTINUESY , DOSY , ELSESY ,
-              ENDSY , FORSY , FUNCTIONSY , GOTOSY , IFSY , INSY ,
-              LABELSY , LOCALSY , MODULESY , NOTSY , OFSY , ORSY ,
-              OTHERWISESY , OVERLAYSY , PACKEDSY , PROCEDURESY ,
-              PROGRAMSY , RECORDSY , REPEATSY , RETURNSY , SETSY ,
-              SQLBEGINSY , SQLENDSY , SQLVARSY , STATICSY , THENSY ,
-              TOSY , TYPESY , UNTILSY , VARSY , WHILESY , WITHSY ,
-              XORSY ) ;
+     SSP = -> XSTRCON ;
+     SETSTRING = array [ 1 .. MAXSETL ] of CHAR ;
+     CSTCLASS = ( XINT , REEL , PSET , STRG ) ;
+     XSTRCON = record
+                 LENGTH : INTEGER ;
+                 case TAG : CHAR of
+                   'S' :
+                     ( SSTR : array [ 1 .. MAXSTRL ] of CHAR ) ;
+                   'P' :
+                     ( PSTR : SETSTRING )
+               end ;
+     XCONSTANT = record
+                   STRTYPE : CHAR ;
+                   case CSTCLASS of
+                     XINT :
+                       ( IVAL : INTEGER ) ;
+                     REEL :
+                       ( RVAL : array [ 1 .. REALLNGTH ] of CHAR ) ;
+                     PSET :
+                       ( SETMIN : INTEGER ;
+                         SETMAX : INTEGER ;
+                         SETOFFS : INTEGER ;
+                         PVAL : SSP ) ;
+                     STRG :
+                       ( SVAL : SSP )
+                 end ;
+
+     //************************************************************
+     // muss mit Def. beim Scanner                                 
+     // uebereinstimmen                                            
+     //************************************************************
+
+     SYMB = ( SYMB_EOF , SYMB_UNKNOWN , EOLCHAR , SEPARATOR , COMMENT1
+            , COMMENT2 , COMMENT3 , COMMENT4 , COMMENT5 , STRINGCONST ,
+            HEXSTRINGCONST , BINSTRINGCONST , INTCONST , INTDOTDOT ,
+            REALCONST , IDENT , SYLPARENT , SYRPARENT , SYLBRACK ,
+            SYRBRACK , SYCOMMA , SYSEMICOLON , SYARROW , SYPERIOD ,
+            SYDOTDOT , SYCOLON , SYPLUS , SYMINUS , SYMULT , SYSLASH ,
+            SYEQOP , SYNEOP , SYGTOP , SYLTOP , SYGEOP , SYLEOP ,
+            SYOROP , SYANDOP , SYASSIGN , SYAND , SYDIV , SYMOD , SYOR
+            , SYXOR , SYIN , SYNOT , SYLABEL , SYCONST , SYTYPE , SYVAR
+            , SYFUNC , SYPROG , SYPROC , SYSET , SYPACKED , SYARRAY ,
+            SYRECORD , SYFILE , SYFORWARD , SYBEGIN , SYIF , SYCASE ,
+            SYREPEAT , SYWHILE , SYFOR , SYWITH , SYGOTO , SYEND ,
+            SYELSE , SYUNTIL , SYOF , SYDO , SYTO , SYDOWNTO , SYTHEN ,
+            SYFRTRN , SYEXTRN , SYOTHERWISE , SYOTHER , SYBREAK ,
+            SYCONTINUE , SYRETURN , SYMODULE , SYLOCAL , SYSTATIC ,
+            SYSQLBEGIN , SYSQLEND , SYSQLVAR , SYOVERLAY , NOTUSED ) ;
+     SYMSET = set of SYMB ;
+
+     //************************************************************
+     // struktur, die den Zustand fuer die                         
+     // kommentarroutinen festhaelt                                
+     //************************************************************
+
      KOMMCTL = record
-                 KOMMP : WORT ;
-                 KOMML : INTEGER ;
-                 ENDOFKOMM : BOOLEAN ;
-                 ANZKOMM : INTEGER ;
-                 ZUSTAND : INTEGER ;
-                 KOMMTYPE : CHAR ;
-                 NURSTERNE : BOOLEAN ;
-                 KOMMSTATUS : INTEGER ;
-                 UEBERLESEN : INTEGER ;
-                 KOMM_VOR_PROC : BOOLEAN ;
+                 KOMMP : WORT ;             // teil des kommentars
+                 KOMML : INTEGER ;          // kommentarlaenge
+                 ENDOFKOMM : BOOLEAN ;      // ende kommentar
+                 ANZKOMM : INTEGER ;        // anz. kommentare
+                 ZUSTAND : INTEGER ;        // zustand fuer fsm
+                 KOMMTYPE : CHAR ;          // welcher typ
+                 NURSTERNE : BOOLEAN ;      // nur sterne ?
+                 KOMMSTATUS : INTEGER ;     // zustand bzgl. kasten
+                 EINRKASTEN : INTEGER ;     // einr waehrend kasten
+                 KOMML_AUS : INTEGER ;      // kommlaenge ausgabe
+                 UEBERLESEN : INTEGER ;     // ueberlesen ?
+                 KOMM_VOR_PROC : BOOLEAN ;  // vor prozedur ?
+                 LINENR : INTEGER ;         // zeilennr aus scb
+                 LINEPOS : INTEGER ;        // linepos scb minus 2
+                 SYMB_VOR_KOMM : BOOLEAN ;  // symb in zeile vorh.
+                 LINENR_LAST : INTEGER ;    // linenr letzt. komm
+                 LINEPOS_LAST : INTEGER ;   // linepos letzt. komm
+                 KOMML_MAX : INTEGER ;      // max. komml. in set
+                 NEUZEILE_VORM : BOOLEAN ;  // neuzeile-Vormerkung
                end ;
 
+     //************************************************************
+     // zentraler Scan-Block                                       
+     //************************************************************
+     // muss mit Def. beim Scanner                                 
+     // uebereinstimmen                                            
+     //************************************************************
 
-var EINGABE , AUSGABE : TEXT ;
+     CHAR32 = array [ 1 .. 32 ] of CHAR ;
+     SOURCELINE = array [ 1 .. MAXLSIZE ] of CHAR ;
+     SCAN_ERRCLASS = 'A' .. 'Z' ;
+     OPTIONS_PTR = -> COMP_OPTIONS ;
+     SCAN_BLOCK = record
+                    MODUS : INTEGER ;
+                    DATEIENDE : INTEGER ;
+                    ENDOFLINE : BOOLEAN ;
+                    SLINE : SOURCELINE ;
+                    LINENR : INTEGER ;
+                    LINEPOS : INTEGER ;
+                    LINELEN : INTEGER ;
+                    LOOKAHEAD : CHAR ;
+                    SYMBOLNR : SYMB ;
+                    SYMBOL : SOURCELINE ;
+                    LSYMBOL : INTEGER ;
+                    MAXLSYMBOL : INTEGER ;
+                    UFZAHL : INTEGER ;
+                    SFZAHL : INTEGER ;
+                    FEZAHL : INTEGER ;
+                    WAZAHL : INTEGER ;
+                    INZAHL : INTEGER ;
+                    FEANFANG : ANYPTR ;
+                    FEAKT : ANYPTR ;
+                    FTTAB : ANYPTR ;
+                    FTTABA : ANYPTR ;
+                    OPTLINE : SOURCELINE ;
+                    POPT : OPTIONS_PTR ;
+
+     //************************************************************
+     // felder fuer sofortige Protokollausgabe                     
+     //************************************************************
+
+                    PROTOUT : BOOLEAN ;
+                    TERMOUT : BOOLEAN ;
+                    FEAKT_ALT : ANYPTR ;
+                    LINEINFO : CHAR32 ;
+                    LINEINFO_SIZE : INTEGER ;
+
+     //************************************************************
+     // felder fuer ueberschrift                                   
+     //************************************************************
+
+                    LINECOUNT : INTEGER ;
+                    HEADLINE : SOURCELINE ;
+                    HEADLINE_SIZE : INTEGER ;
+                    PAGENR : INTEGER ;
+                  end ;
+
+     //************************************************************
+     // Optionen fuer Compiler                                     
+     //************************************************************
+     // muss mit Def. beim Scanner                                 
+     // uebereinstimmen                                            
+     //************************************************************
+
+     COMP_OPTIONS = record
+                      LMARGIN : INTEGER ;
+                      RMARGIN : INTEGER ;
+                      PAGESIZE : INTEGER ;
+                      LIST : BOOLEAN ;
+                      PRCODE : BOOLEAN ;
+                      GET_STAT : BOOLEAN ;
+                      SAVEREGS : BOOLEAN ;
+                      SAVEFPRS : BOOLEAN ;
+                      DEBUG : BOOLEAN ;
+                      MWARN : BOOLEAN ;
+                      DEBUG_LEV : 0 .. 9 ;
+                      NOPACKING : BOOLEAN ;
+                      NESTCOMM : BOOLEAN ;
+                      WARNING : BOOLEAN ;
+                      ASSEMBLE : BOOLEAN ;
+                      ASMVERB : BOOLEAN ;
+                      CTROPTION : BOOLEAN ;
+                    end ;
+
+
+var EINGABE : TEXT ;
+    AUSGABE : TEXT ;
+    LISTING : TEXT ;
+    UPSHIFT : array [ CHAR ] of CHAR ;
+    MXINT2 : INTEGER ;
+    MXINT10 : INTEGER ;
+    MXINT16 : INTEGER ;
     ZZAUS : INTEGER ;
-    BLANKSYMBOLE : set of SYMBOL ;
-    STERMSYMBOLE : set of SYMBOL ;
-    TTERMSYMBOLE : set of SYMBOL ;
-    WORTSYMBOLE : set of SYMBOL ;
-    EXPRSYMBOLE : set of SYMBOL ;
+
+    /*********************************************/
+    /* compiler options in new opt structure     */
+    /*********************************************/
+
+    OPT : COMP_OPTIONS ;
+    SCB : SCAN_BLOCK ;
+
+    (*******************************************************)
+    (* RETURNED BY SOURCE PROGRAM SCANNER = PASSCAN        *)
+    (*                                                     *)
+    (* SY       - symbol read                              *)
+    (* SYLENGTH - length of symbol or constant             *)
+    (* VAL      - constant (if symbol was constant)        *)
+    (*                                                     *)
+    (* more symbols computed by insymbol locally           *)
+    (*******************************************************)
+
+    SY : SYMB ;
+    SYLENGTH : INTEGER ;
+    VAL : XCONSTANT ;
+    LINECNT : INTEGER ;
+    ID : ALPHA ;
+
+    (*******************************************************)
+    (* weitere rueckgabe von insymbol:                     *)
+    (* w1 und w1ende - fuer outsymbol usw.                 *)
+    (* nullstate     - false fuer empty stmt kontrolle     *)
+    (*******************************************************)
+
     W1 : WORT ;
+    W1ENDE : INTEGER ;
+    NULLSTATE : BOOLEAN ;
+
+    (*******************************************************)
+    (* symbol sets                                         *)
+    (*******************************************************)
+
+    BLANKSYMBOLE : set of SYMB ;
+    STERMSYMBOLE : set of SYMB ;
+    TTERMSYMBOLE : set of SYMB ;
+    WORTSYMBOLE : set of SYMB ;
+    EXPRSYMBOLE : set of SYMB ;
     INC : INTEGER ;
     DICHT : BOOLEAN ;
     COMPOUNDNZ : BOOLEAN ;
     BLANKSVORHANDEN : BOOLEAN ;
-    NOMAJOR : BOOLEAN ;
     EINR : INTEGER ;
     EINRKOMM : INTEGER ;
-    MODUS : INTEGER ;
-    WTAB : array [ ANDSY .. XORSY ] of SWORT ;
+    VERARB_MODUS : INTEGER ;
     WTABSQL : array [ 1 .. 30 ] of SWORT ;
     ANZSQLWORTE : INTEGER ;
-    W1ENDE , W1INDEX : INTEGER ;
     EOFILE : BOOLEAN ;
-    SONDERZEICHEN , ISTARTSET , IWEITERSET , HEXZIFFERN , ZIFFERN : set
-                                                   of CHAR ;
-    S : SYMBOL ;
+    S : SYMB ;
     OUTPOINTER : INTEGER ;
     INPOINTER : INTEGER ;
     NICHTLESEN : INTEGER ;
-    CH1 , CH2 : CHAR ;
-    ZIFFERNGELESEN : BOOLEAN ;
-    NULLSTATE : BOOLEAN ;
-    KOMMLAENGE : INTEGER ;
     ENDEKASTEN : CHAR ;
-    ENDEKOMMEIN : INTEGER ;
     ZZAUSVOR : INTEGER ;
     INSQLSTATE : BOOLEAN ;
     SQLHOSTV : BOOLEAN ;
-    TRACE : TEXT ;
+    TRACEF : TEXT ;
 
     (*******************************************************)
     (*  KOMMC: AUFZEICHNEN DES LAUFENDEN KOMMENTAR-STATUS  *)
     (*******************************************************)
 
     KOMMC : KOMMCTL ;
+
+
+const BLANKID : ALPHA = '            ' ;
+      HEXTAB : array [ 0 .. 15 ] of CHAR = '0123456789abcdef' ;
+      LOW_LETTERS : SET_CHAR =
+      [ 'a' .. 'i' , 'j' .. 'r' , 's' .. 'z' ] ;
+      UP_LETTERS : SET_CHAR =
+      [ 'A' .. 'I' , 'J' .. 'R' , 'S' .. 'Z' ] ;
+      HEX_CHARS : SET_CHAR =
+      [ 'a' .. 'f' , 'A' .. 'F' , '0' .. '9' ] ;
+      BIN_CHARS : SET_CHAR =
+      [ '0' .. '1' ] ;
+      CONSTBEGSYS : SYMSET =
+      [ SYPLUS , SYMINUS , INTCONST , REALCONST , STRINGCONST , IDENT ]
+        ;
+      SIMPTYPEBEGSYS : SYMSET =
+      [ SYPLUS , SYMINUS , INTDOTDOT , INTCONST , REALCONST ,
+        STRINGCONST , IDENT , SYLPARENT ] ;
+      TYPEBEGSYS : SYMSET =
+      [ SYARROW , SYPACKED , SYARRAY , SYRECORD , SYSET , SYFILE ,
+        SYPLUS , SYMINUS , INTCONST , REALCONST , STRINGCONST , IDENT ,
+        SYLPARENT ] ;
+      TYPEDELS : SYMSET =
+      [ SYARRAY , SYRECORD , SYSET , SYFILE , SYPACKED ] ;
+      BLOCKBEGSYS : SYMSET =
+      [ SYLABEL , SYCONST , SYTYPE , SYVAR , SYSTATIC , SYPROC , SYFUNC
+        , SYLOCAL , SYBEGIN ] ;
+      SELECTSYS : SYMSET =
+      [ SYARROW , SYPERIOD , SYLBRACK , SYLPARENT ] ;
+      FACBEGSYS : SYMSET =
+      [ INTCONST , REALCONST , STRINGCONST , IDENT , SYLPARENT ,
+        SYLBRACK , SYNOT ] ;
+      STATBEGSYS : SYMSET =
+      [ SYBEGIN , SYGOTO , SYIF , SYWHILE , SYREPEAT , SYFOR , SYWITH ,
+        SYCASE , SYBREAK , SYCONTINUE , SYRETURN ] ;
+      PROCCALLENDSYS : SYMSET =
+      [ SYLPARENT , SYSEMICOLON , SYEND , SYELSE , SYUNTIL ] ;
+      FACTOROPS : SYMSET =
+      [ SYMULT , SYSLASH , SYDIV , SYMOD , SYAND ] ;
+      TERMOPS : SYMSET =
+      [ SYPLUS , SYMINUS , SYOR , SYXOR ] ;
+      EXPROPS : SYMSET =
+      [ SYEQOP , SYNEOP , SYGTOP , SYLTOP , SYGEOP , SYLEOP , SYIN ] ;
+
+      (*********************************************************)
+      (*   table of reserved symbols                           *)
+      (*********************************************************)
+
+      RW : array [ 1 .. MAXRW ] of ALPHA =
+
+      (*********************************************************)
+      (*   new reserved symbols in the 2011 version:           *)
+      (*   break, return, continue                             *)
+      (*********************************************************)
+
+      ( 'IF          ' , 'DO          ' , 'OF          ' ,
+        'TO          ' , 'IN          ' , 'OR          ' ,
+        'END         ' , 'FOR         ' , 'VAR         ' ,
+        'DIV         ' , 'MOD         ' , 'SET         ' ,
+        'AND         ' , 'NOT         ' , 'XOR         ' ,
+        'THEN        ' , 'ELSE        ' , 'WITH        ' ,
+        'GOTO        ' , 'CASE        ' , 'TYPE        ' ,
+        'FILE        ' , 'BEGIN       ' , 'UNTIL       ' ,
+        'WHILE       ' , 'ARRAY       ' , 'CONST       ' ,
+        'LABEL       ' , 'LOCAL       ' , 'BREAK       ' ,
+        'REPEAT      ' , 'RECORD      ' , 'DOWNTO      ' ,
+        'PACKED      ' , 'RETURN      ' , 'MODULE      ' ,
+        'STATIC      ' , 'SQLEND      ' , 'SQLVAR      ' ,
+        'FORWARD     ' , 'PROGRAM     ' , 'FORTRAN     ' ,
+        'OVERLAY     ' , 'EXTERNAL    ' , 'FUNCTION    ' ,
+        'CONTINUE    ' , 'SQLBEGIN    ' , 'PROCEDURE   ' ,
+        'OTHERWISE   ' , '            ' , '            ' ,
+        '            ' , '            ' , '            ' ,
+        '            ' , '            ' , '            ' ,
+        '            ' , '            ' , '            ' ) ;
+      FRW : array [ 1 .. 12 ] of 1 .. MAXRW =
+
+      (**********************************************************)
+      (*  1  2  3    4    5    6    7    8    9   10   11   12  *)
+      (**********************************************************)
+
+      ( 1 , 1 , 7 , 16 , 23 , 31 , 40 , 44 , 48 , 50 , - 1 , - 1 ) ;
+
+      (*********************************************************)
+      (*   symbole zu RW Tabelle                               *)
+      (*********************************************************)
+
+      RSY : array [ 1 .. MAXRW ] of SYMB =
+      ( SYIF , SYDO , SYOF , SYTO , SYIN , SYOR , SYEND , SYFOR , SYVAR
+        , SYDIV , SYMOD , SYSET , SYAND , SYNOT , SYXOR , SYTHEN ,
+        SYELSE , SYWITH , SYGOTO , SYCASE , SYTYPE , SYFILE , SYBEGIN ,
+        SYUNTIL , SYWHILE , SYARRAY , SYCONST , SYLABEL , SYLOCAL ,
+        SYBREAK , SYREPEAT , SYRECORD , SYDOWNTO , SYPACKED , SYRETURN
+        , SYMODULE , SYSTATIC , SYSQLEND , SYSQLVAR , SYFORWARD ,
+        SYPROG , SYFRTRN , SYOVERLAY , SYEXTRN , SYFUNC , SYCONTINUE ,
+        SYSQLBEGIN , SYPROC , SYOTHERWISE , NOTUSED , NOTUSED , NOTUSED
+        , NOTUSED , NOTUSED , NOTUSED , NOTUSED , NOTUSED , NOTUSED ,
+        NOTUSED , NOTUSED ) ;
+
+
+
+procedure PASSCANR ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB
+                   : SCAN_BLOCK ; var CH : CHAR ) ;
+
+   EXTERNAL ;
+
+
+
+procedure PASSCANS ( var SCANOUT : TEXT ; var SCB : SCAN_BLOCK ) ;
+
+   EXTERNAL ;
+
+
+
+procedure PASSCANL ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB
+                   : SCAN_BLOCK ; ALLES : BOOLEAN ) ;
+
+   EXTERNAL ;
+
+
+
+procedure PASSCANE ( var SCB : SCAN_BLOCK ; ERRLEVEL : CHAR ; ERRCLASS
+                   : CHAR ; I : INTEGER ; INFO : CHAR32 ; ZEILNR :
+                   INTEGER ; PLATZ : INTEGER ) ;
+
+   EXTERNAL ;
+
+
+
+procedure PASSCANF ( var SCB : SCAN_BLOCK ; WHICHTABLE : CHAR ;
+                   ERRCLASS : SCAN_ERRCLASS ; ERRNUM : INTEGER ; ERRMSG
+                   : SOURCELINE ; ERRMSGSIZE : INTEGER ) ;
+
+   EXTERNAL ;
+
+
+
+procedure PASSCAN ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB :
+                  SCAN_BLOCK ; DO_COMMENT : BOOLEAN ) ;
+
+   EXTERNAL ;
 
 
 
@@ -183,14 +546,21 @@ procedure HALTX ;
 
 
 
-function MAJOR ( CH : CHAR ) : CHAR ;
+procedure ERROR ( ERRNO : INTEGER ) ;
 
-   begin (* MAJOR *)
-     if CH in [ 'a' .. 'i' , 'j' .. 'r' , 's' .. 'z' ] then
-       MAJOR := CHR ( ORD ( CH ) - ORD ( 'a' ) + ORD ( 'A' ) )
-     else
-       MAJOR := CH
-   end (* MAJOR *) ;
+   begin (* ERROR *)
+     WRITE ( '+++ FRM' , ERRNO : - 3 , ': ' ) ;
+     case ERRNO of
+       1 : WRITELN ( 'String does not fit into target line' ) ;
+       2 : WRITELN ( 'EOF found when processing SQL statement' ) ;
+       3 : WRITELN ( 'Syntax error detected' ) ;
+       4 : WRITELN ( 'Syntax error detected' ) ;
+       5 : WRITELN ( 'Empty statement not expected here' ) ;
+       otherwise
+         WRITELN ( 'unknown error' ) ;
+     end (* case *) ;
+     HALTX
+   end (* ERROR *) ;
 
 
 
@@ -205,28 +575,11 @@ function MINOR ( CH : CHAR ) : CHAR ;
 
 
 
-procedure RESWRD ( var SYERG : SYMBOL ) ;
+procedure WRITEHEXBYTE ( var F : TEXT ; I : INTEGER ) ;
 
-   var TESTWORT : SWORT ;
-       I : INTEGER ;
-       SY : SYMBOL ;
-       WORTENDE : INTEGER ;
-
-   begin (* RESWRD *)
-     SYERG := IDENTIFIER ;
-     TESTWORT := '' ;
-     if W1ENDE <= 10 then
-       WORTENDE := W1ENDE
-     else
-       WORTENDE := 10 ;
-     for I := 1 to WORTENDE do
-       TESTWORT [ I ] := W1 [ I ] ;
-     for SY := ANDSY to XORSY do
-       begin
-         if TESTWORT = WTAB [ SY ] then
-           SYERG := SY
-       end (* for *)
-   end (* RESWRD *) ;
+   begin (* WRITEHEXBYTE *)
+     WRITE ( F , HEXTAB [ I DIV 16 ] , HEXTAB [ I MOD 16 ] ) ;
+   end (* WRITEHEXBYTE *) ;
 
 
 
@@ -254,97 +607,6 @@ function RESWRDSQL : BOOLEAN ;
 
 
 
-procedure READCH ( var CH : CHAR ) ;
-
-   begin (* READCH *)
-     EOFILE := FALSE ;
-     if EOF ( EINGABE ) then
-       begin
-         EOFILE := TRUE ;
-         CH := ' '
-       end (* then *)
-     else
-       begin
-         if EOLN ( EINGABE ) then
-           INPOINTER := 0 ;
-         if INPOINTER > MAXLINPUT then
-           begin
-             READLN ( EINGABE ) ;
-             INPOINTER := 0 ;
-             CH := ' '
-           end (* then *)
-         else
-           begin
-             if EOF ( EINGABE ) then
-               begin
-                 EOFILE := TRUE ;
-                 CH := ' '
-               end (* then *)
-             else
-               begin
-                 INPOINTER := INPOINTER + 1 ;
-                 READ ( EINGABE , CH )
-               end (* else *)
-           end (* else *)
-       end (* else *) ;
-     if not NOMAJOR then
-       CH := MAJOR ( CH )
-   end (* READCH *) ;
-
-
-
-procedure LIES ( var CH : CHAR ) ;
-
-   begin (* LIES *)
-     if NICHTLESEN = 2 then
-       begin
-         CH := CH1 ;
-         CH1 := CH2 ;
-         NICHTLESEN := 1
-       end (* then *)
-     else
-       if NICHTLESEN = 1 then
-         begin
-           CH := CH1 ;
-           NICHTLESEN := 0
-         end (* then *)
-       else
-         begin
-           READCH ( CH ) ;
-           if ZIFFERNGELESEN and ( CH = '.' ) then
-             begin
-               READCH ( CH2 ) ;
-               if not ( CH2 in ZIFFERN ) then
-                 begin
-                   CH1 := CH ;
-                   CH := ' ' ;
-                   NICHTLESEN := 2
-                 end (* then *)
-               else
-                 begin
-                   CH1 := CH2 ;
-                   NICHTLESEN := 1
-                 end (* else *)
-             end (* then *)
-         end (* else *) ;
-     W1INDEX := W1INDEX + 1 ;
-     W1 [ W1INDEX ] := CH ;
-     ZIFFERNGELESEN := ( CH in ZIFFERN ) ;
-   end (* LIES *) ;
-
-
-
-procedure LIESKOMM ( var CH : CHAR ) ;
-
-   begin (* LIESKOMM *)
-     READCH ( CH ) ;
-     W1INDEX := W1INDEX + 1 ;
-     W1 [ W1INDEX ] := CH ;
-     ZIFFERNGELESEN := ( CH in ZIFFERN ) ;
-   end (* LIESKOMM *) ;
-
-
-
 procedure NEUZEILEKOMM ( BLANKS : BOOLEAN ) ;
 
    var EIN : INTEGER ;
@@ -368,33 +630,47 @@ procedure NEUZEILEKOMM ( BLANKS : BOOLEAN ) ;
 
 
 
-procedure KOMMENDEKASTEN ;
+procedure KOMMSTERNZEILE ;
 
    var I : INTEGER ;
-       KOMMTYPE : CHAR ;
+
+   begin (* KOMMSTERNZEILE *)
+     case KOMMC . KOMMTYPE of
+       ')' : WRITE ( AUSGABE , '(*' ) ;
+       '/' : if EINRKOMM = 0 then
+               WRITE ( AUSGABE , '(*' )
+             else
+               WRITE ( AUSGABE , '/*' ) ;
+       '}' : WRITE ( AUSGABE , '(*' ) ;
+       '"' : WRITE ( AUSGABE , '"' ) ;
+       '+' : WRITE ( AUSGABE , '//' ) ;
+     end (* case *) ;
+     for I := 1 to KOMMC . KOMML_AUS - 4 do
+       WRITE ( AUSGABE , '*' ) ;
+     if KOMMC . KOMMTYPE in [ '"' , '+' ] then
+       WRITE ( AUSGABE , '**' ) ;
+     case KOMMC . KOMMTYPE of
+       ')' : WRITE ( AUSGABE , '*)' ) ;
+       '/' : if EINRKOMM = 0 then
+               WRITE ( AUSGABE , '*)' )
+             else
+               WRITE ( AUSGABE , '*/' ) ;
+       '}' : WRITE ( AUSGABE , '*)' ) ;
+       '"' : WRITE ( AUSGABE , '"' ) ;
+       '+' : ;
+     end (* case *) ;
+   end (* KOMMSTERNZEILE *) ;
+
+
+
+procedure KOMMENDEKASTEN ;
 
    begin (* KOMMENDEKASTEN *)
      if ENDEKASTEN <> ' ' then
        begin
-         KOMMTYPE := ENDEKASTEN ;
-         if ENDEKOMMEIN <> 0 then
-           WRITE ( AUSGABE , ' ' : ENDEKOMMEIN ) ;
-         case KOMMTYPE of
-           ')' : WRITE ( AUSGABE , '(*' ) ;
-           '/' : WRITE ( AUSGABE , '/*' ) ;
-           '}' : WRITE ( AUSGABE , '(*' ) ;
-           '"' : WRITE ( AUSGABE , '"' ) ;
-         end (* case *) ;
-         for I := 1 to KOMMLAENGE - 4 do
-           WRITE ( AUSGABE , '*' ) ;
-         if KOMMTYPE = '"' then
-           WRITE ( AUSGABE , '**' ) ;
-         case KOMMTYPE of
-           ')' : WRITE ( AUSGABE , '*)' ) ;
-           '/' : WRITE ( AUSGABE , '*/' ) ;
-           '}' : WRITE ( AUSGABE , '*)' ) ;
-           '"' : WRITE ( AUSGABE , '"' ) ;
-         end (* case *) ;
+         if KOMMC . EINRKASTEN <> 0 then
+           WRITE ( AUSGABE , ' ' : KOMMC . EINRKASTEN ) ;
+         KOMMSTERNZEILE ;
          WRITELN ( AUSGABE ) ;
          ZZAUS := ZZAUS + 1 ;
          ENDEKASTEN := ' '
@@ -407,9 +683,18 @@ procedure READKOMM ( var KOMMC : KOMMCTL ) ;
 
    var CH : CHAR ;
        I : INTEGER ;
+       ISTART , IENDE : INTEGER ;
 
    begin (* READKOMM *)
-     KOMMC . KOMML := 0 ;
+
+     (************************************************)
+     (*   erste zeichen anhand von gelesenem         *)
+     (*   symbol in kommp eintragen                  *)
+     (************************************************)
+     (*   zeilennummer des kommentaranfangs merken   *)
+     (*   - fuer alle faelle                         *)
+     (************************************************)
+
      case KOMMC . KOMMTYPE of
        ')' : begin
                KOMMC . KOMMP [ 1 ] := '(' ;
@@ -430,132 +715,156 @@ procedure READKOMM ( var KOMMC : KOMMCTL ) ;
                KOMMC . KOMMP [ 1 ] := '"' ;
                KOMMC . KOMML := 1 ;
              end (* tag/ca *) ;
+       '+' : begin
+               KOMMC . KOMMP [ 1 ] := '/' ;
+               KOMMC . KOMMP [ 2 ] := '/' ;
+               KOMMC . KOMML := 2 ;
+             end (* tag/ca *) ;
      end (* case *) ;
 
      (************************************************)
-     (*   HIER WERDEN DIE ERSTEN 100 ZEICHEN         *)
+     (*   HIER WERDEN DIE ERSTEN ZEICHEN (max. 100)  *)
      (*   IN DEN KOMMPUFFER EINGETRAGEN              *)
+     (************************************************)
+     (*   ende, wenn kommentarende erreicht oder     *)
+     (*   mehr als 100 zeichen gelesen oder          *)
+     (*   wenn der scanner zeilenende meldet         *)
      (************************************************)
 
      KOMMC . ENDOFKOMM := FALSE ;
-     case KOMMC . KOMMTYPE of
-       ')' : begin
-               repeat
-                 READCH ( CH ) ;
-                 KOMMC . KOMML := KOMMC . KOMML + 1 ;
-                 KOMMC . KOMMP [ KOMMC . KOMML ] := CH ;
-                 case KOMMC . ZUSTAND of
-                   1 : begin
-                         if CH = '*' then
-                           KOMMC . ZUSTAND := 2
-                         else
-                           if CH = '(' then
-                             KOMMC . ZUSTAND := 3
-                       end (* tag/ca *) ;
-                   2 : begin
-                         if CH = '*' then
-                           KOMMC . ZUSTAND := 2
-                         else
-                           if CH = ')' then
+     CH := SCB . LOOKAHEAD ;
+     while not SCB . ENDOFLINE do
+       begin
+         KOMMC . KOMML := KOMMC . KOMML + 1 ;
+         KOMMC . KOMMP [ KOMMC . KOMML ] := CH ;
+         case KOMMC . KOMMTYPE of
+           ')' : begin
+                   case KOMMC . ZUSTAND of
+                     1 : begin
+                           if CH = '*' then
+                             KOMMC . ZUSTAND := 2
+                           else
+                             if CH = '(' then
+                               KOMMC . ZUSTAND := 3
+                         end (* tag/ca *) ;
+                     2 : begin
+                           if CH = '*' then
+                             KOMMC . ZUSTAND := 2
+                           else
+                             if CH = ')' then
+                               begin
+                                 KOMMC . ANZKOMM := KOMMC . ANZKOMM - 1
+                                                   ;
+                                 if KOMMC . ANZKOMM <= 0 then
+                                   KOMMC . ENDOFKOMM := TRUE
+                                 else
+                                   KOMMC . ZUSTAND := 1
+                               end (* then *)
+                             else
+                               KOMMC . ZUSTAND := 1
+                         end (* tag/ca *) ;
+                     3 : begin
+                           if CH = '*' then
                              begin
-                               KOMMC . ANZKOMM := KOMMC . ANZKOMM - 1 ;
-                               if KOMMC . ANZKOMM <= 0 then
-                                 KOMMC . ENDOFKOMM := TRUE
-                               else
-                                 KOMMC . ZUSTAND := 1
+                               KOMMC . ZUSTAND := 1 ;
+                               KOMMC . ANZKOMM := KOMMC . ANZKOMM + 1
                              end (* then *)
                            else
                              KOMMC . ZUSTAND := 1
-                       end (* tag/ca *) ;
-                   3 : begin
-                         if CH = '*' then
-                           begin
-                             KOMMC . ZUSTAND := 1 ;
-                             KOMMC . ANZKOMM := KOMMC . ANZKOMM + 1
-                           end (* then *)
-                         else
-                           KOMMC . ZUSTAND := 1
-                       end (* tag/ca *) ;
-                 end (* case *)
-               until ( KOMMC . KOMML >= 98 ) or KOMMC . ENDOFKOMM or
-               EOLN ( EINGABE ) ;
-             end (* tag/ca *) ;
-       '/' : begin
-               repeat
-                 READCH ( CH ) ;
-                 KOMMC . KOMML := KOMMC . KOMML + 1 ;
-                 KOMMC . KOMMP [ KOMMC . KOMML ] := CH ;
-                 case KOMMC . ZUSTAND of
-                   1 : begin
-                         if CH = '*' then
-                           KOMMC . ZUSTAND := 2
-                         else
-                           if CH = '/' then
-                             KOMMC . ZUSTAND := 3
-                       end (* tag/ca *) ;
-                   2 : begin
-                         if CH = '*' then
-                           KOMMC . ZUSTAND := 2
-                         else
-                           if CH = '/' then
+                         end (* tag/ca *) ;
+                   end (* case *) ;
+                 end (* tag/ca *) ;
+           '/' : begin
+                   case KOMMC . ZUSTAND of
+                     1 : begin
+                           if CH = '*' then
+                             KOMMC . ZUSTAND := 2
+                           else
+                             if CH = '/' then
+                               KOMMC . ZUSTAND := 3
+                         end (* tag/ca *) ;
+                     2 : begin
+                           if CH = '*' then
+                             KOMMC . ZUSTAND := 2
+                           else
+                             if CH = '/' then
+                               begin
+                                 KOMMC . ANZKOMM := KOMMC . ANZKOMM - 1
+                                                   ;
+                                 if KOMMC . ANZKOMM <= 0 then
+                                   KOMMC . ENDOFKOMM := TRUE
+                                 else
+                                   KOMMC . ZUSTAND := 1
+                               end (* then *)
+                             else
+                               KOMMC . ZUSTAND := 1
+                         end (* tag/ca *) ;
+                     3 : begin
+                           if CH = '*' then
                              begin
-                               KOMMC . ANZKOMM := KOMMC . ANZKOMM - 1 ;
-                               if KOMMC . ANZKOMM <= 0 then
-                                 KOMMC . ENDOFKOMM := TRUE
-                               else
-                                 KOMMC . ZUSTAND := 1
+                               KOMMC . ZUSTAND := 1 ;
+                               KOMMC . ANZKOMM := KOMMC . ANZKOMM + 1
                              end (* then *)
                            else
                              KOMMC . ZUSTAND := 1
-                       end (* tag/ca *) ;
-                   3 : begin
-                         if CH = '*' then
-                           begin
-                             KOMMC . ZUSTAND := 1 ;
-                             KOMMC . ANZKOMM := KOMMC . ANZKOMM + 1
-                           end (* then *)
-                         else
-                           KOMMC . ZUSTAND := 1
-                       end (* tag/ca *) ;
-                 end (* case *)
-               until ( KOMMC . KOMML >= 98 ) or KOMMC . ENDOFKOMM or
-               EOLN ( EINGABE ) ;
-             end (* tag/ca *) ;
-       '}' : begin
-               repeat
-                 READCH ( CH ) ;
-                 KOMMC . KOMML := KOMMC . KOMML + 1 ;
-                 KOMMC . KOMMP [ KOMMC . KOMML ] := CH ;
-                 if CH = '}' then
-                   begin
-                     KOMMC . ANZKOMM := KOMMC . ANZKOMM - 1 ;
-                     if KOMMC . ANZKOMM <= 0 then
-                       KOMMC . ENDOFKOMM := TRUE ;
-                     KOMMC . KOMMP [ KOMMC . KOMML ] := '*' ;
-                     KOMMC . KOMML := KOMMC . KOMML + 1 ;
-                     KOMMC . KOMMP [ KOMMC . KOMML ] := ')' ;
-                   end (* then *)
-                 else
-                   if CH = '{' then
-                     KOMMC . ANZKOMM := KOMMC . ANZKOMM + 1
-               until ( KOMMC . KOMML >= 98 ) or KOMMC . ENDOFKOMM or
-               EOLN ( EINGABE ) ;
-             end (* tag/ca *) ;
-       '"' : begin
-               repeat
-                 READCH ( CH ) ;
-                 KOMMC . KOMML := KOMMC . KOMML + 1 ;
-                 KOMMC . KOMMP [ KOMMC . KOMML ] := CH ;
-                 KOMMC . ENDOFKOMM := ( CH = '"' ) ;
-               until ( KOMMC . KOMML >= 98 ) or KOMMC . ENDOFKOMM or
-               EOLN ( EINGABE ) ;
-             end (* tag/ca *) ;
-     end (* case *) ;
+                         end (* tag/ca *) ;
+                   end (* case *)
+                 end (* tag/ca *) ;
+           '}' : begin
+                   if CH = '}' then
+                     begin
+                       KOMMC . ANZKOMM := KOMMC . ANZKOMM - 1 ;
+                       if KOMMC . ANZKOMM <= 0 then
+                         KOMMC . ENDOFKOMM := TRUE ;
+                       KOMMC . KOMMP [ KOMMC . KOMML ] := '*' ;
+                       KOMMC . KOMML := KOMMC . KOMML + 1 ;
+                       KOMMC . KOMMP [ KOMMC . KOMML ] := ')' ;
+                     end (* then *)
+                   else
+                     if CH = '{' then
+                       KOMMC . ANZKOMM := KOMMC . ANZKOMM + 1
+                 end (* tag/ca *) ;
+           '"' : begin
+                   KOMMC . ENDOFKOMM := ( CH = '"' ) ;
+                 end (* tag/ca *) ;
+           '+' : ;
+         end (* case *) ;
+         if KOMMC . KOMML >= 98 then
+           break ;
+         if KOMMC . ENDOFKOMM then
+           break ;
+         PASSCANR ( EINGABE , LISTING , SCB , CH ) ;
+       end (* while *) ;
+
+     (************************************************)
+     (*   zeilenende ist auch kommentarende bei      *)
+     (*   c++ kommentar                              *)
+     (************************************************)
+
+     if SCB . ENDOFLINE then
+       if KOMMC . KOMMTYPE = '+' then
+         KOMMC . ENDOFKOMM := TRUE ;
+
+     (************************************************)
+     (*   schauen, ob nur sterne enthalten sind      *)
+     (*   c++ kommentar                              *)
+     (************************************************)
+
      if KOMMC . ENDOFKOMM then
        begin
+         if KOMMC . KOMMTYPE = '+' then
+           begin
+             ISTART := 3 ;
+             IENDE := KOMMC . KOMML ;
+           end (* then *)
+         else
+           begin
+             ISTART := 2 ;
+             IENDE := KOMMC . KOMML - 1 ;
+           end (* else *) ;
          KOMMC . NURSTERNE := TRUE ;
-         for I := 2 to KOMMC . KOMML - 1 do
-           if KOMMC . KOMMP [ I ] <> '*' then
+         for I := ISTART to IENDE do
+           if not ( KOMMC . KOMMP [ I ] in [ '*' , ' ' ] ) then
              begin
                KOMMC . NURSTERNE := FALSE ;
                break
@@ -563,36 +872,38 @@ procedure READKOMM ( var KOMMC : KOMMCTL ) ;
        end (* then *) ;
 
      (************************************************)
-     (*   TRACEAUSGABE                               *)
-     (************************************************)
-     (*                                              *)
-     (*      WRITELN ( TRACE , KOMMC . KOMML : 4 ,   *)
-     (*                KOMMC . ENDOFKOMM ,           *)
-     (*                KOMMC . ANZKOMM : 4 ,         *)
-     (*                KOMMC . ZUSTAND : 4 , ' ' ,   *)
-     (*                KOMMC . KOMMTYPE , ' ' ,      *)
-     (*                KOMMC . KOMMP ) ;             *)
-     (*      WRITELN ( TRACE ,                       *)
-     (*                'KOMMSTATUS NACH READKOMM = ' *)
-     (*                , KOMMC . KOMMSTATUS ) ;      *)
-     (*                                              *)
-     (************************************************)
-     (*   W1INDEX AUF NULL, WEIL NICHTS RELEVANTES   *)
-     (*   GELESEN WURDE                              *)
+     (*   naechstes zeichen                          *)
+     (*   lesen und nach scb.lookahead               *)
      (************************************************)
 
-     W1INDEX := 0 ;
+     PASSCANR ( EINGABE , LISTING , SCB , CH ) ;
+     SCB . LOOKAHEAD := CH ;
 
      (************************************************)
-     (*   MUSS MAN MACHEN, WEIL READCH VERWENDET     *)
-     (*   WIRD                                       *)
+     (*   traceausgaben                              *)
      (************************************************)
 
+     if FALSE then
+       begin
+         WRITELN ( TRACEF , '--------------------------------------'
+                   '--------------------------------------' ) ;
+         WRITELN ( TRACEF , 'komml     = ' , KOMMC . KOMML : 4 ) ;
+         WRITELN ( TRACEF , 'endofkomm = ' , KOMMC . ENDOFKOMM ) ;
+         WRITELN ( TRACEF , 'anzkomm   = ' , KOMMC . ANZKOMM : 4 ) ;
+         WRITELN ( TRACEF , 'zustand   = ' , KOMMC . ZUSTAND : 4 ) ;
+         WRITELN ( TRACEF , 'kommtype  = ' , KOMMC . KOMMTYPE ) ;
+         WRITELN ( TRACEF , 'nursterne = ' , KOMMC . NURSTERNE ) ;
+         WRITELN ( TRACEF , 'kommp     = ' , KOMMC . KOMMP : KOMMC .
+                   KOMML ) ;
+         WRITELN ( TRACEF , 'KOMMSTATUS NACH READKOMM = ' , KOMMC .
+                   KOMMSTATUS ) ;
+         WRITELN ( TRACEF , 'scb.Lookahead = ' , SCB . LOOKAHEAD ) ;
+       end (* then *)
    end (* READKOMM *) ;
 
 
 
-procedure WRITEKOMM ( var KOMMC : KOMMCTL ; KOMMLAENGE : INTEGER ) ;
+procedure WRITEKOMM ( var KOMMC : KOMMCTL ) ;
 
    var I : INTEGER ;
        X : INTEGER ;
@@ -603,17 +914,15 @@ procedure WRITEKOMM ( var KOMMC : KOMMCTL ; KOMMLAENGE : INTEGER ) ;
        FILLCH : CHAR ;
 
    begin (* WRITEKOMM *)
+     KOMMC . NEUZEILE_VORM := FALSE ;
      while TRUE do
        begin
-         if KOMMC . KOMML < KOMMLAENGE then
+         if KOMMC . KOMML < KOMMC . KOMML_AUS then
            begin
-             if KOMMC . NURSTERNE then
-               FILLCH := '*'
-             else
-               FILLCH := ' ' ;
-             for I := KOMMC . KOMML + 1 to KOMMLAENGE do
+             FILLCH := ' ' ;
+             for I := KOMMC . KOMML + 1 to KOMMC . KOMML_AUS do
                KOMMC . KOMMP [ I ] := FILLCH ;
-             X := KOMMLAENGE ;
+             X := KOMMC . KOMML_AUS ;
              case KOMMC . KOMMTYPE of
                ')' : begin
                        if KOMMC . ENDOFKOMM then
@@ -652,13 +961,14 @@ procedure WRITEKOMM ( var KOMMC : KOMMCTL ; KOMMLAENGE : INTEGER ) ;
                          end (* then *) ;
                        KOMMC . KOMMP [ X ] := '"' ;
                      end (* tag/ca *) ;
+               '+' : ;
              end (* case *) ;
            end (* then *) ;
-         if KOMMC . KOMML > KOMMLAENGE then
+         if KOMMC . KOMML > KOMMC . KOMML_AUS then
            begin
              case KOMMC . KOMMTYPE of
                ')' : begin
-                       X := KOMMLAENGE - 2 ;
+                       X := KOMMC . KOMML_AUS - 2 ;
                        CH1 := KOMMC . KOMMP [ X ] ;
                        CH2 := KOMMC . KOMMP [ X + 1 ] ;
                        CH3 := KOMMC . KOMMP [ X + 2 ] ;
@@ -667,7 +977,7 @@ procedure WRITEKOMM ( var KOMMC : KOMMCTL ; KOMMLAENGE : INTEGER ) ;
                        KOMMC . KOMMP [ X + 2 ] := ')' ;
                      end (* tag/ca *) ;
                '/' : begin
-                       X := KOMMLAENGE - 2 ;
+                       X := KOMMC . KOMML_AUS - 2 ;
                        CH1 := KOMMC . KOMMP [ X ] ;
                        CH2 := KOMMC . KOMMP [ X + 1 ] ;
                        CH3 := KOMMC . KOMMP [ X + 2 ] ;
@@ -676,7 +986,7 @@ procedure WRITEKOMM ( var KOMMC : KOMMCTL ; KOMMLAENGE : INTEGER ) ;
                        KOMMC . KOMMP [ X + 2 ] := '/' ;
                      end (* tag/ca *) ;
                '}' : begin
-                       X := KOMMLAENGE - 2 ;
+                       X := KOMMC . KOMML_AUS - 2 ;
                        CH1 := KOMMC . KOMMP [ X ] ;
                        CH2 := KOMMC . KOMMP [ X + 1 ] ;
                        CH3 := KOMMC . KOMMP [ X + 2 ] ;
@@ -685,9 +995,12 @@ procedure WRITEKOMM ( var KOMMC : KOMMCTL ; KOMMLAENGE : INTEGER ) ;
                        KOMMC . KOMMP [ X + 2 ] := ')' ;
                      end (* tag/ca *) ;
                '"' : begin
-                       X := KOMMLAENGE ;
+                       X := KOMMC . KOMML_AUS - 1 ;
                        CH1 := KOMMC . KOMMP [ X ] ;
                        KOMMC . KOMMP [ X ] := '"' ;
+                     end (* tag/ca *) ;
+               '+' : begin
+                       X := KOMMC . KOMML_AUS ;
                      end (* tag/ca *) ;
              end (* case *) ;
            end (* then *) ;
@@ -702,11 +1015,13 @@ procedure WRITEKOMM ( var KOMMC : KOMMCTL ; KOMMLAENGE : INTEGER ) ;
            if EINRKOMM = 0 then
              begin
                KOMMC . KOMMP [ 1 ] := '(' ;
-               KOMMC . KOMMP [ KOMMLAENGE ] := ')' ;
+               KOMMC . KOMMP [ KOMMC . KOMML_AUS ] := ')' ;
              end (* then *) ;
-         for I := 1 to KOMMLAENGE do
+         for I := 1 to KOMMC . KOMML_AUS do
            WRITE ( AUSGABE , KOMMC . KOMMP [ I ] ) ;
-         if KOMMC . KOMML > KOMMLAENGE then
+         if KOMMC . KOMMTYPE = '+' then
+           KOMMC . NEUZEILE_VORM := TRUE ;
+         if KOMMC . KOMML > KOMMC . KOMML_AUS then
            begin
              NEUZEILEKOMM ( TRUE ) ;
              case KOMMC . KOMMTYPE of
@@ -739,9 +1054,13 @@ procedure WRITEKOMM ( var KOMMC : KOMMCTL ; KOMMLAENGE : INTEGER ) ;
                        KOMMC . KOMMP [ 2 ] := CH1 ;
                        X := 2 ;
                      end (* tag/ca *) ;
+               '+' : begin
+                       KOMMC . KOMMP [ 1 ] := '/' ;
+                       KOMMC . KOMMP [ 2 ] := '/' ;
+                       X := 2 ;
+                     end (* tag/ca *) ;
              end (* case *) ;
-             Y := KOMMLAENGE + 1 ;
-             for Y := KOMMLAENGE + 1 to KOMMC . KOMML do
+             for Y := KOMMC . KOMML_AUS + 1 to KOMMC . KOMML do
                begin
                  X := X + 1 ;
                  KOMMC . KOMMP [ X ] := KOMMC . KOMMP [ Y ] ;
@@ -767,7 +1086,7 @@ procedure KOMMENTAR ( var KOMMC : KOMMCTL ) ;
 (*   KOMMKASTEN: BOOLEAN - LEGT FEST, OB WIR AKTUELL KASTEN         *)
 (*   WOLLEN ODER NICHT                                              *)
 (*                                                                  *)
-(*   KOMMZUSTAND: ZUSTAND DER KOMMENTARBEARBEITUNG                  *)
+(*   KOMMSTATUS: ZUSTAND DER KOMMENTARBEARBEITUNG                   *)
 (*                                                                  *)
 (*   0 = AUSSERHALB VON KOMMENTAREN                                 *)
 (*   1 = INNERHALB KOMMENTARKASTEN-BEARBEITUNG                      *)
@@ -787,12 +1106,12 @@ procedure KOMMENTAR ( var KOMMC : KOMMCTL ) ;
 (********************************************************************)
 
 
-   var I : INTEGER ;
-       DICHTSAVE : BOOLEAN ;
-       KASTENEINFUEGEN : BOOLEAN ;
+   var DICHTSAVE : BOOLEAN ;
+       KOMMKASTEN : BOOLEAN ;
+       KOMMOUT : INTEGER ;
 
    begin (* KOMMENTAR *)
-     KASTENEINFUEGEN := FALSE ;
+     KOMMKASTEN := FALSE ;
      KOMMC . ENDOFKOMM := FALSE ;
      KOMMC . ANZKOMM := 1 ;
      KOMMC . ZUSTAND := 1 ;
@@ -829,434 +1148,721 @@ procedure KOMMENTAR ( var KOMMC : KOMMCTL ) ;
              NEUZEILEKOMM ( FALSE ) ;
              NEUZEILEKOMM ( FALSE ) ;
              KOMMC . KOMM_VOR_PROC := FALSE ;
+             KOMMC . SYMB_VOR_KOMM := FALSE ;
+           end (* then *) ;
+         if not KOMMC . SYMB_VOR_KOMM then
+           begin
+             KOMMC . LINENR_LAST := - 1 ;
+             KOMMC . LINEPOS_LAST := - 1 ;
+             KOMMC . KOMML_MAX := - 1 ;
            end (* then *) ;
          case KOMMC . KOMMSTATUS of
            0 : begin
-                 if MODUS > 2 then
+                 if KOMMC . SYMB_VOR_KOMM then
                    begin
-                     NEUZEILEKOMM ( FALSE ) ;
-                     NEUZEILEKOMM ( TRUE ) ;
-                   end (* then *) ;
-                 if MODUS = 2 then
-                   NEUZEILEKOMM ( TRUE ) ;
+                     if FALSE then
+                       begin
+                         WRITELN ( TRACEF , 'symb_vor_komm' ) ;
+                         WRITELN ( TRACEF , 'komml      = ' , KOMMC .
+                                   KOMML ) ;
+                         WRITELN ( TRACEF , 'komml_aus  = ' , KOMMC .
+                                   KOMML_AUS ) ;
+                         WRITELN ( TRACEF , 'linepos    = ' , KOMMC .
+                                   LINEPOS ) ;
+                         WRITELN ( TRACEF , 'outpointer = ' ,
+                                   OUTPOINTER ) ;
+                       end (* then *) ;
+                     if KOMMC . LINENR = KOMMC . LINENR_LAST + 1 then
+                       begin
+                         KOMMOUT := KOMMC . LINEPOS_LAST ;
+                         if KOMMC . KOMML_MAX < KOMMC . KOMML then
+                           KOMMC . KOMML_MAX := KOMMC . KOMML ;
+                       end (* then *)
+                     else
+                       begin
+                         KOMMOUT := KOMMC . LINEPOS ;
+                         KOMMC . KOMML_MAX := KOMMC . KOMML ;
+                       end (* else *) ;
+                     if SY = COMMENT5 then
+                       KOMMC . KOMML_AUS := KOMMC . KOMML
+                     else
+                       KOMMC . KOMML_AUS := KOMMC . KOMML_MAX ;
+                     if OUTPOINTER < KOMMOUT then
+                       begin
+                         WRITE ( AUSGABE , ' ' : KOMMOUT - OUTPOINTER )
+                                 ;
+                         OUTPOINTER := KOMMOUT ;
+                       end (* then *) ;
+                     KOMMC . LINENR_LAST := KOMMC . LINENR ;
+                     KOMMC . LINEPOS_LAST := KOMMOUT ;
+                   end (* then *)
+                 else
+                   begin
+                     if VERARB_MODUS > 2 then
+                       begin
+                         NEUZEILEKOMM ( FALSE ) ;
+                         NEUZEILEKOMM ( TRUE ) ;
+                       end (* then *) ;
+                     if VERARB_MODUS = 2 then
+                       NEUZEILEKOMM ( TRUE ) ;
 
-     (************************************************)
-     (*   SCHAUEN, OB KASTEN EINGEFUEGT WERDEN MUSS  *)
-     (************************************************)
+     /*************************************************/
+     /* SCHAUEN, OB KASTEN EINGEFUEGT WERDEN MUSS     */
+     /* a) wenn nursterne, kein kasten; laenge ist    */
+     /*    dann bereits klar                          */
+     /* b) andernfalls kasten, laenge nach neuer      */
+     /*    formel; gleiches gilt auch, wenn komm.     */
+     /*    unvollstaendig                             */
+     /*************************************************/
 
-                 KASTENEINFUEGEN := not KOMMC . NURSTERNE ;
-
-     (************************************************)
-     (*   WENN KOMMENTAR NICHT PASST, WIRD AUF       *)
-     (*   JEDEN FALL EIN KASTEN EINGEFUEGT           *)
-     (************************************************)
-
-                 if KOMMC . KOMML > 72 - EINRKOMM then
-                   KASTENEINFUEGEN := TRUE ;
+                     if KOMMC . NURSTERNE then
+                       begin
+                         KOMMKASTEN := FALSE ;
+                         KOMMC . KOMML_AUS := KOMMC . KOMML ;
+                       end (* then *)
+                     else
+                       begin
+                         KOMMKASTEN := TRUE ;
+                         KOMMC . KOMML_AUS := MAXWIDTH - 2 * EINRKOMM ;
+                       end (* else *) ;
+                     if not KOMMC . ENDOFKOMM then
+                       begin
+                         KOMMKASTEN := TRUE ;
+                         KOMMC . KOMML_AUS := MAXWIDTH - 2 * EINRKOMM ;
+                       end (* then *) ;
+                     if KOMMC . KOMML > KOMMC . KOMML_AUS then
+                       KOMMC . KOMML_AUS := MAXWIDTH - EINRKOMM ;
+                     if KOMMC . KOMML > KOMMC . KOMML_AUS then
+                       KOMMKASTEN := TRUE ;
 
      (************************************************)
      (*   NEUER KOMMC.KOMMSTATUS ABH. VOM KASTEN     *)
      (************************************************)
 
-                 if KASTENEINFUEGEN then
-                   KOMMC . KOMMSTATUS := 1
-                 else
-                   KOMMC . KOMMSTATUS := 2 ;
+                     if KOMMKASTEN then
+                       begin
+                         KOMMC . KOMMSTATUS := 1 ;
+                         KOMMC . EINRKASTEN := EINRKOMM ;
+                       end (* then *)
+                     else
+                       KOMMC . KOMMSTATUS := 2 ;
 
      (************************************************)
-     (*   KOMMLAENGE FESTLEGEN                       *)
+     (*   KOMMC.KOMML_AUS FESTLEGEN                  *)
      (************************************************)
 
-                 KOMMLAENGE := KOMMC . KOMML ;
-                 if not KOMMC . ENDOFKOMM then
-                   KOMMLAENGE := KOMMLAENGE + 3 ;
-                 if KOMMLAENGE < 10 then
-                   KOMMLAENGE := 10 ;
-                 if KOMMC . KOMML > 72 - EINRKOMM then
-                   KOMMLAENGE := 72 - EINRKOMM ;
+                     if KOMMC . KOMML_AUS < 10 then
+                       KOMMC . KOMML_AUS := 10 ;
+                     if KOMMC . KOMML_AUS > MAXWIDTH - EINRKOMM then
+                       KOMMC . KOMML_AUS := MAXWIDTH - EINRKOMM ;
+                   end (* else *)
                end (* tag/ca *) ;
            1 : begin
-                 if MODUS >= 2 then
+                 if VERARB_MODUS >= 2 then
                    NEUZEILEKOMM ( TRUE ) ;
                end (* tag/ca *) ;
            2 : begin
-                 if MODUS >= 2 then
+                 if VERARB_MODUS >= 2 then
                    NEUZEILEKOMM ( TRUE ) ;
                end (* tag/ca *) ;
          end (* case *) ;
 
      (************************************************)
      (*   AUSGEBEN DES KOMMENTARS                    *)
+     (*   wenn kasten, vorher kasten ausgeben        *)
+     (*   und kasten nachher planen                  *)
      (************************************************)
 
-         if KASTENEINFUEGEN then
+         if KOMMKASTEN then
            begin
-             ENDEKASTEN := KOMMC . KOMMTYPE ;
-             ENDEKOMMEIN := EINRKOMM ;
-             case KOMMC . KOMMTYPE of
-               ')' : WRITE ( AUSGABE , '(*' ) ;
-               '/' : WRITE ( AUSGABE , '/*' ) ;
-               '}' : WRITE ( AUSGABE , '(*' ) ;
-               '"' : WRITE ( AUSGABE , '"' ) ;
-             end (* case *) ;
-             for I := 1 to KOMMLAENGE - 4 do
-               WRITE ( AUSGABE , '*' ) ;
-             if KOMMC . KOMMTYPE = '"' then
-               WRITE ( AUSGABE , '**' ) ;
-             case KOMMC . KOMMTYPE of
-               ')' : WRITE ( AUSGABE , '*)' ) ;
-               '/' : WRITE ( AUSGABE , '*/' ) ;
-               '}' : WRITE ( AUSGABE , '*)' ) ;
-               '"' : WRITE ( AUSGABE , '"' ) ;
-             end (* case *) ;
+             ENDEKASTEN := 'J' ;
+             KOMMSTERNZEILE ;
              NEUZEILEKOMM ( TRUE ) ;
            end (* then *) ;
-         WRITEKOMM ( KOMMC , KOMMLAENGE ) ;
+         WRITEKOMM ( KOMMC ) ;
        end (* else *) ;
      DICHT := DICHTSAVE ;
    end (* KOMMENTAR *) ;
 
 
 
-procedure INSYMBOL ( var S : SYMBOL ) ;
+procedure INSYMBOL ;
 
-   var CH : CHAR ;
-       KOMMENTFOUND : BOOLEAN ;
-       ZIFFERNLESEN : BOOLEAN ;
+(**************************************************************)
+(*                                                            *)
+(*   READ NEXT BASIS SYMB OF SOURCE PROGRAM AND RETURN        *)
+(*   ITS DESCRIPTION IN THE GLOBAL VARIABLES                  *)
+(*   SY, OP, ID, VAL AND SYLENGTH                             *)
+(*                                                            *)
+(*------------------------------------------------------------*)
+(*                                                            *)
+(*   REWORKED 24.10.2011 - BERND OPPOLZER                     *)
+(*                                                            *)
+(*   ADDED THE FOLLOWING SYMB SPELLINGS:                      *)
+(*                                                            *)
+(*   (. AND .) AS ANOTHER POSSIBILITY FOR [ ] AND (/ /)       *)
+(*                                                            *)
+(*   -> AS AN ALTERNATIVE FOR @                               *)
+(*                                                            *)
+(*   COMMENTS ALSO LIKE THIS: /* ... COMMENT ... */           *)
+(*                                                            *)
+(**************************************************************)
+
+
+   var I , K : INTEGER ;
+       DIGIT : array [ 1 .. 40 ] of CHAR ;
+       XSTRING : array [ 1 .. MAXSTRL ] of CHAR ;
+
+
+   procedure MODSTRING ( STRTYPE : CHAR ; var L : INTEGER ) ;
+
+      var IX : INTEGER ;
+          LNEU : INTEGER ;
+          L1 : INTEGER ;
+          X : INTEGER ;
+          X2 : INTEGER ;
+          INEU : INTEGER ;
+          SX : INTEGER ;
+          TX : INTEGER ;
+
+      begin (* MODSTRING *)
+        if FALSE then
+          begin
+            WRITE ( TRACEF , 'MODSTRING: ' , STRTYPE , ' ' , L : 1 ,
+                    ' <' ) ;
+            for I := 1 to L do
+              WRITE ( TRACEF , XSTRING [ I ] ) ;
+            WRITELN ( TRACEF , '>' ) ;
+          end (* then *) ;
+        case STRTYPE of
+          'C' : begin
+                  SX := 1 ;
+                  TX := 0 ;
+                  while SX <= L do
+                    begin
+                      if ( XSTRING [ SX ] <> '''' ) or ( SX = L ) then
+                        begin
+                          TX := TX + 1 ;
+                          if TX < SX then
+                            XSTRING [ TX ] := XSTRING [ SX ] ;
+                          SX := SX + 1
+                        end (* then *)
+                      else
+                        if XSTRING [ SX + 1 ] = '''' then
+                          begin
+                            TX := TX + 1 ;
+                            if TX < SX then
+                              XSTRING [ TX ] := XSTRING [ SX ] ;
+                            SX := SX + 2
+                          end (* then *)
+                    end (* while *) ;
+                  L := TX ;
+                end (* tag/ca *) ;
+          'B' : begin
+
+        /**********************/
+        /* remove underscores */
+        /**********************/
+
+                  LNEU := 0 ;
+                  for X := 1 to L do
+                    if XSTRING [ X ] <> '_' then
+                      begin
+                        LNEU := LNEU + 1 ;
+                        if LNEU < X then
+                          XSTRING [ LNEU ] := XSTRING [ X ] ;
+                      end (* then *) ;
+                  L := LNEU ;
+
+        /**************************************/
+        /* l = new length without underscores */
+        /**************************************/
+
+                  IX := 1 ;
+                  LNEU := ( L + 7 ) DIV 8 ;
+
+        /********************************************/
+        /* lneu = length of converted target string */
+        /********************************************/
+
+                  L1 := L MOD 8 ;
+                  if L1 = 0 then
+                    L1 := 8 ;
+                  for X := 1 to LNEU do
+                    begin
+                      INEU := 0 ;
+                      for X2 := 1 to L1 do
+                        begin
+                          INEU := INEU * 2 ;
+                          if XSTRING [ IX ] = '1' then
+                            INEU := INEU + 1 ;
+                          IX := IX + 1 ;
+                        end (* for *) ;
+                      L1 := 8 ;
+                      XSTRING [ X ] := CHR ( INEU ) ;
+                    end (* for *) ;
+                  L := LNEU ;
+                end (* tag/ca *) ;
+          'X' : begin
+                  LNEU := 0 ;
+                  for X := 1 to L do
+                    if XSTRING [ X ] <> '_' then
+                      begin
+                        LNEU := LNEU + 1 ;
+                        if LNEU < X then
+                          XSTRING [ LNEU ] := XSTRING [ X ] ;
+                      end (* then *) ;
+                  L := LNEU ;
+
+        /**************************************/
+        /* l = new length without underscores */
+        /**************************************/
+
+                  IX := 1 ;
+                  LNEU := ( L + 1 ) DIV 2 ;
+
+        /********************************************/
+        /* lneu = length of converted target string */
+        /********************************************/
+
+                  L1 := L MOD 2 ;
+                  if L1 = 0 then
+                    L1 := 2 ;
+                  for X := 1 to LNEU do
+                    begin
+                      INEU := 0 ;
+                      for X2 := 1 to L1 do
+                        begin
+                          INEU := INEU * 16 ;
+                          if XSTRING [ IX ] in [ '1' .. '9' ] then
+                            INEU := INEU + ORD ( XSTRING [ IX ] ) - ORD
+                                    ( '0' )
+                          else
+                            if XSTRING [ IX ] in [ 'A' .. 'F' ] then
+                              INEU := INEU + ORD ( XSTRING [ IX ] ) -
+                                      ORD ( 'A' ) + 10
+                            else
+                              if XSTRING [ IX ] in [ 'a' .. 'f' ] then
+                                INEU := INEU + ORD ( XSTRING [ IX ] ) -
+                                        ORD ( 'a' ) + 10 ;
+                          IX := IX + 1 ;
+                        end (* for *) ;
+                      L1 := 2 ;
+                      XSTRING [ X ] := CHR ( INEU ) ;
+                    end (* for *) ;
+                  L := LNEU ;
+                end (* tag/ca *)
+        end (* case *) ;
+        if FALSE then
+          begin
+            WRITE ( TRACEF , 'ENDE MODS: ' , STRTYPE , ' ' , L : 1 ,
+                    ' <' ) ;
+            for I := 1 to L do
+              if STRTYPE = 'C' then
+                WRITE ( TRACEF , XSTRING [ I ] )
+              else
+                WRITEHEXBYTE ( TRACEF , ORD ( XSTRING [ I ] ) ) ;
+            WRITELN ( TRACEF , '>' ) ;
+          end (* then *)
+      end (* MODSTRING *) ;
+
 
    begin (* INSYMBOL *)
-     NULLSTATE := FALSE ;
-     repeat
-       KOMMENTFOUND := FALSE ;
-       if W1INDEX = 0 then
-         LIES ( CH )
-       else
-         begin
-           W1INDEX := W1ENDE + 1 ;
-           W1 [ 1 ] := W1 [ W1INDEX ] ;
-           CH := W1 [ W1INDEX ] ;
-           W1INDEX := 1
-         end (* else *) ;
+     VAL . IVAL := 0 ;
+     VAL . STRTYPE := ' ' ;
 
-     (************************************************)
-     (*   BLANKS USW. UEBERLESEN                     *)
-     (************************************************)
+     (**********************************************************)
+     (*   schleife, z.b. wg. blanks und kommentaren            *)
+     (**********************************************************)
 
-       while ( ( CH = ' ' ) or ( CH = CHR ( 10 ) ) or ( CH = CHR ( 13 )
-       ) or ( CH = '#' ) ) and not EOFILE do
-         begin
+     while TRUE do
+       begin
 
-     (************************************************)
-     (*   NACH EINER LEERZEILE KOMMENTARE            *)
-     (*   NICHT MEHR UEBERLESEN                      *)
-     (************************************************)
+     (**********************************************************)
+     (*   scanner aufrufen (externes modul)                    *)
+     (**********************************************************)
 
-           if KOMMC . UEBERLESEN = 2 then
-             if INPOINTER = 1 then
-               KOMMC . UEBERLESEN := 0 ;
-           W1INDEX := 0 ;
-           LIES ( CH )
-         end (* while *) ;
-       if CH = ' ' then
-         S := EOFSY
-       else
-         if CH in ISTARTSET then
+         PASSCAN ( EINGABE , LISTING , SCB , FALSE ) ;
+
+     (**********************************************************)
+     (*   variablen sy und sylength setzen (rueckg. scanner)   *)
+     (**********************************************************)
+
+         SY := SCB . SYMBOLNR ;
+         SYLENGTH := SCB . LSYMBOL ;
+         LINECNT := SCB . LINENR ;
+         if FALSE then
+           WRITELN ( TRACEF , 'nach passcan: sy = ' , SY : 30 ,
+                     ' zeile/spalte = ' , SCB . LINENR , SCB . LINEPOS
+                     , KOMMC . LINENR ) ;
+         if SCB . LINENR <> KOMMC . LINENR then
            begin
-             S := IDENTIFIER ;
-             if CH in [ 'B' , 'X' ] then
-               begin
-                 LIES ( CH ) ;
-                 if CH = '''' then
-                   begin
-                     repeat
-                       NOMAJOR := TRUE ;
-                       repeat
-                         LIESKOMM ( CH )
-                       until CH = '''' ;
-                       NOMAJOR := FALSE ;
-                       LIES ( CH )
-                     until CH <> '''' ;
-                     S := ZKETTE
-                   end (* then *)
-               end (* then *)
-             else
-               LIES ( CH ) ;
-             if S = IDENTIFIER then
-               begin
-                 while CH in IWEITERSET do
-                   LIES ( CH ) ;
-                 W1ENDE := W1INDEX - 1 ;
-                 RESWRD ( S )
-               end (* then *)
-           end (* then *)
-         else
-           if CH in ( ZIFFERN + [ '#' ] ) then
+
+     //**************************************************
+     // zeilenwechsel seit letztem Passcan-Aufruf        
+     //**************************************************
+
+             KOMMC . LINENR := SCB . LINENR ;
+             KOMMC . SYMB_VOR_KOMM := FALSE ;
+           end (* then *) ;
+         if not ( SY in [ SEPARATOR , COMMENT1 , COMMENT2 , COMMENT3 ,
+         COMMENT4 , COMMENT5 ] ) then
+           begin
+
+     //**************************************************
+     // ein "echtes" symbol wurde gefunden               
+     //**************************************************
+
+             KOMMC . SYMB_VOR_KOMM := TRUE ;
+           end (* then *) ;
+
+     (*****************************************************)
+     (*   look what has to be done depending on symbol    *)
+     (*   (some symbols need additional work)             *)
+     (*****************************************************)
+
+         case SY of
+
+     (**********************************************************)
+     (*   separator und kommentare ignorieren und nochmal      *)
+     (**********************************************************)
+
+           SEPARATOR :
+             continue ;
+           COMMENT1 :
              begin
+               KOMMC . KOMMTYPE := '/' ;
+               KOMMC . LINEPOS := SCB . LINEPOS - 2 ;
+               KOMMENTAR ( KOMMC ) ;
+               KOMMC . UEBERLESEN := 0 ;
+               continue ;
+             end (* tag/ca *) ;
+           COMMENT2 :
+             begin
+               KOMMC . KOMMTYPE := ')' ;
+               KOMMC . LINEPOS := SCB . LINEPOS - 2 ;
+               KOMMENTAR ( KOMMC ) ;
+               KOMMC . UEBERLESEN := 0 ;
+               continue ;
+             end (* tag/ca *) ;
+           COMMENT3 :
+             begin
+               KOMMC . KOMMTYPE := '}' ;
+               KOMMC . LINEPOS := SCB . LINEPOS - 2 ;
+               KOMMENTAR ( KOMMC ) ;
+               KOMMC . UEBERLESEN := 0 ;
+               continue ;
+             end (* tag/ca *) ;
+           COMMENT4 :
+             begin
+               KOMMC . KOMMTYPE := '"' ;
+               KOMMC . LINEPOS := SCB . LINEPOS - 2 ;
+               KOMMENTAR ( KOMMC ) ;
+               KOMMC . UEBERLESEN := 0 ;
+               continue ;
+             end (* tag/ca *) ;
+           COMMENT5 :
+             begin
+               KOMMC . KOMMTYPE := '+' ;
+               KOMMC . LINEPOS := SCB . LINEPOS - 2 ;
+               KOMMENTAR ( KOMMC ) ;
+               KOMMC . UEBERLESEN := 0 ;
+               continue ;
+             end (* tag/ca *) ;
 
-     (************************************************)
-     (*   auch 0x... hex darstellung zulassen        *)
-     (*   Exponent E gross oder klein schreiben      *)
-     (************************************************)
+     (**********************************************************)
+     (*   ident in grossbuchstaben und gegen tabelle der       *)
+     (*   reservierten worte abchecken                         *)
+     (**********************************************************)
 
-               repeat
-                 ZIFFERNLESEN := TRUE ;
-                 if CH = '0' then
+           IDENT : begin
+                     ID := ' ' ;
+                     K := SYLENGTH ;
+                     if K > IDLNGTH then
+                       K := IDLNGTH ;
+                     MEMCPY ( ADDR ( ID ) , ADDR ( SCB . SYMBOL ) , K )
+                              ;
+                     for I := 1 to K do
+                       ID [ I ] := UPSHIFT [ ID [ I ] ] ;
+                     MEMCPY ( ADDR ( SCB . SYMBOL ) , ADDR ( ID ) , K )
+                              ;
+
+     (**********************************************************)
+     (*   maxrwlen = laenge des laengsten reservierten wortes  *)
+     (*   die tabelle frw ist nur so lang                      *)
+     (**********************************************************)
+
+                     if K <= MAXRWLEN then
+                       for I := FRW [ K ] to FRW [ K + 1 ] - 1 do
+                         if RW [ I ] = ID then
+                           begin
+                             SY := RSY [ I ] ;
+                             break ;
+                           end (* then *) ;
+                   end (* tag/ca *) ;
+
+     (**********************************************************)
+     (*   stringconst nacharbeiten wg. doppelter               *)
+     (*   hochkommas z.B.                                      *)
+     (**********************************************************)
+
+           STRINGCONST :
+             begin
+               K := SYLENGTH - 2 ;
+               MEMCPY ( ADDR ( XSTRING ) , ADDR ( SCB . SYMBOL [ 2 ] )
+                        , K ) ;
+               MODSTRING ( 'C' , K ) ;
+               VAL . STRTYPE := ' ' ;
+               SYLENGTH := K ;
+               if SYLENGTH = 0 then
+                 VAL . IVAL := ORD ( ' ' )
+               else
+                 if SYLENGTH = 1 then
+                   VAL . IVAL := ORD ( XSTRING [ 1 ] )
+                 else
                    begin
-                     LIES ( CH ) ;
-                     if not ( CH in ( ZIFFERN + [ 'e' , 'E' , '.' , 'X'
-                     , 'x' ] ) ) then
-                       break ;
-                     if CH in [ 'X' , 'x' ] then
+                     if SYLENGTH > MAXSTRL then
                        begin
-                         repeat
-                           LIES ( CH )
-                         until not ( CH in ( ZIFFERN + [ 'A' .. 'F' ,
-                         'a' .. 'f' ] ) ) ;
-                         break ;
+                         ERROR ( 398 ) ;
+                         SYLENGTH := MAXSTRL
                        end (* then *) ;
-                     if CH in [ 'e' , 'E' , '.' ] then
-                       ZIFFERNLESEN := FALSE ;
-                   end (* then *) ;
-                 if ZIFFERNLESEN then
-                   repeat
-                     LIES ( CH )
-                   until not ( CH in ZIFFERN ) ;
-                 if CH = '.' then
-                   repeat
-                     LIES ( CH )
-                   until not ( CH in ZIFFERN ) ;
-                 if ( CH = 'E' ) or ( CH = 'e' ) then
-                   begin
-                     LIES ( CH ) ;
-                     if ( CH = '+' ) or ( CH = '-' ) then
-                       LIES ( CH ) ;
-                     repeat
-                       LIES ( CH )
-                     until not ( CH in ZIFFERN )
-                   end (* then *)
-               until TRUE ;
-               S := ZAHL
-             end (* then *)
-           else
-             if CH = '$' then
-               begin
-                 repeat
-                   LIES ( CH )
-                 until not ( CH in HEXZIFFERN ) ;
-                 S := ZAHL
-               end (* then *)
-             else
-               if CH = '''' then
+                     NEW ( VAL . SVAL ) ;
+                     VAL . SVAL -> . TAG := 'S' ;
+                     VAL . SVAL -> . LENGTH := SYLENGTH ;
+                     VAL . SVAL -> . SSTR := XSTRING ;
+                   end (* else *)
+             end (* tag/ca *) ;
+
+     (**********************************************************)
+     (*   hex stringconst umcodieren                           *)
+     (**********************************************************)
+
+           HEXSTRINGCONST :
+             begin
+               K := SYLENGTH - 3 ;
+               MEMCPY ( ADDR ( XSTRING ) , ADDR ( SCB . SYMBOL [ 3 ] )
+                        , K ) ;
+               MODSTRING ( 'X' , K ) ;
+               VAL . STRTYPE := 'X' ;
+               SYLENGTH := K ;
+               if SYLENGTH = 0 then
                  begin
-                   repeat
-                     NOMAJOR := TRUE ;
-                     repeat
-                       LIESKOMM ( CH )
-                     until CH = '''' ;
-                     NOMAJOR := FALSE ;
-                     LIES ( CH )
-                   until CH <> '''' ;
-                   S := ZKETTE
+                   VAL . IVAL := ORD ( ' ' ) ;
+                   SYLENGTH := 1 ;
                  end (* then *)
                else
-                 begin
-                   if CH = '{' then
-                     begin
-                       NOMAJOR := TRUE ;
-                       KOMMC . KOMMTYPE := '}' ;
-                       KOMMENTAR ( KOMMC ) ;
-                       NOMAJOR := FALSE ;
-                       KOMMENTFOUND := TRUE
-                     end (* then *)
-                   else
-                     if CH = '"' then
+                 if SYLENGTH = 1 then
+                   VAL . IVAL := ORD ( XSTRING [ 1 ] )
+                 else
+                   begin
+                     if SYLENGTH > MAXSTRL then
                        begin
-                         NOMAJOR := TRUE ;
-                         KOMMC . KOMMTYPE := '"' ;
-                         KOMMENTAR ( KOMMC ) ;
-                         NOMAJOR := FALSE ;
-                         KOMMENTFOUND := TRUE
-                       end (* then *)
-                     else
-                       if CH = '(' then
-                         begin
-                           LIES ( CH ) ;
-                           if CH = '*' then
-                             begin
-                               NOMAJOR := TRUE ;
-                               KOMMC . KOMMTYPE := ')' ;
-                               KOMMENTAR ( KOMMC ) ;
-                               NOMAJOR := FALSE ;
-                               KOMMENTFOUND := TRUE
-                             end (* then *)
-                           else
-                             begin
-                               S := KLAMMAUF ;
-                               if ( CH = '.' ) or ( CH = '/' ) then
-                                 begin
-                                   S := ECKKLAMMAUF ;
-                                   LIES ( CH ) ;
-                                 end (* then *)
-                             end (* else *)
-                         end (* then *)
+                         ERROR ( 398 ) ;
+                         SYLENGTH := MAXSTRL
+                       end (* then *) ;
+                     NEW ( VAL . SVAL ) ;
+                     VAL . SVAL -> . TAG := 'S' ;
+                     VAL . SVAL -> . LENGTH := SYLENGTH ;
+                     VAL . SVAL -> . SSTR := XSTRING ;
+                   end (* else *) ;
+               SY := STRINGCONST ;
+             end (* tag/ca *) ;
+
+     (**********************************************************)
+     (*   bin stringconst umcodieren                           *)
+     (**********************************************************)
+
+           BINSTRINGCONST :
+             begin
+               K := SYLENGTH - 3 ;
+               MEMCPY ( ADDR ( XSTRING ) , ADDR ( SCB . SYMBOL [ 3 ] )
+                        , K ) ;
+               MODSTRING ( 'B' , K ) ;
+               VAL . STRTYPE := 'X' ;
+               SYLENGTH := K ;
+               if SYLENGTH = 0 then
+                 begin
+                   VAL . IVAL := ORD ( ' ' ) ;
+                   SYLENGTH := 1 ;
+                 end (* then *)
+               else
+                 if SYLENGTH = 1 then
+                   VAL . IVAL := ORD ( XSTRING [ 1 ] )
+                 else
+                   begin
+                     if SYLENGTH > MAXSTRL then
+                       begin
+                         ERROR ( 398 ) ;
+                         SYLENGTH := MAXSTRL
+                       end (* then *) ;
+                     NEW ( VAL . SVAL ) ;
+                     VAL . SVAL -> . TAG := 'S' ;
+                     VAL . SVAL -> . LENGTH := SYLENGTH ;
+                     VAL . SVAL -> . SSTR := XSTRING ;
+                   end (* else *) ;
+               SY := STRINGCONST ;
+             end (* tag/ca *) ;
+
+     (**********************************************************)
+     (*   intconst kann hex oder binaer sein ...               *)
+     (**********************************************************)
+
+           INTCONST , INTDOTDOT :
+             begin
+               DIGIT := ' ' ;
+               K := SYLENGTH ;
+               if SY = INTDOTDOT then
+                 K := K - 2 ;
+               if K > SIZEOF ( DIGIT ) then
+                 K := SIZEOF ( DIGIT ) ;
+               MEMCPY ( ADDR ( DIGIT ) , ADDR ( SCB . SYMBOL ) , K ) ;
+               VAL . IVAL := 0 ;
+
+     (***********************************************)
+     (*   if hex const, translate to integer / ival *)
+     (***********************************************)
+
+               if ( DIGIT [ 2 ] = 'X' ) or ( DIGIT [ 2 ] = 'x' ) then
+                 begin
+                   with VAL do
+                     for I := 3 to K do
+                       if IVAL <= MXINT16 then
+                         case DIGIT [ I ] of
+                           '0' .. '9' :
+                             IVAL := IVAL * 16 + ORD ( DIGIT [ I ] ) -
+                                     ORD ( '0' ) ;
+                           'A' .. 'F' :
+                             IVAL := IVAL * 16 + ORD ( DIGIT [ I ] ) -
+                                     ORD ( 'A' ) + 10 ;
+                           'a' .. 'f' :
+                             IVAL := IVAL * 16 + ORD ( DIGIT [ I ] ) -
+                                     ORD ( 'a' ) + 10 ;
+                           '_' : ;
+                         end (* case *)
                        else
-                         if CH = '/' then
-                           begin
-                             LIES ( CH ) ;
-                             if CH = '*' then
-                               begin
-                                 NOMAJOR := TRUE ;
-                                 KOMMC . KOMMTYPE := '/' ;
-                                 KOMMENTAR ( KOMMC ) ;
-                                 NOMAJOR := FALSE ;
-                                 KOMMENTFOUND := TRUE
-                               end (* then *)
-                             else
-                               begin
-                                 S := SONDER ;
-                                 if CH = ')' then
-                                   begin
-                                     S := ECKKLAMMZU ;
-                                     LIES ( CH ) ;
-                                   end (* then *)
-                               end (* else *)
-                           end (* then *)
+                         begin
+                           ERROR ( 203 ) ;
+                           IVAL := 0 ;
+                           break
+                         end (* else *)
+                 end (* then *)
+               else
+
+     (***********************************************)
+     (*   if bin const, translate to integer / ival *)
+     (***********************************************)
+
+                 if ( DIGIT [ 2 ] = 'B' ) or ( DIGIT [ 2 ] = 'b' ) then
+                   begin
+                     with VAL do
+                       for I := 3 to K do
+                         if IVAL <= MXINT2 then
+                           case DIGIT [ I ] of
+                             '0' : IVAL := IVAL * 2 ;
+                             '1' : IVAL := IVAL * 2 + 1 ;
+                             '_' : ;
+                           end (* case *)
                          else
                            begin
-                             S := SONDER ;
-                             if ( CH in SONDERZEICHEN ) then
-                               case CH of
-                                 '@' : begin
-                                         S := POINTERSY ;
-                                         LIES ( CH )
-                                       end (* tag/ca *) ;
-                                 '[' : begin
-                                         S := ECKKLAMMAUF ;
-                                         LIES ( CH )
-                                       end (* tag/ca *) ;
-                                 ']' : begin
-                                         S := ECKKLAMMZU ;
-                                         LIES ( CH )
-                                       end (* tag/ca *) ;
-                                 '^' : begin
-                                         S := POINTERSY ;
-                                         LIES ( CH )
-                                       end (* tag/ca *) ;
-                                 '*' : begin
-                                         LIES ( CH )
-                                       end (* tag/ca *) ;
-                                 ')' : begin
-                                         LIES ( CH ) ;
-                                         S := KLAMMZU
-                                       end (* tag/ca *) ;
-                                 '-' : begin
-                                         LIES ( CH ) ;
-                                         if CH = '>' then
-                                           begin
-                                             S := POINTERSY ;
-                                             LIES ( CH )
-                                           end (* then *)
-                                       end (* tag/ca *) ;
-                                 '+' : begin
-                                         LIES ( CH )
-                                       end (* tag/ca *) ;
-                                 '=' : begin
-                                         LIES ( CH ) ;
-                                         S := GLEICH
-                                       end (* tag/ca *) ;
-                                 ':' : begin
-                                         LIES ( CH ) ;
-                                         S := DOPU ;
-                                         if CH = '=' then
-                                           begin
-                                             S := ZUWEISUNG ;
-                                             LIES ( CH )
-                                           end (* then *)
-                                       end (* tag/ca *) ;
-                                 ';' : begin
-                                         LIES ( CH ) ;
-                                         S := STRIPU
-                                       end (* tag/ca *) ;
-                                 ',' : begin
-                                         LIES ( CH )
-                                       end (* tag/ca *) ;
-                                 '.' : begin
-                                         LIES ( CH ) ;
-                                         if CH = '.' then
-                                           LIES ( CH )
-                                         else
-                                           if CH = ')' then
-                                             begin
-                                               S := ECKKLAMMZU ;
-                                               LIES ( CH )
-                                             end (* then *)
-                                       end (* tag/ca *) ;
-                                 '>' : begin
-                                         LIES ( CH ) ;
-                                         if CH = '=' then
-                                           LIES ( CH )
-                                       end (* tag/ca *) ;
-                                 '<' : begin
-                                         LIES ( CH ) ;
-                                         if CH = '=' then
-                                           LIES ( CH )
-                                         else
-                                           if CH = '>' then
-                                             LIES ( CH )
-                                       end (* tag/ca *) ;
-                                 '!' : begin
-                                         LIES ( CH ) ;
-                                         if CH = '!' then
-                                           LIES ( CH )
-                                       end (* tag/ca *) ;
-                                 VERKETT2 :
-                                   begin
-                                     LIES ( CH ) ;
-                                     if CH = VERKETT2 then
-                                       LIES ( CH )
-                                   end (* tag/ca *) ;
-                                 '%' : begin
-                                         if not DICHT then
-                                           if KOMMC . KOMMSTATUS = 1
-                                           then
-                                             begin
-                                               NEUZEILEKOMM ( FALSE ) ;
-                                               KOMMENDEKASTEN ;
-                                               KOMMC . KOMMSTATUS := 0
-                                                   ;
-                                               if MODUS > 2 then
-                                                 NEUZEILEKOMM ( FALSE )
-                                                   ;
-                                             end (* then *)
-                                           else
-                                             begin
-                                               NEUZEILEKOMM ( FALSE ) ;
-                                               if MODUS > 2 then
-                                                 NEUZEILEKOMM ( FALSE )
-                                                   ;
-                                             end (* else *)
-                                         else
-                                           NEUZEILEKOMM ( FALSE ) ;
-                                         WRITE ( AUSGABE , CH ) ;
-                                         NOMAJOR := TRUE ;
-                                         repeat
-                                           READCH ( CH ) ;
-                                           WRITE ( AUSGABE , CH ) ;
-                                         until EOLN ( EINGABE ) or (
-                                         INPOINTER = 0 ) ;
-                                         NOMAJOR := FALSE ;
-                                         OUTPOINTER := MAXLOUTPUT + 1 ;
-                                         KOMMENTFOUND := TRUE ;
-                                         W1INDEX := 0
-                                       end (* tag/ca *)
-                               end (* case *)
-                             else
-                               LIES ( CH )
+                             ERROR ( 203 ) ;
+                             IVAL := 0 ;
+                             break
                            end (* else *)
+                   end (* then *)
+                 else
+                   begin
+
+     (*************************)
+     (*   normal int constant *)
+     (*************************)
+
+                     with VAL do
+                       for I := 1 to K do
+                         if DIGIT [ I ] <> '_' then
+                           if IVAL <= MXINT10 then
+                             IVAL := IVAL * 10 + ( ORD ( DIGIT [ I ] )
+                                     - ORD ( '0' ) )
+                           else
+                             begin
+                               ERROR ( 203 ) ;
+                               IVAL := 0 ;
+                               break
+                             end (* else *)
+                   end (* else *)
+             end (* tag/ca *) ;
+
+     (**********************************)
+     (*   realconst ...                *)
+     (**********************************)
+
+           REALCONST :
+             begin
+               DIGIT := ' ' ;
+               K := SYLENGTH ;
+               if K > SIZEOF ( DIGIT ) then
+                 K := SIZEOF ( DIGIT ) ;
+               MEMCPY ( ADDR ( DIGIT ) , ADDR ( SCB . SYMBOL ) , K ) ;
+               VAL . RVAL := ' ' ;
+               if K <= DIGMAX then
+                 for I := 2 to K + 1 do
+                   VAL . RVAL [ I ] := DIGIT [ I - 1 ]
+               else
+                 begin
+                   ERROR ( 203 ) ;
+                   UNPACK ( '0.0' , VAL . RVAL , 2 )
                  end (* else *)
-     until not KOMMENTFOUND ;
+             end (* tag/ca *) ;
+           otherwise
+             
+         end (* case *) ;
+
+     (**********************************************************)
+     (*   endlosschleife jetzt beenden - wenn nicht vorher     *)
+     (*   schon mit continue eine wiederholung angefordert     *)
+     (*   wurde                                                *)
+     (**********************************************************)
+
+         break ;
+       end (* while *) ;
+
+     (**********************************************************)
+     (*   debug trace                                          *)
+     (**********************************************************)
+
+     if FALSE then
+       begin
+         WRITELN ( TRACEF ) ;
+         WRITELN ( TRACEF , 'rueckgabe vom scanner:' ) ;
+         WRITELN ( TRACEF , 'sy       = ' , SY ) ;
+         WRITELN ( TRACEF , 'sylength = ' , SYLENGTH : 1 ) ;
+       end (* then *) ;
+
+     (**********************************************************)
+     (*   unexpected eof is a fatal error                      *)
+     (**********************************************************)
+
      KOMMC . UEBERLESEN := 0 ;
-     W1ENDE := W1INDEX - 1 ;
+     NULLSTATE := FALSE ;
+     W1 := ' ' ;
+     W1ENDE := 0 ;
+     if SY <> SYMB_EOF then
+       begin
+         W1ENDE := SCB . LSYMBOL ;
+         if W1ENDE > 100 then
+           W1ENDE := 100 ;
+         MEMCPY ( ADDR ( W1 ) , ADDR ( SCB . SYMBOL ) , W1ENDE ) ;
+         if SY = INTDOTDOT then
+           begin
+
+     (************************************************************)
+     (*   insert blank into int ..                               *)
+     (************************************************************)
+
+             W1ENDE := W1ENDE + 1 ;
+             W1 [ W1ENDE - 2 ] := ' ' ;
+             W1 [ W1ENDE ] := '.' ;
+           end (* then *)
+       end (* then *) ;
    end (* INSYMBOL *) ;
 
 
@@ -1295,6 +1901,15 @@ procedure NEUZEILE ( BLANKS : BOOLEAN ) ;
      else
        OUTPOINTER := 0 ;
      BLANKSVORHANDEN := FALSE ;
+
+     //************************************************************
+     // neuzeile_vorm loeschen                                     
+     // von c++ kommentar getriggerte leerzeile                    
+     // soll nur geschrieben werden, wenn nicht schon              
+     // eine andere leerzeile sowieso erzeugt wird                 
+     //************************************************************
+
+     KOMMC . NEUZEILE_VORM := FALSE ;
    end (* NEUZEILE *) ;
 
 
@@ -1308,10 +1923,7 @@ procedure PLATZZEILE ( PLATZBEDARF : INTEGER ) ;
      if EIN > MAXEINR then
        EIN := MAXEINR ;
      if PLATZBEDARF > MAXLOUTPUT then
-       begin
-         WRITELN ( '+++ Zkette passt nicht in Zeile' ) ;
-         HALTX
-       end (* then *)
+       ERROR ( 1 )
      else
        if EIN + PLATZBEDARF < MAXLOUTPUT then
          NEUZEILE ( TRUE )
@@ -1328,7 +1940,7 @@ procedure PLATZZEILE ( PLATZBEDARF : INTEGER ) ;
 
 
 
-procedure OUTSYMBOL ( S : SYMBOL ) ;
+procedure OUTSYMBOL ( S : SYMB ) ;
 
    var I : INTEGER ;
        PLATZBEDARF : INTEGER ;
@@ -1349,7 +1961,7 @@ procedure OUTSYMBOL ( S : SYMBOL ) ;
                  WRITELN ( AUSGABE ) ;
                  ZZAUS := ZZAUS + 1 ;
                end (* then *) ;
-           if MODUS > 2 then
+           if VERARB_MODUS > 2 then
              NEUZEILE ( TRUE )
            else
              if not DICHT then
@@ -1357,38 +1969,44 @@ procedure OUTSYMBOL ( S : SYMBOL ) ;
          end (* then *) ;
      KOMMC . KOMMSTATUS := 0 ;
 
+     //************************************************************
+     // letztes symbol war c++ kommentar                           
+     //************************************************************
+
+     if KOMMC . NEUZEILE_VORM then
+       begin
+         NEUZEILE ( TRUE ) ;
+         KOMMC . NEUZEILE_VORM := FALSE ;
+       end (* then *) ;
+
      (*****************************)
      (* SYMBOLE GGF. MODIFIZIEREN *)
      (*****************************)
 
-     if S in [ POINTERSY , ECKKLAMMAUF , ECKKLAMMZU ] then
-       begin
-         case S of
-           POINTERSY :
-             begin
-               W1 [ 3 ] := W1 [ W1INDEX ] ;
-               W1 [ 1 ] := '-' ;
-               W1 [ 2 ] := '>' ;
-               W1ENDE := 2 ;
-             end (* tag/ca *) ;
-           ECKKLAMMAUF :
-             begin
-               W1 [ 2 ] := W1 [ W1INDEX ] ;
-               W1 [ 1 ] := '[' ;
-               W1ENDE := 1 ;
-             end (* tag/ca *) ;
-           ECKKLAMMZU :
-             begin
-               W1 [ 2 ] := W1 [ W1INDEX ] ;
-               W1 [ 1 ] := ']' ;
-               W1ENDE := 1 ;
-             end (* tag/ca *)
-         end (* case *)
-       end (* then *) ;
+     case S of
+       SYARROW :
+         begin
+           W1 [ 1 ] := '-' ;
+           W1 [ 2 ] := '>' ;
+           W1ENDE := 2 ;
+         end (* tag/ca *) ;
+       SYLBRACK :
+         begin
+           W1 [ 1 ] := '[' ;
+           W1ENDE := 1 ;
+         end (* tag/ca *) ;
+       SYRBRACK :
+         begin
+           W1 [ 1 ] := ']' ;
+           W1ENDE := 1 ;
+         end (* tag/ca *) ;
+       otherwise
+         
+     end (* case *) ;
      if not DICHT then
        begin
          PLATZBEDARF := OUTPOINTER + W1ENDE + 1 ;
-         if ( S = DOPU ) and INSQLSTATE then
+         if ( S = SYCOLON ) and INSQLSTATE then
            PLATZBEDARF := PLATZBEDARF + 8 ;
          if PLATZBEDARF > MAXLOUTPUT then
            PLATZZEILE ( PLATZBEDARF - OUTPOINTER ) ;
@@ -1408,7 +2026,7 @@ procedure OUTSYMBOL ( S : SYMBOL ) ;
          ZZAUSVOR := ZZAUS ;
          for I := 1 to W1ENDE do
            WRITE ( AUSGABE , W1 [ I ] ) ;
-         SQLHOSTV := ( S = DOPU ) and INSQLSTATE ;
+         SQLHOSTV := ( S = SYCOLON ) and INSQLSTATE ;
          OUTPOINTER := OUTPOINTER + W1ENDE + 1
        end (* then *)
      else
@@ -1443,12 +2061,13 @@ procedure OUTSYMBOL ( S : SYMBOL ) ;
 procedure STRIPUTEST ;
 
    begin (* STRIPUTEST *)
-     if S = STRIPU then
+     if S = SYSEMICOLON then
        begin
          OUTSYMBOL ( S ) ;
          repeat
-           INSYMBOL ( S )
-         until S <> STRIPU
+           INSYMBOL ;
+           S := SY
+         until S <> SYSEMICOLON
        end (* then *)
    end (* STRIPUTEST *) ;
 
@@ -1465,12 +2084,13 @@ procedure KOMM_ZWISCHEN_PROCS ( BLOCKLEVEL : INTEGER ) ;
          KOMMC . KOMM_VOR_PROC := TRUE ;
          EINRKOMM := 0 ;
        end (* then *) ;
-     if S = STRIPU then
+     if S = SYSEMICOLON then
        begin
          OUTSYMBOL ( S ) ;
          repeat
-           INSYMBOL ( S ) ;
-         until S <> STRIPU
+           INSYMBOL ;
+           S := SY ;
+         until S <> SYSEMICOLON
        end (* then *) ;
      KOMMC . KOMM_VOR_PROC := FALSE ;
      EINRKOMM := EINRKOMMSAVE ;
@@ -1490,10 +2110,12 @@ procedure SQLSTATE ;
      EINRZWEI := EINR ;
      OUTSYMBOL ( S ) ;
      INSQLSTATE := TRUE ;
-     INSYMBOL ( S ) ;
+     INSYMBOL ;
+     S := SY ;
      EINR := EINR + W1ENDE + 1 ;
      OUTSYMBOL ( S ) ;
-     INSYMBOL ( S ) ;
+     INSYMBOL ;
+     S := SY ;
      repeat
        if RESWRDSQL then
          begin
@@ -1508,24 +2130,22 @@ procedure SQLSTATE ;
            EINR := EINR + W1ENDE + 1
          end (* then *) ;
        OUTSYMBOL ( S ) ;
-       INSYMBOL ( S ) ;
-       if S = EOFSY then
-         begin
-           WRITELN ( '+++ Warnung: Dateiende innerhalb SQL-Einschub.' )
-                     ;
-           HALTX
-         end (* then *) ;
-       if S = STRIPU then
+       INSYMBOL ;
+       S := SY ;
+       if S = SYMB_EOF then
+         ERROR ( 2 ) ;
+       if S = SYSEMICOLON then
          WRITELN ( '+++ Warnung: Strichpunkt in SQL-Einschub.' ) ;
-     until ( S = SQLENDSY ) or ( S = STRIPU ) ;
+     until ( S = SYSQLEND ) or ( S = SYSEMICOLON ) ;
      EINR := EINRZWEI ;
      EINR := EINR - 9 ;
      INSQLSTATE := FALSE ;
-     if S <> STRIPU then
+     if S <> SYSEMICOLON then
        begin
          NEUZEILE ( TRUE ) ;
          OUTSYMBOL ( S ) ;
-         INSYMBOL ( S ) ;
+         INSYMBOL ;
+         S := SY ;
        end (* then *) ;
      STRIPUTEST ;
      EINR := EINRSAVE ;
@@ -1545,8 +2165,7 @@ procedure CSIMPSTATE ;
         if S in WORTSYMBOLE - EXPRSYMBOLE - STERMSYMBOLE then
           begin
             OUTSYMBOL ( S ) ;
-            WRITELN ( '+++ Syntaxfehler festgestellt.' ) ;
-            HALTX
+            ERROR ( 3 ) ;
           end (* then *)
       end (* CSFEHLERTEST *) ;
 
@@ -1555,20 +2174,23 @@ procedure CSIMPSTATE ;
      EINRSAVE := EINR ;
      repeat
        OUTSYMBOL ( S ) ;
-       INSYMBOL ( S ) ;
+       INSYMBOL ;
+       S := SY ;
        CSFEHLERTEST
-     until ( S = ZUWEISUNG ) or ( S = KLAMMAUF ) or ( S in STERMSYMBOLE
+     until ( S = SYASSIGN ) or ( S = SYLPARENT ) or ( S in STERMSYMBOLE
      ) ;
      if not ( S in STERMSYMBOLE ) then
        begin
          OUTSYMBOL ( S ) ;
          EINR := OUTPOINTER ;
-         INSYMBOL ( S ) ;
+         INSYMBOL ;
+         S := SY ;
          while not ( S in STERMSYMBOLE ) do
            begin
              CSFEHLERTEST ;
              OUTSYMBOL ( S ) ;
-             INSYMBOL ( S )
+             INSYMBOL ;
+             S := SY
            end (* while *)
        end (* then *) ;
      STRIPUTEST ;
@@ -1590,65 +2212,73 @@ procedure CTYPE ;
 
       begin (* FIELDLIST *)
         VS := VORSCHUB ;
-        while ( S <> ENDSY ) and ( S <> KLAMMZU ) do
+        while ( S <> SYEND ) and ( S <> SYRPARENT ) do
           begin
             if VS then
               NEUZEILE ( TRUE ) ;
             VS := TRUE ;
-            if S = CASESY then
+            if S = SYCASE then
               begin
                 repeat
                   OUTSYMBOL ( S ) ;
-                  INSYMBOL ( S )
-                until S = OFSY ;
+                  INSYMBOL ;
+                  S := SY
+                until S = SYOF ;
                 OUTSYMBOL ( S ) ;
                 EINR := EINR + INC ;
-                INSYMBOL ( S ) ;
+                INSYMBOL ;
+                S := SY ;
                 repeat
-                  if ( S <> ENDSY ) and ( S <> KLAMMZU ) then
+                  if ( S <> SYEND ) and ( S <> SYRPARENT ) then
                     begin
-                      if S = STRIPU then
+                      if S = SYSEMICOLON then
                         begin
                           NEUZEILE ( TRUE ) ;
                           OUTSYMBOL ( S ) ;
-                          INSYMBOL ( S )
+                          INSYMBOL ;
+                          S := SY
                         end (* then *)
                       else
                         begin
                           NEUZEILE ( TRUE ) ;
                           repeat
                             OUTSYMBOL ( S ) ;
-                            INSYMBOL ( S ) ;
-                          until S = KLAMMAUF ;
+                            INSYMBOL ;
+                            S := SY ;
+                          until S = SYLPARENT ;
                           EINRS2 := EINR ;
                           EINR := EINR + INC ;
                           NEUZEILE ( TRUE ) ;
                           OUTSYMBOL ( S ) ;
                           EINR := EINR + INC ;
-                          INSYMBOL ( S ) ;
+                          INSYMBOL ;
+                          S := SY ;
                           repeat
-                            if S <> KLAMMZU then
+                            if S <> SYRPARENT then
                               FIELDLIST ( FALSE ) ;
-                            if S <> KLAMMZU then
+                            if S <> SYRPARENT then
                               NEUZEILE ( TRUE )
-                          until S = KLAMMZU ;
+                          until S = SYRPARENT ;
                           OUTSYMBOL ( S ) ;
-                          INSYMBOL ( S ) ;
+                          INSYMBOL ;
+                          S := SY ;
                           STRIPUTEST ;
                           EINR := EINRS2
                         end (* else *)
                     end (* then *)
-                until ( S = ENDSY ) or ( S = KLAMMZU ) ;
+                until ( S = SYEND ) or ( S = SYRPARENT ) ;
                 EINR := EINR - INC
               end (* then *)
             else
               begin
                 repeat
                   OUTSYMBOL ( S ) ;
-                  INSYMBOL ( S )
-                until S = DOPU ;
+                  INSYMBOL ;
+                  S := SY
+                until S = SYCOLON ;
                 OUTSYMBOL ( S ) ;
-                INSYMBOL ( S ) ;
+                INSYMBOL ;
+                S := SY ;
                 CTYPE ;
                 STRIPUTEST
               end (* else *)
@@ -1657,53 +2287,57 @@ procedure CTYPE ;
 
 
    begin (* CTYPE *)
-     if S <> ENDSY then
+     if S <> SYEND then
        begin
          EINRSAVE := EINR ;
          EINR := OUTPOINTER ;
          ANZKLAMAUF := 0 ;
-         if S = KLAMMAUF then
+         if S = SYLPARENT then
            begin
-             TTERMSYMBOLE := TTERMSYMBOLE - [ KLAMMZU ] ;
+             TTERMSYMBOLE := TTERMSYMBOLE - [ SYRPARENT ] ;
              ANZKLAMAUF := ANZKLAMAUF + 1 ;
            end (* then *) ;
          while not ( S in TTERMSYMBOLE ) do
            begin
              OUTSYMBOL ( S ) ;
-             INSYMBOL ( S ) ;
-             if S = KLAMMAUF then
+             INSYMBOL ;
+             S := SY ;
+             if S = SYLPARENT then
                begin
-                 TTERMSYMBOLE := TTERMSYMBOLE - [ KLAMMZU ] ;
+                 TTERMSYMBOLE := TTERMSYMBOLE - [ SYRPARENT ] ;
                  ANZKLAMAUF := ANZKLAMAUF + 1 ;
                end (* then *) ;
-             if S = KLAMMZU then
+             if S = SYRPARENT then
                begin
                  ANZKLAMAUF := ANZKLAMAUF - 1 ;
                  if ANZKLAMAUF < 0 then
-                   TTERMSYMBOLE := TTERMSYMBOLE + [ KLAMMZU ] ;
+                   TTERMSYMBOLE := TTERMSYMBOLE + [ SYRPARENT ] ;
                end (* then *) ;
            end (* while *) ;
-         TTERMSYMBOLE := TTERMSYMBOLE + [ KLAMMZU ] ;
-         if S = STRIPU then
+         TTERMSYMBOLE := TTERMSYMBOLE + [ SYRPARENT ] ;
+         if S = SYSEMICOLON then
            begin
              OUTSYMBOL ( S ) ;
-             INSYMBOL ( S ) ;
+             INSYMBOL ;
+             S := SY ;
              EINR := EINRSAVE ;
            end (* then *)
          else
-           if S = RECORDSY then
+           if S = SYRECORD then
              begin
                EINR := EINRSAVE ;
                EINRSAVE := EINR ;
                EINR := OUTPOINTER ;
                OUTSYMBOL ( S ) ;
                EINR := EINR + INC ;
-               INSYMBOL ( S ) ;
+               INSYMBOL ;
+               S := SY ;
                FIELDLIST ( TRUE ) ;
                EINR := EINR - INC ;
                NEUZEILE ( TRUE ) ;
                OUTSYMBOL ( S ) ;
-               INSYMBOL ( S ) ;
+               INSYMBOL ;
+               S := SY ;
                STRIPUTEST ;
                EINR := EINRSAVE ;
              end (* then *)
@@ -1714,13 +2348,14 @@ procedure CTYPE ;
 
 
 
-procedure CSTATE ( AUFNEUEZEILE : BOOLEAN ; KENNUNG : FELD6 ) ;
+procedure CSTATE ( FSYS : SYMSET ; AUFNEUEZEILE : BOOLEAN ; KENNUNG :
+                 FELD6 ) ;
 
    var EINRSAVE : INTEGER ;
        LAUFX : INTEGER ;
 
    begin (* CSTATE *)
-     if ( S = BEGINSY ) and not COMPOUNDNZ then
+     if ( S = SYBEGIN ) and not COMPOUNDNZ then
        AUFNEUEZEILE := FALSE ;
      if AUFNEUEZEILE then
        NEUZEILE ( TRUE ) ;
@@ -1729,10 +2364,11 @@ procedure CSTATE ( AUFNEUEZEILE : BOOLEAN ; KENNUNG : FELD6 ) ;
      (* leeres statement              *)
      (*********************************)
 
-     if S = STRIPU then
+     if S = SYSEMICOLON then
        begin
          OUTSYMBOL ( S ) ;
-         INSYMBOL ( S ) ;
+         INSYMBOL ;
+         S := SY ;
          return
        end (* then *) ;
 
@@ -1740,7 +2376,7 @@ procedure CSTATE ( AUFNEUEZEILE : BOOLEAN ; KENNUNG : FELD6 ) ;
      (* prozeduraufruf                *)
      (*********************************)
 
-     if S = IDENTIFIER then
+     if S = IDENT then
        begin
          CSIMPSTATE ;
          return
@@ -1750,7 +2386,7 @@ procedure CSTATE ( AUFNEUEZEILE : BOOLEAN ; KENNUNG : FELD6 ) ;
      (* break (neu)                   *)
      (*********************************)
 
-     if S = BREAKSY then
+     if S = SYBREAK then
        begin
          CSIMPSTATE ;
          return
@@ -1760,7 +2396,7 @@ procedure CSTATE ( AUFNEUEZEILE : BOOLEAN ; KENNUNG : FELD6 ) ;
      (* continue (neu)                *)
      (*********************************)
 
-     if S = CONTINUESY then
+     if S = SYCONTINUE then
        begin
          CSIMPSTATE ;
          return
@@ -1770,7 +2406,7 @@ procedure CSTATE ( AUFNEUEZEILE : BOOLEAN ; KENNUNG : FELD6 ) ;
      (* return (neu)                  *)
      (*********************************)
 
-     if S = RETURNSY then
+     if S = SYRETURN then
        begin
          CSIMPSTATE ;
          return
@@ -1780,7 +2416,7 @@ procedure CSTATE ( AUFNEUEZEILE : BOOLEAN ; KENNUNG : FELD6 ) ;
      (* sql-Einschub                  *)
      (*********************************)
 
-     if S = SQLBEGINSY then
+     if S = SYSQLBEGIN then
        begin
          SQLSTATE ;
          return
@@ -1790,15 +2426,17 @@ procedure CSTATE ( AUFNEUEZEILE : BOOLEAN ; KENNUNG : FELD6 ) ;
      (* Statement mit label           *)
      (*********************************)
 
-     if S = ZAHL then
+     if S = INTCONST then
        begin
          repeat
            OUTSYMBOL ( S ) ;
-           INSYMBOL ( S )
-         until S = DOPU ;
+           INSYMBOL ;
+           S := SY
+         until S = SYCOLON ;
          OUTSYMBOL ( S ) ;
-         INSYMBOL ( S ) ;
-         CSTATE ( TRUE , '      ' ) ;
+         INSYMBOL ;
+         S := SY ;
+         CSTATE ( FSYS , TRUE , '      ' ) ;
          return
        end (* then *) ;
 
@@ -1806,14 +2444,15 @@ procedure CSTATE ( AUFNEUEZEILE : BOOLEAN ; KENNUNG : FELD6 ) ;
      (* andere, je nach typ           *)
      (*********************************)
 
-     if S = BEGINSY then
+     if S = SYBEGIN then
        begin
          OUTSYMBOL ( S ) ;
          if COMPOUNDNZ then
            EINR := EINR + INC ;
-         INSYMBOL ( S ) ;
+         INSYMBOL ;
+         S := SY ;
          repeat
-           CSTATE ( TRUE , '      ' )
+           CSTATE ( FSYS , TRUE , '      ' )
          until ( S in STERMSYMBOLE ) ;
          if COMPOUNDNZ then
            begin
@@ -1834,48 +2473,54 @@ procedure CSTATE ( AUFNEUEZEILE : BOOLEAN ; KENNUNG : FELD6 ) ;
                end (* then *) ;
              KOMMC . UEBERLESEN := 2
            end (* then *) ;
-         INSYMBOL ( S ) ;
+         INSYMBOL ;
+         S := SY ;
          STRIPUTEST
        end (* then *)
      else
-       if S = CASESY then
+       if S = SYCASE then
          begin
            repeat
              OUTSYMBOL ( S ) ;
-             INSYMBOL ( S )
-           until S = OFSY ;
+             INSYMBOL ;
+             S := SY
+           until S = SYOF ;
            OUTSYMBOL ( S ) ;
            EINR := EINR + INC ;
-           INSYMBOL ( S ) ;
-           while not ( S in ( STERMSYMBOLE - [ ELSESY , OTHERWISESY ] )
+           INSYMBOL ;
+           S := SY ;
+           while not ( S in ( STERMSYMBOLE - [ SYELSE , SYOTHERWISE ] )
            ) do
              begin
                NEUZEILE ( TRUE ) ;
-               if S = ELSESY then
+               if S = SYELSE then
                  begin
                    OUTSYMBOL ( S ) ;
-                   INSYMBOL ( S ) ;
+                   INSYMBOL ;
+                   S := SY ;
                    EINR := EINR + INC ;
                    NEUZEILE ( TRUE ) ;
-                   CSTATE ( FALSE , 'else/c' ) ;
+                   CSTATE ( FSYS , FALSE , 'else/c' ) ;
                    EINR := EINR - INC ;
                  end (* then *)
                else
-                 if S = OTHERWISESY then
+                 if S = SYOTHERWISE then
                    begin
                      OUTSYMBOL ( S ) ;
-                     INSYMBOL ( S ) ;
+                     INSYMBOL ;
+                     S := SY ;
                      EINR := EINR + INC ;
                      NEUZEILE ( TRUE ) ;
-                     CSTATE ( FALSE , 'otherw' ) ;
+                     CSTATE ( FSYS , FALSE , 'otherw' ) ;
                      EINR := EINR - INC ;
                    end (* then *)
                  else
                    begin
-                     while S <> DOPU do
+                     while S <> SYCOLON do
                        begin
                          OUTSYMBOL ( S ) ;
-                         INSYMBOL ( S )
+                         INSYMBOL ;
+                         S := SY
                        end (* while *) ;
                      OUTSYMBOL ( S ) ;
                      if OUTPOINTER - EINR <= 8 then
@@ -1889,8 +2534,9 @@ procedure CSTATE ( AUFNEUEZEILE : BOOLEAN ; KENNUNG : FELD6 ) ;
                          EINR := EINR + INC ;
                          NEUZEILE ( TRUE ) ;
                        end (* else *) ;
-                     INSYMBOL ( S ) ;
-                     CSTATE ( FALSE , 'tag/ca' ) ;
+                     INSYMBOL ;
+                     S := SY ;
+                     CSTATE ( FSYS , FALSE , 'tag/ca' ) ;
                      EINR := EINRSAVE ;
                    end (* else *)
              end (* while *) ;
@@ -1903,51 +2549,57 @@ procedure CSTATE ( AUFNEUEZEILE : BOOLEAN ; KENNUNG : FELD6 ) ;
                OUTPOINTER := OUTPOINTER + 11
              end (* then *) ;
            KOMMC . UEBERLESEN := 2 ;
-           INSYMBOL ( S ) ;
+           INSYMBOL ;
+           S := SY ;
            STRIPUTEST
          end (* then *)
        else
-         if ( S = FORSY ) or ( S = WHILESY ) or ( S = WITHSY ) then
+         if ( S = SYFOR ) or ( S = SYWHILE ) or ( S = SYWITH ) then
            begin
-             if S = FORSY then
+             if S = SYFOR then
                KENNUNG := 'for   ' ;
-             if S = WHILESY then
+             if S = SYWHILE then
                KENNUNG := 'while ' ;
-             if S = WITHSY then
+             if S = SYWITH then
                KENNUNG := 'with  ' ;
              repeat
                OUTSYMBOL ( S ) ;
-               INSYMBOL ( S )
-             until S = DOSY ;
+               INSYMBOL ;
+               S := SY
+             until S = SYDO ;
              OUTSYMBOL ( S ) ;
              EINR := EINR + INC ;
-             INSYMBOL ( S ) ;
-             CSTATE ( TRUE , KENNUNG ) ;
+             INSYMBOL ;
+             S := SY ;
+             CSTATE ( FSYS , TRUE , KENNUNG ) ;
              STRIPUTEST ;
              EINR := EINR - INC ;
            end (* then *)
          else
-           if S = GOTOSY then
+           if S = SYGOTO then
              CSIMPSTATE
            else
-             if S = IFSY then
+             if S = SYIF then
                begin
                  repeat
                    OUTSYMBOL ( S ) ;
-                   INSYMBOL ( S )
-                 until S = THENSY ;
+                   INSYMBOL ;
+                   S := SY
+                 until S = SYTHEN ;
                  OUTSYMBOL ( S ) ;
                  EINR := EINR + INC ;
-                 INSYMBOL ( S ) ;
-                 CSTATE ( TRUE , 'then  ' ) ;
+                 INSYMBOL ;
+                 S := SY ;
+                 CSTATE ( FSYS , TRUE , 'then  ' ) ;
                  EINR := EINR - INC ;
-                 if S = ELSESY then
+                 if S = SYELSE then
                    begin
                      NEUZEILE ( TRUE ) ;
                      OUTSYMBOL ( S ) ;
                      EINR := EINR + INC ;
-                     INSYMBOL ( S ) ;
-                     CSTATE ( TRUE , 'else  ' ) ;
+                     INSYMBOL ;
+                     S := SY ;
+                     CSTATE ( FSYS , TRUE , 'else  ' ) ;
                      STRIPUTEST ;
                      EINR := EINR - INC ;
                    end (* then *)
@@ -1955,29 +2607,28 @@ procedure CSTATE ( AUFNEUEZEILE : BOOLEAN ; KENNUNG : FELD6 ) ;
                    STRIPUTEST
                end (* then *)
              else
-               if S = REPEATSY then
+               if S = SYREPEAT then
                  begin
                    OUTSYMBOL ( S ) ;
                    EINR := EINR + INC ;
-                   INSYMBOL ( S ) ;
+                   INSYMBOL ;
+                   S := SY ;
                    repeat
-                     CSTATE ( TRUE , '      ' )
+                     CSTATE ( FSYS , TRUE , '      ' )
                    until ( S in STERMSYMBOLE ) ;
                    EINR := EINR - INC ;
                    NEUZEILE ( TRUE ) ;
                    repeat
                      OUTSYMBOL ( S ) ;
-                     INSYMBOL ( S )
+                     INSYMBOL ;
+                     S := SY
                    until ( S in STERMSYMBOLE ) ;
                    STRIPUTEST
                  end (* then *)
                else
                  begin
                    if NULLSTATE then
-                     begin
-                       WRITELN ( '+++ Syntaxfehler festgestellt.' ) ;
-                       HALTX
-                     end (* then *)
+                     ERROR ( 5 )
                    else
                      NULLSTATE := TRUE
                  end (* else *)
@@ -1985,13 +2636,14 @@ procedure CSTATE ( AUFNEUEZEILE : BOOLEAN ; KENNUNG : FELD6 ) ;
 
 
 
-procedure CBODY ( FUELLWORT : PWORT ; BLOCKLEVEL : INTEGER ) ;
+procedure CBODY ( FSYS : SYMSET ; FUELLWORT : PWORT ; BLOCKLEVEL :
+                INTEGER ) ;
 
    var I : INTEGER ;
        EINRKOMMSAVE : INTEGER ;
 
    begin (* CBODY *)
-     if S = BEGINSY then
+     if S = SYBEGIN then
        begin
          EINRKOMMSAVE := EINRKOMM ;
          NEUZEILE ( TRUE ) ;
@@ -2003,9 +2655,10 @@ procedure CBODY ( FUELLWORT : PWORT ; BLOCKLEVEL : INTEGER ) ;
          EINR := EINR + INC ;
          EINRKOMM := EINR ;
          KOMMC . UEBERLESEN := 2 ;
-         INSYMBOL ( S ) ;
+         INSYMBOL ;
+         S := SY ;
          repeat
-           CSTATE ( TRUE , '      ' )
+           CSTATE ( FSYS , TRUE , '      ' )
          until ( S in STERMSYMBOLE ) ;
          EINR := EINR - INC ;
          NEUZEILE ( TRUE ) ;
@@ -2015,29 +2668,58 @@ procedure CBODY ( FUELLWORT : PWORT ; BLOCKLEVEL : INTEGER ) ;
            WRITE ( AUSGABE , FUELLWORT . NAME [ I ] ) ;
          WRITE ( AUSGABE , ' *)' ) ;
          KOMMC . UEBERLESEN := 2 ;
-         INSYMBOL ( S ) ;
-         KOMM_ZWISCHEN_PROCS ( BLOCKLEVEL ) ;
+         INSYMBOL ;
+         S := SY ;
          EINRKOMM := EINRKOMMSAVE ;
+         KOMM_ZWISCHEN_PROCS ( BLOCKLEVEL ) ;
        end (* then *)
      else
-       begin
-         EINRKOMMSAVE := EINRKOMM ;
-         EINRKOMM := EINR ;
-         CSTATE ( TRUE , '      ' ) ;
-         EINRKOMM := EINRKOMMSAVE ;
-       end (* else *)
+       if S in [ SYEXTRN , SYFRTRN , SYFORWARD ] then
+         begin
+           EINRKOMMSAVE := EINRKOMM ;
+           NEUZEILE ( TRUE ) ;
+           EINR := EINR + INC ;
+           EINRKOMM := EINR ;
+           OUTSYMBOL ( S ) ;
+           INSYMBOL ;
+           S := SY ;
+           if S in [ IDENT , SYFRTRN , STRINGCONST ] then
+             begin
+               OUTSYMBOL ( S ) ;
+               INSYMBOL ;
+               S := SY ;
+             end (* then *) ;
+           if S = STRINGCONST then
+             begin
+               OUTSYMBOL ( S ) ;
+               INSYMBOL ;
+               S := SY ;
+             end (* then *) ;
+           if S = SYSEMICOLON then
+             begin
+               OUTSYMBOL ( S ) ;
+               INSYMBOL ;
+               S := SY ;
+             end (* then *) ;
+           EINR := EINR - INC ;
+           EINRKOMM := EINRKOMMSAVE ;
+           KOMM_ZWISCHEN_PROCS ( BLOCKLEVEL ) ;
+         end (* then *)
+       else
+         ERROR ( 4 )
    end (* CBODY *) ;
 
 
 
-procedure CBLOCK ( FUELLWORT : PWORT ; BLOCKLEVEL : INTEGER ) ;
+procedure CBLOCK ( FSYS : SYMSET ; FUELLWORT : PWORT ; BLOCKLEVEL :
+                 INTEGER ) ;
 
    var EINRSAVE : INTEGER ;
        EINRKOMMSAVE : INTEGER ;
        KLAMMZ : INTEGER ;
        I : INTEGER ;
        PROCWORT : PWORT ;
-       SALT : SYMBOL ;
+       SALT : SYMB ;
        INCR : INTEGER ;
        PROC_VORH : BOOLEAN ;
 
@@ -2046,7 +2728,7 @@ procedure CBLOCK ( FUELLWORT : PWORT ; BLOCKLEVEL : INTEGER ) ;
      EINRKOMM := EINR ;
      while TRUE do
        begin
-         if S = LABELSY then
+         if S = SYLABEL then
            begin
              NEUZEILE ( FALSE ) ;
              if BLOCKLEVEL = 1 then
@@ -2057,18 +2739,21 @@ procedure CBLOCK ( FUELLWORT : PWORT ; BLOCKLEVEL : INTEGER ) ;
              EINR := OUTPOINTER ;
              EINRKOMMSAVE := EINRKOMM ;
              EINRKOMM := OUTPOINTER ;
-             INSYMBOL ( S ) ;
-             while S <> STRIPU do
+             INSYMBOL ;
+             S := SY ;
+             while S <> SYSEMICOLON do
                begin
                  OUTSYMBOL ( S ) ;
-                 INSYMBOL ( S )
+                 INSYMBOL ;
+                 S := SY
                end (* while *) ;
              OUTSYMBOL ( S ) ;
-             INSYMBOL ( S ) ;
+             INSYMBOL ;
+             S := SY ;
              EINR := EINRSAVE ;
              continue ;
            end (* then *) ;
-         if S = CONSTSY then
+         if S = SYCONST then
            begin
              NEUZEILE ( FALSE ) ;
              if BLOCKLEVEL = 1 then
@@ -2076,9 +2761,10 @@ procedure CBLOCK ( FUELLWORT : PWORT ; BLOCKLEVEL : INTEGER ) ;
              NEUZEILE ( TRUE ) ;
              OUTSYMBOL ( S ) ;
              EINRKOMM := OUTPOINTER ;
-             INSYMBOL ( S ) ;
+             INSYMBOL ;
+             S := SY ;
              EINR := EINR + 6 ;
-             while S = IDENTIFIER do
+             while S = IDENT do
                begin
                  INCR := 0 ;
                  repeat
@@ -2090,25 +2776,27 @@ procedure CBLOCK ( FUELLWORT : PWORT ; BLOCKLEVEL : INTEGER ) ;
      (************************************************)
 
                    SALT := S ;
-                   INSYMBOL ( S ) ;
-                   if ( SALT = GLEICH ) and ( ( S = KLAMMAUF ) or ( S =
-                   ECKKLAMMAUF ) ) then
+                   INSYMBOL ;
+                   S := SY ;
+                   if ( SALT = SYEQOP ) and ( ( S = SYLPARENT ) or ( S
+                   = SYLBRACK ) ) then
                      begin
                        NEUZEILE ( TRUE ) ;
                        INCR := INCR + 2 ;
                        EINR := EINR + 2 ;
                      end (* then *) ;
-                 until S = STRIPU ;
+                 until S = SYSEMICOLON ;
                  OUTSYMBOL ( S ) ;
                  EINR := EINR - INCR ;
-                 INSYMBOL ( S ) ;
-                 if S = IDENTIFIER then
+                 INSYMBOL ;
+                 S := SY ;
+                 if S = IDENT then
                    NEUZEILE ( TRUE )
                end (* while *) ;
              EINR := EINR - 6 ;
              continue ;
            end (* then *) ;
-         if S = TYPESY then
+         if S = SYTYPE then
            begin
              NEUZEILE ( FALSE ) ;
              if BLOCKLEVEL = 1 then
@@ -2116,24 +2804,27 @@ procedure CBLOCK ( FUELLWORT : PWORT ; BLOCKLEVEL : INTEGER ) ;
              NEUZEILE ( TRUE ) ;
              OUTSYMBOL ( S ) ;
              EINRKOMM := OUTPOINTER ;
-             INSYMBOL ( S ) ;
+             INSYMBOL ;
+             S := SY ;
              EINR := EINR + 5 ;
-             while S = IDENTIFIER do
+             while S = IDENT do
                begin
                  repeat
                    OUTSYMBOL ( S ) ;
-                   INSYMBOL ( S )
-                 until S = GLEICH ;
+                   INSYMBOL ;
+                   S := SY
+                 until S = SYEQOP ;
                  OUTSYMBOL ( S ) ;
-                 INSYMBOL ( S ) ;
+                 INSYMBOL ;
+                 S := SY ;
                  CTYPE ;
-                 if S = IDENTIFIER then
+                 if S = IDENT then
                    NEUZEILE ( TRUE )
                end (* while *) ;
              EINR := EINR - 5 ;
              continue ;
            end (* then *) ;
-         if S = SQLVARSY then
+         if S = SYSQLVAR then
            begin
              NEUZEILE ( FALSE ) ;
              if BLOCKLEVEL = 1 then
@@ -2141,24 +2832,27 @@ procedure CBLOCK ( FUELLWORT : PWORT ; BLOCKLEVEL : INTEGER ) ;
              NEUZEILE ( TRUE ) ;
              OUTSYMBOL ( S ) ;
              EINRKOMM := OUTPOINTER ;
-             INSYMBOL ( S ) ;
+             INSYMBOL ;
+             S := SY ;
              EINR := EINR + 7 ;
-             while S = IDENTIFIER do
+             while S = IDENT do
                begin
                  repeat
                    OUTSYMBOL ( S ) ;
-                   INSYMBOL ( S )
-                 until S = DOPU ;
+                   INSYMBOL ;
+                   S := SY
+                 until S = SYCOLON ;
                  OUTSYMBOL ( S ) ;
-                 INSYMBOL ( S ) ;
+                 INSYMBOL ;
+                 S := SY ;
                  CTYPE ;
-                 if S = IDENTIFIER then
+                 if S = IDENT then
                    NEUZEILE ( TRUE )
                end (* while *) ;
              EINR := EINR - 7 ;
              continue ;
            end (* then *) ;
-         if S = VARSY then
+         if S = SYVAR then
            begin
              NEUZEILE ( FALSE ) ;
              if BLOCKLEVEL = 1 then
@@ -2166,24 +2860,27 @@ procedure CBLOCK ( FUELLWORT : PWORT ; BLOCKLEVEL : INTEGER ) ;
              NEUZEILE ( TRUE ) ;
              OUTSYMBOL ( S ) ;
              EINRKOMM := OUTPOINTER ;
-             INSYMBOL ( S ) ;
+             INSYMBOL ;
+             S := SY ;
              EINR := EINR + 4 ;
-             while S = IDENTIFIER do
+             while S = IDENT do
                begin
                  repeat
                    OUTSYMBOL ( S ) ;
-                   INSYMBOL ( S )
-                 until S = DOPU ;
+                   INSYMBOL ;
+                   S := SY
+                 until S = SYCOLON ;
                  OUTSYMBOL ( S ) ;
-                 INSYMBOL ( S ) ;
+                 INSYMBOL ;
+                 S := SY ;
                  CTYPE ;
-                 if S = IDENTIFIER then
+                 if S = IDENT then
                    NEUZEILE ( TRUE )
                end (* while *) ;
              EINR := EINR - 4 ;
              continue ;
            end (* then *) ;
-         if S = STATICSY then
+         if S = SYSTATIC then
            begin
              NEUZEILE ( FALSE ) ;
              if BLOCKLEVEL = 1 then
@@ -2191,18 +2888,21 @@ procedure CBLOCK ( FUELLWORT : PWORT ; BLOCKLEVEL : INTEGER ) ;
              NEUZEILE ( TRUE ) ;
              OUTSYMBOL ( S ) ;
              EINRKOMM := OUTPOINTER ;
-             INSYMBOL ( S ) ;
+             INSYMBOL ;
+             S := SY ;
              EINR := EINR + 7 ;
-             while S = IDENTIFIER do
+             while S = IDENT do
                begin
                  repeat
                    OUTSYMBOL ( S ) ;
-                   INSYMBOL ( S )
-                 until S = DOPU ;
+                   INSYMBOL ;
+                   S := SY
+                 until S = SYCOLON ;
                  OUTSYMBOL ( S ) ;
-                 INSYMBOL ( S ) ;
+                 INSYMBOL ;
+                 S := SY ;
                  CTYPE ;
-                 if S = IDENTIFIER then
+                 if S = IDENT then
                    NEUZEILE ( TRUE )
                end (* while *) ;
              EINR := EINR - 7 ;
@@ -2211,8 +2911,8 @@ procedure CBLOCK ( FUELLWORT : PWORT ; BLOCKLEVEL : INTEGER ) ;
          break ;
        end (* while *) ;
      PROC_VORH := FALSE ;
-     while ( S = PROCEDURESY ) or ( S = FUNCTIONSY ) or ( S = OVERLAYSY
-     ) or ( S = LOCALSY ) do
+     while ( S = SYPROC ) or ( S = SYFUNC ) or ( S = SYOVERLAY ) or ( S
+     = SYLOCAL ) do
        begin
          if not PROC_VORH then
            if BLOCKLEVEL = 1 then
@@ -2224,13 +2924,15 @@ procedure CBLOCK ( FUELLWORT : PWORT ; BLOCKLEVEL : INTEGER ) ;
          KLAMMZ := 0 ;
          EINRSAVE := EINR ;
          EINRKOMM := EINR ;
-         while ( S = OVERLAYSY ) or ( S = LOCALSY ) do
+         while ( S = SYOVERLAY ) or ( S = SYLOCAL ) do
            begin
              OUTSYMBOL ( S ) ;
-             INSYMBOL ( S ) ;
+             INSYMBOL ;
+             S := SY ;
            end (* while *) ;
          OUTSYMBOL ( S ) ;
-         INSYMBOL ( S ) ;
+         INSYMBOL ;
+         S := SY ;
          PROCWORT . NAME := '' ;
          for I := 1 to W1ENDE do
            if I <= MAXIDSIZE then
@@ -2241,8 +2943,9 @@ procedure CBLOCK ( FUELLWORT : PWORT ; BLOCKLEVEL : INTEGER ) ;
            PROCWORT . LAENGE := W1ENDE ;
          repeat
            OUTSYMBOL ( S ) ;
-           INSYMBOL ( S ) ;
-           if S = KLAMMAUF then
+           INSYMBOL ;
+           S := SY ;
+           if S = SYLPARENT then
              begin
                KLAMMZ := KLAMMZ + 1 ;
                if KLAMMZ = 1 then
@@ -2250,14 +2953,15 @@ procedure CBLOCK ( FUELLWORT : PWORT ; BLOCKLEVEL : INTEGER ) ;
                    EINR := OUTPOINTER
                  end (* then *)
              end (* then *) ;
-           if S = KLAMMZU then
+           if S = SYRPARENT then
              KLAMMZ := KLAMMZ - 1
-         until ( S = STRIPU ) and ( KLAMMZ = 0 ) ;
+         until ( S = SYSEMICOLON ) and ( KLAMMZ = 0 ) ;
          OUTSYMBOL ( S ) ;
-         INSYMBOL ( S ) ;
+         INSYMBOL ;
+         S := SY ;
          EINR := EINRSAVE ;
          EINR := EINR + 3 ;
-         CBLOCK ( PROCWORT , BLOCKLEVEL + 1 ) ;
+         CBLOCK ( FSYS , PROCWORT , BLOCKLEVEL + 1 ) ;
          EINR := EINR - 3 ;
          if BLOCKLEVEL = 1 then
            NEUZEILE ( FALSE ) ;
@@ -2265,7 +2969,7 @@ procedure CBLOCK ( FUELLWORT : PWORT ; BLOCKLEVEL : INTEGER ) ;
      NEUZEILE ( FALSE ) ;
      if ( BLOCKLEVEL = 1 ) or PROC_VORH then
        NEUZEILE ( FALSE ) ;
-     CBODY ( FUELLWORT , BLOCKLEVEL ) ;
+     CBODY ( FSYS , FUELLWORT , BLOCKLEVEL ) ;
      EINRKOMM := EINRKOMMSAVE
    end (* CBLOCK *) ;
 
@@ -2273,20 +2977,21 @@ procedure CBLOCK ( FUELLWORT : PWORT ; BLOCKLEVEL : INTEGER ) ;
 
 procedure PROG ;
 
-   var S : SYMBOL ;
+   var S : SYMB ;
 
    begin (* PROG *)
      repeat
-       INSYMBOL ( S ) ;
+       INSYMBOL ;
+       S := SY ;
        OUTSYMBOL ( S ) ;
-       if S = ENDSY then
+       if S = SYEND then
          KOMMC . UEBERLESEN := 2
      until EOFILE
    end (* PROG *) ;
 
 
 
-procedure CHANGE ;
+procedure CHANGE ( FSYS : SYMSET ) ;
 
    var EINRSAVE : INTEGER ;
        I : INTEGER ;
@@ -2296,16 +3001,18 @@ procedure CHANGE ;
      MAINWORT . NAME := 'HAUPTPROGRAMM  ' ;
      MAINWORT . LAENGE := 13 ;
      EINRSAVE := EINR ;
-     INSYMBOL ( S ) ;
+     INSYMBOL ;
+     S := SY ;
      OUTSYMBOL ( S ) ;
-     if ( S = PROGRAMSY ) or ( S = MODULESY ) then
+     if ( S = SYPROG ) or ( S = SYMODULE ) then
        begin
          MAINWORT . NAME := 'HAUPTPROGRAMM  ' ;
          MAINWORT . LAENGE := 13
        end (* then *)
      else
        begin
-         INSYMBOL ( S ) ;
+         INSYMBOL ;
+         S := SY ;
          MAINWORT . NAME := '' ;
          for I := 1 to W1ENDE do
            if I <= MAXIDSIZE then
@@ -2316,77 +3023,47 @@ procedure CHANGE ;
            MAINWORT . LAENGE := W1ENDE ;
          OUTSYMBOL ( S )
        end (* else *) ;
-     INSYMBOL ( S ) ;
+     INSYMBOL ;
+     S := SY ;
      repeat
        OUTSYMBOL ( S ) ;
-       if S = KLAMMAUF then
+       if S = SYLPARENT then
          begin
            EINR := OUTPOINTER ;
            repeat
-             INSYMBOL ( S ) ;
+             INSYMBOL ;
+             S := SY ;
              OUTSYMBOL ( S )
-           until S = KLAMMZU ;
+           until S = SYRPARENT ;
          end (* then *) ;
-       INSYMBOL ( S )
-     until S = STRIPU ;
+       INSYMBOL ;
+       S := SY
+     until S = SYSEMICOLON ;
      OUTSYMBOL ( S ) ;
-     INSYMBOL ( S ) ;
+     INSYMBOL ;
+     S := SY ;
      EINR := EINRSAVE ;
-     CBLOCK ( MAINWORT , 1 ) ;
+     CBLOCK ( FSYS , MAINWORT , 1 ) ;
      OUTSYMBOL ( S ) ;
-     INSYMBOL ( S ) ;
-     if S <> EOFSY then
-       WRITELN ( '+++ Warnung: Es wurde nicht die' ,
-                 ' ganze Datei verarbeitet.' )
+     if TRUE then
+       begin
+         INSYMBOL ;
+         S := SY ;
+         if S <> SYMB_EOF then
+           WRITELN ( '+++ Warnung: Es wurde nicht die' ,
+                     ' ganze Datei verarbeitet.' )
+       end (* then *)
    end (* CHANGE *) ;
 
 
 
 procedure VORBESETZEN ;
 
+   const ORDCHMAX = 255 ;
+
+   var CH : CHAR ;
+
    begin (* VORBESETZEN *)
-     WTAB [ ANDSY ] := 'AND       ' ;
-     WTAB [ ARRAYSY ] := 'ARRAY     ' ;
-     WTAB [ BEGINSY ] := 'BEGIN     ' ;
-     WTAB [ BREAKSY ] := 'BREAK     ' ;
-     WTAB [ CASESY ] := 'CASE      ' ;
-     WTAB [ CONSTSY ] := 'CONST     ' ;
-     WTAB [ CONTINUESY ] := 'CONTINUE  ' ;
-     WTAB [ DOSY ] := 'DO        ' ;
-     WTAB [ ELSESY ] := 'ELSE      ' ;
-     WTAB [ ENDSY ] := 'END       ' ;
-     WTAB [ FORSY ] := 'FOR       ' ;
-     WTAB [ FUNCTIONSY ] := 'FUNCTION  ' ;
-     WTAB [ GOTOSY ] := 'GOTO      ' ;
-     WTAB [ IFSY ] := 'IF        ' ;
-     WTAB [ INSY ] := 'IN        ' ;
-     WTAB [ LABELSY ] := 'LABEL     ' ;
-     WTAB [ LOCALSY ] := 'LOCAL     ' ;
-     WTAB [ MODULESY ] := 'MODULE    ' ;
-     WTAB [ NOTSY ] := 'NOT       ' ;
-     WTAB [ OFSY ] := 'OF        ' ;
-     WTAB [ ORSY ] := 'OR        ' ;
-     WTAB [ OTHERWISESY ] := 'OTHERWISE ' ;
-     WTAB [ OVERLAYSY ] := 'OVERLAY   ' ;
-     WTAB [ PACKEDSY ] := 'PACKED    ' ;
-     WTAB [ PROCEDURESY ] := 'PROCEDURE ' ;
-     WTAB [ PROGRAMSY ] := 'PROGRAM   ' ;
-     WTAB [ RECORDSY ] := 'RECORD    ' ;
-     WTAB [ REPEATSY ] := 'REPEAT    ' ;
-     WTAB [ RETURNSY ] := 'RETURN    ' ;
-     WTAB [ SETSY ] := 'SET       ' ;
-     WTAB [ SQLBEGINSY ] := 'SQLBEGIN  ' ;
-     WTAB [ SQLENDSY ] := 'SQLEND    ' ;
-     WTAB [ SQLVARSY ] := 'SQLVAR    ' ;
-     WTAB [ STATICSY ] := 'STATIC    ' ;
-     WTAB [ THENSY ] := 'THEN      ' ;
-     WTAB [ TOSY ] := 'TO        ' ;
-     WTAB [ TYPESY ] := 'TYPE      ' ;
-     WTAB [ UNTILSY ] := 'UNTIL     ' ;
-     WTAB [ VARSY ] := 'VAR       ' ;
-     WTAB [ WHILESY ] := 'WHILE     ' ;
-     WTAB [ WITHSY ] := 'WITH      ' ;
-     WTAB [ XORSY ] := 'XOR       ' ;
      WTABSQL [ 1 ] := 'CONNECT   ' ;
      WTABSQL [ 2 ] := 'DECLARE   ' ;
      WTABSQL [ 3 ] := 'DELETE    ' ;
@@ -2403,13 +3080,132 @@ procedure VORBESETZEN ;
      WTABSQL [ 14 ] := 'VALUES    ' ;
      WTABSQL [ 15 ] := 'WHERE     ' ;
      ANZSQLWORTE := 15 ;
+
+     (***************************************)
+     (*   useful initializations            *)
+     (***************************************)
+
+     for CH := CHR ( 0 ) to CHR ( ORDCHMAX ) do
+       UPSHIFT [ CH ] := CH ;
+
+     (***************************************)
+     (*   an old comment told about some    *)
+     (*   troubles with upshift, because    *)
+     (*   some meaningful chars (to pascal) *)
+     (*   are in the letter range 'a' to    *)
+     (*   'z', but are no letters ...       *)
+     (*   see the EBCDIC letter gaps.       *)
+     (*   I avoided those problems by       *)
+     (*   the three loops below             *)
+     (*   - bernd oppolzer (2016)           *)
+     (***************************************)
+
+     for CH := 'a' to 'i' do
+       begin
+         UPSHIFT [ CH ] := CHR ( ORD ( CH ) - ORD ( 'a' ) + ORD ( 'A' )
+                           ) ;
+       end (* for *) ;
+     for CH := 'j' to 'r' do
+       begin
+         UPSHIFT [ CH ] := CHR ( ORD ( CH ) - ORD ( 'a' ) + ORD ( 'A' )
+                           ) ;
+       end (* for *) ;
+     for CH := 's' to 'z' do
+       begin
+         UPSHIFT [ CH ] := CHR ( ORD ( CH ) - ORD ( 'a' ) + ORD ( 'A' )
+                           ) ;
+       end (* for *) ;
+
+     (***************************************)
+     (*   useful initializations            *)
+     (***************************************)
+
+     MXINT2 := MAXINT DIV 2 ;
+     MXINT10 := MAXINT DIV 10 ;
+     MXINT16 := MAXINT DIV 16 ;
+     NULLSTATE := FALSE ;
    end (* VORBESETZEN *) ;
 
 
 
+procedure INIT_SCANNER ;
+
+   var CTEMP : array [ 1 .. 16 ] of CHAR ;
+
+   begin (* INIT_SCANNER *)
+
+     (****************************************)
+     (* default values for compiler options  *)
+     (* and: init control blocks for scanner *)
+     (****************************************)
+
+     MEMSET ( ADDR ( SCB ) , CHR ( 0 ) , SIZEOF ( SCB ) ) ;
+     MEMSET ( ADDR ( OPT ) , CHR ( 0 ) , SIZEOF ( OPT ) ) ;
+     OPT . LMARGIN := 0 ;
+     OPT . RMARGIN := 80 ;
+     OPT . PAGESIZE := 72 ;
+     OPT . LIST := TRUE ;
+     OPT . PRCODE := TRUE ;
+     OPT . GET_STAT := TRUE ;
+     OPT . SAVEREGS := TRUE ;
+     OPT . SAVEFPRS := TRUE ;
+     OPT . DEBUG := TRUE ;
+     OPT . MWARN := FALSE ;
+     OPT . DEBUG_LEV := 2 ;
+     OPT . NOPACKING := FALSE ;
+     OPT . NESTCOMM := FALSE ;
+     OPT . WARNING := TRUE ;
+     OPT . ASSEMBLE := FALSE ;
+     OPT . ASMVERB := FALSE ;
+     OPT . CTROPTION := FALSE ;
+     SCB . MAXLSYMBOL := MAXLSIZE ;
+     SCB . MODUS := 1 ;
+     SCB . SYMBOLNR := SYMB_UNKNOWN ;
+     SCB . SLINE := ' ' ;
+     SCB . LINENR := 0 ;
+     SCB . LINEPOS := 1 ;
+     SCB . LINELEN := 0 ;
+     SCB . FEANFANG := NIL ;
+     SCB . FTTAB := NIL ;
+     SCB . FTTABA := NIL ;
+     SCB . POPT := ADDR ( OPT ) ;
+     SCB . FEAKT := NIL ;
+     SCB . FEAKT_ALT := NIL ;
+
+     (********************************************)
+     (* listing is printed by scanner, too       *)
+     (* so all needed information has to be      *)
+     (* provided in the scanner control block    *)
+     (********************************************)
+     (* and terminal output in case of error     *)
+     (********************************************)
+
+     SCB . PROTOUT := TRUE ;
+     SCB . TERMOUT := TRUE ;
+     SCB . LINEINFO := ' ' ;
+     SCB . LINEINFO_SIZE := 0 ;
+     SCB . HEADLINE := '1LINE #   Pascal Source '
+                       'Formatting Program - Version of MM.YYYY'
+                       '    hh:mm:ss  DD/MM/YYYY' ;
+     CTEMP := VERSION ;
+     MEMCPY ( ADDR ( SCB . HEADLINE [ 57 ] ) , ADDR ( CTEMP ) , 7 ) ;
+     MEMCPY ( ADDR ( SCB . HEADLINE [ 68 ] ) , ADDR ( TIME ) , 8 ) ;
+     MEMCPY ( ADDR ( SCB . HEADLINE [ 78 ] ) , ADDR ( DATE ) , 10 ) ;
+     SCB . HEADLINE_SIZE := 100 ;
+
+     (****************************************)
+     (* linecount high to force heading      *)
+     (* on first insymbol call               *)
+     (****************************************)
+
+     SCB . LINECOUNT := 100 ;
+   end (* INIT_SCANNER *) ;
+
+
+
 begin (* HAUPTPROGRAMM *)
-  REWRITE ( TRACE ) ;
-  MODUS := 4 ;
+  REWRITE ( TRACEF ) ;
+  VERARB_MODUS := 4 ;
   KOMMC . KOMML := 0 ;
   KOMMC . ENDOFKOMM := FALSE ;
   KOMMC . ANZKOMM := 0 ;
@@ -2418,6 +3214,12 @@ begin (* HAUPTPROGRAMM *)
   KOMMC . NURSTERNE := FALSE ;
   KOMMC . KOMMSTATUS := 0 ;
   KOMMC . KOMM_VOR_PROC := FALSE ;
+  KOMMC . LINENR := - 1 ;
+  KOMMC . LINEPOS := - 1 ;
+  KOMMC . LINENR_LAST := - 1 ;
+  KOMMC . LINEPOS_LAST := - 1 ;
+  KOMMC . KOMML_MAX := - 1 ;
+  KOMMC . NEUZEILE_VORM := FALSE ;
 
   (***********************************************)
   (*   HIER UNTERSCHIED PASCAL/VS ZU TURBO/3     *)
@@ -2426,68 +3228,55 @@ begin (* HAUPTPROGRAMM *)
   (***********************************************)
 
   COMPOUNDNZ := TRUE ;
-  if MODUS > 4 then
+  if VERARB_MODUS > 4 then
     begin
       COMPOUNDNZ := FALSE ;
-      MODUS := MODUS - 2
+      VERARB_MODUS := VERARB_MODUS - 2
     end (* then *) ;
-  DICHT := ( MODUS = 1 ) or ( MODUS = 3 ) ;
+  DICHT := ( VERARB_MODUS = 1 ) or ( VERARB_MODUS = 3 ) ;
   VORBESETZEN ;
-  STERMSYMBOLE := [ EOFSY , STRIPU , ELSESY , ENDSY , OTHERWISESY ,
-                  UNTILSY ] ;
-  TTERMSYMBOLE := [ EOFSY , STRIPU , ENDSY , RECORDSY , KLAMMZU ] ;
-  BLANKSYMBOLE := [ IDENTIFIER , ZAHL , ANDSY , ARRAYSY , BEGINSY ,
-                  BREAKSY , CASESY , CONSTSY , CONTINUESY , DOSY ,
-                  ELSESY , ENDSY , FORSY , FUNCTIONSY , GOTOSY , IFSY ,
-                  INSY , LABELSY , LOCALSY , MODULESY , NOTSY , OFSY ,
-                  ORSY , OTHERWISESY , OVERLAYSY , PACKEDSY ,
-                  PROCEDURESY , PROGRAMSY , RECORDSY , REPEATSY ,
-                  RETURNSY , SETSY , SQLBEGINSY , SQLENDSY , SQLVARSY ,
-                  STATICSY , THENSY , TOSY , TYPESY , UNTILSY , VARSY ,
-                  WHILESY , WITHSY , XORSY ] ;
-  WORTSYMBOLE := [ ANDSY , ARRAYSY , BEGINSY , BREAKSY , CASESY ,
-                 CONSTSY , CONTINUESY , DOSY , ELSESY , ENDSY , FORSY ,
-                 FUNCTIONSY , GOTOSY , IFSY , INSY , LABELSY , LOCALSY
-                 , MODULESY , NOTSY , OFSY , ORSY , OTHERWISESY ,
-                 OVERLAYSY , PACKEDSY , PROCEDURESY , PROGRAMSY ,
-                 RECORDSY , REPEATSY , RETURNSY , SETSY , SQLBEGINSY ,
-                 SQLENDSY , SQLVARSY , STATICSY , THENSY , TOSY ,
-                 TYPESY , UNTILSY , VARSY , WHILESY , WITHSY , XORSY ]
-                 ;
-  EXPRSYMBOLE := [ ANDSY , INSY , NOTSY , ORSY , XORSY ] ;
-  SONDERZEICHEN := [ '@' , '^' , '*' , ')' , '-' , '+' , '=' , ':' ,
-                   ';' , ',' , '.' , '/' , '>' , '<' , '!' , '%' , '['
-                   , ']' , VERKETT2 ] ;
-  ISTARTSET := [ 'A' .. 'I' , 'J' .. 'R' , 'S' .. 'Z' , '$' ] ;
-  IWEITERSET := [ 'A' .. 'I' , 'J' .. 'R' , 'S' .. 'Z' , '0' .. '9' ,
-                '_' ] ;
-  ZIFFERN := [ '0' .. '9' ] ;
-  HEXZIFFERN := [ '0' .. '9' , 'A' .. 'F' ] ;
+  STERMSYMBOLE := [ SYMB_EOF , SYSEMICOLON , SYELSE , SYEND ,
+                  SYOTHERWISE , SYUNTIL ] ;
+  TTERMSYMBOLE := [ SYMB_EOF , SYSEMICOLON , SYEND , SYRECORD ,
+                  SYRPARENT ] ;
+  BLANKSYMBOLE := [ IDENT , INTCONST , SYAND , SYARRAY , SYBEGIN ,
+                  SYBREAK , SYCASE , SYCONST , SYCONTINUE , SYDO ,
+                  SYELSE , SYEND , SYFOR , SYFUNC , SYGOTO , SYIF ,
+                  SYIN , SYLABEL , SYLOCAL , SYMODULE , SYNOT , SYOF ,
+                  SYOR , SYOTHERWISE , SYOVERLAY , SYPACKED , SYPROC ,
+                  SYPROG , SYRECORD , SYREPEAT , SYRETURN , SYSET ,
+                  SYSQLBEGIN , SYSQLEND , SYSQLVAR , SYSTATIC , SYTHEN
+                  , SYTO , SYTYPE , SYUNTIL , SYVAR , SYWHILE , SYWITH
+                  , SYXOR ] ;
+  WORTSYMBOLE := [ SYAND , SYARRAY , SYBEGIN , SYBREAK , SYCASE ,
+                 SYCONST , SYCONTINUE , SYDO , SYELSE , SYEND , SYFOR ,
+                 SYFUNC , SYGOTO , SYIF , SYIN , SYLABEL , SYLOCAL ,
+                 SYMODULE , SYNOT , SYOF , SYOR , SYOTHERWISE ,
+                 SYOVERLAY , SYPACKED , SYPROC , SYPROG , SYRECORD ,
+                 SYREPEAT , SYRETURN , SYSET , SYSQLBEGIN , SYSQLEND ,
+                 SYSQLVAR , SYSTATIC , SYTHEN , SYTO , SYTYPE , SYUNTIL
+                 , SYVAR , SYWHILE , SYWITH , SYXOR ] ;
+  EXPRSYMBOLE := [ SYAND , SYIN , SYNOT , SYOR , SYXOR ] ;
+  INIT_SCANNER ;
   NICHTLESEN := 0 ;
   EINR := 0 ;
   EINRKOMM := 0 ;
   INC := 2 ;
-  NOMAJOR := FALSE ;
   BLANKSVORHANDEN := FALSE ;
   KOMMC . UEBERLESEN := 0 ;
   ENDEKASTEN := ' ' ;
-  ENDEKOMMEIN := 0 ;
-  KOMMLAENGE := 0 ;
   INSQLSTATE := FALSE ;
   SQLHOSTV := FALSE ;
   ZZAUS := 0 ;
   ZZAUSVOR := - 1 ;
   RESET ( EINGABE ) ;
   REWRITE ( AUSGABE ) ;
-  W1INDEX := 0 ;
   INPOINTER := 0 ;
-  if EINR <> 0 then
-    WRITE ( AUSGABE , ' ' : EINR ) ;
   OUTPOINTER := EINR ;
-  if MODUS < 3 then
+  if VERARB_MODUS < 3 then
     PROG
   else
-    CHANGE ;
+    CHANGE ( BLOCKBEGSYS + STATBEGSYS - [ SYCASE ] ) ;
   WRITELN ( AUSGABE ) ;
 
   (***********************************************)

@@ -446,9 +446,7 @@ procedure INTTOSTR ( CP : VOIDPTR ; LEN : INTEGER ; VAL : INTEGER ;
          I := I - 1 ;
          VAL := VAL DIV 10 ;
        end (* while *) ;
-     LIMIT := 20 - LEN + 1 ;
-     if MINUS then
-       LIMIT := LIMIT + 1 ;
+     LIMIT := 20 - LEN ;
      if ZEROES then
        while I > LIMIT do
          begin
@@ -457,6 +455,8 @@ procedure INTTOSTR ( CP : VOIDPTR ; LEN : INTEGER ; VAL : INTEGER ;
          end (* while *) ;
      if MINUS then
        begin
+         if ZEROES then
+           I := I + 1 ;
          BUFFER [ I ] := '-' ;
          I := I - 1 ;
        end (* then *) ;

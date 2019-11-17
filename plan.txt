@@ -15,17 +15,22 @@
 * DISPOSE implementieren (mit Warnung, macht nix) in PASCAL1 als neue CSP
 * Fehler bei INDEX Funktion (korrigiert)
 * CSP RDD war in PCINT nicht implementiert (READ fuer Binaerfiles)
+* PCINT verliert LOC-Information bei CUP-Aufruf, meldet falsche Fehlerzeile
+* siehe ebenfalls TESTERR3
+* Im Fehlerfall (runtime_error) Funktionsname mit ausgeben (bei PCINT)
+- Im Fehlerfall (runtime_error) Call-Stack mit ausgeben (bei PCINT)
+- Compile-Fehler in TESTERR3
 - Fehler bei Structconst ist auch in PASCAL1N, d.h.:
   PASCAL1N angleichen an PASCAL1, ausser WITH-Erweiterung
 - Einlesen STRING-Datentyp mit READLN
 - Funktionen LEFT und RIGHT bei Strings
 - Ausgabe Strings linksbuendig?
 - Fehler bei CONST-Parameter mit Struktur
-- Pointer-Konstruktor ist nicht ueberall in Funktionskopf zulaessig
-  (z.B. nicht bei var-Parameter, bei value schon)
 - Problem auf Mainframe, wenn PCODE_CHK fuer Pointer aktiv ist (NIL-Pointer-Check)
   CHK N muss wohl neu implementiert werden
 - Auslieferung Compiler auf alle Plattformen - Version 2019.09
+- Pointer-Konstruktor ist nicht ueberall in Funktionskopf zulaessig
+  (z.B. nicht bei var-Parameter, bei value schon)
 
 - P5 testen, Compile klappt ja schon
 - Weiter mit PINT.PAS (von P5)

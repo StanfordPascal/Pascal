@@ -735,31 +735,64 @@ static double roundx (double wert, short bereich)
 
 
 
-static void runtime_error (void *vgs, int errn, char *info)
+static void print_runtime_error (FILE *outfile,
+                                 void *vgs,
+                                 int errn,
+                                 char *info)
 
 {
    global_store *gs = vgs;
+   int ip;
+   sc_code *pcode;
+   sc_code *pcode_ent;
+   char *opcode;
+   ent_section *pent;
 
-   fprintf (stderr, "\n\n");
-   fprintf (stderr, "+++ runtime error %s\n",
+   fprintf (outfile, "\n\n");
+   fprintf (outfile, "+++ runtime error %s\n",
             runtime_errmsg [errn - 1]);
-   fprintf (stderr, "    at line %d\n", gs -> lineofcode);
    if (info != NULL)
    {
-      fprintf (stderr, "    error info = %s\n", info);
+      fprintf (outfile, "    error info = %s\n", info);
    }
-   fprintf (stderr, "\n\n");
 
-   fprintf (stdout, "\n\n");
-   fprintf (stdout, "+++ runtime error %s\n",
-            runtime_errmsg [errn - 1]);
-   fprintf (stdout, "    at line %d\n", gs -> lineofcode);
-   if (info != NULL)
+   fprintf (outfile, "--------------------------------------------\n");
+   fprintf (outfile, "information about the location of the error:\n");
+   pcode = gs -> code0 + gs -> ip;
+   fprintf (outfile, "instruction pointer = %d\n", ip);
+   opcode = gs -> ot [pcode -> op] . opcode;
+   fprintf (outfile, "operation           = %s %c %c %d %d\n",
+            opcode,
+            pcode -> t,
+            pcode -> t2,
+            pcode -> p,
+            pcode -> q);
+   fprintf (outfile, "line of code ...... = %d\n",
+            pcode -> loc);
+   pcode_ent = pcode = gs -> code0 + gs -> entry_act;
+   pent = pcode_ent -> psect;
+   if (pent != NULL)
    {
-      fprintf (stdout, "    error info = %s\n", info);
+      fprintf (outfile, "section ........... = %s / %s\n",
+               pent -> name_long,
+               pent -> name_short);
+      fprintf (outfile, "level ............. = %d\n",
+               pent -> level);
+      fprintf (outfile, "sourcefile ........ = %s\n",
+               pent -> sourcename);
    }
-   fprintf (stdout, "\n\n");
 
+   fprintf (outfile, "\n\n");
+}
+
+
+
+
+static void runtime_error (void *vgs, int errn, char *info)
+
+{
+   print_runtime_error (stderr, vgs, errn, info);
+   print_runtime_error (stdout, vgs, errn, info);
    exit (1000);
 }
 
@@ -4035,6 +4068,7 @@ static void int1 (global_store *gs)
          pcup -> level_caller = gs -> level;
          pcup -> is_procparm = gs -> mst_pfparm;
          pcup -> displayaddr = addr_displaysave;
+         pcup -> entry_old = gs -> entry_act;
 
          /************************************************/
          /*   pruefen auf Stack/Heap Collision           */
@@ -4202,7 +4236,7 @@ static void int1 (global_store *gs)
          /*   das bei CUP angegebene statische Level fuehrt zu     */
          /*   nichts, jedenfalls nicht bei Prozedur-Parametern;    */
          /*   da ist das statische Level der gerufenen Prozedur    */
-         /*   leider nichtssagen (stellt sich erst beim            */
+         /*   leider nichtssagend (stellt sich erst beim           */
          /*   Aufruf der aktuellen Prozedur heraus).               */
          /**********************************************************/
 
@@ -4220,6 +4254,14 @@ static void int1 (global_store *gs)
             gs -> level = 1;
             gs -> display [gs -> level] = 0;
          }
+
+         /**********************************************************/
+         /*   entry_act wird gesetzt                               */
+         /*   primaer fuer fehleranalyse                           */
+         /*   aber auch fuer runtime stack                         */
+         /**********************************************************/
+
+         gs -> entry_act = gs -> ip;
 
          /************************************************/
          /*   trace output                               */
@@ -6485,6 +6527,12 @@ static void int1 (global_store *gs)
 #endif
 
          /************************************************/
+         /*   restore previous entry address             */
+         /************************************************/
+
+         gs -> entry_act = pcup -> entry_old;
+
+         /************************************************/
          /*   branch to return addr                      */
          /************************************************/
 
@@ -8346,6 +8394,7 @@ static void interpreter (global_store *gs)
 
    gs -> stepanz = 1;
    gs -> ip = gs -> startpos;
+   gs -> entry_act = gs -> ip;
    gs -> sp = 16;
    gs -> hp = gs -> start_const - 16;
    gs -> level = 1;

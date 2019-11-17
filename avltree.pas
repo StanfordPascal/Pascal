@@ -935,6 +935,18 @@ function AVLCACHE ( FUNKCODE : CHAR ( 8 ) ;   // Funktionscode
           SP2 : -> CHAR ( 8 ) ;
 
       begin (* DIRCOMP *)
+
+        //**********************************************
+        // this coding simply to avoid warning message
+        // about parameters not used :-)              
+        //**********************************************
+
+        if FALSE then
+          if L1 <> L2 then
+            begin
+              L1 := 8 ;
+              L2 := 8
+            end (* then *) ;
         SP1 := X1 ;
         SP2 := X2 ;
         S1 := SP1 -> ;

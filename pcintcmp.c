@@ -920,8 +920,8 @@ static void load (void *vgs,
 
       case 'L':
          pcode -> q = gs -> code_used - 1;
-         if (gs -> pcode_ent_akt >= 0)
-            pcode_ent = gs -> code0 + gs -> pcode_ent_akt;
+         if (gs -> entry_act >= 0)
+            pcode_ent = gs -> code0 + gs -> entry_act;
          else
             pcode_ent = NULL;
 
@@ -967,8 +967,8 @@ static void load (void *vgs,
          }
          while (0);
 
-         if (gs -> pcode_ent_akt >= 0)
-            pcode_ent = gs -> code0 + gs -> pcode_ent_akt;
+         if (gs -> entry_act >= 0)
+            pcode_ent = gs -> code0 + gs -> entry_act;
          else
             pcode_ent = NULL;
 
@@ -1516,7 +1516,7 @@ static void load (void *vgs,
          pcode -> q = gs -> code_used - 1;
          pcode -> psect = pent;
 
-         gs -> pcode_ent_akt = pcode -> q;
+         gs -> entry_act = pcode -> q;
 
          pent -> pcodenr = pcode -> q;
 
@@ -1758,7 +1758,7 @@ void translate (global_store *gs, FILE *f, char *fname)
 
    char *zeile = gs -> inpzeile;
 
-   gs -> pcode_ent_akt = -1;
+   gs -> entry_act = -1;
 
    for (;;)
    {

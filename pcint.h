@@ -306,6 +306,7 @@ typedef struct cup_sect
    int displayaddr;               // addr of saved display vector
    int returnaddr;                // return address
    int calladdr;                  // call address
+   int entry_old;                 // old entry point
 }
 cup_section;
 
@@ -406,10 +407,10 @@ typedef struct
    int mst_level;                 /* temp stor for MST information  */
    int mst_addr2;                 /* temp stor for MST information  */
    int pcups;                     /* Pointer auf CUP-Savearea       */
+   int entry_act;                 /* address of actual entry        */
    int stepanz;                   /* Stepanzahl Debugger            */
                                   /*--------------------------------*/
                                   /* nur tempor. waehrend assembly: */
-   int pcode_ent_akt;             /* pcode-Nummer aktueller Entry   */
    int local_error;               /* lokaler Fehler bei assembler   */
    int xbg_xen_count;             /* Anzahl belegte XBG/XEN         */
    int xbg_xen_tag [10];          /* XBG/XEN-Tags                   */

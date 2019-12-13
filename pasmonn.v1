@@ -3134,8 +3134,8 @@ SUBTBL2  DS    0A
          DC    A(RDY,EOL,EOT,RDD,WRD,CLK,WLN,RLN)
          DC    A(RDI,EOF,ELN,RDS,TRP,XIT,FDF,SIO)
          DC    A(EIO,MSG,SKP,LIM,TRA,WRP,CLS,DAT)
-         DC    A(TIM,FLR,TRC,RND,WRV,RDV)
-         DC    A(0,0,0,0,0,0,0,0)
+         DC    A(TIM,FLR,TRC,RND,WRV)
+         DC    A(0,0,0,0,0,0,0,0,0)
 SUBTBLZ2 DS    0A
 *
 TRSTART  DC    CL80'TRACE: FUNKTIONSAUFRUF XXX BEI ADR XXXXXXXX'
@@ -3692,7 +3692,7 @@ PAFPUT   DS    0H
          LA    R1,1(R1)
 *
 **********************************************************************
-*        (ibm370 dependency: STCM)
+*        (ibm370 dependendy: STCM)
 **********************************************************************
 *
 PAFPUT2  STCM  R1,3,0(AF)          SET RDW FOR V-FORMAT
@@ -3744,7 +3744,7 @@ PAFCLR1  DS    0H
          LH    R15,FILEND(AE)      LOAD BUFFER LENGTH
 *
 **********************************************************************
-*        (ibm370 dependency: MVCL)
+*        (ibm370 dependendy: MVCL)
 **********************************************************************
 *
          LR    R14,AF
@@ -3890,9 +3890,9 @@ PAFCHKW4 DS    0H
 *        RESET AN INPUT FILE
 *****************************************************************
 *
-         DS    0H
          DC    CL4'RES '
 RES      DS    0H
+*
          FILADR ,
          CLI   FILSTA(AE),C'1'     if filsta is 1, last call was reset
          BE    RTN                 then no action
@@ -3935,10 +3935,8 @@ RES1     DS    0H
 *        GET AN INPUT RECORD
 *****************************************************************
 *
-         DS    0H
          DC    CL4'GET'
-GET      DS    0H
-         FILADR ,
+GET      FILADR ,
          TM    FILEOF(AE),1
          BO    RTN
          TM    FILOPN(AE),TEXTFLAG
@@ -3969,8 +3967,7 @@ GET3     ST    R1,PFILRSZ(AD)      PUT SIZE BACK FOR PASCAL PROG ?
 *        EOT (SKIP BLANKS TO END OF TEXT)
 *****************************************************************
 *
-EOT      DS    0H
-         FILADR ,
+EOT      FILADR ,
          BAL   R5,PAFCHK           CHECK FILE STATUS
          BAL   R5,PAFGNB
          B     RTN
@@ -3982,7 +3979,6 @@ EOT      DS    0H
 *        READ-LINE (FOR TEXTFILE ONLY)
 *****************************************************************
 *
-         DS    0H
          DC    CL4'RLN'
 RLN      DS    0H
          FILADR ,
@@ -4009,8 +4005,7 @@ RLN2     DS    0H
 *        EOL (SKIP BLANKS TO END OF LINE)
 *****************************************************************
 *
-EOL      DS    0H
-         FILADR ,
+EOL      FILADR ,
          BAL   R5,PAFCHK           CHECK FILE STATUS
          TM    FILEOF(AE),1
          BO    RTN                 RETURN IF END OF FILE
@@ -4039,10 +4034,8 @@ EOL3     DS    0H
 *        RDB, (READ BOOLEAN)   ADR(FILE),ADR(BOOLEAN)
 *****************************************************************
 *
-         DS    0H
          DC    CL4'RDB'
-RDB      DS    0H
-         FILADR ,
+RDB      FILADR ,
          BAL   R5,PAFCHK           CHECK FILE STATUS
          BAL   R5,PAFGNB           ADVANCE TO A NON-BLANK
          B     EOFREAD             ERROR RETURN FOR EOF
@@ -4063,10 +4056,8 @@ RDB6     STC   RSLT,0(R2)          STORE THE RESULT
 *        RDC  (READ CHAR),  R2 = ADDR. OF CHAR
 *****************************************************************
 *
-         DS    0H
          DC    CL4'RDC'
-RDC      DS    0H
-         FILADR ,
+RDC      FILADR ,
 *
          BAL   R5,PAFCHK           CHECK FILE STATUS
          IC    R0,PFILCOMP(AD)
@@ -4097,19 +4088,14 @@ TRRDC1   DC    CL80'TRACE: ZEICHEN RDC = XXXXXXXXX'
 *        RDI/RDH/RDY (READ INTEGER)    AD: ADR(FILE),  R2: ADR(INT)
 *****************************************************************
 *
-         DS    0H
          DC    CL4'RDY'
 RDY      OI    RDY1+1,X'F0'        OVERWRITE NO-OP
          B     RDI
 *
-         DS    0H
          DC    CL4'RDH'
 RDH      OI    RDH1+1,X'F0'        OVERWRITE NO-OP
          B     RDI
 *
-*
-*
-         DS    0H
          DC    CL4'RDI'
 RDI      DS    0H
          FILADR ,
@@ -4181,10 +4167,25 @@ TRRDI1   DC    CL80'TRACE: ZEICHEN RDI = XXXXXXXXX'
 *  RDS, (READ STRING), R2= STRING ADDRESS, R3=STRING LENGTH !
 *****************************************************************
 *
-         DS    0H
          DC    CL4'RDS'
-RDS      DS    0H
-         FILADR ,
+RDS      FILADR ,
+*
+*        STM   R1,R5,SAVERDS
+*
+*        ST    AF,HEX5
+*        UNPK  HEX9,HEX5
+*        TR    HEX9(8),TABHEX-C'0'
+*        MVC   TRRDS0+36(8),HEX9
+*        LA    R3,TRRDS0
+*        L     R15,=A(PTRACE)
+*        BALR  R14,R15
+*
+*        MVC   TRRDS1+20(30),0(R2)
+*        LA    R3,TRRDS1
+*        L     R15,=A(PTRACE)
+*        BALR  R14,R15
+*
+*        LM    R1,R5,SAVERDS
 *
          BAL   R5,PAFCHK           CHECK FILE STATUS
 *
@@ -4204,7 +4205,7 @@ RDS01    DS    0H
          IC    R0,PFILCOMP(AD)     START WITH CURRENT CHARACTER
 *
 **********************************************************************
-*        (ibm370 dependency: MVCL)
+*        (ibm370 dependendy: MVCL)
 **********************************************************************
 *
          STC   R0,0(R2)            COPY CHARS ONE-BY-ONE
@@ -4235,89 +4236,18 @@ RDSF4    DS    0H
 *
 RDSZ     DS    0H
 *
-         B     RTN
-*
-         LTORG
-*
-*
-*
-*****************************************************************
-*  RDV, (READ STRING), R2= STRING ADDRESS, R3=STRING LENGTH !
-*****************************************************************
-*
-         DS    0H
-         DC    CL4'RDV'
-RDV      DS    0H
-         FILADR ,
-*
-*        STM   R1,R5,SAVERDS
-*
-*        ST    AF,HEX5
-*        UNPK  HEX9,HEX5
-*        TR    HEX9(8),TABHEX-C'0'
-*        MVC   TRRDV0+36(8),HEX9
-*        LA    R3,TRRDV0
-*        L     R15,=A(PTRACE)
-*        BALR  R14,R15
-*
-*        MVC   TRRDV1+20(30),0(R2)
-*        LA    R3,TRRDV1
-*        L     R15,=A(PTRACE)
-*        BALR  R14,R15
-*
 *        LM    R1,R5,SAVERDS
-*
-         BAL   R5,PAFCHK           CHECK FILE STATUS
-*
-         LH    R15,FILEND(AE)
-         LH    R14,FILPTR(AE)
-         SR    R15,R14             COMPUTE # CHARS LEFT
-         CR    R3,R15              string has more space ?
-         BL    RDVL
-         MVC   FILPTR(2,AE),FILEND(AE)  FILPTR TO FILEND
-         MVI   FILEOLN(AE),TRUE         INDICATE EOLN
-         B     RDV01
-RDVL     DS    0H
-         LR    R0,R14              ADD LENGTH (R3) TO FILPTR
-         AR    R0,R3
-         STH   R0,FILPTR(AE)       NEW POSITION TO FILPTR
-RDV01    DS    0H
-*
-         STH   R3,0(R2)            store maxlength to String maxl
-         STH   R15,2(R2)           store actlength to String actl
-         LA    R2,4(R2)            point R2 to String content
-*
-         IC    R0,PFILCOMP(AD)     START WITH CURRENT CHARACTER
-RDV02    DS    0H
-         STC   R0,0(R2)            COPY CHARS ONE-BY-ONE
-         LA    R14,1(R14)
-         LA    R2,1(R2)
-         IC    R0,0(R14,AF)        LOAD NEXT INPUT CHAR
-         BCT   R15,RDV02
-*
-         CLI   FILEOLN(AE),TRUE    EOLN ?
-         BE    RDV03
-         STC   R0,PFILCOMP(AD)     SET CURRENT CHAR
-         B     RDVZ
-*
-RDV03    DS    0H
-         LA    R0,FILBLA           END OF LINE CHARACTER
-         STC   R0,PFILCOMP(AD)     SET CURRENT CHAR
-*
-RDVZ     DS    0H
-*
-*        LM    R1,R5,SAVERDS
-*        MVC   TRRDV2+20(30),0(R2)
-*        LA    R3,TRRDV2
+*        MVC   TRRDS2+20(30),0(R2)
+*        LA    R3,TRRDS2
 *        L     R15,=A(PTRACE)
 *        BALR  R14,R15
 *
          B     RTN
 *
-TRRDV0   DC    CL80'TRACE: START  RDV FILEBUFFER (AF) = XXXXXXXX'
+TRRDS0   DC    CL80'TRACE: START  RDS FILEBUFFER (AF) = XXXXXXXX'
 *                   0....5....1....5....2....5....3....5
-TRRDV1   DC    CL80'TRACE: START  RDV = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
-TRRDV2   DC    CL80'TRACE: RETURN RDV = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
+TRRDS1   DC    CL80'TRACE: START  RDS = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
+TRRDS2   DC    CL80'TRACE: RETURN RDS = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
          DS    0F
 HEX5     DS    CL5
 HEX9     DS    CL9
@@ -4330,7 +4260,6 @@ HEX9     DS    CL9
 *  REW (REWRITE = REWIND FOR OUTPUT)
 *****************************************************************
 *
-         DS    0H
          DC    CL4'REW'
 REW      DS    0H
          FILADR ,
@@ -4365,10 +4294,8 @@ REW1     DS    0H
 *        PUT (PASCAL 'PUT' OPERATION)
 *****************************************************************
 *
-         DS    0H
          DC    CL4'PUT '
-PUT      DS    0H
-         FILADR ,
+PUT      FILADR ,
 *
 *************************************************************
 *        03.10.2017 - versuchsweise test auf eof auskomm.
@@ -4402,10 +4329,8 @@ PUT2     ST    R0,FILLIM(AE)       PUT UPDATED COUNT BACK
 *        18.08.2016: VERSUCH, SOFORT ZU SCHREIBEN
 *****************************************************************
 *
-         DS    0H
          DC    CL4'WLN '
-WLN      DS    0H
-         FILADR ,
+WLN      FILADR ,
          BAL   R5,PAFCHKW          CHECK FILE STATUS (WRITE)
 *
          TM    FILOPN(AE),TEXTMOVE
@@ -4543,10 +4468,8 @@ WRXERR   DS    0H
 *        WRC   R1: ADR(FILE),  R3: FIELD_WIDTH,  R2: CHAR
 *****************************************************************
 *
-         DS    0H
          DC    CL4'WRC '
-WRC      DS    0H
-         FILADR ,
+WRC      FILADR ,
          BAL   R5,PAFCHKW          CHECK FILE STATUS (WRITE)
          BCTR  R3,0
          LTR   R3,R3
@@ -4565,55 +4488,23 @@ WRC3     STC   R2,PFILCOMP(AD)
 *     WRS   ADR(FILE):R1, STRLGTH:R4, FIELD_WIDTH:R3, R2:ADR(STRING)
 *****************************************************************
 *
-         DS    0H
          DC    CL4'WRS '
-WRS      DS    0H
-         FILADR ,
+WRS      FILADR ,
+*
+*        STM   R1,R5,SAVETRC
+*        MVC   TRCALL+18(4),WRS-4
+*        LA    R3,TRCALL
+*        L     R15,=A(PTRACE)
+*        BALR  R14,R15
+*        LM    R1,R5,SAVETRC
 *
          BAL   R5,PAFCHKW          CHECK FILE STATUS (WRITE)
          LTR   R3,R3
-         BZ    RTN                 ZERO FIELD WIDTH, RETURN
-*
-*****************************************************************
-*        IF R3 > R4, WRITE BLANKS BEFORE STRING CONTENT
-*        THAT IS: WRITE STRING CONTENT RIGHT JUSTIFIED
-*        OTHERWISE WRITE STRING LEFT JUSTIFIED
-*****************************************************************
-*
-         BP    WRSC1
-         B     WRSC2
-*
-WRSC1    DS    0H
-         CR    R3,R4
-         BH    WRSC11
-         LR    R4,R3
-*
-WRSC11   DS    0H
-         SR    R3,R4
-         B     WRSC3
-*
-WRSC2    DS    0H
-         LCR   R3,R3
-         CR    R3,R4
-         BH    WRSC21
-         LR    R4,R3
-*
-WRSC21   DS    0H
-         SR    R3,R4
-         LCR   R3,R3
-*
-WRSC3    DS    0H
+         BNP   RTN                 ZERO FIELD WIDTH, RETURN
          LH    R1,FILPTR(AE)
          LA    R0,FILBLA           FILL CHARACTER
-*
-*****************************************************************
-*        write blanks before string content, if needed
-*****************************************************************
-*
-         LTR   R3,R3               Blanks needed before string content?
-         BNP   WRSB2               NO NEED FOR FILL CHARS
-*
-WRSB1    DS    0H
+WRSB1    CR    R3,R4               COMPARE FLD_LGTH TO STR_LGTH
+         BNH   WRSF2               NO NEED FOR FILL CHARS
          CH    R1,FILEND(AE)
          BL    WRSF1
          STH   R1,FILPTR(AE)       UPDATE LENGTH FIRST
@@ -4623,13 +4514,9 @@ WRSB1    DS    0H
 WRSF1    STC   R0,0(R1,AF)         PLANT NEXT BLANK IN BUFFER
          LA    R1,1(R1)            AND ADVANCE TO NEXT POSITION
          BCT   R3,WRSB1
-*
-*****************************************************************
-*        Now write string content
-*****************************************************************
-*
-WRSB2    DS    0H
-         CH    R1,FILEND(AE)
+*    NOW WE HAVE R3 <= R4
+WRSF2    DS    0H
+WRSB2    CH    R1,FILEND(AE)
          BL    WRSF3
          STH   R1,FILPTR(AE)       UPDATE LENGTH FIELD
          BAL   R5,PAFPUT           THEN EMPTY THE FULL BUFFER
@@ -4638,29 +4525,7 @@ WRSF3    IC    R0,0(R2)            PICK UP NEXT CHAR IN STRING
          STC   R0,0(R1,AF)         AND PLANT IT IN BUFFER
          LA    R2,1(R2)            ADVANCE IN THE STRING
          LA    R1,1(R1)            ADVANCE IN THE BUFFER
-         BCT   R4,WRSB2
-*
-*****************************************************************
-*        write blanks after string content, if needed
-*****************************************************************
-*
-         LTR   R3,R3               Blanks needed after string content?
-         BZ    WRSF5               NO NEED FOR FILL CHARS
-         LCR   R3,R3               negate R3 content
-         LA    R0,FILBLA
-*
-WRSB3    DS    0H
-         CH    R1,FILEND(AE)
-         BL    WRSF4
-         STH   R1,FILPTR(AE)       UPDATE LENGTH FIRST
-         BAL   R5,PAFPUT           THEN EMPTY THE FULL BUFFER
-         LH    R1,FILPTR(AE)
-         LA    R0,FILBLA
-WRSF4    STC   R0,0(R1,AF)         PLANT NEXT BLANK IN BUFFER
-         LA    R1,1(R1)            AND ADVANCE TO NEXT POSITION
-         BCT   R3,WRSB3
-*
-WRSF5    DS    0H
+         BCT   R3,WRSB2
          STH   R1,FILPTR(AE)
          STC   R0,PFILCOMP(AD)
          B     RTN
@@ -4741,7 +4606,6 @@ WRI3     DS    0H
 *        WRR, REAL NUMBER IN FPRG2, FIELDWITH IN GRG3
 *****************************************************************
 *
-         DS    0H
          DC    CL4'WRR'
 WRR      DS    0H
          FILADR ,
@@ -4757,10 +4621,8 @@ WRR      DS    0H
 *        RDR, READ THE NEXT (REAL) NUMBER INTO (GRG2)
 *****************************************************************
 *
-         DS    0H
          DC    CL4'RDR'
-RDR      DS    0H
-         FILADR ,
+RDR      FILADR ,
          BAL   R5,PAFCHK           CHECK FILE STATUS
          SDR   0,0
          LA    R3,1
@@ -4863,12 +4725,10 @@ PAG      SR    R2,R2
 *        SKP - SKIP R2 INPUT OR OUTPUT LINES
 *****************************************************************
 *
-         DS    0H
          DC    CL4'SKP'
 SKP      LTR   R2,R2
          BM    RTN
-SKP1     DS    0H
-         FILADR ,
+SKP1     FILADR ,
          BAL   R5,PAFCHKW          CHECK FILE STATUS (WRITE)
          TM    FILOPN(AE),TEXTFLAG
          BZ    SKP9                JUMP IF NOT A TEXT FILE
@@ -5147,10 +5007,8 @@ CTRMVE   MVC   0(0,R4),0(R3)
 *        LINELIMIT PROCEDURE   AD=FILE,  R2=LIMIT
 *****************************************************************
 *
-         DS    0H
          DC    CL4'LIM'
-LIM      DS    0H
-         FILADR ,
+LIM      FILADR ,
          ST    R2,FILLIM(AE)       SET THE NEW LIMIT
          B     RTN
 *
@@ -5207,7 +5065,6 @@ TRA      EQU   *
 *        CLOSE: CLOSE A FILE
 *****************************************************************
 *
-         DS    0H
          DC    CL4'CLS'
 CLS      DS    0H
          FILADR ,

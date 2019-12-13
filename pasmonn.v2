@@ -3134,8 +3134,8 @@ SUBTBL2  DS    0A
          DC    A(RDY,EOL,EOT,RDD,WRD,CLK,WLN,RLN)
          DC    A(RDI,EOF,ELN,RDS,TRP,XIT,FDF,SIO)
          DC    A(EIO,MSG,SKP,LIM,TRA,WRP,CLS,DAT)
-         DC    A(TIM,FLR,TRC,RND,WRV,RDV)
-         DC    A(0,0,0,0,0,0,0,0)
+         DC    A(TIM,FLR,TRC,RND,WRV)
+         DC    A(0,0,0,0,0,0,0,0,0)
 SUBTBLZ2 DS    0A
 *
 TRSTART  DC    CL80'TRACE: FUNKTIONSAUFRUF XXX BEI ADR XXXXXXXX'
@@ -3692,7 +3692,7 @@ PAFPUT   DS    0H
          LA    R1,1(R1)
 *
 **********************************************************************
-*        (ibm370 dependency: STCM)
+*        (ibm370 dependendy: STCM)
 **********************************************************************
 *
 PAFPUT2  STCM  R1,3,0(AF)          SET RDW FOR V-FORMAT
@@ -3744,7 +3744,7 @@ PAFCLR1  DS    0H
          LH    R15,FILEND(AE)      LOAD BUFFER LENGTH
 *
 **********************************************************************
-*        (ibm370 dependency: MVCL)
+*        (ibm370 dependendy: MVCL)
 **********************************************************************
 *
          LR    R14,AF
@@ -4186,6 +4186,23 @@ TRRDI1   DC    CL80'TRACE: ZEICHEN RDI = XXXXXXXXX'
 RDS      DS    0H
          FILADR ,
 *
+*        STM   R1,R5,SAVERDS
+*
+*        ST    AF,HEX5
+*        UNPK  HEX9,HEX5
+*        TR    HEX9(8),TABHEX-C'0'
+*        MVC   TRRDS0+36(8),HEX9
+*        LA    R3,TRRDS0
+*        L     R15,=A(PTRACE)
+*        BALR  R14,R15
+*
+*        MVC   TRRDS1+20(30),0(R2)
+*        LA    R3,TRRDS1
+*        L     R15,=A(PTRACE)
+*        BALR  R14,R15
+*
+*        LM    R1,R5,SAVERDS
+*
          BAL   R5,PAFCHK           CHECK FILE STATUS
 *
          LH    R15,FILEND(AE)
@@ -4204,7 +4221,7 @@ RDS01    DS    0H
          IC    R0,PFILCOMP(AD)     START WITH CURRENT CHARACTER
 *
 **********************************************************************
-*        (ibm370 dependency: MVCL)
+*        (ibm370 dependendy: MVCL)
 **********************************************************************
 *
          STC   R0,0(R2)            COPY CHARS ONE-BY-ONE
@@ -4235,89 +4252,18 @@ RDSF4    DS    0H
 *
 RDSZ     DS    0H
 *
-         B     RTN
-*
-         LTORG
-*
-*
-*
-*****************************************************************
-*  RDV, (READ STRING), R2= STRING ADDRESS, R3=STRING LENGTH !
-*****************************************************************
-*
-         DS    0H
-         DC    CL4'RDV'
-RDV      DS    0H
-         FILADR ,
-*
-*        STM   R1,R5,SAVERDS
-*
-*        ST    AF,HEX5
-*        UNPK  HEX9,HEX5
-*        TR    HEX9(8),TABHEX-C'0'
-*        MVC   TRRDV0+36(8),HEX9
-*        LA    R3,TRRDV0
-*        L     R15,=A(PTRACE)
-*        BALR  R14,R15
-*
-*        MVC   TRRDV1+20(30),0(R2)
-*        LA    R3,TRRDV1
-*        L     R15,=A(PTRACE)
-*        BALR  R14,R15
-*
 *        LM    R1,R5,SAVERDS
-*
-         BAL   R5,PAFCHK           CHECK FILE STATUS
-*
-         LH    R15,FILEND(AE)
-         LH    R14,FILPTR(AE)
-         SR    R15,R14             COMPUTE # CHARS LEFT
-         CR    R3,R15              string has more space ?
-         BL    RDVL
-         MVC   FILPTR(2,AE),FILEND(AE)  FILPTR TO FILEND
-         MVI   FILEOLN(AE),TRUE         INDICATE EOLN
-         B     RDV01
-RDVL     DS    0H
-         LR    R0,R14              ADD LENGTH (R3) TO FILPTR
-         AR    R0,R3
-         STH   R0,FILPTR(AE)       NEW POSITION TO FILPTR
-RDV01    DS    0H
-*
-         STH   R3,0(R2)            store maxlength to String maxl
-         STH   R15,2(R2)           store actlength to String actl
-         LA    R2,4(R2)            point R2 to String content
-*
-         IC    R0,PFILCOMP(AD)     START WITH CURRENT CHARACTER
-RDV02    DS    0H
-         STC   R0,0(R2)            COPY CHARS ONE-BY-ONE
-         LA    R14,1(R14)
-         LA    R2,1(R2)
-         IC    R0,0(R14,AF)        LOAD NEXT INPUT CHAR
-         BCT   R15,RDV02
-*
-         CLI   FILEOLN(AE),TRUE    EOLN ?
-         BE    RDV03
-         STC   R0,PFILCOMP(AD)     SET CURRENT CHAR
-         B     RDVZ
-*
-RDV03    DS    0H
-         LA    R0,FILBLA           END OF LINE CHARACTER
-         STC   R0,PFILCOMP(AD)     SET CURRENT CHAR
-*
-RDVZ     DS    0H
-*
-*        LM    R1,R5,SAVERDS
-*        MVC   TRRDV2+20(30),0(R2)
-*        LA    R3,TRRDV2
+*        MVC   TRRDS2+20(30),0(R2)
+*        LA    R3,TRRDS2
 *        L     R15,=A(PTRACE)
 *        BALR  R14,R15
 *
          B     RTN
 *
-TRRDV0   DC    CL80'TRACE: START  RDV FILEBUFFER (AF) = XXXXXXXX'
+TRRDS0   DC    CL80'TRACE: START  RDS FILEBUFFER (AF) = XXXXXXXX'
 *                   0....5....1....5....2....5....3....5
-TRRDV1   DC    CL80'TRACE: START  RDV = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
-TRRDV2   DC    CL80'TRACE: RETURN RDV = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
+TRRDS1   DC    CL80'TRACE: START  RDS = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
+TRRDS2   DC    CL80'TRACE: RETURN RDS = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
          DS    0F
 HEX5     DS    CL5
 HEX9     DS    CL9
@@ -4570,6 +4516,13 @@ WRC3     STC   R2,PFILCOMP(AD)
 WRS      DS    0H
          FILADR ,
 *
+*        STM   R1,R5,SAVETRC
+*        MVC   TRCALL+18(4),WRS-4
+*        LA    R3,TRCALL
+*        L     R15,=A(PTRACE)
+*        BALR  R14,R15
+*        LM    R1,R5,SAVETRC
+*
          BAL   R5,PAFCHKW          CHECK FILE STATUS (WRITE)
          LTR   R3,R3
          BZ    RTN                 ZERO FIELD WIDTH, RETURN
@@ -4584,23 +4537,11 @@ WRS      DS    0H
          B     WRSC2
 *
 WRSC1    DS    0H
-         CR    R3,R4
-         BH    WRSC11
-         LR    R4,R3
-*
-WRSC11   DS    0H
          SR    R3,R4
          B     WRSC3
 *
 WRSC2    DS    0H
-         LCR   R3,R3
-         CR    R3,R4
-         BH    WRSC21
-         LR    R4,R3
-*
-WRSC21   DS    0H
-         SR    R3,R4
-         LCR   R3,R3
+         AR    R3,R4
 *
 WRSC3    DS    0H
          LH    R1,FILPTR(AE)

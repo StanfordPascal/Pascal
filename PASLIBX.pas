@@ -2449,6 +2449,53 @@ function $PASSTR1 ( FUNCCODE : INTEGER ; const S1 : STRING ; I1 :
            end (* tag/ca *) ;
 
      /*********************************/
+     /* LEFT                          */
+     /*********************************/
+
+       7 : begin
+             START := 1 ;
+             LEN := I1 ;
+             if LEN < 1 then
+               EXIT ( 1201 ) ;
+             LS1 := LENGTH ( S1 ) ;
+             if LS1 > LEN then
+               LS1 := LEN ;
+             $PASSTR1 := REPEATSTR ( ' ' , LEN ) ;
+             P := STRRESULTP ;
+             Q := ADDR ( S1 [ START ] ) ;
+             MEMCPY ( P , Q , LS1 ) ;
+           end (* tag/ca *) ;
+
+     /*********************************/
+     /* RIGHT                         */
+     /*********************************/
+
+       8 : begin
+             START := 1 ;
+             LEN := I1 ;
+             if LEN < 1 then
+               EXIT ( 1201 ) ;
+             LS1 := LENGTH ( S1 ) ;
+             if LS1 > LEN then
+               begin
+                 START := LS1 - LEN + 1 ;
+                 LS1 := LEN ;
+                 X := 0 ;
+               end (* then *)
+             else
+               begin
+                 START := 1 ;
+                 X := LEN - LS1 ;
+               end (* else *) ;
+             $PASSTR1 := REPEATSTR ( ' ' , LEN ) ;
+             P := STRRESULTP ;
+             if X > 0 then
+               P := PTRADD ( P , X ) ;
+             Q := ADDR ( S1 [ START ] ) ;
+             MEMCPY ( P , Q , LS1 ) ;
+           end (* tag/ca *) ;
+
+     /*********************************/
      /* unknown subfunction           */
      /*********************************/
 
@@ -2473,6 +2520,11 @@ function $PASSTR2 ( FUNCCODE : INTEGER ; const S1 : STRING ; const S2 :
        LFOUND : INTEGER ;
        I : INTEGER ;
        OKSET : set of CHAR ;
+       STATUS : INTEGER ;
+       C2A : CHAR ;
+       C2E : CHAR ;
+       CP1F : -> CHAR ;
+       CP1T : -> CHAR ;
 
    begin (* $PASSTR2 *)
      case FUNCCODE of
@@ -2482,51 +2534,105 @@ function $PASSTR2 ( FUNCCODE : INTEGER ; const S1 : STRING ; const S2 :
      /*********************************/
 
        1 : begin
+
+     //***************************************
+     // ergebnis zuerst mal auf Null          
+     // laengen besorgen                      
+     // wenn laenge des suchstrings groesser  
+     // kann nichts gefunden werden           
+     //***************************************
+
              $PASSTR2 := 0 ;
              LS1 := LENGTH ( S1 ) ;
              LS2 := LENGTH ( S2 ) ;
              if LS2 > LS1 then
                return ;
-             CP1 := ADDR ( S1 [ 1 ] ) ;
-             CP1START := CP1 ;
-             CP2 := ADDR ( S2 [ 1 ] ) ;
-             CP2START := CP2 ;
-             LFOUND := 0 ;
-             CP1LIMIT := PTRADD ( CP1 , LS1 ) ;
-             while PTRDIFF ( CP1LIMIT , CP1 ) > 0 do
+
+     //**************************************************
+     // spezialvariante fuer laenge des suchstrings = 1  
+     // dann ist einiges einfacher                       
+     //**************************************************
+
+             if LS2 = 1 then
                begin
-                 if CP1 -> <> CP2 -> then
-                   begin
-                     if LFOUND > 0 then
-                       begin
-                         CP2 := CP2START ;
-                         if CP1FOUND2 <> NIL then
-                           CP1 := CP1FOUND2 ;
-                         LFOUND := 0 ;
-                       end (* then *)
-                     else
-                       begin
-                         CP1 := PTRADD ( CP1 , 1 ) ;
-                       end (* else *) ;
-                     if PTRDIFF ( CP1LIMIT , CP1 ) < LS2 then
+                 CP1 := ADDR ( S1 [ 1 ] ) ;
+                 CP1START := CP1 ;
+                 C2A := S2 [ 1 ] ;
+                 LFOUND := 0 ;
+                 CP1LIMIT := PTRADD ( CP1 , LS1 ) ;
+                 while PTRDIFF ( CP1LIMIT , CP1 ) > 0 do
+                   if CP1 -> <> C2A then
+                     CP1 := PTRADD ( CP1 , 1 )
+                   else
+                     begin
+                       LFOUND := 1 ;
                        break ;
-                   end (* then *)
-                 else
-                   begin
-                     if LFOUND = 0 then
-                       CP1FOUND2 := NIL
-                     else
-                       if CP1 -> = CP2START -> then
-                         CP1FOUND2 := CP1 ;
-                     LFOUND := LFOUND + 1 ;
-                     if LFOUND >= LS2 then
-                       break ;
-                     CP2 := PTRADD ( CP2 , 1 ) ;
-                     CP1 := PTRADD ( CP1 , 1 ) ;
-                   end (* else *)
-               end (* while *) ;
-             if LFOUND >= LS2 then
-               $PASSTR2 := PTRDIFF ( CP1 , CP1START ) - LS2 + 2 ;
+                     end (* else *) ;
+                 if LFOUND = 1 then
+                   $PASSTR2 := PTRDIFF ( CP1 , CP1START ) + 1 ;
+               end (* then *)
+
+     //****************************************************
+     // optimierung: zuerst wird nach anfang und ende des  
+     // suchstrings gesucht                                
+     //****************************************************
+
+             else
+               begin
+                 CP1 := ADDR ( S1 [ 1 ] ) ;
+                 CP1START := CP1 ;
+                 CP2START := ADDR ( S2 [ 1 ] ) ;
+                 C2A := S2 [ 1 ] ;
+                 C2E := S2 [ LS2 ] ;
+                 LFOUND := 0 ;
+                 CP1LIMIT := PTRADD ( CP1 , LS1 ) ;
+                 CP1FOUND2 := NIL ;
+                 STATUS := 0 ;
+                 while PTRDIFF ( CP1LIMIT , CP1 ) > 0 do
+                   case STATUS of
+                     0 : begin
+                           if CP1 -> <> C2A then
+                             CP1 := PTRADD ( CP1 , 1 )
+                           else
+                             STATUS := 1
+                         end (* tag/ca *) ;
+                     1 : begin
+                           CP1T := PTRADD ( CP1 , LS2 - 1 ) ;
+                           if CP1T -> <> C2E then
+                             begin
+                               CP1 := PTRADD ( CP1 , 1 ) ;
+                               STATUS := 0 ;
+                               continue ;
+                             end (* then *) ;
+                           CP1FOUND2 := NIL ;
+                           LFOUND := 1 ;
+                           if LFOUND >= LS2 then
+                             break ;
+                           CP1 := PTRADD ( CP1 , 1 ) ;
+                           CP2 := PTRADD ( CP2START , 1 ) ;
+                           STATUS := 2 ;
+                         end (* tag/ca *) ;
+                     2 : begin
+                           if CP1 -> <> CP2 -> then
+                             begin
+                               if CP1FOUND2 <> NIL then
+                                 CP1 := CP1FOUND2 ;
+                               LFOUND := 0 ;
+                               STATUS := 0 ;
+                               continue ;
+                             end (* then *) ;
+                           LFOUND := LFOUND + 1 ;
+                           if LFOUND >= LS2 then
+                             break ;
+                           if CP1 -> = CP2START -> then
+                             CP1FOUND2 := CP1 ;
+                           CP1 := PTRADD ( CP1 , 1 ) ;
+                           CP2 := PTRADD ( CP2 , 1 ) ;
+                         end (* tag/ca *) ;
+                   end (* case *) ;
+                 if LFOUND >= LS2 then
+                   $PASSTR2 := PTRDIFF ( CP1 , CP1START ) - LS2 + 2 ;
+               end (* else *)
            end (* tag/ca *) ;
 
      /*********************************/
@@ -2544,6 +2650,109 @@ function $PASSTR2 ( FUNCCODE : INTEGER ; const S1 : STRING ; const S2 :
                    $PASSTR2 := I ;
                    break ;
                  end (* then *) ;
+           end (* tag/ca *) ;
+
+     /*********************************/
+     /* LastIndex                     */
+     /*********************************/
+
+       3 : begin
+
+     //***************************************
+     // ergebnis zuerst mal auf Null          
+     // laengen besorgen                      
+     // wenn laenge des suchstrings groesser  
+     // kann nichts gefunden werden           
+     //***************************************
+
+             $PASSTR2 := 0 ;
+             LS1 := LENGTH ( S1 ) ;
+             LS2 := LENGTH ( S2 ) ;
+             if LS2 > LS1 then
+               return ;
+
+     //**************************************************
+     // spezialvariante fuer laenge des suchstrings = 1  
+     // dann ist einiges einfacher                       
+     //**************************************************
+
+             if LS2 = 1 then
+               begin
+                 CP1 := ADDR ( S1 [ LS1 ] ) ;
+                 CP1START := ADDR ( S1 [ 1 ] ) ;
+                 CP1LIMIT := CP1START ;
+                 C2A := S2 [ 1 ] ;
+                 LFOUND := 0 ;
+                 while PTRDIFF ( CP1 , CP1LIMIT ) >= 0 do
+                   if CP1 -> <> C2A then
+                     CP1 := PTRADD ( CP1 , - 1 )
+                   else
+                     begin
+                       LFOUND := 1 ;
+                       break ;
+                     end (* else *) ;
+                 if LFOUND = 1 then
+                   $PASSTR2 := PTRDIFF ( CP1 , CP1START ) + 1 ;
+               end (* then *)
+
+     //****************************************************
+     // optimierung: zuerst wird nach anfang und ende des  
+     // suchstrings gesucht                                
+     //****************************************************
+
+             else
+               begin
+                 CP1 := ADDR ( S1 [ LS1 - LS2 + 1 ] ) ;
+                 CP1START := ADDR ( S1 [ 1 ] ) ;
+                 CP1LIMIT := CP1START ;
+                 CP2START := ADDR ( S2 [ 1 ] ) ;
+                 C2A := S2 [ 1 ] ;
+                 C2E := S2 [ LS2 ] ;
+                 LFOUND := 0 ;
+                 CP1FOUND2 := NIL ;
+                 STATUS := 0 ;
+                 while PTRDIFF ( CP1 , CP1LIMIT ) >= 0 do
+                   case STATUS of
+                     0 : begin
+                           if CP1 -> <> C2A then
+                             CP1 := PTRADD ( CP1 , - 1 )
+                           else
+                             STATUS := 1
+                         end (* tag/ca *) ;
+                     1 : begin
+                           CP1F := CP1 ;
+                           CP1T := PTRADD ( CP1 , LS2 - 1 ) ;
+                           if CP1T -> <> C2E then
+                             begin
+                               CP1 := PTRADD ( CP1 , - 1 ) ;
+                               STATUS := 0 ;
+                               continue ;
+                             end (* then *) ;
+                           LFOUND := 1 ;
+                           if LFOUND >= LS2 then
+                             break ;
+                           CP1 := PTRADD ( CP1 , 1 ) ;
+                           CP2 := PTRADD ( CP2START , 1 ) ;
+                           STATUS := 2 ;
+                         end (* tag/ca *) ;
+                     2 : begin
+                           if CP1 -> <> CP2 -> then
+                             begin
+                               CP1 := PTRADD ( CP1F , - 1 ) ;
+                               LFOUND := 0 ;
+                               STATUS := 0 ;
+                               continue ;
+                             end (* then *) ;
+                           LFOUND := LFOUND + 1 ;
+                           if LFOUND >= LS2 then
+                             break ;
+                           CP1 := PTRADD ( CP1 , 1 ) ;
+                           CP2 := PTRADD ( CP2 , 1 ) ;
+                         end (* tag/ca *) ;
+                   end (* case *) ;
+                 if LFOUND >= LS2 then
+                   $PASSTR2 := PTRDIFF ( CP1 , CP1START ) - LS2 + 2 ;
+               end (* else *)
            end (* tag/ca *) ;
 
      /*********************************/

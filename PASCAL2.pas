@@ -122,6 +122,15 @@ program PCODE_TRANSLATOR ( INPUT , OUTPUT , OBJCODE , LIST002 , TRACEF
 (*                                                                  *)
 (********************************************************************)
 (*                                                                  *)
+(*  Nov 2019 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*             (berndoppolzer@yahoo.com)                            *)
+(*                                                                  *)
+(*  - See PASCAL1; support negative length parameter on             *)
+(*    VMV operation (varchar move) - if negative then the           *)
+(*    the order of the operands on the stack is reversed.           *)
+(*                                                                  *)
+(********************************************************************)
+(*                                                                  *)
 (*  Sep 2019 - Extensions to the Compiler by Bernd Oppolzer         *)
 (*             (berndoppolzer@yahoo.com)                            *)
 (*                                                                  *)
@@ -919,8 +928,8 @@ type OPTYPE = ( PCTS , PCTI , PLOD , PSTR , PLDA , PLOC , PSTO , PLDC ,
                , PRDR , PRDH , PRDY , PEOL , PEOT , PRDD , PWRD , PCLK
                , PWLN , PRLN , PRDI , PEOF , PELN , PRDS , PTRP , PXIT
                , PFDF , PSIO , PEIO , PMSG , PSKP , PLIM , PTRA , PWRP
-               , PCLS , PDAT , PTIM , PFLR , PTRC , PRND , PWRV ,
-               UNDEF_CSP ) ;
+               , PCLS , PDAT , PTIM , PFLR , PTRC , PRND , PWRV , PRDV
+               , UNDEF_CSP ) ;
      BETA = array [ 1 .. 3 ] of CHAR ;
      HINTEGER = - 32768 .. 32767 ;
      STRNG = packed array [ 1 .. MAXSTRL ] of CHAR ;
@@ -1731,8 +1740,8 @@ const HEXTAB : array [ 0 .. 15 ] of CHAR = '0123456789abcdef' ;
         'RDR' , 'RDH' , 'RDY' , 'EOL' , 'EOT' , 'RDD' , 'WRD' , 'CLK' ,
         'WLN' , 'RLN' , 'RDI' , 'EOF' , 'ELN' , 'RDS' , 'TRP' , 'XIT' ,
         'FDF' , 'SIO' , 'EIO' , 'MSG' , 'SKP' , 'LIM' , 'TRA' , 'WRP' ,
-        'CLS' , 'DAT' , 'TIM' , 'FLR' , 'TRC' , 'RND' , 'WRV' , '-?-' )
-        ;
+        'CLS' , 'DAT' , 'TIM' , 'FLR' , 'TRC' , 'RND' , 'WRV' , 'RDV' ,
+        '-?-' ) ;
 
 
 
@@ -1912,13 +1921,16 @@ procedure WRITEBINBYTE ( var F : TEXT ; I : INTEGER ) ;
 
 
 
-procedure ERROR ( ERRCDE : INTEGER ) ;
+procedure ERROR_SYMB ( ERRCDE : INTEGER ; ERR_SYMBOL : BETA ) ;
 
-   begin (* ERROR *)
+   begin (* ERROR_SYMB *)
      ERRORCNT := ERRORCNT + 1 ;
-     WRITELN ( OUTPUT , '   ++++ PERROR ' , ERRCDE : 5 , ' (NEAR LINE '
-               , LASTLN : 6 , ' OF PROCEDURE ' , PIAKT -> . CURPNAME ,
-               ')' ) ;
+     WRITELN ( OUTPUT , '   ++++ Error ' , ERRCDE : 5 , ' (near line '
+               , LASTLN : 6 , ' of procedure ' , RTRIM ( PIAKT -> .
+               CURPNAME ) , ')' ) ;
+     if ERR_SYMBOL <> ' ' then
+       WRITELN ( OUTPUT , ' ' : 8 , 'Symbol in error = ' , ERR_SYMBOL )
+                 ;
      if ERRCDE = 253 then
        WRITELN ( OUTPUT , ' ' : 8 , 'PROCEDURE TOO LARGE.' ) ;
      if ERRCDE = 254 then
@@ -1948,6 +1960,14 @@ procedure ERROR ( ERRCDE : INTEGER ) ;
      if ERRCDE = 618 then
        WRITELN ( OUTPUT , ' ' : 8 , 'UNEXPECTED EOL IN P-CODE INPUT' )
                  ;
+   end (* ERROR_SYMB *) ;
+
+
+
+procedure ERROR ( ERRCDE : INTEGER ) ;
+
+   begin (* ERROR *)
+     ERROR_SYMB ( ERRCDE , '   ' ) ;
    end (* ERROR *) ;
 
 
@@ -6623,8 +6643,9 @@ procedure ASMNXTINST ;
         if not CSPACTIVE [ FILADR ] then
           if CSP in [ PRES , PREW , PGET , PPUT , PRLN , PWLN , PPAG ,
           PSKP , PLIM , PRDB , PWRB , PRDH , PRDY , PEOL , PEOT , PEOF
-          , PELN , PRDC , PWRC , PRDI , PWRI , PRDS , PWRS , PWRV ,
-          PRDR , PWRR , PWRP , PWRX , PFDF , PWRD , PWRE , PCLS ] then
+          , PELN , PRDC , PWRC , PRDI , PWRI , PRDS , PRDV , PWRS ,
+          PWRV , PRDR , PWRR , PWRP , PWRX , PFDF , PWRD , PWRE , PCLS
+          ] then
             with STK [ STP ] do
               begin
                 if VRBL then
@@ -7337,14 +7358,10 @@ procedure ASMNXTINST ;
             begin
               FILESETUP ( 3 ) ;
             end (* tag/ca *) ;
-          PWRV : begin
-                   FILESETUP ( 2 ) ;
-                 end (* tag/ca *) ;
+          PWRV : FILESETUP ( 2 ) ;
+          PRDV : FILESETUP ( 2 ) ;
           otherwise
-            begin
-              WRITE ( ' -->' , P_OPCODE ) ;
-              ERROR ( 607 )
-            end (* otherw *) ;
+            ERROR_SYMB ( 607 , P_OPCODE )
         end (* case *) ;
         if FALSE then
           begin
@@ -13988,6 +14005,8 @@ procedure ASMNXTINST ;
           LEN_OFFS : ADRRNG ;
           COUNT : INTEGER ;
           NEWLEN : INTEGER ;
+          SP1 : INTEGER ;
+          SP2 : INTEGER ;
 
 
       procedure WORK_VCC ;
@@ -15136,6 +15155,17 @@ procedure ASMNXTINST ;
         //*******************************************************
 
           PVMV : begin
+                   if Q < 0 then
+                     begin
+                       SP1 := TOP - 2 ;
+                       SP2 := TOP - 1 ;
+                       Q := - Q ;
+                     end (* then *)
+                   else
+                     begin
+                       SP1 := TOP - 1 ;
+                       SP2 := TOP - 2 ;
+                     end (* else *) ;
 
         //*********************************************
         // patblank = blank pattern for mfioperation   
@@ -15146,17 +15176,17 @@ procedure ASMNXTINST ;
 
                    PATBLANK := DATNULL ;
                    PATBLANK . FPA . DSPLMT := ORD ( ' ' ) ;
-                   MFIOPERATION ( STK [ TOP - 2 ] , PATBLANK , Q ) ;
+                   MFIOPERATION ( STK [ SP2 ] , PATBLANK , Q ) ;
 
         //*********************************************
         // assign string                               
         //*********************************************
 
-                   STRING_GET_ACTLEN ( STK [ TOP - 1 ] , TRUE , RGWORK
-                                       , FALSE ) ;
+                   STRING_GET_ACTLEN ( STK [ SP1 ] , TRUE , RGWORK ,
+                                       FALSE ) ;
                    GENRXLIT ( XC , RGWORK , Q , 0 ) ;
-                   ASSIGN_STRING ( STK [ TOP - 2 ] , STK [ TOP - 1 ] ,
-                                   - RGWORK , 0 , 0 ) ;
+                   ASSIGN_STRING ( STK [ SP2 ] , STK [ SP1 ] , - RGWORK
+                                   , 0 , 0 ) ;
                    AVAIL [ RGWORK ] := TRUE ;
                    TOP := TOP - 2
                  end (* tag/ca *) ;
@@ -16301,6 +16331,8 @@ procedure ASMNXTINST ;
 
 
    begin (* ASMNXTINST *)
+     if PCODE in [ PXBG , PXEN ] then
+       return ;
      if OLDPCODE = PUJP then
        if not CASE_FLAG then
 
@@ -17079,8 +17111,8 @@ procedure ASMNXTINST ;
        PVC2 , PVMV , PVSM :
          STRINGOPS ;
        PBGN : ;               // do nothing on BGN
-       otherwise              // otherwise
-         ERROR ( 620 )        // show error 620 if pcode is not impl.
+       otherwise              // otherwise show error
+         ERROR_SYMB ( 620 , PTBL [ PCODE ] )
      end (* case *) ;
      if FALSE then
        begin

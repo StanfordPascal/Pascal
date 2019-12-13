@@ -55,6 +55,8 @@
 /*  14.01.2019 ! Oppolzer    ! (d.h. leeres Case-Statement)           */
 /*  29.05.2019 ! Oppolzer    ! XBG/XEN eingebaut (Code-Seq. unterdr.) */
 /*  06.09.2019 ! Oppolzer    ! Kommentare korrig. wg. PCODE_2019.TXT  */
+/*  19.11.2019 ! Oppolzer    ! Allow strings as byvalue arg to chars  */
+/*  19.11.2019 ! Oppolzer    ! that is: negative length on VMV        */
 /*  .......... ! ........    ! .....................................  */
 /*  .......... ! ........    ! .....................................  */
 /*  .......... ! ........    ! .....................................  */
@@ -742,11 +744,14 @@ static void print_runtime_error (FILE *outfile,
 
 {
    global_store *gs = vgs;
-   int ip;
    sc_code *pcode;
    sc_code *pcode_ent;
    char *opcode;
    ent_section *pent;
+   cup_section *pcup;
+   int pcups_work;
+   int ip_work;
+   int entry_work;
 
    fprintf (outfile, "\n\n");
    fprintf (outfile, "+++ runtime error %s\n",
@@ -759,9 +764,9 @@ static void print_runtime_error (FILE *outfile,
    fprintf (outfile, "--------------------------------------------\n");
    fprintf (outfile, "information about the location of the error:\n");
    pcode = gs -> code0 + gs -> ip;
-   fprintf (outfile, "instruction pointer = %d\n", ip);
+   fprintf (outfile, "instruction pointer = %d\n", gs -> ip);
    opcode = gs -> ot [pcode -> op] . opcode;
-   fprintf (outfile, "operation           = %s %c %c %d %d\n",
+   fprintf (outfile, "operation ......... = %s %c %c %d %d\n",
             opcode,
             pcode -> t,
             pcode -> t2,
@@ -780,6 +785,42 @@ static void print_runtime_error (FILE *outfile,
                pent -> level);
       fprintf (outfile, "sourcefile ........ = %s\n",
                pent -> sourcename);
+   }
+
+   pcups_work = gs -> pcups;
+   while (pcups_work != 0)
+   {
+      pcup = ADDRSTOR (pcups_work);
+      entry_work = pcup -> entry_old;
+      ip_work = pcup -> returnaddr - 1;
+
+      fprintf (outfile, "--------------------------------------------\n");
+      fprintf (outfile, "block was called from\n");
+      pcode = gs -> code0 + ip_work;
+      fprintf (outfile, "instruction pointer = %d\n", ip_work);
+      opcode = gs -> ot [pcode -> op] . opcode;
+      fprintf (outfile, "operation ......... = %s %c %c %d %d\n",
+               opcode,
+               pcode -> t,
+               pcode -> t2,
+               pcode -> p,
+               pcode -> q);
+      fprintf (outfile, "line of code ...... = %d\n",
+               pcode -> loc);
+      pcode_ent = pcode = gs -> code0 + entry_work;
+      pent = pcode_ent -> psect;
+      if (pent != NULL)
+      {
+         fprintf (outfile, "section ........... = %s / %s\n",
+                  pent -> name_long,
+                  pent -> name_short);
+         fprintf (outfile, "level ............. = %d\n",
+                  pent -> level);
+         fprintf (outfile, "sourcefile ........ = %s\n",
+                  pent -> sourcename);
+      }
+
+      pcups_work = pcup -> backchain;
    }
 
    fprintf (outfile, "\n\n");
@@ -1785,6 +1826,7 @@ static void *cspf_wrs (void *vgs,
    global_store *gs = vgs;
    char *charp;
    filecb *fcb;
+   int linksb = 0;
 
 #if 0
 
@@ -1799,15 +1841,22 @@ static void *cspf_wrs (void *vgs,
 
    check_write (gs, fcb);
 
-   if (parm3 <= 0)
+   if (parm3 == 0)
       return NULL;
+
+   if (parm3 < 0)
+   {
+      parm3 = - parm3;
+      linksb = 1;
+   }
 
    //*******************************************************
    // wenn parm3 > parm4, blanks in entsprechender anzahl ausg.
    //*******************************************************
 
-   if (parm3 > parm4)
-      fprintf (fcb -> fhandle, "%*c", parm3 - parm4, ' ');
+   if (! linksb)
+      if (parm3 > parm4)
+         fprintf (fcb -> fhandle, "%*c", parm3 - parm4, ' ');
 
    //*******************************************************
    // 2. parameter = adresse des strings
@@ -1823,6 +1872,14 @@ static void *cspf_wrs (void *vgs,
       parm4 = parm3;
 
    fprintf (fcb -> fhandle, "%-*.*s", parm4, parm4, charp);
+
+   //*******************************************************
+   // wenn parm3 > parm4, blanks in entsprechender anzahl ausg.
+   //*******************************************************
+
+   if (linksb)
+      if (parm3 > parm4)
+         fprintf (fcb -> fhandle, "%*c", parm3 - parm4, ' ');
 
    return NULL;
 }
@@ -2651,6 +2708,71 @@ static void *cspf_rds (void *vgs,
 
 
 
+static void *cspf_rdv (void *vgs,
+                       int parm1,
+                       int parm2,
+                       int parm3,
+                       int parm4)
+
+{
+   global_store *gs = vgs;
+   filecb *fcb;
+   char ch;
+   char *charp;
+   char *charp1;
+   short *plen;
+   int i;
+
+#if 0
+
+   fprintf (stderr, "rdv: parm1 = %d\n", parm1);
+   fprintf (stderr, "rdv: parm2 = %d\n", parm2);
+   fprintf (stderr, "rdv: parm3 = %d\n", parm3);
+
+#endif
+
+   STOR_FCB (parm1, fcb);
+
+   check_read (gs, fcb);
+
+   if (fcb -> status != '3' || fcb -> eof)
+      runtime_error (gs, BADIO, fcb -> ddname);
+
+   //*************************************
+   // Pointer to target from parm2
+   //*************************************
+
+   charp = ADDRSTOR (parm2);
+   plen = (short *) charp;
+   charp += 4;
+
+   //*************************************
+   // Init to blanks - length = parm3
+   //*************************************
+
+   plen [0] = parm3;
+   plen [1] = parm3;
+   memset (charp, ' ', parm3);
+
+   charp1 = charp;
+   for (i = 0; i < parm3; i ++)
+   {
+      if (fcb -> eof || fcb -> eoln)
+         break;
+
+      ch = file_getch (gs, fcb);
+      *charp = ch;
+      charp ++;
+   }
+
+   plen [1] = charp - charp1;
+
+   return NULL;
+}
+
+
+
+
 static void *cspf_rdr (void *vgs,
                        int parm1,
                        int parm2,
@@ -3089,6 +3211,7 @@ static void *cspf_rdc (void *vgs,
 #define CSP_RND    53
 #define CSP_WRV    54
 #define CSP_APN    55
+#define CSP_RDV    56
 
 
 static funtab ft [] =
@@ -3150,6 +3273,7 @@ static funtab ft [] =
    { "RND", CSP_RND, (cspfunc *) cspf_rnd, -2, 0, 0, ' ' },
    { "WRV", CSP_WRV, cspf_wrv, 3, 2, 0, ' ' },
    { "APN", CSP_APN, cspf_apn, 1, 0, 0, ' ' },
+   { "RDV", CSP_RDV, cspf_rdv, 3, 2, 0, ' ' },
    {  NULL,      -1, NULL,     0, 0, 0, ' ' }
 };
 
@@ -7449,37 +7573,72 @@ static void int1 (global_store *gs)
 
       case XXX_VMV:
 
-         /************************************************/
-         /*   get string addr from top of stack          */
-         /************************************************/
+         maxlen = pcode -> q;
 
-         straddr = STACK_I (gs -> sp);
+         if (maxlen > 0)
+         {
+            /************************************************/
+            /*   get string addr from top of stack          */
+            /************************************************/
 
-         /************************************************/
-         /*   get length values from SP - 1              */
-         /************************************************/
+            straddr = STACK_I (gs -> sp);
 
-         (gs -> sp) -= 4;
+            /************************************************/
+            /*   get length values from SP - 1              */
+            /************************************************/
 
-         stackp = ADDRSTACK (gs -> sp);
-         shortp = (short *) stackp;
+            (gs -> sp) -= 4;
 
-         if (shortp [0] != -1)
-            runtime_error (gs, UNDEFSTRING, NULL);
+            stackp = ADDRSTACK (gs -> sp);
+            shortp = (short *) stackp;
+
+            if (shortp [0] != -1)
+               runtime_error (gs, UNDEFSTRING, NULL);
+
+            slen = shortp [1];
+
+            (gs -> sp) -= 4;
+
+            addr = STACK_I (gs -> sp);
+            storep = ADDRSTOR (addr);
+
+            (gs -> sp) -= 4;
+         }
+         else
+         {
+            maxlen = - maxlen;
+
+            addr = STACK_I (gs -> sp);
+            storep = ADDRSTOR (addr);
+
+            (gs -> sp) -= 4;
+
+            /************************************************/
+            /*   get string addr from top of stack          */
+            /************************************************/
+
+            straddr = STACK_I (gs -> sp);
+
+            /************************************************/
+            /*   get length values from SP - 1              */
+            /************************************************/
+
+            (gs -> sp) -= 4;
+
+            stackp = ADDRSTACK (gs -> sp);
+            shortp = (short *) stackp;
+
+            if (shortp [0] != -1)
+               runtime_error (gs, UNDEFSTRING, NULL);
+
+            slen = shortp [1];
+
+            (gs -> sp) -= 4;
+         }
 
          /************************************************/
          /*   check lengths and move to target           */
          /************************************************/
-
-         slen = shortp [1];
-         maxlen = pcode -> q;
-
-         (gs -> sp) -= 4;
-
-         addr = STACK_I (gs -> sp);
-         storep = ADDRSTOR (addr);
-
-         (gs -> sp) -= 4;
 
          memset (storep, ' ', maxlen);
 
@@ -9332,6 +9491,21 @@ int main (int argc, char **argv)
       else
       {
          cpnext = cp + strlen (cp);
+      }
+
+      //**************************************************
+      // - als weiteres Argument zulassen
+      // sofern kein weiterer Inc-File gebraucht wird
+      // und wenn trotzdem ein Argument angegeben
+      // werden muss (Restriktion von BAT-Files)
+      //**************************************************
+      // Erweiterung Opp - 12.12.2019
+      //**************************************************
+
+      if (strcmp (cp, "-") == 0)
+      {
+         cp = cpnext;
+         continue;
       }
 
       strcpy (incfilename, cp);

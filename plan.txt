@@ -18,17 +18,27 @@
 * PCINT verliert LOC-Information bei CUP-Aufruf, meldet falsche Fehlerzeile
 * siehe ebenfalls TESTERR3
 * Im Fehlerfall (runtime_error) Funktionsname mit ausgeben (bei PCINT)
-- Im Fehlerfall (runtime_error) Call-Stack mit ausgeben (bei PCINT)
-- Compile-Fehler in TESTERR3
-- Fehler bei Structconst ist auch in PASCAL1N, d.h.:
-  PASCAL1N angleichen an PASCAL1, ausser WITH-Erweiterung
-- Einlesen STRING-Datentyp mit READLN
-- Funktionen LEFT und RIGHT bei Strings
-- Ausgabe Strings linksbuendig?
+* Im Fehlerfall (runtime_error) Call-Stack mit ausgeben (bei PCINT)
+* Compile-Fehler in TESTERR3 (Funktion mit String-Ergebnis als byvalue-parm)
+* Einlesen STRING-Datentyp mit READLN
+* PASCAL2: P-Codes XBG und XEN implementieren
+* LEFT und RIGHT bei Strings
+* LASTINDEX
+* Ausgabe Strings linksbuendig?
+* PASCAL2: neue Funktionen testen - siehe TESTNF
+* PASCAL2: negative Laenge bei VMV implementieren - siehe TESTERR3
+* PASCAL2: Ausgabe Strings linksbuendig mit CSP WRS - siehe TESTWRS
+* PASCAL2: neue CSP RDV implementieren - siehe TESTCOPY
+- Testen Unterschied bei Ausgabe Leerzeilen in Textfiles
+- Testen CSP RDV bei Eingabe von Terminal
+- Fehler (PASCAL1-Abbruch) bei falschem Funktionsnamen - siehe TESTERR4
 - Fehler bei CONST-Parameter mit Struktur
+- PASCAL1N angleichen an PASCAL1, PASCAL1N mit WITH-Erweiterung
 - Problem auf Mainframe, wenn PCODE_CHK fuer Pointer aktiv ist (NIL-Pointer-Check)
   CHK N muss wohl neu implementiert werden
 - Auslieferung Compiler auf alle Plattformen - Version 2019.09
+- READSTR
+- WRITESTR
 - Pointer-Konstruktor ist nicht ueberall in Funktionskopf zulaessig
   (z.B. nicht bei var-Parameter, bei value schon)
 

@@ -1,0 +1,1397 @@
+
+c:\work\pascal\work>pcint prr=testread.prr inc=paslibx,pasutils, pas=testread.pas out=testread.prrlis        
+
+PCINT (Build 1.0 Dec 13 2019 01:16:54)
+
+
+lesen einzelne char
+
+gelesen: p 112 eof = FALSE eoln = FALSE
+gelesen: r 114 eof = FALSE eoln = FALSE
+gelesen: o 111 eof = FALSE eoln = FALSE
+gelesen: g 103 eof = FALSE eoln = FALSE
+gelesen: r 114 eof = FALSE eoln = FALSE
+gelesen: a  97 eof = FALSE eoln = FALSE
+gelesen: m 109 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: T  84 eof = FALSE eoln = FALSE
+gelesen: E  69 eof = FALSE eoln = FALSE
+gelesen: S  83 eof = FALSE eoln = FALSE
+gelesen: T  84 eof = FALSE eoln = FALSE
+gelesen: R  82 eof = FALSE eoln = FALSE
+gelesen: E  69 eof = FALSE eoln = FALSE
+gelesen: A  65 eof = FALSE eoln = FALSE
+gelesen: D  68 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: (  40 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: I  73 eof = FALSE eoln = FALSE
+gelesen: N  78 eof = FALSE eoln = FALSE
+gelesen: P  80 eof = FALSE eoln = FALSE
+gelesen: F  70 eof = FALSE eoln = FALSE
+gelesen: I  73 eof = FALSE eoln = FALSE
+gelesen: L  76 eof = FALSE eoln = FALSE
+gelesen: E  69 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: ,  44 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: O  79 eof = FALSE eoln = FALSE
+gelesen: U  85 eof = FALSE eoln = FALSE
+gelesen: T  84 eof = FALSE eoln = FALSE
+gelesen: P  80 eof = FALSE eoln = FALSE
+gelesen: U  85 eof = FALSE eoln = FALSE
+gelesen: T  84 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: )  41 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: ;  59 eof = FALSE eoln =  TRUE
+gelesen:    32 eof = FALSE eoln =  TRUE
+gelesen:    32 eof = FALSE eoln =  TRUE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: v 118 eof = FALSE eoln = FALSE
+gelesen: a  97 eof = FALSE eoln = FALSE
+gelesen: r 114 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: I  73 eof = FALSE eoln = FALSE
+gelesen: N  78 eof = FALSE eoln = FALSE
+gelesen: P  80 eof = FALSE eoln = FALSE
+gelesen: F  70 eof = FALSE eoln = FALSE
+gelesen: I  73 eof = FALSE eoln = FALSE
+gelesen: L  76 eof = FALSE eoln = FALSE
+gelesen: E  69 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: :  58 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: T  84 eof = FALSE eoln = FALSE
+gelesen: E  69 eof = FALSE eoln = FALSE
+gelesen: X  88 eof = FALSE eoln = FALSE
+gelesen: T  84 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: ;  59 eof = FALSE eoln =  TRUE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: C  67 eof = FALSE eoln = FALSE
+gelesen: H  72 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: :  58 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: C  67 eof = FALSE eoln = FALSE
+gelesen: H  72 eof = FALSE eoln = FALSE
+gelesen: A  65 eof = FALSE eoln = FALSE
+gelesen: R  82 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: ;  59 eof = FALSE eoln =  TRUE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: C  67 eof = FALSE eoln = FALSE
+gelesen: H  72 eof = FALSE eoln = FALSE
+gelesen: 1  49 eof = FALSE eoln = FALSE
+gelesen: 0  48 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: :  58 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: C  67 eof = FALSE eoln = FALSE
+gelesen: H  72 eof = FALSE eoln = FALSE
+gelesen: A  65 eof = FALSE eoln = FALSE
+gelesen: R  82 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: (  40 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: 1  49 eof = FALSE eoln = FALSE
+gelesen: 0  48 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: )  41 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: ;  59 eof = FALSE eoln =  TRUE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: S  83 eof = FALSE eoln = FALSE
+gelesen: 1  49 eof = FALSE eoln = FALSE
+gelesen: 0  48 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: :  58 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: S  83 eof = FALSE eoln = FALSE
+gelesen: T  84 eof = FALSE eoln = FALSE
+gelesen: R  82 eof = FALSE eoln = FALSE
+gelesen: I  73 eof = FALSE eoln = FALSE
+gelesen: N  78 eof = FALSE eoln = FALSE
+gelesen: G  71 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: (  40 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: 1  49 eof = FALSE eoln = FALSE
+gelesen: 0  48 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: )  41 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: ;  59 eof = FALSE eoln =  TRUE
+gelesen:    32 eof = FALSE eoln =  TRUE
+gelesen:    32 eof = FALSE eoln =  TRUE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: b  98 eof = FALSE eoln = FALSE
+gelesen: e 101 eof = FALSE eoln = FALSE
+gelesen: g 103 eof = FALSE eoln = FALSE
+gelesen: i 105 eof = FALSE eoln = FALSE
+gelesen: n 110 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: (  40 eof = FALSE eoln = FALSE
+gelesen: *  42 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: H  72 eof = FALSE eoln = FALSE
+gelesen: A  65 eof = FALSE eoln = FALSE
+gelesen: U  85 eof = FALSE eoln = FALSE
+gelesen: P  80 eof = FALSE eoln = FALSE
+gelesen: T  84 eof = FALSE eoln = FALSE
+gelesen: P  80 eof = FALSE eoln = FALSE
+gelesen: R  82 eof = FALSE eoln = FALSE
+gelesen: O  79 eof = FALSE eoln = FALSE
+gelesen: G  71 eof = FALSE eoln = FALSE
+gelesen: R  82 eof = FALSE eoln = FALSE
+gelesen: A  65 eof = FALSE eoln = FALSE
+gelesen: M  77 eof = FALSE eoln = FALSE
+gelesen: M  77 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: *  42 eof = FALSE eoln = FALSE
+gelesen: )  41 eof = FALSE eoln =  TRUE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: W  87 eof = FALSE eoln = FALSE
+gelesen: R  82 eof = FALSE eoln = FALSE
+gelesen: I  73 eof = FALSE eoln = FALSE
+gelesen: T  84 eof = FALSE eoln = FALSE
+gelesen: E  69 eof = FALSE eoln = FALSE
+gelesen: L  76 eof = FALSE eoln = FALSE
+gelesen: N  78 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: ;  59 eof = FALSE eoln =  TRUE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: W  87 eof = FALSE eoln = FALSE
+gelesen: R  82 eof = FALSE eoln = FALSE
+gelesen: I  73 eof = FALSE eoln = FALSE
+gelesen: T  84 eof = FALSE eoln = FALSE
+gelesen: E  69 eof = FALSE eoln = FALSE
+gelesen: L  76 eof = FALSE eoln = FALSE
+gelesen: N  78 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: (  40 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: '  39 eof = FALSE eoln = FALSE
+gelesen: l 108 eof = FALSE eoln = FALSE
+gelesen: e 101 eof = FALSE eoln = FALSE
+gelesen: s 115 eof = FALSE eoln = FALSE
+gelesen: e 101 eof = FALSE eoln = FALSE
+gelesen: n 110 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: e 101 eof = FALSE eoln = FALSE
+gelesen: i 105 eof = FALSE eoln = FALSE
+gelesen: n 110 eof = FALSE eoln = FALSE
+gelesen: z 122 eof = FALSE eoln = FALSE
+gelesen: e 101 eof = FALSE eoln = FALSE
+gelesen: l 108 eof = FALSE eoln = FALSE
+gelesen: n 110 eof = FALSE eoln = FALSE
+gelesen: e 101 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: c  99 eof = FALSE eoln = FALSE
+gelesen: h 104 eof = FALSE eoln = FALSE
+gelesen: a  97 eof = FALSE eoln = FALSE
+gelesen: r 114 eof = FALSE eoln = FALSE
+gelesen: '  39 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: )  41 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: ;  59 eof = FALSE eoln =  TRUE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: W  87 eof = FALSE eoln = FALSE
+gelesen: R  82 eof = FALSE eoln = FALSE
+gelesen: I  73 eof = FALSE eoln = FALSE
+gelesen: T  84 eof = FALSE eoln = FALSE
+gelesen: E  69 eof = FALSE eoln = FALSE
+gelesen: L  76 eof = FALSE eoln = FALSE
+gelesen: N  78 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: ;  59 eof = FALSE eoln =  TRUE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: R  82 eof = FALSE eoln = FALSE
+gelesen: E  69 eof = FALSE eoln = FALSE
+gelesen: S  83 eof = FALSE eoln = FALSE
+gelesen: E  69 eof = FALSE eoln = FALSE
+gelesen: T  84 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: (  40 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: I  73 eof = FALSE eoln = FALSE
+gelesen: N  78 eof = FALSE eoln = FALSE
+gelesen: P  80 eof = FALSE eoln = FALSE
+gelesen: F  70 eof = FALSE eoln = FALSE
+gelesen: I  73 eof = FALSE eoln = FALSE
+gelesen: L  76 eof = FALSE eoln = FALSE
+gelesen: E  69 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: )  41 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: ;  59 eof = FALSE eoln =  TRUE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: w 119 eof = FALSE eoln = FALSE
+gelesen: h 104 eof = FALSE eoln = FALSE
+gelesen: i 105 eof = FALSE eoln = FALSE
+gelesen: l 108 eof = FALSE eoln = FALSE
+gelesen: e 101 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: n 110 eof = FALSE eoln = FALSE
+gelesen: o 111 eof = FALSE eoln = FALSE
+gelesen: t 116 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: E  69 eof = FALSE eoln = FALSE
+gelesen: O  79 eof = FALSE eoln = FALSE
+gelesen: F  70 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: (  40 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: I  73 eof = FALSE eoln = FALSE
+gelesen: N  78 eof = FALSE eoln = FALSE
+gelesen: P  80 eof = FALSE eoln = FALSE
+gelesen: F  70 eof = FALSE eoln = FALSE
+gelesen: I  73 eof = FALSE eoln = FALSE
+gelesen: L  76 eof = FALSE eoln = FALSE
+gelesen: E  69 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: )  41 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: d 100 eof = FALSE eoln = FALSE
+gelesen: o 111 eof = FALSE eoln =  TRUE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: b  98 eof = FALSE eoln = FALSE
+gelesen: e 101 eof = FALSE eoln = FALSE
+gelesen: g 103 eof = FALSE eoln = FALSE
+gelesen: i 105 eof = FALSE eoln = FALSE
+gelesen: n 110 eof = FALSE eoln =  TRUE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: R  82 eof = FALSE eoln = FALSE
+gelesen: E  69 eof = FALSE eoln = FALSE
+gelesen: A  65 eof = FALSE eoln = FALSE
+gelesen: D  68 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: (  40 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: I  73 eof = FALSE eoln = FALSE
+gelesen: N  78 eof = FALSE eoln = FALSE
+gelesen: P  80 eof = FALSE eoln = FALSE
+gelesen: F  70 eof = FALSE eoln = FALSE
+gelesen: I  73 eof = FALSE eoln = FALSE
+gelesen: L  76 eof = FALSE eoln = FALSE
+gelesen: E  69 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: ,  44 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: C  67 eof = FALSE eoln = FALSE
+gelesen: H  72 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: )  41 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: ;  59 eof = FALSE eoln =  TRUE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: W  87 eof = FALSE eoln = FALSE
+gelesen: R  82 eof = FALSE eoln = FALSE
+gelesen: I  73 eof = FALSE eoln = FALSE
+gelesen: T  84 eof = FALSE eoln = FALSE
+gelesen: E  69 eof = FALSE eoln = FALSE
+gelesen: L  76 eof = FALSE eoln = FALSE
+gelesen: N  78 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: (  40 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: '  39 eof = FALSE eoln = FALSE
+gelesen: g 103 eof = FALSE eoln = FALSE
+gelesen: e 101 eof = FALSE eoln = FALSE
+gelesen: l 108 eof = FALSE eoln = FALSE
+gelesen: e 101 eof = FALSE eoln = FALSE
+gelesen: s 115 eof = FALSE eoln = FALSE
+gelesen: e 101 eof = FALSE eoln = FALSE
+gelesen: n 110 eof = FALSE eoln = FALSE
+gelesen: :  58 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: '  39 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: ,  44 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: C  67 eof = FALSE eoln = FALSE
+gelesen: H  72 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: ,  44 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: O  79 eof = FALSE eoln = FALSE
+gelesen: R  82 eof = FALSE eoln = FALSE
+gelesen: D  68 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: (  40 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: C  67 eof = FALSE eoln = FALSE
+gelesen: H  72 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: )  41 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: :  58 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: 4  52 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: ,  44 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: '  39 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: e 101 eof = FALSE eoln = FALSE
+gelesen: o 111 eof = FALSE eoln = FALSE
+gelesen: f 102 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: =  61 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: '  39 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: ,  44 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: E  69 eof = FALSE eoln = FALSE
+gelesen: O  79 eof = FALSE eoln = FALSE
+gelesen: F  70 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: (  40 eof = FALSE eoln =  TRUE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: I  73 eof = FALSE eoln = FALSE
+gelesen: N  78 eof = FALSE eoln = FALSE
+gelesen: P  80 eof = FALSE eoln = FALSE
+gelesen: F  70 eof = FALSE eoln = FALSE
+gelesen: I  73 eof = FALSE eoln = FALSE
+gelesen: L  76 eof = FALSE eoln = FALSE
+gelesen: E  69 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: )  41 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: ,  44 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: '  39 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: e 101 eof = FALSE eoln = FALSE
+gelesen: o 111 eof = FALSE eoln = FALSE
+gelesen: l 108 eof = FALSE eoln = FALSE
+gelesen: n 110 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: =  61 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: '  39 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: ,  44 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: E  69 eof = FALSE eoln = FALSE
+gelesen: O  79 eof = FALSE eoln = FALSE
+gelesen: L  76 eof = FALSE eoln = FALSE
+gelesen: N  78 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: (  40 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: I  73 eof = FALSE eoln = FALSE
+gelesen: N  78 eof = FALSE eoln = FALSE
+gelesen: P  80 eof = FALSE eoln = FALSE
+gelesen: F  70 eof = FALSE eoln = FALSE
+gelesen: I  73 eof = FALSE eoln = FALSE
+gelesen: L  76 eof = FALSE eoln = FALSE
+gelesen: E  69 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: )  41 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: )  41 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: ;  59 eof = FALSE eoln =  TRUE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: e 101 eof = FALSE eoln = FALSE
+gelesen: n 110 eof = FALSE eoln = FALSE
+gelesen: d 100 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: (  40 eof = FALSE eoln = FALSE
+gelesen: *  42 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: w 119 eof = FALSE eoln = FALSE
+gelesen: h 104 eof = FALSE eoln = FALSE
+gelesen: i 105 eof = FALSE eoln = FALSE
+gelesen: l 108 eof = FALSE eoln = FALSE
+gelesen: e 101 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: *  42 eof = FALSE eoln = FALSE
+gelesen: )  41 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: ;  59 eof = FALSE eoln =  TRUE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: W  87 eof = FALSE eoln = FALSE
+gelesen: R  82 eof = FALSE eoln = FALSE
+gelesen: I  73 eof = FALSE eoln = FALSE
+gelesen: T  84 eof = FALSE eoln = FALSE
+gelesen: E  69 eof = FALSE eoln = FALSE
+gelesen: L  76 eof = FALSE eoln = FALSE
+gelesen: N  78 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: ;  59 eof = FALSE eoln =  TRUE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: W  87 eof = FALSE eoln = FALSE
+gelesen: R  82 eof = FALSE eoln = FALSE
+gelesen: I  73 eof = FALSE eoln = FALSE
+gelesen: T  84 eof = FALSE eoln = FALSE
+gelesen: E  69 eof = FALSE eoln = FALSE
+gelesen: L  76 eof = FALSE eoln = FALSE
+gelesen: N  78 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: (  40 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: '  39 eof = FALSE eoln = FALSE
+gelesen: l 108 eof = FALSE eoln = FALSE
+gelesen: e 101 eof = FALSE eoln = FALSE
+gelesen: s 115 eof = FALSE eoln = FALSE
+gelesen: e 101 eof = FALSE eoln = FALSE
+gelesen: n 110 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: c  99 eof = FALSE eoln = FALSE
+gelesen: h 104 eof = FALSE eoln = FALSE
+gelesen: a  97 eof = FALSE eoln = FALSE
+gelesen: r 114 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: (  40 eof = FALSE eoln = FALSE
+gelesen: 1  49 eof = FALSE eoln = FALSE
+gelesen: 0  48 eof = FALSE eoln = FALSE
+gelesen: )  41 eof = FALSE eoln = FALSE
+gelesen: '  39 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: )  41 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: ;  59 eof = FALSE eoln =  TRUE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: W  87 eof = FALSE eoln = FALSE
+gelesen: R  82 eof = FALSE eoln = FALSE
+gelesen: I  73 eof = FALSE eoln = FALSE
+gelesen: T  84 eof = FALSE eoln = FALSE
+gelesen: E  69 eof = FALSE eoln = FALSE
+gelesen: L  76 eof = FALSE eoln = FALSE
+gelesen: N  78 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: ;  59 eof = FALSE eoln =  TRUE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: R  82 eof = FALSE eoln = FALSE
+gelesen: E  69 eof = FALSE eoln = FALSE
+gelesen: S  83 eof = FALSE eoln = FALSE
+gelesen: E  69 eof = FALSE eoln = FALSE
+gelesen: T  84 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: (  40 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: I  73 eof = FALSE eoln = FALSE
+gelesen: N  78 eof = FALSE eoln = FALSE
+gelesen: P  80 eof = FALSE eoln = FALSE
+gelesen: F  70 eof = FALSE eoln = FALSE
+gelesen: I  73 eof = FALSE eoln = FALSE
+gelesen: L  76 eof = FALSE eoln = FALSE
+gelesen: E  69 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: )  41 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: ;  59 eof = FALSE eoln =  TRUE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: w 119 eof = FALSE eoln = FALSE
+gelesen: h 104 eof = FALSE eoln = FALSE
+gelesen: i 105 eof = FALSE eoln = FALSE
+gelesen: l 108 eof = FALSE eoln = FALSE
+gelesen: e 101 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: n 110 eof = FALSE eoln = FALSE
+gelesen: o 111 eof = FALSE eoln = FALSE
+gelesen: t 116 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: E  69 eof = FALSE eoln = FALSE
+gelesen: O  79 eof = FALSE eoln = FALSE
+gelesen: F  70 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: (  40 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: I  73 eof = FALSE eoln = FALSE
+gelesen: N  78 eof = FALSE eoln = FALSE
+gelesen: P  80 eof = FALSE eoln = FALSE
+gelesen: F  70 eof = FALSE eoln = FALSE
+gelesen: I  73 eof = FALSE eoln = FALSE
+gelesen: L  76 eof = FALSE eoln = FALSE
+gelesen: E  69 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: )  41 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: d 100 eof = FALSE eoln = FALSE
+gelesen: o 111 eof = FALSE eoln =  TRUE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: b  98 eof = FALSE eoln = FALSE
+gelesen: e 101 eof = FALSE eoln = FALSE
+gelesen: g 103 eof = FALSE eoln = FALSE
+gelesen: i 105 eof = FALSE eoln = FALSE
+gelesen: n 110 eof = FALSE eoln =  TRUE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: R  82 eof = FALSE eoln = FALSE
+gelesen: E  69 eof = FALSE eoln = FALSE
+gelesen: A  65 eof = FALSE eoln = FALSE
+gelesen: D  68 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: (  40 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: I  73 eof = FALSE eoln = FALSE
+gelesen: N  78 eof = FALSE eoln = FALSE
+gelesen: P  80 eof = FALSE eoln = FALSE
+gelesen: F  70 eof = FALSE eoln = FALSE
+gelesen: I  73 eof = FALSE eoln = FALSE
+gelesen: L  76 eof = FALSE eoln = FALSE
+gelesen: E  69 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: ,  44 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: C  67 eof = FALSE eoln = FALSE
+gelesen: H  72 eof = FALSE eoln = FALSE
+gelesen: 1  49 eof = FALSE eoln = FALSE
+gelesen: 0  48 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: )  41 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: ;  59 eof = FALSE eoln =  TRUE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: W  87 eof = FALSE eoln = FALSE
+gelesen: R  82 eof = FALSE eoln = FALSE
+gelesen: I  73 eof = FALSE eoln = FALSE
+gelesen: T  84 eof = FALSE eoln = FALSE
+gelesen: E  69 eof = FALSE eoln = FALSE
+gelesen: L  76 eof = FALSE eoln = FALSE
+gelesen: N  78 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: (  40 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: '  39 eof = FALSE eoln = FALSE
+gelesen: g 103 eof = FALSE eoln = FALSE
+gelesen: e 101 eof = FALSE eoln = FALSE
+gelesen: l 108 eof = FALSE eoln = FALSE
+gelesen: e 101 eof = FALSE eoln = FALSE
+gelesen: s 115 eof = FALSE eoln = FALSE
+gelesen: e 101 eof = FALSE eoln = FALSE
+gelesen: n 110 eof = FALSE eoln = FALSE
+gelesen: :  58 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: <  60 eof = FALSE eoln = FALSE
+gelesen: '  39 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: ,  44 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: C  67 eof = FALSE eoln = FALSE
+gelesen: H  72 eof = FALSE eoln = FALSE
+gelesen: 1  49 eof = FALSE eoln = FALSE
+gelesen: 0  48 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: ,  44 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: '  39 eof = FALSE eoln = FALSE
+gelesen: >  62 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: e 101 eof = FALSE eoln = FALSE
+gelesen: o 111 eof = FALSE eoln = FALSE
+gelesen: l 108 eof = FALSE eoln = FALSE
+gelesen: n 110 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: =  61 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: '  39 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: ,  44 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: E  69 eof = FALSE eoln = FALSE
+gelesen: O  79 eof = FALSE eoln = FALSE
+gelesen: L  76 eof = FALSE eoln = FALSE
+gelesen: N  78 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: (  40 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: I  73 eof = FALSE eoln = FALSE
+gelesen: N  78 eof = FALSE eoln = FALSE
+gelesen: P  80 eof = FALSE eoln = FALSE
+gelesen: F  70 eof = FALSE eoln = FALSE
+gelesen: I  73 eof = FALSE eoln = FALSE
+gelesen: L  76 eof = FALSE eoln = FALSE
+gelesen: E  69 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: )  41 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: )  41 eof = FALSE eoln =  TRUE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: ;  59 eof = FALSE eoln =  TRUE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: i 105 eof = FALSE eoln = FALSE
+gelesen: f 102 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: E  69 eof = FALSE eoln = FALSE
+gelesen: O  79 eof = FALSE eoln = FALSE
+gelesen: L  76 eof = FALSE eoln = FALSE
+gelesen: N  78 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: (  40 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: I  73 eof = FALSE eoln = FALSE
+gelesen: N  78 eof = FALSE eoln = FALSE
+gelesen: P  80 eof = FALSE eoln = FALSE
+gelesen: F  70 eof = FALSE eoln = FALSE
+gelesen: I  73 eof = FALSE eoln = FALSE
+gelesen: L  76 eof = FALSE eoln = FALSE
+gelesen: E  69 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: )  41 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: t 116 eof = FALSE eoln = FALSE
+gelesen: h 104 eof = FALSE eoln = FALSE
+gelesen: e 101 eof = FALSE eoln = FALSE
+gelesen: n 110 eof = FALSE eoln =  TRUE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: R  82 eof = FALSE eoln = FALSE
+gelesen: E  69 eof = FALSE eoln = FALSE
+gelesen: A  65 eof = FALSE eoln = FALSE
+gelesen: D  68 eof = FALSE eoln = FALSE
+gelesen: L  76 eof = FALSE eoln = FALSE
+gelesen: N  78 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: (  40 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: I  73 eof = FALSE eoln = FALSE
+gelesen: N  78 eof = FALSE eoln = FALSE
+gelesen: P  80 eof = FALSE eoln = FALSE
+gelesen: F  70 eof = FALSE eoln = FALSE
+gelesen: I  73 eof = FALSE eoln = FALSE
+gelesen: L  76 eof = FALSE eoln = FALSE
+gelesen: E  69 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: )  41 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: ;  59 eof = FALSE eoln =  TRUE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: e 101 eof = FALSE eoln = FALSE
+gelesen: n 110 eof = FALSE eoln = FALSE
+gelesen: d 100 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: (  40 eof = FALSE eoln = FALSE
+gelesen: *  42 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: w 119 eof = FALSE eoln = FALSE
+gelesen: h 104 eof = FALSE eoln = FALSE
+gelesen: i 105 eof = FALSE eoln = FALSE
+gelesen: l 108 eof = FALSE eoln = FALSE
+gelesen: e 101 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: *  42 eof = FALSE eoln = FALSE
+gelesen: )  41 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: ;  59 eof = FALSE eoln =  TRUE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: W  87 eof = FALSE eoln = FALSE
+gelesen: R  82 eof = FALSE eoln = FALSE
+gelesen: I  73 eof = FALSE eoln = FALSE
+gelesen: T  84 eof = FALSE eoln = FALSE
+gelesen: E  69 eof = FALSE eoln = FALSE
+gelesen: L  76 eof = FALSE eoln = FALSE
+gelesen: N  78 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: ;  59 eof = FALSE eoln =  TRUE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: W  87 eof = FALSE eoln = FALSE
+gelesen: R  82 eof = FALSE eoln = FALSE
+gelesen: I  73 eof = FALSE eoln = FALSE
+gelesen: T  84 eof = FALSE eoln = FALSE
+gelesen: E  69 eof = FALSE eoln = FALSE
+gelesen: L  76 eof = FALSE eoln = FALSE
+gelesen: N  78 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: (  40 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: '  39 eof = FALSE eoln = FALSE
+gelesen: l 108 eof = FALSE eoln = FALSE
+gelesen: e 101 eof = FALSE eoln = FALSE
+gelesen: s 115 eof = FALSE eoln = FALSE
+gelesen: e 101 eof = FALSE eoln = FALSE
+gelesen: n 110 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: s 115 eof = FALSE eoln = FALSE
+gelesen: t 116 eof = FALSE eoln = FALSE
+gelesen: r 114 eof = FALSE eoln = FALSE
+gelesen: i 105 eof = FALSE eoln = FALSE
+gelesen: n 110 eof = FALSE eoln = FALSE
+gelesen: g 103 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: (  40 eof = FALSE eoln = FALSE
+gelesen: 1  49 eof = FALSE eoln = FALSE
+gelesen: 0  48 eof = FALSE eoln = FALSE
+gelesen: )  41 eof = FALSE eoln = FALSE
+gelesen: '  39 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: )  41 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: ;  59 eof = FALSE eoln =  TRUE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: W  87 eof = FALSE eoln = FALSE
+gelesen: R  82 eof = FALSE eoln = FALSE
+gelesen: I  73 eof = FALSE eoln = FALSE
+gelesen: T  84 eof = FALSE eoln = FALSE
+gelesen: E  69 eof = FALSE eoln = FALSE
+gelesen: L  76 eof = FALSE eoln = FALSE
+gelesen: N  78 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: ;  59 eof = FALSE eoln =  TRUE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: R  82 eof = FALSE eoln = FALSE
+gelesen: E  69 eof = FALSE eoln = FALSE
+gelesen: S  83 eof = FALSE eoln = FALSE
+gelesen: E  69 eof = FALSE eoln = FALSE
+gelesen: T  84 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: (  40 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: I  73 eof = FALSE eoln = FALSE
+gelesen: N  78 eof = FALSE eoln = FALSE
+gelesen: P  80 eof = FALSE eoln = FALSE
+gelesen: F  70 eof = FALSE eoln = FALSE
+gelesen: I  73 eof = FALSE eoln = FALSE
+gelesen: L  76 eof = FALSE eoln = FALSE
+gelesen: E  69 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: )  41 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: ;  59 eof = FALSE eoln =  TRUE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: w 119 eof = FALSE eoln = FALSE
+gelesen: h 104 eof = FALSE eoln = FALSE
+gelesen: i 105 eof = FALSE eoln = FALSE
+gelesen: l 108 eof = FALSE eoln = FALSE
+gelesen: e 101 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: n 110 eof = FALSE eoln = FALSE
+gelesen: o 111 eof = FALSE eoln = FALSE
+gelesen: t 116 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: E  69 eof = FALSE eoln = FALSE
+gelesen: O  79 eof = FALSE eoln = FALSE
+gelesen: F  70 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: (  40 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: I  73 eof = FALSE eoln = FALSE
+gelesen: N  78 eof = FALSE eoln = FALSE
+gelesen: P  80 eof = FALSE eoln = FALSE
+gelesen: F  70 eof = FALSE eoln = FALSE
+gelesen: I  73 eof = FALSE eoln = FALSE
+gelesen: L  76 eof = FALSE eoln = FALSE
+gelesen: E  69 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: )  41 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: d 100 eof = FALSE eoln = FALSE
+gelesen: o 111 eof = FALSE eoln =  TRUE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: b  98 eof = FALSE eoln = FALSE
+gelesen: e 101 eof = FALSE eoln = FALSE
+gelesen: g 103 eof = FALSE eoln = FALSE
+gelesen: i 105 eof = FALSE eoln = FALSE
+gelesen: n 110 eof = FALSE eoln =  TRUE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: R  82 eof = FALSE eoln = FALSE
+gelesen: E  69 eof = FALSE eoln = FALSE
+gelesen: A  65 eof = FALSE eoln = FALSE
+gelesen: D  68 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: (  40 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: I  73 eof = FALSE eoln = FALSE
+gelesen: N  78 eof = FALSE eoln = FALSE
+gelesen: P  80 eof = FALSE eoln = FALSE
+gelesen: F  70 eof = FALSE eoln = FALSE
+gelesen: I  73 eof = FALSE eoln = FALSE
+gelesen: L  76 eof = FALSE eoln = FALSE
+gelesen: E  69 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: ,  44 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: S  83 eof = FALSE eoln = FALSE
+gelesen: 1  49 eof = FALSE eoln = FALSE
+gelesen: 0  48 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: )  41 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: ;  59 eof = FALSE eoln =  TRUE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: W  87 eof = FALSE eoln = FALSE
+gelesen: R  82 eof = FALSE eoln = FALSE
+gelesen: I  73 eof = FALSE eoln = FALSE
+gelesen: T  84 eof = FALSE eoln = FALSE
+gelesen: E  69 eof = FALSE eoln = FALSE
+gelesen: L  76 eof = FALSE eoln = FALSE
+gelesen: N  78 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: (  40 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: '  39 eof = FALSE eoln = FALSE
+gelesen: g 103 eof = FALSE eoln = FALSE
+gelesen: e 101 eof = FALSE eoln = FALSE
+gelesen: l 108 eof = FALSE eoln = FALSE
+gelesen: e 101 eof = FALSE eoln = FALSE
+gelesen: s 115 eof = FALSE eoln = FALSE
+gelesen: e 101 eof = FALSE eoln = FALSE
+gelesen: n 110 eof = FALSE eoln = FALSE
+gelesen: :  58 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: <  60 eof = FALSE eoln = FALSE
+gelesen: '  39 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: ,  44 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: S  83 eof = FALSE eoln = FALSE
+gelesen: 1  49 eof = FALSE eoln = FALSE
+gelesen: 0  48 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: ,  44 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: '  39 eof = FALSE eoln = FALSE
+gelesen: >  62 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: e 101 eof = FALSE eoln = FALSE
+gelesen: o 111 eof = FALSE eoln = FALSE
+gelesen: l 108 eof = FALSE eoln = FALSE
+gelesen: n 110 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: =  61 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: '  39 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: ,  44 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: E  69 eof = FALSE eoln = FALSE
+gelesen: O  79 eof = FALSE eoln = FALSE
+gelesen: L  76 eof = FALSE eoln = FALSE
+gelesen: N  78 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: (  40 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: I  73 eof = FALSE eoln = FALSE
+gelesen: N  78 eof = FALSE eoln = FALSE
+gelesen: P  80 eof = FALSE eoln = FALSE
+gelesen: F  70 eof = FALSE eoln = FALSE
+gelesen: I  73 eof = FALSE eoln = FALSE
+gelesen: L  76 eof = FALSE eoln = FALSE
+gelesen: E  69 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: )  41 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: )  41 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: ;  59 eof = FALSE eoln =  TRUE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: i 105 eof = FALSE eoln = FALSE
+gelesen: f 102 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: E  69 eof = FALSE eoln = FALSE
+gelesen: O  79 eof = FALSE eoln = FALSE
+gelesen: L  76 eof = FALSE eoln = FALSE
+gelesen: N  78 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: (  40 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: I  73 eof = FALSE eoln = FALSE
+gelesen: N  78 eof = FALSE eoln = FALSE
+gelesen: P  80 eof = FALSE eoln = FALSE
+gelesen: F  70 eof = FALSE eoln = FALSE
+gelesen: I  73 eof = FALSE eoln = FALSE
+gelesen: L  76 eof = FALSE eoln = FALSE
+gelesen: E  69 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: )  41 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: t 116 eof = FALSE eoln = FALSE
+gelesen: h 104 eof = FALSE eoln = FALSE
+gelesen: e 101 eof = FALSE eoln = FALSE
+gelesen: n 110 eof = FALSE eoln =  TRUE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: R  82 eof = FALSE eoln = FALSE
+gelesen: E  69 eof = FALSE eoln = FALSE
+gelesen: A  65 eof = FALSE eoln = FALSE
+gelesen: D  68 eof = FALSE eoln = FALSE
+gelesen: L  76 eof = FALSE eoln = FALSE
+gelesen: N  78 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: (  40 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: I  73 eof = FALSE eoln = FALSE
+gelesen: N  78 eof = FALSE eoln = FALSE
+gelesen: P  80 eof = FALSE eoln = FALSE
+gelesen: F  70 eof = FALSE eoln = FALSE
+gelesen: I  73 eof = FALSE eoln = FALSE
+gelesen: L  76 eof = FALSE eoln = FALSE
+gelesen: E  69 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: )  41 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: ;  59 eof = FALSE eoln =  TRUE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: e 101 eof = FALSE eoln = FALSE
+gelesen: n 110 eof = FALSE eoln = FALSE
+gelesen: d 100 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: (  40 eof = FALSE eoln = FALSE
+gelesen: *  42 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: w 119 eof = FALSE eoln = FALSE
+gelesen: h 104 eof = FALSE eoln = FALSE
+gelesen: i 105 eof = FALSE eoln = FALSE
+gelesen: l 108 eof = FALSE eoln = FALSE
+gelesen: e 101 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: *  42 eof = FALSE eoln = FALSE
+gelesen: )  41 eof = FALSE eoln =  TRUE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: e 101 eof = FALSE eoln = FALSE
+gelesen: n 110 eof = FALSE eoln = FALSE
+gelesen: d 100 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: (  40 eof = FALSE eoln = FALSE
+gelesen: *  42 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: H  72 eof = FALSE eoln = FALSE
+gelesen: A  65 eof = FALSE eoln = FALSE
+gelesen: U  85 eof = FALSE eoln = FALSE
+gelesen: P  80 eof = FALSE eoln = FALSE
+gelesen: T  84 eof = FALSE eoln = FALSE
+gelesen: P  80 eof = FALSE eoln = FALSE
+gelesen: R  82 eof = FALSE eoln = FALSE
+gelesen: O  79 eof = FALSE eoln = FALSE
+gelesen: G  71 eof = FALSE eoln = FALSE
+gelesen: R  82 eof = FALSE eoln = FALSE
+gelesen: A  65 eof = FALSE eoln = FALSE
+gelesen: M  77 eof = FALSE eoln = FALSE
+gelesen: M  77 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: *  42 eof = FALSE eoln = FALSE
+gelesen: )  41 eof = FALSE eoln = FALSE
+gelesen:    32 eof = FALSE eoln = FALSE
+gelesen: .  46 eof = FALSE eoln =  TRUE
+gelesen:    32 eof =  TRUE eoln =  TRUE
+
+lesen char (10)
+
+gelesen: <program TE> eoln = FALSE
+gelesen: <STREAD ( I> eoln = FALSE
+gelesen: <NPFILE , O> eoln = FALSE
+gelesen: <UTPUT ) ; > eoln =  TRUE
+gelesen: <          > eoln =  TRUE
+gelesen: <          > eoln =  TRUE
+gelesen: <var INPFIL> eoln = FALSE
+gelesen: <E : TEXT ;> eoln =  TRUE
+gelesen: <    CH : C> eoln = FALSE
+gelesen: <HAR ;     > eoln =  TRUE
+gelesen: <    CH10 :> eoln = FALSE
+gelesen: < CHAR ( 10> eoln = FALSE
+gelesen: < ) ;      > eoln =  TRUE
+gelesen: <    S10 : > eoln = FALSE
+gelesen: <STRING ( 1> eoln = FALSE
+gelesen: <0 ) ;     > eoln =  TRUE
+gelesen: <          > eoln =  TRUE
+gelesen: <          > eoln =  TRUE
+gelesen: <begin (* H> eoln = FALSE
+gelesen: <AUPTPROGRA> eoln = FALSE
+gelesen: <MM *)     > eoln =  TRUE
+gelesen: <  WRITELN > eoln = FALSE
+gelesen: <;         > eoln =  TRUE
+gelesen: <  WRITELN > eoln = FALSE
+gelesen: <( 'lesen e> eoln = FALSE
+gelesen: <inzelne ch> eoln = FALSE
+gelesen: <ar' ) ;   > eoln =  TRUE
+gelesen: <  WRITELN > eoln = FALSE
+gelesen: <;         > eoln =  TRUE
+gelesen: <  RESET ( > eoln = FALSE
+gelesen: <INPFILE ) > eoln = FALSE
+gelesen: <;         > eoln =  TRUE
+gelesen: <  while no> eoln = FALSE
+gelesen: <t EOF ( IN> eoln = FALSE
+gelesen: <PFILE ) do> eoln =  TRUE
+gelesen: <    begin > eoln =  TRUE
+gelesen: <      READ> eoln = FALSE
+gelesen: < ( INPFILE> eoln = FALSE
+gelesen: < , CH ) ; > eoln =  TRUE
+gelesen: <      WRIT> eoln = FALSE
+gelesen: <ELN ( 'gel> eoln = FALSE
+gelesen: <esen: ' , > eoln = FALSE
+gelesen: <CH , ORD (> eoln = FALSE
+gelesen: < CH ) : 4 > eoln = FALSE
+gelesen: <, ' eof = > eoln = FALSE
+gelesen: <' , EOF ( > eoln =  TRUE
+gelesen: <          > eoln = FALSE
+gelesen: <      INPF> eoln = FALSE
+gelesen: <ILE ) , ' > eoln = FALSE
+gelesen: <eoln = ' ,> eoln = FALSE
+gelesen: < EOLN ( IN> eoln = FALSE
+gelesen: <PFILE ) ) > eoln = FALSE
+gelesen: <;         > eoln =  TRUE
+gelesen: <    end (*> eoln = FALSE
+gelesen: < while *) > eoln = FALSE
+gelesen: <;         > eoln =  TRUE
+gelesen: <  WRITELN > eoln = FALSE
+gelesen: <;         > eoln =  TRUE
+gelesen: <  WRITELN > eoln = FALSE
+gelesen: <( 'lesen c> eoln = FALSE
+gelesen: <har (10)' > eoln = FALSE
+gelesen: <) ;       > eoln =  TRUE
+gelesen: <  WRITELN > eoln = FALSE
+gelesen: <;         > eoln =  TRUE
+gelesen: <  RESET ( > eoln = FALSE
+gelesen: <INPFILE ) > eoln = FALSE
+gelesen: <;         > eoln =  TRUE
+gelesen: <  while no> eoln = FALSE
+gelesen: <t EOF ( IN> eoln = FALSE
+gelesen: <PFILE ) do> eoln =  TRUE
+gelesen: <    begin > eoln =  TRUE
+gelesen: <      READ> eoln = FALSE
+gelesen: < ( INPFILE> eoln = FALSE
+gelesen: < , CH10 ) > eoln = FALSE
+gelesen: <;         > eoln =  TRUE
+gelesen: <      WRIT> eoln = FALSE
+gelesen: <ELN ( 'gel> eoln = FALSE
+gelesen: <esen: <' ,> eoln = FALSE
+gelesen: < CH10 , '>> eoln = FALSE
+gelesen: < eoln = ' > eoln = FALSE
+gelesen: <, EOLN ( I> eoln = FALSE
+gelesen: <NPFILE ) )> eoln =  TRUE
+gelesen: <          > eoln = FALSE
+gelesen: <      ;   > eoln =  TRUE
+gelesen: <      if E> eoln = FALSE
+gelesen: <OLN ( INPF> eoln = FALSE
+gelesen: <ILE ) then> eoln =  TRUE
+gelesen: <        RE> eoln = FALSE
+gelesen: <ADLN ( INP> eoln = FALSE
+gelesen: <FILE ) ;  > eoln =  TRUE
+gelesen: <    end (*> eoln = FALSE
+gelesen: < while *) > eoln = FALSE
+gelesen: <;         > eoln =  TRUE
+gelesen: <  WRITELN > eoln = FALSE
+gelesen: <;         > eoln =  TRUE
+gelesen: <  WRITELN > eoln = FALSE
+gelesen: <( 'lesen s> eoln = FALSE
+gelesen: <tring (10)> eoln = FALSE
+gelesen: <' ) ;     > eoln =  TRUE
+gelesen: <  WRITELN > eoln = FALSE
+gelesen: <;         > eoln =  TRUE
+gelesen: <  RESET ( > eoln = FALSE
+gelesen: <INPFILE ) > eoln = FALSE
+gelesen: <;         > eoln =  TRUE
+gelesen: <  while no> eoln = FALSE
+gelesen: <t EOF ( IN> eoln = FALSE
+gelesen: <PFILE ) do> eoln =  TRUE
+gelesen: <    begin > eoln =  TRUE
+gelesen: <      READ> eoln = FALSE
+gelesen: < ( INPFILE> eoln = FALSE
+gelesen: < , S10 ) ;> eoln =  TRUE
+gelesen: <      WRIT> eoln = FALSE
+gelesen: <ELN ( 'gel> eoln = FALSE
+gelesen: <esen: <' ,> eoln = FALSE
+gelesen: < S10 , '> > eoln = FALSE
+gelesen: <eoln = ' ,> eoln = FALSE
+gelesen: < EOLN ( IN> eoln = FALSE
+gelesen: <PFILE ) ) > eoln = FALSE
+gelesen: <;         > eoln =  TRUE
+gelesen: <      if E> eoln = FALSE
+gelesen: <OLN ( INPF> eoln = FALSE
+gelesen: <ILE ) then> eoln =  TRUE
+gelesen: <        RE> eoln = FALSE
+gelesen: <ADLN ( INP> eoln = FALSE
+gelesen: <FILE ) ;  > eoln =  TRUE
+gelesen: <    end (*> eoln = FALSE
+gelesen: < while *) > eoln =  TRUE
+gelesen: <end (* HAU> eoln = FALSE
+gelesen: <PTPROGRAMM> eoln = FALSE
+gelesen: < *) .     > eoln =  TRUE
+
+lesen string (10)
+
+gelesen: <program TE> eoln = FALSE
+gelesen: <STREAD ( I> eoln = FALSE
+gelesen: <NPFILE , O> eoln = FALSE
+gelesen: <UTPUT ) ;> eoln =  TRUE
+gelesen: <> eoln =  TRUE
+gelesen: <> eoln =  TRUE
+gelesen: <var INPFIL> eoln = FALSE
+gelesen: <E : TEXT ;> eoln =  TRUE
+gelesen: <    CH : C> eoln = FALSE
+gelesen: <HAR ;> eoln =  TRUE
+gelesen: <    CH10 :> eoln = FALSE
+gelesen: < CHAR ( 10> eoln = FALSE
+gelesen: < ) ;> eoln =  TRUE
+gelesen: <    S10 : > eoln = FALSE
+gelesen: <STRING ( 1> eoln = FALSE
+gelesen: <0 ) ;> eoln =  TRUE
+gelesen: <> eoln =  TRUE
+gelesen: <> eoln =  TRUE
+gelesen: <begin (* H> eoln = FALSE
+gelesen: <AUPTPROGRA> eoln = FALSE
+gelesen: <MM *)> eoln =  TRUE
+gelesen: <  WRITELN > eoln = FALSE
+gelesen: <;> eoln =  TRUE
+gelesen: <  WRITELN > eoln = FALSE
+gelesen: <( 'lesen e> eoln = FALSE
+gelesen: <inzelne ch> eoln = FALSE
+gelesen: <ar' ) ;> eoln =  TRUE
+gelesen: <  WRITELN > eoln = FALSE
+gelesen: <;> eoln =  TRUE
+gelesen: <  RESET ( > eoln = FALSE
+gelesen: <INPFILE ) > eoln = FALSE
+gelesen: <;> eoln =  TRUE
+gelesen: <  while no> eoln = FALSE
+gelesen: <t EOF ( IN> eoln = FALSE
+gelesen: <PFILE ) do> eoln =  TRUE
+gelesen: <    begin> eoln =  TRUE
+gelesen: <      READ> eoln = FALSE
+gelesen: < ( INPFILE> eoln = FALSE
+gelesen: < , CH ) ;> eoln =  TRUE
+gelesen: <      WRIT> eoln = FALSE
+gelesen: <ELN ( 'gel> eoln = FALSE
+gelesen: <esen: ' , > eoln = FALSE
+gelesen: <CH , ORD (> eoln = FALSE
+gelesen: < CH ) : 4 > eoln = FALSE
+gelesen: <, ' eof = > eoln = FALSE
+gelesen: <' , EOF (> eoln =  TRUE
+gelesen: <          > eoln = FALSE
+gelesen: <      INPF> eoln = FALSE
+gelesen: <ILE ) , ' > eoln = FALSE
+gelesen: <eoln = ' ,> eoln = FALSE
+gelesen: < EOLN ( IN> eoln = FALSE
+gelesen: <PFILE ) ) > eoln = FALSE
+gelesen: <;> eoln =  TRUE
+gelesen: <    end (*> eoln = FALSE
+gelesen: < while *) > eoln = FALSE
+gelesen: <;> eoln =  TRUE
+gelesen: <  WRITELN > eoln = FALSE
+gelesen: <;> eoln =  TRUE
+gelesen: <  WRITELN > eoln = FALSE
+gelesen: <( 'lesen c> eoln = FALSE
+gelesen: <har (10)' > eoln = FALSE
+gelesen: <) ;> eoln =  TRUE
+gelesen: <  WRITELN > eoln = FALSE
+gelesen: <;> eoln =  TRUE
+gelesen: <  RESET ( > eoln = FALSE
+gelesen: <INPFILE ) > eoln = FALSE
+gelesen: <;> eoln =  TRUE
+gelesen: <  while no> eoln = FALSE
+gelesen: <t EOF ( IN> eoln = FALSE
+gelesen: <PFILE ) do> eoln =  TRUE
+gelesen: <    begin> eoln =  TRUE
+gelesen: <      READ> eoln = FALSE
+gelesen: < ( INPFILE> eoln = FALSE
+gelesen: < , CH10 ) > eoln = FALSE
+gelesen: <;> eoln =  TRUE
+gelesen: <      WRIT> eoln = FALSE
+gelesen: <ELN ( 'gel> eoln = FALSE
+gelesen: <esen: <' ,> eoln = FALSE
+gelesen: < CH10 , '>> eoln = FALSE
+gelesen: < eoln = ' > eoln = FALSE
+gelesen: <, EOLN ( I> eoln = FALSE
+gelesen: <NPFILE ) )> eoln =  TRUE
+gelesen: <          > eoln = FALSE
+gelesen: <      ;> eoln =  TRUE
+gelesen: <      if E> eoln = FALSE
+gelesen: <OLN ( INPF> eoln = FALSE
+gelesen: <ILE ) then> eoln =  TRUE
+gelesen: <        RE> eoln = FALSE
+gelesen: <ADLN ( INP> eoln = FALSE
+gelesen: <FILE ) ;> eoln =  TRUE
+gelesen: <    end (*> eoln = FALSE
+gelesen: < while *) > eoln = FALSE
+gelesen: <;> eoln =  TRUE
+gelesen: <  WRITELN > eoln = FALSE
+gelesen: <;> eoln =  TRUE
+gelesen: <  WRITELN > eoln = FALSE
+gelesen: <( 'lesen s> eoln = FALSE
+gelesen: <tring (10)> eoln = FALSE
+gelesen: <' ) ;> eoln =  TRUE
+gelesen: <  WRITELN > eoln = FALSE
+gelesen: <;> eoln =  TRUE
+gelesen: <  RESET ( > eoln = FALSE
+gelesen: <INPFILE ) > eoln = FALSE
+gelesen: <;> eoln =  TRUE
+gelesen: <  while no> eoln = FALSE
+gelesen: <t EOF ( IN> eoln = FALSE
+gelesen: <PFILE ) do> eoln =  TRUE
+gelesen: <    begin> eoln =  TRUE
+gelesen: <      READ> eoln = FALSE
+gelesen: < ( INPFILE> eoln = FALSE
+gelesen: < , S10 ) ;> eoln =  TRUE
+gelesen: <      WRIT> eoln = FALSE
+gelesen: <ELN ( 'gel> eoln = FALSE
+gelesen: <esen: <' ,> eoln = FALSE
+gelesen: < S10 , '> > eoln = FALSE
+gelesen: <eoln = ' ,> eoln = FALSE
+gelesen: < EOLN ( IN> eoln = FALSE
+gelesen: <PFILE ) ) > eoln = FALSE
+gelesen: <;> eoln =  TRUE
+gelesen: <      if E> eoln = FALSE
+gelesen: <OLN ( INPF> eoln = FALSE
+gelesen: <ILE ) then> eoln =  TRUE
+gelesen: <        RE> eoln = FALSE
+gelesen: <ADLN ( INP> eoln = FALSE
+gelesen: <FILE ) ;> eoln =  TRUE
+gelesen: <    end (*> eoln = FALSE
+gelesen: < while *)> eoln =  TRUE
+gelesen: <end (* HAU> eoln = FALSE
+gelesen: <PTPROGRAMM> eoln = FALSE
+gelesen: < *) .> eoln =  TRUE

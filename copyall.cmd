@@ -168,15 +168,15 @@ rem **********************************************************
 
 rem call copymvs pascal.messages compiler.messages
 
-    call copymvs pascal1.pas   compiler.pas
+rem call copymvs pascal1.pas   compiler.pas
 rem call copymvs pascal1a.pas  compiler.pas
 rem call copymvs pascal1b.pas  compiler.pas
-    call copymvs pascal2.pas   compiler.pas
+rem call copymvs pascal2.pas   compiler.pas
 rem call copymvs pascal2a.pas  compiler.pas
 rem call copymvs pascal2b.pas  compiler.pas
 rem call copymvs pasform.pas   compiler.pas
-    call copymvs paslibx.pas   compiler.pas
-    call copymvs passcan.pas   compiler.pas
+rem call copymvs paslibx.pas   compiler.pas
+rem call copymvs passcan.pas   compiler.pas
 rem call copymvs passnap.pas   compiler.pas
 rem call copymvs passnapc.pas  compiler.pas
 rem call copymvs pasutils.pas  compiler.pas
@@ -201,9 +201,37 @@ rem call copymvs testsub.pas   testpgm.pas
 rem call copymvs testvarc.pas  testpgm.pas
 rem call copymvs testvc2.pas   testpgm.pas
 rem call copymvs xcompn.pas    testpgm.pas
-    call copymvs testptr.pas   testpgm.pas
-    call copymvs testptr2.pas  testpgm.pas
-    call copymvs testset5.pas  testpgm.pas
+rem call copymvs testptr.pas   testpgm.pas
+rem call copymvs testptr2.pas  testpgm.pas
+rem call copymvs testset5.pas  testpgm.pas
 
 rem call copymvs pasmonn.ass   runtime.asm
+
+rem **********************************************************
+rem +++ Version 2019.09 +++
+rem **********************************************************
+
+    call copymvs pascal.messages compiler.messages
+
+    call copymvs pascal1.pas   compiler.pas
+    call copymvs pascal1a.pas  compiler.pas
+    call copymvs pascal1b.pas  compiler.pas
+    call copymvs pascal2.pas   compiler.pas
+    call copymvs pascal2a.pas  compiler.pas
+    call copymvs pascal2b.pas  compiler.pas
+    call copymvs pasform.pas   compiler.pas
+    call copymvs pasforma.pas  compiler.pas
+    call copymvs paslibx.pas   compiler.pas
+    call copymvs passcan.pas   compiler.pas
+    call copymvs pasutils.pas  compiler.pas
+
+    call copymvs avltree.pas   testpgm.pas
+    call copymvs copyteil.pas  testpgm.pas
+    call copymvs showhex.pas   testpgm.pas
+    call copymvs testerr4.pas  testpgm.pas
+    call copymvs testrea2.pas  testpgm.pas
+    call copymvs testread.pas  testpgm.pas
+    call copymvs xcompn.pas    testpgm.pas
+
+    call copymvs pasmonn.ass   runtime.asm
 

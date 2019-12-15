@@ -1,4 +1,25 @@
 
+2020.01:
+
+* Testen CSP RDV bei Eingabe von Terminal
+- zuerst Version 2019.09 auf MVS ausliefern
+- Fehler bei CSP RDV auf Mainframe - Maxlaenge wird nicht eingehalten bei laengerer Zeile
+- Testen Unterschied bei Ausgabe Leerzeilen in Textfiles
+- Lesen CHAR(10) und STRING(10) tickt anders als einzelne CHARs - siehe TESTREAD
+- Implementieren READ (X : N) - d.h. Change Read einzelne Chars, feste Strings, Varchars
+- READ Ints usw. neu als Pascal-Funktion
+- READSTR usw. als Pascal-Funktion
+- WRITESTR usw. als Pascal-Funktion
+- Fehler (PASCAL1-Abbruch) bei falschem Funktionsnamen - siehe TESTERR4
+- Fehler bei CONST-Parameter mit Struktur
+- PASCAL1N angleichen an PASCAL1, PASCAL1N mit WITH-Erweiterung
+- Problem auf Mainframe, wenn PCODE_CHK fuer Pointer aktiv ist (NIL-Pointer-Check)
+  CHK N muss wohl neu implementiert werden
+- Pointer-Konstruktor ist nicht ueberall in Funktionskopf zulaessig
+  (z.B. nicht bei var-Parameter, bei value schon)
+
+=======================================================================================
+
 2019.09:
 
 * Structconst erzeugt andere Offsets bei PASCAL1 (vergl. mit PASCAL1A)
@@ -29,18 +50,7 @@
 * PASCAL2: negative Laenge bei VMV implementieren - siehe TESTERR3
 * PASCAL2: Ausgabe Strings linksbuendig mit CSP WRS - siehe TESTWRS
 * PASCAL2: neue CSP RDV implementieren - siehe TESTCOPY
-- Testen Unterschied bei Ausgabe Leerzeilen in Textfiles
-- Testen CSP RDV bei Eingabe von Terminal
-- Fehler (PASCAL1-Abbruch) bei falschem Funktionsnamen - siehe TESTERR4
-- Fehler bei CONST-Parameter mit Struktur
-- PASCAL1N angleichen an PASCAL1, PASCAL1N mit WITH-Erweiterung
-- Problem auf Mainframe, wenn PCODE_CHK fuer Pointer aktiv ist (NIL-Pointer-Check)
-  CHK N muss wohl neu implementiert werden
-- Auslieferung Compiler auf alle Plattformen - Version 2019.09
-- READSTR
-- WRITESTR
-- Pointer-Konstruktor ist nicht ueberall in Funktionskopf zulaessig
-  (z.B. nicht bei var-Parameter, bei value schon)
+* Auslieferung Compiler auf alle Plattformen - Version 2019.09
 
 - P5 testen, Compile klappt ja schon
 - Weiter mit PINT.PAS (von P5)

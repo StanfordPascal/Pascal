@@ -1321,6 +1321,18 @@ function AVLCACHE ( FUNKCODE : CHAR ( 8 ) ;   // Funktionscode
           SP2 : -> CHAR ( 8 ) ;
 
       begin (* DIRCOMP *)
+
+        //**********************************************
+        // this coding simply to avoid warning message
+        // about parameters not used :-)
+        //**********************************************
+
+        if FALSE then
+          if L1 <> L2 then
+            begin
+              L1 := 8 ;
+              L2 := 8
+            end (* then *) ;
         SP1 := X1 ;
         SP2 := X2 ;
         S1 := SP1 -> ;
@@ -3092,7 +3104,7 @@ program PASFORM ( OUTPUT , EINGABE , AUSGABE , TRACE ) ;
 
 
 
-const VERKETT2 = 'Э' ;
+const VERKETT2 = 'З' ;
       MAXLOUTPUT = 72 ;
       MAXLINPUT = 160 ;
       MAXEINR = 51 ;
@@ -5662,11 +5674,11 @@ var I : INTEGER ;
 
 procedure CHKPARMS ;
 
-(***********************************)
-(* check run time parms via osparm *)
-(* option -b or -t (bin or text)   *)
-(* and filename                    *)
-(***********************************)
+/***********************************/
+/* check run time parms via osparm */
+/* option -b or -t (bin or text)   */
+/* and filename                    */
+/***********************************/
 
 
    var SX : INTEGER ;
@@ -5684,46 +5696,47 @@ procedure CHKPARMS ;
          with OSPARM -> do
            begin
              STATUS := 1 ;
-             for SX := 1 to LENGTH do
+             for SX := 1 to PLENGTH do
                begin
                  case STATUS of
-                   1 : if STRING [ SX ] = ' ' then
+                   1 : if PSTRING [ SX ] = ' ' then
                          STATUS := 1
                        else
-                         if STRING [ SX ] = '-' then
+                         if PSTRING [ SX ] = '-' then
                            STATUS := 2
                          else
                            begin
                              STATUS := 3 ;
                              PARM_FILENAME := ' ' ;
-                             PARM_FILENAME [ 1 ] := STRING [ SX ] ;
+                             PARM_FILENAME [ 1 ] := PSTRING [ SX ] ;
                              PARM_LF := 1 ;
                            end (* else *) ;
-                   2 : if STRING [ SX ] = ' ' then
+                   2 : if PSTRING [ SX ] = ' ' then
                          STATUS := 99
                        else
-                         if STRING [ SX ] = '-' then
+                         if PSTRING [ SX ] = '-' then
                            STATUS := 99
                          else
                            begin
                              STATUS := 4 ;
-                             if STRING [ SX ] = 'b' then
+                             if PSTRING [ SX ] = 'b' then
                                PARM_MODE := MODE_BINARY
                              else
-                               if STRING [ SX ] = 't' then
+                               if PSTRING [ SX ] = 't' then
                                  PARM_MODE := MODE_TEXT
                                else
                                  STATUS := 99 ;
                            end (* else *) ;
-                   3 : if STRING [ SX ] = ' ' then
+                   3 : if PSTRING [ SX ] = ' ' then
                          STATUS := 1
                        else
                          begin
                            PARM_LF := PARM_LF + 1 ;
-                           PARM_FILENAME [ PARM_LF ] := STRING [ SX ] ;
+                           PARM_FILENAME [ PARM_LF ] := PSTRING [ SX ]
+                                                   ;
                            STATUS := 3 ;
                          end (* else *) ;
-                   4 : if STRING [ SX ] = ' ' then
+                   4 : if PSTRING [ SX ] = ' ' then
                          STATUS := 1
                        else
                          STATUS := 99 ;
@@ -6632,7 +6645,7 @@ begin (* HAUPTPROGRAMM *)
   WRITELN ( 'x and y  ' , X and Y ) ;
   WRITELN ( 'x and y  ' , X & Y ) ;
   WRITELN ( 'x or y   ' , X or Y ) ;
-  WRITELN ( 'x or y   ' , X Э Y ) ;
+  WRITELN ( 'x or y   ' , X З Y ) ;
   WRITELN ( 'x xor y  ' , X xor Y ) ;
   WRITELN ( 'not x    ' , not X ) ;
   WRITELN ( 'not y    ' , not Y ) ;
@@ -6641,7 +6654,7 @@ begin (* HAUPTPROGRAMM *)
   WRITELN ( 'a and b  ' , A and B ) ;
   WRITELN ( 'a and b  ' , A & B ) ;
   WRITELN ( 'a or b   ' , A or B ) ;
-  WRITELN ( 'a or b   ' , A Э B ) ;
+  WRITELN ( 'a or b   ' , A З B ) ;
   WRITELN ( 'a xor b  ' , A xor B ) ;
   WRITELN ( 'not a    ' , not A ) ;
   WRITELN ( 'not b    ' , not B ) ;
@@ -7807,6 +7820,55 @@ begin (* HAUPTPROGRAMM *)
                 ' Milli Sec.)' ) ;
     end (* for *)
 end (* HAUPTPROGRAMM *) .
+++FILE PASCALN.TESTPGM.PAS                          MEMB TESTCOPY EXT PAS HEX -
+program TESTCOPY ( OUTPUT , INP1 , OUT1 , OUT2 ) ;
+
+//*****
+//$A+
+//*****
+
+
+
+var INP1 : TEXT ;
+    OUT1 : TEXT ;
+    OUT2 : TEXT ;
+    CF : CHAR ( 80 ) ;
+    CV : STRING ( 80 ) ;
+    ZEILNR : INTEGER ;
+    LAENGE : INTEGER ;
+    LMAX : INTEGER ;
+
+
+begin (* HAUPTPROGRAMM *)
+  RESET ( INP1 ) ;
+  REWRITE ( OUT1 ) ;
+  ZEILNR := 0 ;
+  while not EOF ( INP1 ) do
+    begin
+      READLN ( INP1 , CF ) ;
+      ZEILNR := ZEILNR + 1 ;
+      LMAX := MAXLENGTH ( CF ) ;
+      LAENGE := LENGTH ( CF ) ;
+      WRITELN ( 'Zeile ' , ZEILNR , ' MaxL ' , LMAX , ' Laenge ' ,
+                LAENGE ) ;
+      WRITELN ( OUT1 , CF )
+    end (* while *) ;
+  CLOSE ( OUT1 ) ;
+  RESET ( INP1 ) ;
+  REWRITE ( OUT2 ) ;
+  ZEILNR := 0 ;
+  while not EOF ( INP1 ) do
+    begin
+      READLN ( INP1 , CV ) ;
+      ZEILNR := ZEILNR + 1 ;
+      LMAX := MAXLENGTH ( CV ) ;
+      LAENGE := LENGTH ( CV ) ;
+      WRITELN ( 'Zeile ' , ZEILNR , ' MaxL ' , LMAX , ' Laenge ' ,
+                LAENGE ) ;
+      WRITELN ( OUT2 , CV )
+    end (* while *) ;
+  CLOSE ( OUT2 ) ;
+end (* HAUPTPROGRAMM *) .
 ++FILE PASCALN.TESTPGM.PAS                          MEMB TESTDUPL EXT PAS HEX -
 program TESTDUPL ( INPUT , OUTPUT ) ;
 (*$A+*)
@@ -7916,6 +7978,71 @@ begin (* HAUPTPROGRAMM *)
   MEMSET ( ADDR ( ABC ) , '*' , SIZEOF ( ALFA ) ) ;
   WRITELN ( 'abc = ' , ABC ) ;
 end (* HAUPTPROGRAMM *) .
+++FILE PASCALN.TESTPGM.PAS                          MEMB TESTERR3 EXT PAS HEX -
+program TESTERR3 ( OUTPUT ) ;
+
+
+var S : CHAR ( 80 ) ;
+    S2 : CHAR ( 10 ) ;
+
+
+
+procedure WRITE_VORSCHRIFT ( var F : TEXT ; VORSCHRIFT : CHAR ( 10 ) )
+                           ;
+
+   begin (* WRITE_VORSCHRIFT *)
+     WRITELN ( F , VORSCHRIFT ) ;
+   end (* WRITE_VORSCHRIFT *) ;
+
+
+
+function CHARFUNC : STRING ;
+
+   begin (* CHARFUNC *)
+     CHARFUNC := 'constant' ;
+   end (* CHARFUNC *) ;
+
+
+
+procedure FEHLER_ZUWEISUNG ;
+
+   begin (* FEHLER_ZUWEISUNG *)
+     S := 'langer string mit vielen zeichen' ;
+     S2 := SUBSTR ( S , 8 , 8 ) ;
+
+     //****************************************
+     // runtime error stringsize is diagnosed
+     // which is correct
+     // but wrong error line
+     // error line refers to line in $PASSTR1
+     // should refer to loc here !
+     //****************************************
+
+     if FALSE then
+       S2 := 'zu langer ' || 'String' ;
+     if FALSE then
+       S2 := SUBSTR ( S , 8 , 20 ) ;
+   end (* FEHLER_ZUWEISUNG *) ;
+
+
+
+begin (* HAUPTPROGRAMM *)
+  FEHLER_ZUWEISUNG ;
+
+  //*********************************************
+  // compiler refuses to compile procedure call
+  // where function result of string type
+  // is passed by value to fixed char argument
+  // but should work
+  //*********************************************
+
+  if TRUE then
+    begin
+      WRITE_VORSCHRIFT ( OUTPUT , S2 ) ;
+      WRITE_VORSCHRIFT ( OUTPUT , CHARFUNC ) ;
+      WRITE_VORSCHRIFT ( OUTPUT , SUBSTR ( S , 8 , 7 ) ) ;
+    end (* then *)
+end (* HAUPTPROGRAMM *) .
 ++FILE PASCALN.TESTPGM.PAS                          MEMB TESTFILE EXT PAS HEX -
 program TESTFILE ( INPUT ) ;
 
@@ -7972,7 +8099,7 @@ procedure DUMP ( PVON : VOIDPTR ; PBIS : VOIDPTR ) ;
       begin (* DUMPCHAR *)
         if CH in [ 'a' .. 'i' , 'j' .. 'r' , 's' .. 'z' , 'A' .. 'I' ,
         'J' .. 'R' , 'S' .. 'Z' , '0' .. '9' , ' ' , ',' , '.' , '-' ,
-        ';' , ':' , '_' , '!' , '"' , 'ж' , '$' , '%' , '&' , '/' , '('
+        ';' , ':' , '_' , '!' , '"' , 'Ю' , '$' , '%' , '&' , '/' , '('
         , ')' , '=' , '?' , '+' , '*' , '#' , '*' ] then
           WRITE ( CH )
         else
@@ -8535,6 +8662,80 @@ begin (* HAUPTPROGRAMM *)
       for CH := 'A' to 'Z' do
         WRITELN ( 'ch = ' , CH , ' ord = ' , ORD ( CH ) ) ;
     end (* then *)
+end (* HAUPTPROGRAMM *) .
+++FILE PASCALN.TESTPGM.PAS                          MEMB TESTINTS EXT PAS HEX -
+program TESTINTS ( OUTPUT ) ;
+
+
+var X : CHAR ( 8 ) ;
+    I : INTEGER ;
+
+
+
+procedure INTTOSTR ( CP : VOIDPTR ; LEN : INTEGER ; VAL : INTEGER ;
+                   ZEROES : BOOLEAN ) ;
+
+   var BUFFER : array [ 1 .. 20 ] of CHAR ;
+       MINUS : BOOLEAN ;
+       LETZT : INTEGER ;
+       I : INTEGER ;
+       LIMIT : INTEGER ;
+       LENX : INTEGER ;
+       POSX : INTEGER ;
+
+   begin (* INTTOSTR *)
+     if VAL < 0 then
+       begin
+         VAL := - VAL ;
+         MINUS := TRUE
+       end (* then *)
+     else
+       MINUS := FALSE ;
+     I := 20 ;
+     BUFFER := ' ' ;
+     while VAL > 0 do
+       begin
+         LETZT := VAL MOD 10 ;
+         BUFFER [ I ] := CHR ( ORD ( '0' ) + LETZT ) ;
+         I := I - 1 ;
+         VAL := VAL DIV 10 ;
+       end (* while *) ;
+     LIMIT := 20 - LEN ;
+     if ZEROES then
+       while I > LIMIT do
+         begin
+           BUFFER [ I ] := '0' ;
+           I := I - 1 ;
+         end (* while *) ;
+     if MINUS then
+       begin
+         if ZEROES then
+           I := I + 1 ;
+         BUFFER [ I ] := '-' ;
+         I := I - 1 ;
+       end (* then *) ;
+     LENX := 20 - I ;
+     POSX := LEN - LENX ;
+     MEMSET ( CP , ' ' , LEN ) ;
+     MEMCPY ( PTRADD ( CP , POSX ) , ADDR ( BUFFER [ I + 1 ] ) , LENX )
+              ;
+   end (* INTTOSTR *) ;
+
+
+
+begin (* HAUPTPROGRAMM *)
+  I := 25 ;
+  INTTOSTR ( ADDR ( X ) , 8 , I , TRUE ) ;
+  WRITELN ( 'result inttostr = ' , X , ' expected: 00000025' ) ;
+  I := - 25 ;
+  INTTOSTR ( ADDR ( X ) , 8 , I , TRUE ) ;
+  WRITELN ( 'result inttostr = ' , X , ' expected: -0000025' ) ;
+  I := 25 ;
+  INTTOSTR ( ADDR ( X ) , 8 , I , FALSE ) ;
+  WRITELN ( 'result inttostr = ' , X , ' expected:       25' ) ;
+  I := - 25 ;
+  INTTOSTR ( ADDR ( X ) , 8 , I , FALSE ) ;
+  WRITELN ( 'result inttostr = ' , X , ' expected:      -25' ) ;
 end (* HAUPTPROGRAMM *) .
 ++FILE PASCALN.TESTPGM.PAS                          MEMB TESTLAB  EXT PAS HEX -
 program TESTINP ( INPUT , OUTPUT , EINGABE ) ;
@@ -9147,7 +9348,7 @@ procedure $PASSNAP ( LEVEL : INTEGER ; DUMPPTR : VOIDPTR ) ;
       const DUMPSHOWCHARS : set of CHAR =
             [ 'a' .. 'i' , 'j' .. 'r' , 's' .. 'z' , 'A' .. 'I' , 'J'
               .. 'R' , 'S' .. 'Z' , '0' .. '9' , ' ' , ',' , '.' , '-'
-              , ';' , ':' , '_' , '!' , '"' , 'ж' , '$' , '%' , '&' ,
+              , ';' , ':' , '_' , '!' , '"' , 'Ю' , '$' , '%' , '&' ,
               '/' , '(' , ')' , '=' , '?' , '+' , '*' , '#' , '*' ] ;
 
 
@@ -10867,6 +11068,39 @@ procedure PROC1 ;
 begin (* HAUPTPROGRAMM *)
 
 end (* HAUPTPROGRAMM *) .
+++FILE PASCALN.TESTPGM.PAS                          MEMB TESTNF   EXT PAS HEX -
+program TESTNF ( OUTPUT ) ;
+
+
+var S1 , S2 , S3 : STRING ( 100 ) ;
+
+
+begin (* HAUPTPROGRAMM *)
+  S1 := 'Bernd Oppolzer' ;
+  S2 := LEFT ( S1 , 5 ) ;
+  S3 := RIGHT ( S1 , 8 ) ;
+  WRITELN ( '<' , S1 , '>' ) ;
+  WRITELN ( '<' , S2 , '>' ) ;
+  WRITELN ( '<' , S3 , '>' ) ;
+  S1 := RIGHT ( S1 , 50 ) ;
+  S2 := LEFT ( S2 , 20 ) ;
+  S3 := LEFT ( S3 , 4 ) ;
+  WRITELN ( '<' , S1 , '>' ) ;
+  WRITELN ( '<' , S2 , '>' ) ;
+  WRITELN ( '<' , S3 , '>' ) ;
+  WRITELN ( 'index     = ' , INDEX ( S1 , 'e' ) ) ;
+  WRITELN ( 'lastindex = ' , LASTINDEX ( S1 , 'e' ) ) ;
+  WRITELN ( 'index     = ' , INDEX ( S1 , 'er' ) ) ;
+  WRITELN ( 'lastindex = ' , LASTINDEX ( S1 , 'er' ) ) ;
+  WRITELN ( 'index     = ' , INDEX ( S1 , 'Oppo' ) ) ;
+  WRITELN ( 'lastindex = ' , LASTINDEX ( S1 , 'Oppo' ) ) ;
+  WRITELN ( 'index     = ' , INDEX ( S1 , '     Bernd' ) ) ;
+  WRITELN ( 'lastindex = ' , LASTINDEX ( S1 , '     Bernd' ) ) ;
+  WRITELN ( 'index     = ' , INDEX ( S2 , 'Bernd' ) ) ;
+  WRITELN ( 'lastindex = ' , LASTINDEX ( S2 , 'Bernd' ) ) ;
+  WRITELN ( 'index     = ' , INDEX ( S1 , '          ' ) ) ;
+  WRITELN ( 'lastindex = ' , LASTINDEX ( S1 , '          ' ) ) ;
+end (* HAUPTPROGRAMM *) .
 ++FILE PASCALN.TESTPGM.PAS                          MEMB TESTPDS  EXT PAS HEX -
 program TESTPDS ( INPUT , OUTPUT , PDS , PDSOUT ) ;
 
@@ -11257,6 +11491,55 @@ PROGRAM PASC_P30;
          END.
 
 
+++FILE PASCALN.TESTPGM.PAS                          MEMB TESTPTR2 EXT PAS HEX -
+program TESTPTR ( OUTPUT ) ;
+
+//**********************************************************************
+//$A+
+//**********************************************************************
+
+
+
+type CFORW = record
+               SOMEV : INTEGER ;
+               C : -> CHAIN ;
+             end ;
+     CHAIN = record
+               N : INTEGER ;
+               NEXT : -> CHAIN ;
+             end ;
+
+
+var K : -> CHAIN ;
+    X : CFORW ;
+
+
+
+procedure PRINT ( X : -> CHAIN ) ;
+
+   begin (* PRINT *)
+     while X <> NIL do
+       begin
+         WRITELN ( X -> . N ) ;
+         X := X -> . NEXT
+       end (* while *)
+   end (* PRINT *) ;
+
+
+
+begin (* HAUPTPROGRAMM *)
+  NEW ( K ) ;
+  X . C := K ;
+  K -> . N := 1 ;
+  NEW ( K -> . NEXT ) ;
+  K := K -> . NEXT ;
+  K -> . N := 2 ;
+  NEW ( K -> . NEXT ) ;
+  K := K -> . NEXT ;
+  K -> . N := 3 ;
+  K -> . NEXT := NIL ;
+  PRINT ( X . C ) ;
+end (* HAUPTPROGRAMM *) .
 ++FILE PASCALN.TESTPGM.PAS                          MEMB TESTRDR  EXT PAS HEX -
 program TESTRDR ( INPUT , OUTPUT ) ;
 
@@ -11298,18 +11581,48 @@ begin (* HAUPTPROGRAMM *)
     end (* while *)
 end (* HAUPTPROGRAMM *) .
 ++FILE PASCALN.TESTPGM.PAS                          MEMB TESTREAD EXT PAS HEX -
-program TESTREAD ( INPUT , OUTPUT ) ;
+program TESTREAD ( INPFILE , OUTPUT ) ;
 
 
-var CH : CHAR ;
+var INPFILE : TEXT ;
+    CH : CHAR ;
+    CH10 : CHAR ( 10 ) ;
+    S10 : STRING ( 10 ) ;
 
 
 begin (* HAUPTPROGRAMM *)
-  while not EOF do
+  WRITELN ;
+  WRITELN ( 'lesen einzelne char' ) ;
+  WRITELN ;
+  RESET ( INPFILE ) ;
+  while not EOF ( INPFILE ) do
     begin
-      READ ( CH ) ;
-      WRITELN ( 'gelesen: ' , CH , ORD ( CH ) : 4 , ' eof = ' , EOF ,
-                ' eoln = ' , EOLN ) ;
+      READ ( INPFILE , CH ) ;
+      WRITELN ( 'gelesen: ' , CH , ORD ( CH ) : 4 , ' eof = ' , EOF (
+                INPFILE ) , ' eoln = ' , EOLN ( INPFILE ) ) ;
+    end (* while *) ;
+  WRITELN ;
+  WRITELN ( 'lesen char (10)' ) ;
+  WRITELN ;
+  RESET ( INPFILE ) ;
+  while not EOF ( INPFILE ) do
+    begin
+      READ ( INPFILE , CH10 ) ;
+      WRITELN ( 'gelesen: <' , CH10 , '> eoln = ' , EOLN ( INPFILE ) )
+                ;
+      if EOLN ( INPFILE ) then
+        READLN ( INPFILE ) ;
+    end (* while *) ;
+  WRITELN ;
+  WRITELN ( 'lesen string (10)' ) ;
+  WRITELN ;
+  RESET ( INPFILE ) ;
+  while not EOF ( INPFILE ) do
+    begin
+      READ ( INPFILE , S10 ) ;
+      WRITELN ( 'gelesen: <' , S10 , '> eoln = ' , EOLN ( INPFILE ) ) ;
+      if EOLN ( INPFILE ) then
+        READLN ( INPFILE ) ;
     end (* while *)
 end (* HAUPTPROGRAMM *) .
 ++FILE PASCALN.TESTPGM.PAS                          MEMB TESTREAL EXT PAS HEX -
@@ -11483,7 +11796,7 @@ local procedure DUMP ( PVON : VOIDPTR ; PBIS : VOIDPTR ) ;
       begin (* DUMPCHAR *)
         if CH in [ 'a' .. 'i' , 'j' .. 'r' , 's' .. 'z' , 'A' .. 'I' ,
         'J' .. 'R' , 'S' .. 'Z' , '0' .. '9' , ' ' , ',' , '.' , '-' ,
-        ';' , ':' , '_' , '!' , '"' , 'ж' , '$' , '%' , '&' , '/' , '('
+        ';' , ':' , '_' , '!' , '"' , 'Ю' , '$' , '%' , '&' , '/' , '('
         , ')' , '=' , '?' , '+' , '*' , '#' , '*' ] then
           WRITE ( CH )
         else
@@ -12989,6 +13302,53 @@ begin (* HAUPTPROGRAMM *)
   //******************************************************************
 
 end (* HAUPTPROGRAMM *) .
+++FILE PASCALN.TESTPGM.PAS                          MEMB TESTSET5 EXT PAS HEX -
+program TESTSET5 ( OUTPUT ) ;
+
+(********)
+(*$A+   *)
+(********)
+
+
+
+type FARBE = ( GELB , ROT , GRUEN , BLAU ) ;
+
+
+var XSET : set of FARBE ;
+    CSET : set of FARBE ;
+
+
+
+procedure PRINTSET ( X : set of FARBE ; Y : 0 .. 15 ) ;
+
+   var F : FARBE ;
+
+   begin (* PRINTSET *)
+     WRITE ( 'test printset' ) ;
+     WRITELN ;
+     WRITE ( 'set = ' ) ;
+     for F := GELB to BLAU do
+       if F in X then
+         WRITE ( F : 6 ) ;
+     WRITELN ;
+     WRITE ( 'y   = ' , Y ) ;
+     WRITELN ;
+   end (* PRINTSET *) ;
+
+
+
+begin (* HAUPTPROGRAMM *)
+  XSET := [ ROT , GRUEN ] ;
+  CSET := [ GELB , ROT , GRUEN , BLAU ] ;
+  PRINTSET ( XSET , 2 ) ;
+  PRINTSET ( CSET , 4 ) ;
+
+  //******************************************************************
+  // range error:
+  //******************************************************************
+  // PRINTSET ( CSET , 30 ) ;
+
+end (* HAUPTPROGRAMM *) .
 ++FILE PASCALN.TESTPGM.PAS                          MEMB TESTSETH EXT PAS HEX -
 program TESTSETH ( OUTPUT ) ;
 
@@ -14338,44 +14698,44 @@ procedure TEIL1 ;
      WRITELN ( '<' , VC20 , '>' ) ;
      C20 := VC20 ;
      WRITELN ( 'C20 nach Zuweisung VC20 ..............: ' , C20 ) ;
-     C20 := 'Bernd ' || 'Oppolzer' ;
+     C20 := 'Bernd ' ЭЭ 'Oppolzer' ;
      WRITELN ( 'C20 nach Zuweisung String Expression .: ' , C20 ) ;
 
      //*****************************************************************
      // Verkettung usw.
      //*****************************************************************
 
-     VC200 := VC20 || VC20 ;
+     VC200 := VC20 ЭЭ VC20 ;
      WRITE ( 'VC200 nach Verkettung ................: ' ) ;
      WRITELN ( '<' , VC200 , '>' ) ;
-     VC200 := VC20 || ' Oppolzer' ;
+     VC200 := VC20 ЭЭ ' Oppolzer' ;
      WRITE ( 'VC200 nach Verkettung ................: ' ) ;
      WRITELN ( '<' , VC200 , '>' ) ;
-     VC200 := VC20 || ' Oppolzer' || ' Leinfelden' ;
+     VC200 := VC20 ЭЭ ' Oppolzer' ЭЭ ' Leinfelden' ;
      WRITE ( 'VC200 nach Verkettung ................: ' ) ;
      WRITELN ( '<' , VC200 , '>' ) ;
-     VC200 := VC20 || ( ' Oppolzer' || ' Leinfelden' ) ;
+     VC200 := VC20 ЭЭ ( ' Oppolzer' ЭЭ ' Leinfelden' ) ;
      WRITE ( 'VC200 nach Verkettung (Klammer hinten): ' ) ;
      WRITELN ( '<' , VC200 , '>' ) ;
-     VC200 := ( VC20 || ' Oppolzer' ) || ' Leinfelden' ;
+     VC200 := ( VC20 ЭЭ ' Oppolzer' ) ЭЭ ' Leinfelden' ;
      WRITE ( 'VC200 nach Verkettung ................: ' ) ;
      WRITELN ( '<' , VC200 , '>' ) ;
-     VC200 := ( ( VC20 || ' Oppolzer' ) || ' Leinfelden' ) ;
+     VC200 := ( ( VC20 ЭЭ ' Oppolzer' ) ЭЭ ' Leinfelden' ) ;
      WRITE ( 'VC200 nach Verkettung ................: ' ) ;
      WRITELN ( '<' , VC200 , '>' ) ;
-     VC200 := VC20 || STR ( ' Oppolzer' ) || STR ( ' Leinfelden' ) ;
+     VC200 := VC20 ЭЭ STR ( ' Oppolzer' ) ЭЭ STR ( ' Leinfelden' ) ;
      WRITE ( 'VC200 nach Verkettung (mit STR Funk.).: ' ) ;
      WRITELN ( '<' , VC200 , '>' ) ;
-     VC200 := VC20 || ' ' || VC20 ;
+     VC200 := VC20 ЭЭ ' ' ЭЭ VC20 ;
      WRITE ( 'VC200 nach Verkettung (mit Blank) ....: ' ) ;
      WRITELN ( '<' , VC200 , '>' ) ;
-     VC200 := VC20 || ' dazwischen ' || VC20 ;
+     VC200 := VC20 ЭЭ ' dazwischen ' ЭЭ VC20 ;
      WRITE ( 'VC200 nach Verkettung ................: ' ) ;
      WRITELN ( '<' , VC200 , '>' ) ;
-     VC200 := VC20 || ' dazwischen ' || STR ( C20 ) ;
+     VC200 := VC20 ЭЭ ' dazwischen ' ЭЭ STR ( C20 ) ;
      WRITE ( 'VC200 nach Verkettung ................: ' ) ;
      WRITELN ( '<' , VC200 , '>' ) ;
-     VC200 := STR ( C20 ) || ' dazwischen ' || VC20 ;
+     VC200 := STR ( C20 ) ЭЭ ' dazwischen ' ЭЭ VC20 ;
      WRITE ( 'VC200 nach Verkettung ................: ' ) ;
      WRITELN ( '<' , VC200 , '>' ) ;
 
@@ -14389,7 +14749,7 @@ procedure TEIL1 ;
      VC200 := VC20 ;
      WRITE ( 'VC200 nach Zuweisung VC20 ............: ' ) ;
      WRITELN ( '<' , VC200 , '>' ) ;
-     VC200 := VC20 || ' mit Verkettung' ;
+     VC200 := VC20 ЭЭ ' mit Verkettung' ;
      WRITE ( 'VC200 nach Zuweisung Expression ......: ' ) ;
      WRITELN ( '<' , VC200 , '>' ) ;
      VC20 := 'Bernd' ;
@@ -14431,7 +14791,7 @@ procedure TEIL2 ;
      WRITELN ( 'vc20 = ''Bornd'' .......................: ' , X ) ;
      X := ( VC20 = 'Bernd' ) ;
      WRITELN ( 'vc20 = ''Bernd'' .......................: ' , X ) ;
-     X := VC20 || ' ' = 'Bernd' || ' ' ;
+     X := VC20 ЭЭ ' ' = 'Bernd' ЭЭ ' ' ;
      WRITELN ( 'vc20 = ''Bernd'' .......................: ' , X ) ;
      X := VC20 = 'Bernd ' ;
      WRITELN ( 'vc20 = ''Bernd '' ......................: ' , X ) ;
@@ -14465,7 +14825,7 @@ procedure TEIL2 ;
      WRITELN ( 'c20a > vc20 ..........................: ' , X ) ;
      X := VC20 > C20A ;
      WRITELN ( 'c20a < vc20 ..........................: ' , X ) ;
-     if VC20 || ' ' = 'Bernd' || ' ' then
+     if VC20 ЭЭ ' ' = 'Bernd' ЭЭ ' ' then
        WRITELN ( 'success !!' ) ;
    end (* TEIL2 *) ;
 
@@ -14482,7 +14842,7 @@ procedure STRPROC ( X : STRING ( 20 ) ; var Y : STRING ; A : STRING (
          WRITELN ( 'maxlength (a) = ' , MAXLENGTH ( A ) ) ;
          WRITELN ( 'maxlength (b) = ' , MAXLENGTH ( B ) ) ;
        end (* then *) ;
-     B := X || ' Oppolzer' ;
+     B := X ЭЭ ' Oppolzer' ;
      Y := A ;
      WRITELN ( 'In STRPROC - X = <' , X , '>' ) ;
      WRITELN ( 'In STRPROC - Y = <' , Y , '>' ) ;
@@ -14495,7 +14855,7 @@ procedure STRPROC ( X : STRING ( 20 ) ; var Y : STRING ; A : STRING (
 function STRFUNC ( X : STRING ( 20 ) ; Y : STRING ( 20 ) ) : STRING ;
 
    begin (* STRFUNC *)
-     STRFUNC := X || '/' || Y ;
+     STRFUNC := X ЭЭ '/' ЭЭ Y ;
    end (* STRFUNC *) ;
 
 
@@ -14503,7 +14863,7 @@ function STRFUNC ( X : STRING ( 20 ) ; Y : STRING ( 20 ) ) : STRING ;
 function IFUNC ( X : STRING ( 20 ) ; Y : STRING ( 20 ) ) : INTEGER ;
 
    begin (* IFUNC *)
-     IFUNC := LENGTH ( X || '/' || Y ) ;
+     IFUNC := LENGTH ( X ЭЭ '/' ЭЭ Y ) ;
    end (* IFUNC *) ;
 
 
@@ -14529,7 +14889,7 @@ function STRFUNC2 ( const X : STRING ; const Y : STRING ) : STRING ;
      WRITELN ( ' ' , PDUMP -> ) ;
      WRITELN ( 'strfunc2: x = <' , X , '>' ) ;
      WRITELN ( 'strfunc2: y = <' , Y , '>' ) ;
-     STRFUNC2 := X || '/' || Y ;
+     STRFUNC2 := X ЭЭ '/' ЭЭ Y ;
    end (* STRFUNC2 *) ;
 
 
@@ -14541,7 +14901,7 @@ function STRFUNC3 ( var X : STRING ; var Y : STRING ) : STRING ;
    begin (* STRFUNC3 *)
      WRITELN ( 'strfunc3: x = <' , X , '>' ) ;
      WRITELN ( 'strfunc3: y = <' , Y , '>' ) ;
-     ERG := X || '/' || Y ;
+     ERG := X ЭЭ '/' ЭЭ Y ;
      WRITELN ( 'strfunc3: erg = <' , ERG , '>' ) ;
      STRFUNC3 := ERG ;
    end (* STRFUNC3 *) ;
@@ -14714,13 +15074,13 @@ procedure TEIL3 ;
      //******
      //************************************************************
 
-     VC200 := VC20 || VC20 ;
+     VC200 := VC20 ЭЭ VC20 ;
      WRITE ( 'VC200 nach Verkettung ................: ' ) ;
      WRITELN ( '<' , VC200 , '>' ) ;
      WRITE ( 'Verkettung direkt ausgeben ...........: ' ) ;
-     WRITELN ( '<' , VC20 || VC20 , '>' ) ;
+     WRITELN ( '<' , VC20 ЭЭ VC20 , '>' ) ;
      WRITE ( 'Verkettung nochmal direkt ausgeben ...: ' ) ;
-     WRITELN ( '<' , VC20 || ' ' || C20A , '>' ) ;
+     WRITELN ( '<' , VC20 ЭЭ ' ' ЭЭ C20A , '>' ) ;
 
      //*****************************************************************
      //*
@@ -14767,7 +15127,7 @@ procedure TEIL3 ;
      WRITE ( 'maxlength von string .................: ' ) ;
      WRITELN ( MAXLENGTH ( VC20 ) ) ;
      WRITE ( 'maxlength von string-Expression ......: ' ) ;
-     WRITELN ( MAXLENGTH ( VC20 || ' ' || VC20 ) ) ;
+     WRITELN ( MAXLENGTH ( VC20 ЭЭ ' ' ЭЭ VC20 ) ) ;
      WRITE ( 'length von einfachem char ............: ' ) ;
      WRITELN ( LENGTH ( 'a' ) ) ;
      WRITE ( 'length von char-konstante ............: ' ) ;
@@ -14779,7 +15139,7 @@ procedure TEIL3 ;
      WRITE ( 'length von string ....................: ' ) ;
      WRITELN ( LENGTH ( VC20 ) ) ;
      WRITE ( 'length von string-expression .........: ' ) ;
-     WRITELN ( LENGTH ( VC20 || ' ' || VC20 ) ) ;
+     WRITELN ( LENGTH ( VC20 ЭЭ ' ' ЭЭ VC20 ) ) ;
 
      //*****************************************************************
      //*
@@ -14795,7 +15155,7 @@ procedure TEIL3 ;
      P2 := STRFUNC ( VC20 , P1 ) ;
      WRITE ( 'p2 = funktion mit String Ergebnis ....: ' ) ;
      WRITELN ( '<' , P2 , '>' ) ;
-     P2 := 'Test ' || STRFUNC ( VC20 , P1 ) || ' nochmal Test' ;
+     P2 := 'Test ' ЭЭ STRFUNC ( VC20 , P1 ) ЭЭ ' nochmal Test' ;
      WRITE ( 'p2 = kombiniert mit Funktion .........: ' ) ;
      WRITELN ( '<' , P2 , '>' ) ;
      WRITE ( 'String Ergebnis direkt ...............: ' ) ;
@@ -14827,7 +15187,7 @@ procedure TEIL3 ;
      WRITELN ( 'Test Funktionsaufruf mit const Parm zwei Expr' ) ;
      P1 := 'Oppolzer' ;
      WRITELN ( 'addr(s) vor strfunc2 = ' , ADDR ( S ) ) ;
-     P2 := STRFUNC2 ( VC20 || ' ' , ' ' || P1 ) ;
+     P2 := STRFUNC2 ( VC20 ЭЭ ' ' , ' ' ЭЭ P1 ) ;
      WRITELN ( 'addr(s) nach strfunc2 = ' , ADDR ( S ) ) ;
      WRITE ( 'p2 = funktion mit const String .......: ' ) ;
      WRITELN ( '<' , P2 , '>' ) ;
@@ -14839,7 +15199,7 @@ procedure TEIL3 ;
      WRITELN ( '<' , P2 , '>' ) ;
      WRITELN ( 'Test Funktionsaufruf mit const Parm Expr + Const' ) ;
      WRITELN ( 'addr(s) vor strfunc2 = ' , ADDR ( S ) ) ;
-     P2 := STRFUNC2 ( VC20 || ' ' , ' Oppolzer' ) ;
+     P2 := STRFUNC2 ( VC20 ЭЭ ' ' , ' Oppolzer' ) ;
      WRITELN ( 'addr(s) nach strfunc2 = ' , ADDR ( S ) ) ;
      WRITE ( 'p2 = funktion mit const String .......: ' ) ;
      WRITELN ( '<' , P2 , '>' ) ;
@@ -14870,7 +15230,7 @@ function CHECKF : STRING ;
      CHECKF := 'Bernd Oppolzer' ;
      WRITELN ( 'strresultp      = ' , STRRESULTP ) ;
      WRITELN ( 'length (result) = ' , LENGTH ( STRRESULT ) ) ;
-     CHECKF := 'Bernd Oppolzer' || STRRESULT ;
+     CHECKF := 'Bernd Oppolzer' ЭЭ STRRESULT ;
      WRITELN ( 'strresultp      = ' , STRRESULTP ) ;
      WRITELN ( 'length (result) = ' , LENGTH ( STRRESULT ) ) ;
      CHECKF := REPEATSTR ( '*' , 1000 ) ;
@@ -14908,10 +15268,10 @@ procedure TEIL4 ;
      P2 := SUBSTR1 ( P1 , 3 , 4 ) ;
      WRITE ( 'p2 = Ergebnis von SUBSTR1 ............: ' ) ;
      WRITELN ( '<' , P2 , '>' ) ;
-     P2 := SUBSTR1 ( 'Bernd ' || 'Oppolzer' , 5 , 7 ) ;
+     P2 := SUBSTR1 ( 'Bernd ' ЭЭ 'Oppolzer' , 5 , 7 ) ;
      WRITE ( 'p2 = Ergebnis von SUBSTR1 ............: ' ) ;
      WRITELN ( '<' , P2 , '>' ) ;
-     P2 := SUBSTR1 ( 'Bernd ' || 'Oppolzer' , 5 , - 1 ) ;
+     P2 := SUBSTR1 ( 'Bernd ' ЭЭ 'Oppolzer' , 5 , - 1 ) ;
      WRITE ( 'p2 = Ergebnis von SUBSTR1 ............: ' ) ;
      WRITELN ( '<' , P2 , '>' ) ;
 
@@ -14945,10 +15305,10 @@ procedure TEIL4 ;
      P2 := SUBSTR2 ( P1 , 3 , 4 ) ;
      WRITE ( 'p2 = Ergebnis von SUBSTR2 ............: ' ) ;
      WRITELN ( '<' , P2 , '>' ) ;
-     P2 := SUBSTR2 ( 'Bernd ' || 'Oppolzer' , 5 , 7 ) ;
+     P2 := SUBSTR2 ( 'Bernd ' ЭЭ 'Oppolzer' , 5 , 7 ) ;
      WRITE ( 'p2 = Ergebnis von SUBSTR2 ............: ' ) ;
      WRITELN ( '<' , P2 , '>' ) ;
-     P2 := SUBSTR2 ( 'Bernd ' || 'Oppolzer' , 5 , - 1 ) ;
+     P2 := SUBSTR2 ( 'Bernd ' ЭЭ 'Oppolzer' , 5 , - 1 ) ;
      WRITE ( 'p2 = Ergebnis von SUBSTR2 ............: ' ) ;
      WRITELN ( '<' , P2 , '>' ) ;
 
@@ -14962,10 +15322,10 @@ procedure TEIL4 ;
      WRITELN ( '<' , P2 , '>' ) ;
      WRITE ( 'P1 nach SUBSTR (should not change) ...: ' ) ;
      WRITELN ( '<' , P1 , '>' ) ;
-     P2 := SUBSTR ( 'Bernd ' || 'Oppolzer' , 5 , 7 ) ;
+     P2 := SUBSTR ( 'Bernd ' ЭЭ 'Oppolzer' , 5 , 7 ) ;
      WRITE ( 'p2 = Ergebnis von SUBSTR .............: ' ) ;
      WRITELN ( '<' , P2 , '>' ) ;
-     P2 := SUBSTR ( 'Bernd ' || 'Oppolzer' , 5 ) ;
+     P2 := SUBSTR ( 'Bernd ' ЭЭ 'Oppolzer' , 5 ) ;
      WRITE ( 'p2 = Ergebnis von SUBSTR .............: ' ) ;
      WRITELN ( '<' , P2 , '>' ) ;
 
@@ -14979,10 +15339,10 @@ procedure TEIL4 ;
      WRITELN ( '<' , P2 , '>' ) ;
      WRITE ( 'P1 nach DELETE (should not change) ...: ' ) ;
      WRITELN ( '<' , P1 , '>' ) ;
-     P2 := DELETE ( 'Bernd ' || 'Oppolzer' , 5 , 7 ) ;
+     P2 := DELETE ( 'Bernd ' ЭЭ 'Oppolzer' , 5 , 7 ) ;
      WRITE ( 'p2 = Ergebnis von DELETE .............: ' ) ;
      WRITELN ( '<' , P2 , '>' ) ;
-     P2 := DELETE ( 'Bernd ' || 'Oppolzer' , 5 ) ;
+     P2 := DELETE ( 'Bernd ' ЭЭ 'Oppolzer' , 5 ) ;
      WRITE ( 'p2 = Ergebnis von DELETE .............: ' ) ;
      WRITELN ( '<' , P2 , '>' ) ;
 
@@ -15151,7 +15511,7 @@ begin (* HAUPTPROGRAMM *)
   WRITELN ( '<' , P1 , '>' ) ;
   if TRUE then
     begin
-      TTAB := IDENT_T1 || IDENT_T2 ;
+      TTAB := IDENT_T1 ЭЭ IDENT_T2 ;
       TTAB [ ORD ( ' ' ) + 1 ] := 'y' ;
       P1 := '  Bernd Oppolzer    ' ;
       P2 := TRANSLATE ( P1 , TTAB , '' ) ;
@@ -15219,12 +15579,12 @@ procedure TESTVAR ( var S : STRING ) ;
 begin (* HAUPTPROGRAMM *)
   S := 'Bernd' ;
   TESTVALUE ( S ) ;
-  TESTVALUE ( 'Bernd ' ЭЭ 'Oppolzer' ) ;
+  TESTVALUE ( 'Bernd ' ЗЗ 'Oppolzer' ) ;
   TESTCONST ( S ) ;
-  TESTCONST ( 'Bernd ' ЭЭ 'Oppolzer' ) ;
+  TESTCONST ( 'Bernd ' ЗЗ 'Oppolzer' ) ;
   TESTVAR ( S ) ;
   WRITELN ( 'main: S after testvar = ' , S ) ;
-  WRITELN ( 'main: maxlength (expr) = ' , MAXLENGTH ( 'Bernd ' ЭЭ
+  WRITELN ( 'main: maxlength (expr) = ' , MAXLENGTH ( 'Bernd ' ЗЗ
             'Oppolzer' ) ) ;
 end (* HAUPTPROGRAMM *) .
 ++FILE PASCALN.TESTPGM.PAS                          MEMB TESTSVAR EXT PAS HEX -
@@ -15330,7 +15690,7 @@ local procedure DUMP ( PVON : VOIDPTR ; PBIS : VOIDPTR ) ;
       begin (* DUMPCHAR *)
         if CH in [ 'a' .. 'i' , 'j' .. 'r' , 's' .. 'z' , 'A' .. 'I' ,
         'J' .. 'R' , 'S' .. 'Z' , '0' .. '9' , ' ' , ',' , '.' , '-' ,
-        ';' , ':' , '_' , '!' , '"' , 'ж' , '$' , '%' , '&' , '/' , '('
+        ';' , ':' , '_' , '!' , '"' , 'Ю' , '$' , '%' , '&' , '/' , '('
         , ')' , '=' , '?' , '+' , '*' , '#' , '*' ] then
           WRITE ( CH )
         else
@@ -15515,7 +15875,7 @@ program TESTUML ( OUTPUT ) ;
 
 
 begin (* HAUPTPROGRAMM *)
-  WRITELN ( '„”ЃЋ™љб ![]|' ) ;
+  WRITELN ( '„”ЃЋ™љц ![]Э' ) ;
 end (* HAUPTPROGRAMM *) .
 ++FILE PASCALN.TESTPGM.PAS                          MEMB TESTVARC EXT PAS HEX -
 program TESTVARC ( OUTPUT ) ;
@@ -15596,7 +15956,7 @@ procedure STRPROC ( X : STRING ( 20 ) ; var Y : STRING ; A : STRING (
          WRITELN ( 'maxlength (a) = ' , MAXLENGTH ( A ) ) ;
          WRITELN ( 'maxlength (b) = ' , MAXLENGTH ( B ) ) ;
        end (* then *) ;
-     B := X || ' Oppolzer' ;
+     B := X ЭЭ ' Oppolzer' ;
      Y := A ;
      WRITELN ( 'In STRPROC - X = <' , X , '>' ) ;
      WRITELN ( 'In STRPROC - Y = <' , Y , '>' ) ;
@@ -15609,7 +15969,7 @@ procedure STRPROC ( X : STRING ( 20 ) ; var Y : STRING ; A : STRING (
 function STRFUNC ( X : STRING ( 20 ) ; Y : STRING ( 20 ) ) : STRING ;
 
    begin (* STRFUNC *)
-     STRFUNC := X || '/' || Y ;
+     STRFUNC := X ЭЭ '/' ЭЭ Y ;
    end (* STRFUNC *) ;
 
 
@@ -15617,7 +15977,7 @@ function STRFUNC ( X : STRING ( 20 ) ; Y : STRING ( 20 ) ) : STRING ;
 function IFUNC ( X : STRING ( 20 ) ; Y : STRING ( 20 ) ) : INTEGER ;
 
    begin (* IFUNC *)
-     IFUNC := LENGTH ( X || '/' || Y ) ;
+     IFUNC := LENGTH ( X ЭЭ '/' ЭЭ Y ) ;
    end (* IFUNC *) ;
 
 
@@ -15625,7 +15985,7 @@ function IFUNC ( X : STRING ( 20 ) ; Y : STRING ( 20 ) ) : INTEGER ;
 function STRFUNC2 ( const X : STRING ; const Y : STRING ) : STRING ;
 
    begin (* STRFUNC2 *)
-     STRFUNC2 := X || '/' || Y ;
+     STRFUNC2 := X ЭЭ '/' ЭЭ Y ;
    end (* STRFUNC2 *) ;
 
 
@@ -15633,7 +15993,7 @@ function STRFUNC2 ( const X : STRING ; const Y : STRING ) : STRING ;
 function STRFUNC3 ( var X : STRING ; var Y : STRING ) : STRING ;
 
    begin (* STRFUNC3 *)
-     STRFUNC3 := X || '/' || Y ;
+     STRFUNC3 := X ЭЭ '/' ЭЭ Y ;
    end (* STRFUNC3 *) ;
 
 
@@ -15781,7 +16141,7 @@ function CHECKF : STRING ;
      CHECKF := 'Bernd Oppolzer' ;
      WRITELN ( 'strresultp      = ' , STRRESULTP ) ;
      WRITELN ( 'length (result) = ' , LENGTH ( STRRESULT ) ) ;
-     CHECKF := 'Bernd Oppolzer' || STRRESULT ;
+     CHECKF := 'Bernd Oppolzer' ЭЭ STRRESULT ;
      WRITELN ( 'strresultp      = ' , STRRESULTP ) ;
      WRITELN ( 'length (result) = ' , LENGTH ( STRRESULT ) ) ;
      CHECKF := REPEATSTR ( '*' , 1000 ) ;
@@ -15848,44 +16208,44 @@ procedure TEST1 ;
      WRITELN ( '<' , VC20 , '>' ) ;
      C20 := VC20 ;
      WRITELN ( 'C20 nach Zuweisung VC20 ..............: ' , C20 ) ;
-     C20 := 'Bernd ' || 'Oppolzer' ;
+     C20 := 'Bernd ' ЭЭ 'Oppolzer' ;
      WRITELN ( 'C20 nach Zuweisung String Expression .: ' , C20 ) ;
 
      //*************************************************************
      // Verkettung usw.
      //*************************************************************
 
-     VC200 := VC20 || VC20 ;
+     VC200 := VC20 ЭЭ VC20 ;
      WRITE ( 'VC200 nach Verkettung ................: ' ) ;
      WRITELN ( '<' , VC200 , '>' ) ;
-     VC200 := VC20 || ' Oppolzer' ;
+     VC200 := VC20 ЭЭ ' Oppolzer' ;
      WRITE ( 'VC200 nach Verkettung ................: ' ) ;
      WRITELN ( '<' , VC200 , '>' ) ;
-     VC200 := VC20 || ' Oppolzer' || ' Leinfelden' ;
+     VC200 := VC20 ЭЭ ' Oppolzer' ЭЭ ' Leinfelden' ;
      WRITE ( 'VC200 nach Verkettung ................: ' ) ;
      WRITELN ( '<' , VC200 , '>' ) ;
-     VC200 := VC20 || ( ' Oppolzer' || ' Leinfelden' ) ;
+     VC200 := VC20 ЭЭ ( ' Oppolzer' ЭЭ ' Leinfelden' ) ;
      WRITE ( 'VC200 nach Verkettung ................: ' ) ;
      WRITELN ( '<' , VC200 , '>' ) ;
-     VC200 := ( VC20 || ' Oppolzer' ) || ' Leinfelden' ;
+     VC200 := ( VC20 ЭЭ ' Oppolzer' ) ЭЭ ' Leinfelden' ;
      WRITE ( 'VC200 nach Verkettung ................: ' ) ;
      WRITELN ( '<' , VC200 , '>' ) ;
-     VC200 := ( ( VC20 || ' Oppolzer' ) || ' Leinfelden' ) ;
+     VC200 := ( ( VC20 ЭЭ ' Oppolzer' ) ЭЭ ' Leinfelden' ) ;
      WRITE ( 'VC200 nach Verkettung ................: ' ) ;
      WRITELN ( '<' , VC200 , '>' ) ;
-     VC200 := VC20 || STR ( ' Oppolzer' ) || STR ( ' Leinfelden' ) ;
+     VC200 := VC20 ЭЭ STR ( ' Oppolzer' ) ЭЭ STR ( ' Leinfelden' ) ;
      WRITE ( 'VC200 nach Verkettung ................: ' ) ;
      WRITELN ( '<' , VC200 , '>' ) ;
-     VC200 := VC20 || ' ' || VC20 ;
+     VC200 := VC20 ЭЭ ' ' ЭЭ VC20 ;
      WRITE ( 'VC200 nach Verkettung ................: ' ) ;
      WRITELN ( '<' , VC200 , '>' ) ;
-     VC200 := VC20 || ' dazwischen ' || VC20 ;
+     VC200 := VC20 ЭЭ ' dazwischen ' ЭЭ VC20 ;
      WRITE ( 'VC200 nach Verkettung ................: ' ) ;
      WRITELN ( '<' , VC200 , '>' ) ;
-     VC200 := VC20 || ' dazwischen ' || STR ( C20 ) ;
+     VC200 := VC20 ЭЭ ' dazwischen ' ЭЭ STR ( C20 ) ;
      WRITE ( 'VC200 nach Verkettung ................: ' ) ;
      WRITELN ( '<' , VC200 , '>' ) ;
-     VC200 := STR ( C20 ) || ' dazwischen ' || VC20 ;
+     VC200 := STR ( C20 ) ЭЭ ' dazwischen ' ЭЭ VC20 ;
      WRITE ( 'VC200 nach Verkettung ................: ' ) ;
      WRITELN ( '<' , VC200 , '>' ) ;
    end (* TEST1 *) ;
@@ -15906,7 +16266,7 @@ procedure TEST2 ;
      VC200 := VC20 ;
      WRITE ( 'VC200 nach Zuweisung VC20 ............: ' ) ;
      WRITELN ( '<' , VC200 , '>' ) ;
-     VC200 := VC20 || ' mit Verkettung' ;
+     VC200 := VC20 ЭЭ ' mit Verkettung' ;
      WRITE ( 'VC200 nach Zuweisung Expression ......: ' ) ;
      WRITELN ( '<' , VC200 , '>' ) ;
      VC20 := 'Bernd' ;
@@ -15919,7 +16279,7 @@ procedure TEST2 ;
      WRITELN ( 'vc20 = ''Bernd'' .......................: ' , X ) ;
      X := ( VC20 = 'Bernd' ) ;
      WRITELN ( 'vc20 = ''Bernd'' .......................: ' , X ) ;
-     X := VC20 || ' ' = 'Bernd' || ' ' ;
+     X := VC20 ЭЭ ' ' = 'Bernd' ЭЭ ' ' ;
      WRITELN ( 'vc20 = ''Bernd'' .......................: ' , X ) ;
      X := VC20 = 'Bernd ' ;
      WRITELN ( 'vc20 = ''Bernd '' ......................: ' , X ) ;
@@ -15953,20 +16313,20 @@ procedure TEST2 ;
      WRITELN ( 'c20a > vc20 ..........................: ' , X ) ;
      X := VC20 > C20A ;
      WRITELN ( 'c20a < vc20 ..........................: ' , X ) ;
-     if VC20 || ' ' = 'Bernd' || ' ' then
+     if VC20 ЭЭ ' ' = 'Bernd' ЭЭ ' ' then
        WRITELN ( 'success !!' ) ;
 
      //*************************************************************
      // verkettung direkt in Writeln ...
      //*************************************************************
 
-     VC200 := VC20 || VC20 ;
+     VC200 := VC20 ЭЭ VC20 ;
      WRITE ( 'VC200 nach Verkettung ................: ' ) ;
      WRITELN ( '<' , VC200 , '>' ) ;
      WRITE ( 'Verkettung direkt ausgeben ...........: ' ) ;
-     WRITELN ( '<' , VC20 || VC20 , '>' ) ;
+     WRITELN ( '<' , VC20 ЭЭ VC20 , '>' ) ;
      WRITE ( 'Verkettung nochmal direkt ausgeben ...: ' ) ;
-     WRITELN ( '<' , VC20 || ' ' || C20A , '>' ) ;
+     WRITELN ( '<' , VC20 ЭЭ ' ' ЭЭ C20A , '>' ) ;
    end (* TEST2 *) ;
 
 
@@ -16014,7 +16374,7 @@ procedure TEST3 ;
      WRITE ( 'maxlength von string .................: ' ) ;
      WRITELN ( MAXLENGTH ( VC20 ) ) ;
      WRITE ( 'maxlength von string-Expression ......: ' ) ;
-     WRITELN ( MAXLENGTH ( VC20 || ' ' || VC20 ) ) ;
+     WRITELN ( MAXLENGTH ( VC20 ЭЭ ' ' ЭЭ VC20 ) ) ;
      WRITE ( 'length von einfachem char ............: ' ) ;
      WRITELN ( LENGTH ( 'a' ) ) ;
      WRITE ( 'length von char-konstante ............: ' ) ;
@@ -16026,7 +16386,7 @@ procedure TEST3 ;
      WRITE ( 'length von string ....................: ' ) ;
      WRITELN ( LENGTH ( VC20 ) ) ;
      WRITE ( 'length von string-expression .........: ' ) ;
-     WRITELN ( LENGTH ( VC20 || ' ' || VC20 ) ) ;
+     WRITELN ( LENGTH ( VC20 ЭЭ ' ' ЭЭ VC20 ) ) ;
 
      //*************************************************************
      // Funktion mit string ergebnis ausprobieren
@@ -16040,7 +16400,7 @@ procedure TEST3 ;
      P2 := STRFUNC ( VC20 , P1 ) ;
      WRITE ( 'p2 = funktion mit String Ergebnis ....: ' ) ;
      WRITELN ( '<' , P2 , '>' ) ;
-     P2 := 'Test ' || STRFUNC ( VC20 , P1 ) || ' nochmal Test' ;
+     P2 := 'Test ' ЭЭ STRFUNC ( VC20 , P1 ) ЭЭ ' nochmal Test' ;
      WRITE ( 'p2 = kombiniert mit Funktion .........: ' ) ;
      WRITELN ( '<' , P2 , '>' ) ;
      WRITE ( 'String Ergebnis direkt ...............: ' ) ;
@@ -16072,7 +16432,7 @@ procedure TEST4 ;
      WRITE ( 'p2 = funktion mit const String .......: ' ) ;
      WRITELN ( '<' , P2 , '>' ) ;
      P1 := 'Oppolzer' ;
-     P2 := STRFUNC2 ( VC20 || ' ' , ' Oppolzer' ) ;
+     P2 := STRFUNC2 ( VC20 ЭЭ ' ' , ' Oppolzer' ) ;
      WRITE ( 'p2 = funktion mit const String .......: ' ) ;
      WRITELN ( '<' , P2 , '>' ) ;
 
@@ -16095,10 +16455,10 @@ procedure TEST4 ;
      P2 := SUBSTR1 ( P1 , 3 , 4 ) ;
      WRITE ( 'p2 = Ergebnis von SUBSTR1 ............: ' ) ;
      WRITELN ( '<' , P2 , '>' ) ;
-     P2 := SUBSTR1 ( 'Bernd ' || 'Oppolzer' , 5 , 7 ) ;
+     P2 := SUBSTR1 ( 'Bernd ' ЭЭ 'Oppolzer' , 5 , 7 ) ;
      WRITE ( 'p2 = Ergebnis von SUBSTR1 ............: ' ) ;
      WRITELN ( '<' , P2 , '>' ) ;
-     P2 := SUBSTR1 ( 'Bernd ' || 'Oppolzer' , 5 , - 1 ) ;
+     P2 := SUBSTR1 ( 'Bernd ' ЭЭ 'Oppolzer' , 5 , - 1 ) ;
      WRITE ( 'p2 = Ergebnis von SUBSTR1 ............: ' ) ;
      WRITELN ( '<' , P2 , '>' ) ;
 
@@ -16124,10 +16484,10 @@ procedure TEST4 ;
      P2 := SUBSTR2 ( P1 , 3 , 4 ) ;
      WRITE ( 'p2 = Ergebnis von SUBSTR2 ............: ' ) ;
      WRITELN ( '<' , P2 , '>' ) ;
-     P2 := SUBSTR2 ( 'Bernd ' || 'Oppolzer' , 5 , 7 ) ;
+     P2 := SUBSTR2 ( 'Bernd ' ЭЭ 'Oppolzer' , 5 , 7 ) ;
      WRITE ( 'p2 = Ergebnis von SUBSTR2 ............: ' ) ;
      WRITELN ( '<' , P2 , '>' ) ;
-     P2 := SUBSTR2 ( 'Bernd ' || 'Oppolzer' , 5 , - 1 ) ;
+     P2 := SUBSTR2 ( 'Bernd ' ЭЭ 'Oppolzer' , 5 , - 1 ) ;
      WRITE ( 'p2 = Ergebnis von SUBSTR2 ............: ' ) ;
      WRITELN ( '<' , P2 , '>' ) ;
 
@@ -16141,10 +16501,10 @@ procedure TEST4 ;
      WRITELN ( '<' , P2 , '>' ) ;
      WRITE ( 'P1 nach SUBSTR (should not change) ...: ' ) ;
      WRITELN ( '<' , P1 , '>' ) ;
-     P2 := SUBSTR ( 'Bernd ' || 'Oppolzer' , 5 , 7 ) ;
+     P2 := SUBSTR ( 'Bernd ' ЭЭ 'Oppolzer' , 5 , 7 ) ;
      WRITE ( 'p2 = Ergebnis von SUBSTR .............: ' ) ;
      WRITELN ( '<' , P2 , '>' ) ;
-     P2 := SUBSTR ( 'Bernd ' || 'Oppolzer' , 5 ) ;
+     P2 := SUBSTR ( 'Bernd ' ЭЭ 'Oppolzer' , 5 ) ;
      WRITE ( 'p2 = Ergebnis von SUBSTR .............: ' ) ;
      WRITELN ( '<' , P2 , '>' ) ;
    end (* TEST4 *) ;
@@ -16165,10 +16525,10 @@ procedure TEST5 ;
      WRITELN ( '<' , P2 , '>' ) ;
      WRITE ( 'P1 nach DELETE (should not change) ...: ' ) ;
      WRITELN ( '<' , P1 , '>' ) ;
-     P2 := DELETE ( 'Bernd ' || 'Oppolzer' , 5 , 7 ) ;
+     P2 := DELETE ( 'Bernd ' ЭЭ 'Oppolzer' , 5 , 7 ) ;
      WRITE ( 'p2 = Ergebnis von DELETE .............: ' ) ;
      WRITELN ( '<' , P2 , '>' ) ;
-     P2 := DELETE ( 'Bernd ' || 'Oppolzer' , 5 ) ;
+     P2 := DELETE ( 'Bernd ' ЭЭ 'Oppolzer' , 5 ) ;
      WRITE ( 'p2 = Ergebnis von DELETE .............: ' ) ;
      WRITELN ( '<' , P2 , '>' ) ;
 
@@ -16327,7 +16687,7 @@ begin (* HAUPTPROGRAMM *)
   WRITELN ( '<' , TRANSLATE ( P1 , 'x' , ' ' ) , '>' ) ;
   WRITE ( 'P1 nach TRANSLATE ....................: ' ) ;
   WRITELN ( '<' , P1 , '>' ) ;
-  TTAB := IDENT_T1 || IDENT_T2 ;
+  TTAB := IDENT_T1 ЭЭ IDENT_T2 ;
   TTAB [ ORD ( ' ' ) + 1 ] := 'y' ;
   P1 := '  Bernd Oppolzer    ' ;
   WRITE ( 'Ergebnis von TRANSLATE ...............: ' ) ;
@@ -16357,22 +16717,22 @@ var STAB : array [ 1 .. 20 ] of STRING ( 25 ) ;
 begin (* HAUPTPROGRAMM *)
   STAB [ 1 ] := 'AB' ;
   STAB [ 2 ] := 'CD' ;
-  STAB [ 3 ] := STAB [ 1 ] || STAB [ 2 ] ;
+  STAB [ 3 ] := STAB [ 1 ] ЭЭ STAB [ 2 ] ;
   N := 2 ;
   M := 3 ;
-  STAB [ 4 ] := STAB [ M ] || STAB [ N ] ;
-  STAB [ 5 ] := SUBSTR ( STAB [ N - 1 ] , 1 , 1 ) || STAB [ N ] ||
+  STAB [ 4 ] := STAB [ M ] ЭЭ STAB [ N ] ;
+  STAB [ 5 ] := SUBSTR ( STAB [ N - 1 ] , 1 , 1 ) ЭЭ STAB [ N ] ЭЭ
                 SUBSTR ( STAB [ N ] , 1 , 1 ) ;
-  STAB [ 5 ] := SUBSTR ( STAB [ N - 1 ] , 1 , 1 ) || STAB [ N ] ||
-                SUBSTR ( STAB [ N ] , 1 , 1 ) || STAB [ N ] ;
+  STAB [ 5 ] := SUBSTR ( STAB [ N - 1 ] , 1 , 1 ) ЭЭ STAB [ N ] ЭЭ
+                SUBSTR ( STAB [ N ] , 1 , 1 ) ЭЭ STAB [ N ] ;
   WRITELN ( 'stab/4  = <' , STAB [ 4 ] , '>' ) ;
-  WRITELN ( 'stab/4  = <' , STAB [ M ] || STAB [ N ] , '>' ) ;
+  WRITELN ( 'stab/4  = <' , STAB [ M ] ЭЭ STAB [ N ] , '>' ) ;
   WRITELN ( 'stab/5  = <' , STAB [ 5 ] , '>' ) ;
   WRITELN ( 'stab/5a = <' , SUBSTR ( STAB [ N - 1 ] , 1 , 1 ) , '>' ) ;
-  WRITELN ( 'stab/5b = <' , SUBSTR ( STAB [ N - 1 ] , 1 , 1 ) || STAB [
+  WRITELN ( 'stab/5b = <' , SUBSTR ( STAB [ N - 1 ] , 1 , 1 ) ЭЭ STAB [
             N ] , '>' ) ;
-  WRITELN ( 'stab/5  = <' , SUBSTR ( STAB [ N - 1 ] , 1 , 1 ) || STAB [
-            N ] || SUBSTR ( STAB [ N ] , 1 , 1 ) || STAB [ N ] , '>' )
+  WRITELN ( 'stab/5  = <' , SUBSTR ( STAB [ N - 1 ] , 1 , 1 ) ЭЭ STAB [
+            N ] ЭЭ SUBSTR ( STAB [ N ] , 1 , 1 ) ЭЭ STAB [ N ] , '>' )
             ;
 end (* HAUPTPROGRAMM *) .
 ++FILE PASCALN.TESTPGM.PAS                          MEMB TESTVS   EXT PAS HEX -
@@ -16442,6 +16802,30 @@ begin (* HAUPTPROGRAMM *)
   I := 5 ;
   TEST ( I , 'x=i' ) ;
   HALT
+end (* HAUPTPROGRAMM *) .
+++FILE PASCALN.TESTPGM.PAS                          MEMB TESTWRS  EXT PAS HEX -
+program TESTWRS ( OUTPUT ) ;
+
+
+begin (* HAUPTPROGRAMM *)
+  WRITELN ( 'Test mit Laenge 3' ) ;
+  WRITELN ( '<' , 'BERND' : 3 , '>' ) ;
+  WRITELN ( 'Test mit Laenge -3' ) ;
+  WRITELN ( '<' , 'BERND' : - 3 , '>' ) ;
+  WRITELN ( 'Test mit Laenge 12' ) ;
+  WRITELN ( '<' , 'BERND' : 12 , '>' ) ;
+  WRITELN ( 'Test mit Laenge -12' ) ;
+  WRITELN ( '<' , 'BERND' : - 12 , '>' ) ;
+  WRITELN ( 'Test mit Laenge 0' ) ;
+  WRITELN ( '<' , 'BERND' : 0 , '>' ) ;
+  WRITELN ( 25 : 7 ) ;
+  WRITELN ( 25 : 20 ) ;
+  WRITELN ( 25 : - 7 ) ;
+  WRITELN ( 25 : - 20 ) ;
+  WRITELN ( - 25 : 7 ) ;
+  WRITELN ( - 25 : 20 ) ;
+  WRITELN ( - 25 : - 7 ) ;
+  WRITELN ( - 25 : - 20 ) ;
 end (* HAUPTPROGRAMM *) .
 ++FILE PASCALN.TESTPGM.PAS                          MEMB TESTXB   EXT PAS HEX -
 program TESTXB ( OUTPUT ) ;
@@ -21919,6 +22303,21 @@ MAXMEM   DS    F                amount of storage allocated             00030000
 //COMPGO  EXEC PASNCG,MEM=TESTCA3,
 //        SRC='PASCALN.TESTPGM.PAS'
 //*
+++FILE PASCALN.TESTPGM.CNTL                         MEMB TESTCOPY EXT JOB HEX -
+//PASCALNG JOB (PASCAL),'CLG TESTFPAR',CLASS=A,MSGCLASS=X,
+//             TIME=1440,REGION=0M,MSGLEVEL=(1,1)
+//*
+//********************************************************************
+//* Test TESTCOPY
+//********************************************************************
+//*
+//COMPGO  EXEC PASNCLG,MEM=TESTCOPY,
+//        SRC='PASCALN.TESTPGM.PAS',
+//        MOD='PASCALN.TESTPGM.LOAD'
+//GO.INP1    DD  DISP=SHR,DSN=PASCALN.TESTPGM.PAS(TESTCOPY)
+//GO.OUT1    DD  SYSOUT=*
+//GO.OUT2    DD  SYSOUT=*
+//*
 ++FILE PASCALN.TESTPGM.CNTL                         MEMB TESTDUPL EXT JOB HEX -
 //PASCALNG JOB (PASCAL),'CLG TESTDUPL',CLASS=A,MSGCLASS=X,
 //             TIME=1440,REGION=0M,MSGLEVEL=(1,1)
@@ -21944,6 +22343,18 @@ MAXMEM   DS    F                amount of storage allocated             00030000
 //COMPGO   EXEC PASNCLG,MEM=TESTERR2,
 //         SRC='PASCALN.TESTPGM.PAS',
 //         MOD='PASCALN.TESTPGM.LOAD'
+++FILE PASCALN.TESTPGM.CNTL                         MEMB TESTERR3 EXT JOB HEX -
+//PASCALNG JOB (PASCAL),'CLG TESTFPAR',CLASS=A,MSGCLASS=X,
+//             TIME=1440,REGION=0M,MSGLEVEL=(1,1)
+//*
+//********************************************************************
+//* Test TESTERR3
+//********************************************************************
+//*
+//COMPGO  EXEC PASNCLG,MEM=TESTERR3,
+//        SRC='PASCALN.TESTPGM.PAS',
+//        MOD='PASCALN.TESTPGM.LOAD'
+//*
 ++FILE PASCALN.TESTPGM.CNTL                         MEMB TESTFILE EXT JOB HEX -
 //PASCALNT JOB (PASCAL),'TEST TESTFILE',CLASS=A,MSGCLASS=X,
 //             TIME=1440,REGION=0M,MSGLEVEL=(1,1)
@@ -21985,6 +22396,18 @@ MAXMEM   DS    F                amount of storage allocated             00030000
 123456
 //*
 //GO.OUTPUT DD SYSOUT=A,DCB=(RECFM=VB,LRECL=133)
+++FILE PASCALN.TESTPGM.CNTL                         MEMB TESTINTS EXT JOB HEX -
+//PASCALNG JOB (PASCAL),'CLG TESTFPAR',CLASS=A,MSGCLASS=X,
+//             TIME=1440,REGION=0M,MSGLEVEL=(1,1)
+//*
+//********************************************************************
+//* Test TESTINTS
+//********************************************************************
+//*
+//COMPGO  EXEC PASNCLG,MEM=TESTINTS,
+//        SRC='PASCALN.TESTPGM.PAS',
+//        MOD='PASCALN.TESTPGM.LOAD'
+//*
 ++FILE PASCALN.TESTPGM.CNTL                         MEMB TESTLAB  EXT JOB HEX -
 //PASCALNT JOB (PASCAL),'TEST TESTLAB',CLASS=A,MSGCLASS=X,
 //             TIME=1440,REGION=0M,MSGLEVEL=(1,1)
@@ -21999,6 +22422,18 @@ MAXMEM   DS    F                amount of storage allocated             00030000
 //COMPGO   EXEC PASNCLG,MEM=TESTM1,
 //         SRC='PASCALN.TESTPGM.PAS',
 //         MOD='PASCALN.TESTPGM.LOAD'
+++FILE PASCALN.TESTPGM.CNTL                         MEMB TESTNF   EXT JOB HEX -
+//PASCALNG JOB (PASCAL),'CLG TESTFPAR',CLASS=A,MSGCLASS=X,
+//             TIME=1440,REGION=0M,MSGLEVEL=(1,1)
+//*
+//********************************************************************
+//* Test TESTNF
+//********************************************************************
+//*
+//COMPGO  EXEC PASNCLG,MEM=TESTNF,
+//        SRC='PASCALN.TESTPGM.PAS',
+//        MOD='PASCALN.TESTPGM.LOAD'
+//*
 ++FILE PASCALN.TESTPGM.CNTL                         MEMB TESTPAS  EXT JOB HEX -
 //PASCALNG JOB (PASCAL),'CLG TESTPAS',CLASS=A,MSGCLASS=X,
 //             TIME=1440,REGION=0M,MSGLEVEL=(1,1)
@@ -22054,6 +22489,31 @@ end.
 //GO.PDSOUT  DD  DISP=SHR,DSN=PASCALN.TESTPGM.COPY
 //*O.PDS   DD  DISP=SHR,DSN=PASCALN.TEST.EINGABE
 //*O.PDS   DD  DISP=SHR,DSN=PASCALN.TESTPGM.PAS
+++FILE PASCALN.TESTPGM.CNTL                         MEMB TESTPTR2 EXT JOB HEX -
+//PASCALNG JOB (PASCAL),'CLG TESTFPAR',CLASS=A,MSGCLASS=X,
+//             TIME=1440,REGION=0M,MSGLEVEL=(1,1)
+//*
+//********************************************************************
+//* Test TESTPTR2
+//********************************************************************
+//*
+//COMPGO  EXEC PASNCLG,MEM=TESTPTR2,
+//        SRC='PASCALN.TESTPGM.PAS',
+//        MOD='PASCALN.TESTPGM.LOAD'
+//*
+++FILE PASCALN.TESTPGM.CNTL                         MEMB TESTREAD EXT JOB HEX -
+//PASCALNG JOB (PASCAL),'CLG TESTFPAR',CLASS=A,MSGCLASS=X,
+//             TIME=1440,REGION=0M,MSGLEVEL=(1,1)
+//*
+//********************************************************************
+//* Test TESTREAD
+//********************************************************************
+//*
+//COMPGO  EXEC PASNCLG,MEM=TESTREAD,
+//        SRC='PASCALN.TESTPGM.PAS',
+//        MOD='PASCALN.TESTPGM.LOAD'
+//GO.INPFILE DD  DISP=SHR,DSN=PASCALN.TESTPGM.PAS(TESTREAD)
+//*
 ++FILE PASCALN.TESTPGM.CNTL                         MEMB TESTSCAL EXT JOB HEX -
 //PASCALNG JOB (PASCAL),'CLG TESTSCAL',CLASS=A,MSGCLASS=X,
 //             TIME=1440,REGION=0M,MSGLEVEL=(1,1)
@@ -22075,6 +22535,18 @@ end.
 //*
 //COMPGO  EXEC PASNCG,MEM=TESTSETH,
 //        SRC='PASCALN.TESTPGM.PAS'
+//*
+++FILE PASCALN.TESTPGM.CNTL                         MEMB TESTSET5 EXT JOB HEX -
+//PASCALNG JOB (PASCAL),'CLG TESTFPAR',CLASS=A,MSGCLASS=X,
+//             TIME=1440,REGION=0M,MSGLEVEL=(1,1)
+//*
+//********************************************************************
+//* Test TESTSET5
+//********************************************************************
+//*
+//COMPGO  EXEC PASNCLG,MEM=TESTSET5,
+//        SRC='PASCALN.TESTPGM.PAS',
+//        MOD='PASCALN.TESTPGM.LOAD'
 //*
 ++FILE PASCALN.TESTPGM.CNTL                         MEMB TESTSIN  EXT JOB HEX -
 //PASCALNT JOB (PASCAL),'TESTSIN',CLASS=A,MSGCLASS=X,                   00000100
@@ -22182,6 +22654,18 @@ end.
 //********************************************************************
 //*
 //COMPGO  EXEC PASNCLG,MEM=TESTVC2,
+//        SRC='PASCALN.TESTPGM.PAS',
+//        MOD='PASCALN.TESTPGM.LOAD'
+//*
+++FILE PASCALN.TESTPGM.CNTL                         MEMB TESTWRS  EXT JOB HEX -
+//PASCALNG JOB (PASCAL),'CLG TESTFPAR',CLASS=A,MSGCLASS=X,
+//             TIME=1440,REGION=0M,MSGLEVEL=(1,1)
+//*
+//********************************************************************
+//* Test TESTWRS
+//********************************************************************
+//*
+//COMPGO  EXEC PASNCLG,MEM=TESTWRS,
 //        SRC='PASCALN.TESTPGM.PAS',
 //        MOD='PASCALN.TESTPGM.LOAD'
 //*

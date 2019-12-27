@@ -2,10 +2,10 @@
 2020.01:
 
 * Testen CSP RDV bei Eingabe von Terminal
-- zuerst Version 2019.09 auf MVS ausliefern
-- Fehler bei CSP RDV auf Mainframe - Maxlaenge wird nicht eingehalten bei laengerer Zeile
-- Testen Unterschied bei Ausgabe Leerzeilen in Textfiles
-- Lesen CHAR(10) und STRING(10) tickt anders als einzelne CHARs - siehe TESTREAD
+* zuerst Version 2019.09 auf MVS ausliefern
+* Fehler bei CSP RDV auf Mainframe - Maxlaenge ueberschr. bei RDV - TESTREAD.pas
+* Testen Unterschied bei Ausgabe Leerzeilen in Textfiles - TESTCOPY.pas
+- Lesen CHAR(10) und STRING(10) tickt anders als einzelne CHARs - siehe TESTREAD.pas
 - Implementieren READ (X : N) - d.h. Change Read einzelne Chars, feste Strings, Varchars
 - READ Ints usw. neu als Pascal-Funktion
 - READSTR usw. als Pascal-Funktion

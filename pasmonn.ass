@@ -4,13 +4,19 @@
 *     PASCAL ENVIRONMENT AND ENTRY SETUP
 *     ------------------------------------
 *
-*     see below --- more recent comments (04.2017) / Bernd Oppolzer
+*     see below: updated Program History / Bernd Oppolzer
 *
 *     This runtime targets MVS and CMS (tested with the free versions
-*     distributed with Hercules) - will maybe run on modern versions
-*     of z/OS and z/VM ... not sure ...
+*     distributed with Hercules) - will probably run on modern versions
+*     of z/OS and z/VM ... not sure for z/VM ...
+*
+*     Only AMODE 24 at the moment ... sorry !
 *
 *     CMS Version must be compiled using SYSPARM(CMS)
+*
+***********************************************************************
+*
+*     Original comment from 1976:
 *
 ***********************************************************************
 *
@@ -132,30 +138,114 @@
 *
 **********************************************************************
 *
-*     FURTHER MODIFICATIONS MADE AT MCGILL UNIVERSITY,
 *
-*                                R. NIGEL HORSPOOL
-*                                APRIL 7, 1982
+*
+*
+*
 *
 **********************************************************************
 *
-*     Minor mods made by Dave Edwards (DE), Jan/2007 - see below.
+*    Program History - newest first
 *
-* See also:  $psc:pascal.mon.notes
-*            $psc:pascal.lib.notes
+***********************************************************************
 *
-* *** This module, assembled with &SYSTEM set to 0, also forms
-*     part of $psc:pascal.lib (run-time library object).
+*    Some more modifications in 2019 by Bernd Oppolzer
+*    (berndoppolzer@yahoo.com)
 *
-* 28jan2007 - JCL added an top of file, and module reassembled.
-*    No change to the source. See $psc:pascal.mon.notes . (DE)
+*    - new CSPs (Pascal Standard Procedures) RDV (read varchar)
+*      and WRV (write varchar) to support input and output of
+*      varying strings.
 *
-* 28jan2007 - Fix year-2000 problem when setting PASDATE (for the
-*    Pascal predefined variable DATE e.g. '01-28-2007'): set correct
-*    century if actual year is 20yy and this seems to be a MUSIC/SP
-*    system. Previously, year 20nn would be reported as 19nn.
-*    (But coding is still incorrect for years like 2100, because
-*    that year is not a leap year.) (DE)
+***********************************************************************
+*
+*    Some more modifications in 2018 by Bernd Oppolzer
+*    (berndoppolzer@yahoo.com)
+*
+*    - added $PASSCMP to support comparison of VARCHAR strings
+*      (it was just too complicated to do it inline). The
+*      function is called without full save area linking
+*      directly from compiler generated code. Special interface.
+*
+*    - added $PASSVCC to support concatenation of VARCHAR strings
+*      (in cases where inline code generation does not work
+*      due to number of available register constraints)
+*
+***********************************************************************
+*
+*    Some more modifications in 2017 by Bernd Oppolzer
+*    (berndoppolzer@yahoo.com)
+*
+*    - Eliminate &IBM370 switch
+*      (MVCL and STCM are required from now on)
+*
+*    - some functions which deal with Pascal files renamed from
+*      FILxxx to PAFxxx (FILxxx only used for offsets of Pascal FCB)
+*
+*    - some more functions moved out of the critical area and made
+*      adressable by themselves (own base), e.g. PAFGOP, PAFPOP,
+*      PAFOPN, CHKPRM
+*
+*    - Compile switch (SYSPARM(CMS)) to control environment; some
+*      features are not needed on CMS; see such coding:
+*      AIF   ('&SYSPARM' EQ 'CMS').CMS101
+*
+*    - Member name included in Pascal FCB (see how it will work)
+*      Offset FILMEM
+*
+*    - Modify JFCB and OPEN ... TYPE=J to open specific members of
+*      a PDS, controlled by member name in Pascal FCB;
+*      member name can be set by new Pascal function ASSIGNMEM,
+*      which is part of PASUTILS runtime library. Works on input
+*      and output; the function ASSIGNMEM is limited to TEXT files
+*      at the moment (no such restriction imposed by the runtime)
+*
+*    - in absence of a member name on both DD assignments and
+*      Pascal FCB, the directory of the PO dataset should be read;
+*      but to do that it is first necessary to recognize PO files
+*      and not to do all those things on normal PS files - later ...
+*
+*    - thanks to Gerhard Pospischil for help with those topics
+*
+*    - open of members is a prerequisite for PASSNAP on MVS !!
+*
+***********************************************************************
+*
+*    Some modifications in 2016 / 2017 by Bernd Oppolzer
+*    (berndoppolzer@yahoo.com)
+*
+*    - Table of functions in $PASCSP2 different
+*
+*    - several CSP functions added and changed, as needed
+*
+*    - compatibility issues resolved (the compiler has been ported
+*      to some other platforms, too)
+*
+*    - $PASCSP2 can use the Pascal runtime stack for its save areas
+*      and so maybe can be called recursively
+*      (Pascal calls a $PASCSP function calls
+*      a Pascal function calls another $PASCSP function
+*      and so on ...)
+*
+*    - $PASCSP2 covered by two base regs (10 and 11)
+*      but some subroutines are moved outside and reuse reg 11
+*      for their own base reg. That means that subroutines inside
+*      $PASCSP2 that are called from outside subroutines have to
+*      be placed at the beginning of $PASCSP2 (later hopefully
+*      may be reduced to reg 10 only - if enough subroutines
+*      have been moved outside).
+*
+*    - Subroutine that handles JCL parameters is moved from mainline
+*      to the end of the program (CHKPRM) and has its own base reg.
+*
+*    - PTRACE routine is available everywhere, called by BALR 14,15
+*      and only needs register 3 on entry (pointing to the output
+*      buffer, 80 characters)
+*
+*    - a temp save area is established on entry, before the "real"
+*      save area is constructed. So PTRACE calls are possible
+*      already in early stages (the "real" save area depends on
+*      STACK size etc., which needs JCL parms to be analyzed first)
+*
 *
 ***********************************************************************
 *
@@ -235,98 +325,36 @@
 *         b) = implicit rewrite
 *         c) = no action
 *
-***********************************************************************
+**********************************************************************
 *
-*    Some modifications in 2016 / 2017 by Bernd Oppolzer
-*    (berndoppolzer@yahoo.com)
+*     Minor mods made by Dave Edwards (DE), Jan/2007 - see below.
 *
-*    - Table of functions in $PASCSP2 different
+*     See also:  $psc:pascal.mon.notes
+*                $psc:pascal.lib.notes
 *
-*    - several CSP functions added and changed, as needed
+*     *** This module, assembled with &SYSTEM set to 0, also forms
+*         part of $psc:pascal.lib (run-time library object).
 *
-*    - compatibility issues resolved (the compiler has been ported
-*      to some other platforms, too)
+*     28jan2007 - JCL added an top of file, and module reassembled.
+*     No change to the source. See $psc:pascal.mon.notes . (DE)
 *
-*    - $PASCSP2 can use the Pascal runtime stack for its save areas
-*      and so maybe can be called recursively
-*      (Pascal calls a $PASCSP function calls
-*      a Pascal function calls another $PASCSP function
-*      and so on ...)
-*
-*    - $PASCSP2 covered by two base regs (10 and 11)
-*      but some subroutines are moved outside and reuse reg 11
-*      for their own base reg. That means that subroutines inside
-*      $PASCSP2 that are called from outside subroutines have to
-*      be placed at the beginning of $PASCSP2 (later hopefully
-*      may be reduced to reg 10 only - if enough subroutines
-*      have been moved outside).
-*
-*    - Subroutine that handles JCL parameters is moved from mainline
-*      to the end of the program (CHKPRM) and has its own base reg.
-*
-*    - PTRACE routine is available everywhere, called by BALR 14,15
-*      and only needs register 3 on entry (pointing to the output
-*      buffer, 80 characters)
-*
-*    - a temp save area is established on entry, before the "real"
-*      save area is constructed. So PTRACE calls are possible
-*      already in early stages (the "real" save area depends on
-*      STACK size etc., which needs JCL parms to be analyzed first)
-*
+*     28jan2007 - Fix year-2000 problem when setting PASDATE (for the
+*     Pascal predefined variable DATE e.g. '01-28-2007'): set correct
+*     century if actual year is 20yy and this seems to be a MUSIC/SP
+*     system. Previously, year 20nn would be reported as 19nn.
+*     (But coding is still incorrect for years like 2100, because
+*     that year is not a leap year.) (DE)
 *
 ***********************************************************************
 *
-*    Some more modifications in 2017 by Bernd Oppolzer
-*    (berndoppolzer@yahoo.com)
+*     FURTHER MODIFICATIONS MADE AT MCGILL UNIVERSITY,
 *
-*    - Eliminate &IBM370 switch
-*      (MVCL and STCM are required from now on)
+*                                R. NIGEL HORSPOOL
+*                                APRIL 7, 1982
 *
-*    - some functions which deal with Pascal files renamed from
-*      FILxxx to PAFxxx (FILxxx only used for offsets of Pascal FCB)
+**********************************************************************
 *
-*    - some more functions moved out of the critical area and made
-*      adressable by themselves (own base), e.g. PAFGOP, PAFPOP,
-*      PAFOPN, CHKPRM
 *
-*    - Compile switch (SYSPARM(CMS)) to control environment; some
-*      features are not needed on CMS; see such coding:
-*      AIF   ('&SYSPARM' EQ 'CMS').CMS101
-*
-*    - Member name included in Pascal FCB (see how it will work)
-*      Offset FILMEM
-*
-*    - Modify JFCB and OPEN ... TYPE=J to open specific members of
-*      a PDS, controlled by member name in Pascal FCB;
-*      member name can be set by new Pascal function ASSIGNMEM,
-*      which is part of PASUTILS runtime library. Works on input
-*      and output; the function ASSIGNMEM is limited to TEXT files
-*      at the moment (no such restriction imposed by the runtime)
-*
-*    - in absence of a member name on both DD assignments and
-*      Pascal FCB, the directory of the PO dataset should be read;
-*      but to do that it is first necessary to recognize PO files
-*      and not to do all those things on normal PS files - later ...
-*
-*    - thanks to Gerhard Pospischil for help with those topics
-*
-*    - open of members is a prerequisite for PASSNAP on MVS !!
-*
-***********************************************************************
-*
-*    Some more modifications in 2018 by Bernd Oppolzer
-*    (berndoppolzer@yahoo.com)
-*
-*    - added $PASSCMP to support comparison of VARCHAR strings
-*      (it was just too complicated to do it inline). The
-*      function is called without full save area linking
-*      directly from compiler generated code. Special interface.
-*
-*    - added $PASSVCC to support concatenation of VARCHAR strings
-*      (in cases where inline code generation does not work
-*      due to number of available register constraints)
-*
-***********************************************************************
 *
 *
 *
@@ -3583,6 +3611,7 @@ PAFGET1  DS    0H
 *        ST    AF,DOWO
 *        UNPK  TRGET2+49(9),DOWO(5)
 *        TR    TRGET2+49(8),TABHEX-C'0'
+*        MVI   TRGET2+57,C' '
 *        LH    R2,FILEND(AE)
 *        CVD   R2,DOWO
 *        UNPK  TRGET2+33(5),DOWO+5(3)
@@ -3590,7 +3619,12 @@ PAFGET1  DS    0H
 *        LA    R3,TRGET2
 *        L     R15,=A(PTRACE)
 *        BALR  R14,R15
-*        MVC   TRGET3+16(40),0(AF)
+*        L     R2,0(AF)
+*        ST    R2,DOWO
+*        UNPK  TRGET3+16(9),DOWO(5)
+*        TR    TRGET3+16(8),TABHEX-C'0'
+*        MVI   TRGET3+24,C' '
+*        MVC   TRGET3+25(40),0(AF)
 *        LA    R3,TRGET3
 *        L     R15,=A(PTRACE)
 *        BALR  R14,R15
@@ -3603,7 +3637,7 @@ PAFGET1  DS    0H
 TRGET    DC    CL80'TRACE: BEFORE GET-CALL INSIDE PAFGET'
 TRGET2   DC    CL80'TRACE: SUCCESSFUL RETURN LRECL = XXXXX ADDRBUF = XX*
                XXXXXX'
-TRGET3   DC    CL80'TRACE: BUFFER = XXX'
+TRGET3   DC    CL80'TRACE: BUFFER = XXXXXXXX XXX'
 XXANZ    DC    H'0'
 *
 *
@@ -4178,7 +4212,7 @@ TRRDI1   DC    CL80'TRACE: ZEICHEN RDI = XXXXXXXXX'
 *
 *
 *****************************************************************
-*  RDS, (READ STRING), R2= STRING ADDRESS, R3=STRING LENGTH !
+*  RDS, (READ STRING), R2 = STRING ADDRESS, R3 = STRING LENGTH !
 *****************************************************************
 *
          DS    0H
@@ -4186,31 +4220,31 @@ TRRDI1   DC    CL80'TRACE: ZEICHEN RDI = XXXXXXXXX'
 RDS      DS    0H
          FILADR ,
 *
-         BAL   R5,PAFCHK           CHECK FILE STATUS
+         BAL   R5,PAFCHK           check file status
 *
          LH    R15,FILEND(AE)
          LH    R14,FILPTR(AE)
-         SR    R15,R14             COMPUTE # CHARS LEFT
-         CR    R3,R15              MORE REQUIRED ?
+         SR    R15,R14             compute number of chars left
+         CR    R3,R15              more required ?
          BL    RDSL
-         MVC   FILPTR(2,AE),FILEND(AE)  FILPTR TO FILEND
-         MVI   FILEOLN(AE),TRUE         INDICATE EOLN
+         MVC   FILPTR(2,AE),FILEND(AE)  filptr to filend
+         MVI   FILEOLN(AE),TRUE         incidate eoln
          B     RDS01
 RDSL     DS    0H
-         LR    R0,R14              ADD LENGTH (R3) TO FILPTR
-         AR    R0,R3
-         STH   R0,FILPTR(AE)       NEW POSITION TO FILPTR
+         LR    R0,R14              R14 = filptr (see above)
+         AR    R0,R3               add length (R3) to filptr
+         STH   R0,FILPTR(AE)       new position to filptr
 RDS01    DS    0H
-         IC    R0,PFILCOMP(AD)     START WITH CURRENT CHARACTER
+         IC    R0,PFILCOMP(AD)     start with current character
 *
 **********************************************************************
 *        (ibm370 dependency: MVCL)
 **********************************************************************
 *
-         STC   R0,0(R2)            COPY CHARS ONE-BY-ONE
-         LA    R14,1(R14)
+         STC   R0,0(R2)            copy chars one by one
+         LA    R14,1(R14)          increment source address
          BCTR  R15,0
-         LA    R2,1(R2)
+         LA    R2,1(R2)            increment target address
          BCTR  R3,0
          LTR   R3,R3
          BNP   RDSF3
@@ -4218,19 +4252,19 @@ RDS01    DS    0H
          BNM   RDSF2
          SR    R15,R15
 RDSF2    DS    0H
-         AR    R14,AF              ADDR OF FIRST CHAR
-         ICM   R15,8,=AL1(FILBLA)  SET FILL CHAR
-         MVCL  R2,R14              NOW COPY STRING
+         AR    R14,AF              addr of first char
+         ICM   R15,8,=AL1(FILBLA)  set fill char
+         MVCL  R2,R14              now copy string
 RDSF3    DS    0H
          LH    R14,FILPTR(AE)
-         CLI   FILEOLN(AE),TRUE    EOLN ?
+         CLI   FILEOLN(AE),TRUE    eoln ?
          BE    RDSF4
-         IC    R0,0(R14,AF)        LOAD NEXT INPUT CHAR
-         STC   R0,PFILCOMP(AD)     SET CURRENT CHAR
+         IC    R0,0(R14,AF)        load next input char
+         STC   R0,PFILCOMP(AD)     set current char
          B     RDSZ
 RDSF4    DS    0H
-         LA    R0,FILBLA           END OF LINE CHARACTER
-         STC   R0,PFILCOMP(AD)     SET CURRENT CHAR
+         LA    R0,FILBLA           end of line character
+         STC   R0,PFILCOMP(AD)     set current char
          B     RDSZ
 *
 RDSZ     DS    0H
@@ -4242,7 +4276,7 @@ RDSZ     DS    0H
 *
 *
 *****************************************************************
-*  RDV, (READ STRING), R2= STRING ADDRESS, R3=STRING LENGTH !
+*  RDV, (READ STRING), R2 = STRING ADDRESS, R3 = STRING LENGTH !
 *****************************************************************
 *
          DS    0H
@@ -4267,42 +4301,44 @@ RDV      DS    0H
 *
 *        LM    R1,R5,SAVERDS
 *
-         BAL   R5,PAFCHK           CHECK FILE STATUS
+         BAL   R5,PAFCHK           check file status
 *
          LH    R15,FILEND(AE)
          LH    R14,FILPTR(AE)
-         SR    R15,R14             COMPUTE # CHARS LEFT
+         SR    R15,R14             compute number of chars left
          CR    R3,R15              string has more space ?
          BL    RDVL
-         MVC   FILPTR(2,AE),FILEND(AE)  FILPTR TO FILEND
-         MVI   FILEOLN(AE),TRUE         INDICATE EOLN
+         MVC   FILPTR(2,AE),FILEND(AE)  filptr to filend
+         MVI   FILEOLN(AE),TRUE         incidate eoln
          B     RDV01
-RDVL     DS    0H
-         LR    R0,R14              ADD LENGTH (R3) TO FILPTR
-         AR    R0,R3
-         STH   R0,FILPTR(AE)       NEW POSITION TO FILPTR
-RDV01    DS    0H
 *
+RDVL     DS    0H
+         LR    R0,R14              R14 = filptr (see above)
+         AR    R0,R3               add length (R3) to filptr
+         STH   R0,FILPTR(AE)       new position to filptr
+         LR    R15,R3              only transfer max. R3 bytes
+*
+RDV01    DS    0H
          STH   R3,0(R2)            store maxlength to String maxl
          STH   R15,2(R2)           store actlength to String actl
          LA    R2,4(R2)            point R2 to String content
 *
-         IC    R0,PFILCOMP(AD)     START WITH CURRENT CHARACTER
+         IC    R0,PFILCOMP(AD)     start with current character
 RDV02    DS    0H
-         STC   R0,0(R2)            COPY CHARS ONE-BY-ONE
-         LA    R14,1(R14)
-         LA    R2,1(R2)
-         IC    R0,0(R14,AF)        LOAD NEXT INPUT CHAR
+         STC   R0,0(R2)            copy chars one by one
+         LA    R14,1(R14)          increment source address
+         LA    R2,1(R2)            increment target address
+         IC    R0,0(R14,AF)        load next input char
          BCT   R15,RDV02
 *
-         CLI   FILEOLN(AE),TRUE    EOLN ?
+         CLI   FILEOLN(AE),TRUE    eoln ?
          BE    RDV03
-         STC   R0,PFILCOMP(AD)     SET CURRENT CHAR
+         STC   R0,PFILCOMP(AD)     set current char
          B     RDVZ
 *
 RDV03    DS    0H
-         LA    R0,FILBLA           END OF LINE CHARACTER
-         STC   R0,PFILCOMP(AD)     SET CURRENT CHAR
+         LA    R0,FILBLA           end of line character
+         STC   R0,PFILCOMP(AD)     set current char
 *
 RDVZ     DS    0H
 *
@@ -4339,7 +4375,7 @@ REW      DS    0H
          BE    RTN                 then no action
 *
          L     R15,=A(PAFCLS)
-         BALR  R14,R15             GO AND CLOSE THE FILE
+         BALR  R14,R15             go and close the file
 *
          L     R15,=A(PAFPOP)
          BALR  R14,R15             open file for write
@@ -4354,7 +4390,7 @@ REW      DS    0H
 *
 REW1     DS    0H
          TM    FILOPN(AE),TEXTFLAG
-         BZ    RTN                 RETURN IF NOT A TEXT FILE
+         BZ    RTN                 return if not a text file
          MVI   FILSTA(AE),C'2'     set file status to 2
          B     RTN
 *

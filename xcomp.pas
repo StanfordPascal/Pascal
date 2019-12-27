@@ -86,8 +86,7 @@ const MAXLEN = 1024 ;
       VERSION = 'XCOMP (Pascal Version 1.1) - 20.10.2016' ;
 
 
-type OSPARM_TYPE = array [ 1 .. 254 ] of CHAR ;
-     CHAR3 = array [ 1 .. 3 ] of CHAR ;
+type CHAR3 = array [ 1 .. 3 ] of CHAR ;
      CHAR64 = array [ 1 .. 64 ] of CHAR ;
      ZEILE = array [ 1 .. MAXLEN ] of CHAR ;
      VOIDPTR = -> INTEGER ;
@@ -205,7 +204,7 @@ var PARM_FEHLER : BOOLEAN ;
     FCB1 : VOIDPTR ;
     FCB2 : VOIDPTR ;
     X : INTEGER ;
-    PSTRING : OSPARM_TYPE ;
+    PARM_STRING : CHAR ( 254 ) ;
 
 
 
@@ -1218,8 +1217,8 @@ procedure ERROR ( ERRNO : INTEGER ) ;
 
 
 
-procedure CHKPARM ( LENGTH : INTEGER ; STRING : OSPARM_TYPE ; var OPT :
-                  S_OPTIONS ; var SEQ : S_SEQINFO ) ;
+procedure CHKPARM ( LENGTH : INTEGER ; STRING : CHAR ( 254 ) ; var OPT
+                  : S_OPTIONS ; var SEQ : S_SEQINFO ) ;
 
 (********************************************************)
 (*   Parameter abarbeiten                               *)
@@ -1231,15 +1230,15 @@ procedure CHKPARM ( LENGTH : INTEGER ; STRING : OSPARM_TYPE ; var OPT :
    var I : INTEGER ;
        INPARM : BOOLEAN ;
        CH : CHAR ;
-       PARM : OSPARM_TYPE ;
+       PARM : CHAR ( 254 ) ;
        X : INTEGER ;
 
 
-   procedure CHKPARM2 ( PARM : OSPARM_TYPE ; var OPT : S_OPTIONS ; var
+   procedure CHKPARM2 ( PARM : CHAR ( 254 ) ; var OPT : S_OPTIONS ; var
                       SEQ : S_SEQINFO ) ;
 
 
-      procedure READPARM ( PARM : OSPARM_TYPE ; ANZAHL : INTEGER ; var
+      procedure READPARM ( PARM : CHAR ( 254 ) ; ANZAHL : INTEGER ; var
                          ERG1 : INTEGER ; var ERG2 : INTEGER ) ;
 
          var CP : -> CHAR ;
@@ -1402,11 +1401,11 @@ begin (* HAUPTPROGRAMM *)
   WRITELN ( VERSION ) ;
   WRITELN ( 'Vergleich Datei 1 <<< ' , 'mit Datei 2 >>>' ) ;
 
-  /*****************************************/
-  /* moegliche Erweiterung:                */
-  /* Standardfunktion zur typgerechten     */
-  /* Initialisierung einer Struktur        */
-  /*****************************************/
+  "***************************************  "
+  " moegliche Erweiterung:                  "
+  " Standardfunktion zur typgerechten       "
+  " Initialisierung einer Struktur          "
+  "***************************************  "
   "INIT ( SEQ ) ;                           "
 
   SEQ . SEQTYPE := 0 ;
@@ -1450,16 +1449,16 @@ begin (* HAUPTPROGRAMM *)
       with OSPARM -> do
         begin
           WRITELN ( 'Eingelesene Parameter: ' ) ;
-          WRITELN ( 'parm: length = ' , LENGTH : 3 ) ;
-          PSTRING := ' ' ;
+          WRITELN ( 'parm: length = ' , PLENGTH : 3 ) ;
+          PARM_STRING := ' ' ;
           WRITE ( 'parm: <' ) ;
-          for X := 1 to LENGTH do
+          for X := 1 to PLENGTH do
             begin
-              WRITE ( STRING [ X ] ) ;
-              PSTRING [ X ] := STRING [ X ] ;
+              WRITE ( PSTRING [ X ] ) ;
+              PARM_STRING [ X ] := PSTRING [ X ] ;
             end (* for *) ;
           WRITELN ( '>' ) ;
-          CHKPARM ( LENGTH , PSTRING , OPT , SEQ ) ;
+          CHKPARM ( PLENGTH , PARM_STRING , OPT , SEQ ) ;
         end (* with *) ;
     end (* then *)
   else

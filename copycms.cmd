@@ -1,19 +1,32 @@
 
 rem **********************************************************
-rem +++ Version 2019.09 +++
+rem +++ Version 2020.01 +++
 rem **********************************************************
 
-    call topas showhex
-    call topas copyteil
-    call topas pasutils
-    call topas avltree
-    call topas testerr3
-    call topas testcopy
-    pause
+    call copyrdr pasmonn.ass      pascomp pasmonn assemble
+
     call topas passcan
     call topas paslibx
     call topas pascal1
     call topas pascal2
+    call topas pascal1a
+    call topas pascal2a
+
+rem **********************************************************
+rem +++ Version 2019.09 +++
+rem **********************************************************
+
+rem call topas showhex
+rem call topas copyteil
+rem call topas pasutils
+rem call topas avltree
+rem call topas testerr3
+rem call topas testcopy
+rem pause
+rem call topas passcan
+rem call topas paslibx
+rem call topas pascal1
+rem call topas pascal2
 
 rem **********************************************************
 rem +++ Version 2019.08 +++

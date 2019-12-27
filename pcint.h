@@ -452,7 +452,7 @@ typedef struct
    int  freclen;              // offset 292
    int  pfilvar;              // offset 296 - pointer to store
    char readbuf_sched;        // offset 300
-   char unused2;              // offset 301 - not used yet
+   char begoln;               // offset 301 - new 12.2019
    char unused3;              // offset 302 - not used yet
    char unused4;              // offset 303 - not used yet
    char *fbufptr;             // offset 304 - outside of store

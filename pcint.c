@@ -57,6 +57,7 @@
 /*  06.09.2019 ! Oppolzer    ! Kommentare korrig. wg. PCODE_2019.TXT  */
 /*  19.11.2019 ! Oppolzer    ! Allow strings as byvalue arg to chars  */
 /*  19.11.2019 ! Oppolzer    ! that is: negative length on VMV        */
+/*  19.12.2019 ! Oppolzer    ! read new line on eoln (RDS and RDV)    */
 /*  .......... ! ........    ! .....................................  */
 /*  .......... ! ........    ! .....................................  */
 /*  .......... ! ........    ! .....................................  */
@@ -936,6 +937,7 @@ static void file_input (void *vgs, filecb *fcb)
    fcb -> freclen = cp - fcb -> fbuffer;
    fcb -> eoln = 0;
    fcb -> eof = 0;
+   fcb -> begoln = 1;
 
    //*********************************************
    // Bufferpointer und Filevariable setzen
@@ -975,6 +977,7 @@ static char file_getch (void *vgs, filecb *fcb)
    }
    else
    {
+      fcb -> begoln = 0;
       fcb -> fbufptr += 1;
 
       charp = ADDRSTOR (fcb -> pfilvar);
@@ -1022,6 +1025,8 @@ static FILE *file_open (filecb *fcb, char *fmode)
    char envbuffer [20];
    char *fname;
    char *fname_neu = NULL;
+
+   fcb -> begoln = 0;
 
    if (fcb -> terminal == 'Y')
    {
@@ -2612,9 +2617,9 @@ static void *cspf_rdd (void *vgs,
 
 #if 0
 
-   fprintf (stderr, "rds: parm1 = %d\n", parm1);
-   fprintf (stderr, "rds: parm2 = %d\n", parm2);
-   fprintf (stderr, "rds: parm3 = %d\n", parm3);
+   fprintf (stderr, "rdd: parm1 = %d\n", parm1);
+   fprintf (stderr, "rdd: parm2 = %d\n", parm2);
+   fprintf (stderr, "rdd: parm3 = %d\n", parm3);
 
 #endif
 
@@ -2681,6 +2686,21 @@ static void *cspf_rds (void *vgs,
       runtime_error (gs, BADIO, fcb -> ddname);
 
    //*************************************
+   // if eoln read new line
+   // only if not at begin of line
+   //*************************************
+
+   if (fcb -> eoln && ! fcb -> begoln)
+   {
+      if (fcb -> terminal != 'Y')
+      {
+         file_input (gs, fcb);
+      }
+   }
+
+   fcb -> begoln = 0;
+
+   //*************************************
    // Pointer to target from parm2
    //*************************************
 
@@ -2737,6 +2757,20 @@ static void *cspf_rdv (void *vgs,
 
    if (fcb -> status != '3' || fcb -> eof)
       runtime_error (gs, BADIO, fcb -> ddname);
+
+   //*************************************
+   // if eoln read new line
+   //*************************************
+
+   if (fcb -> eoln && ! fcb -> begoln)
+   {
+      if (fcb -> terminal != 'Y')
+      {
+         file_input (gs, fcb);
+      }
+   }
+
+   fcb -> begoln = 0;
 
    //*************************************
    // Pointer to target from parm2

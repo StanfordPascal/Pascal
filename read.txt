@@ -1,0 +1,60 @@
+
+new Plan for READ
+-----------------
+
+todays CSPs:
+
+GET,RES,RLN,EOF,ELN,RDD   -- stay the same
+RDC,RDS,RDV               -- stay, but later phased out
+RDB,RDR,RDH,RDY,RDI       -- will be replaced by Pascal logic
+
+new CSPs could be named RFx and RSx (read file / read string)
+new CSPs that should be implemented in the runtime:
+
+RFC, RFS, RFV, RSC, RSS, RSV (length added)
+
+CSPs that should be rewritten in Pascal (length added and input from string):
+
+RDB,RDR,RDH,RDY,RDI
+maybe RDX added
+don't know yet how the Pascal function which does this should look
+
+
+migration steps
+---------------
+
+1. implement RFC, RFS, RFV with additional length specification
+
+if there is a negative length, this means that no length has been specified,
+otherwise (including zero) this length has been specified. Zero means:
+nothing is read at all; the target field is initialized to zero or blank.
+The existing RDx CSPs have to stay untouched, so that older versions of
+the compiler still run fine.
+
+2. change the compiler so that it generates the new CSPs
+
+3. test the new CSPs
+
+4. implement RDB, RDR, RDH, RDY, RDI and maybe RDZ as Pascal functions
+   (in PASLIBX) and test them
+
+5. change the compiler to use the new Read functions
+
+*** done until here ***
+
+6. implement the first READSTR CSPs: RSC, RSS, RSV
+
+7. implement READSTR in the compiler (for the first types)
+
+8. implement READSTR for the other types (using Pascal logic)
+
+9. implement WRITESTR using Pascal logic
+
+10. re-implement WRITE using Pascal logic
+
+
+much later (after 2 more releases of the compiler)
+--------------------------------------------------
+
+remove the old (no more needed) CSPs from the runtime
+

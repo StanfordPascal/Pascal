@@ -116,27 +116,29 @@
 #define SETLENMAX      256
 #define CMDLINEMAX     1024
 #define STRINGSZMAX    32767
+#define ST_SAFETY      4096
 
-#define BADFILE        1
-#define BADIO          2
-#define FILENOTFOUND   3
-#define RANGEERR       4
-#define STACKNEG       5
-#define STACKCOLL      6
-#define BADBRANCH      7
-#define BADLBRANCH     8
-#define SETLERROR      9
-#define TOOMUCHFILES   10
-#define NOMOREHEAP     11
-#define BADBOOL        12
-#define EXTLANGNSUP    13
-#define STRINGSPACE    14
-#define UNDEFSTRING    15
-#define STRINGSIZE     16
-#define STRINGRANGE    17
-#define NILPOINTER     18
-#define FTNFUNCNDEF    19
-#define UNDEFPOINTER   20
+#define BADFILE         1
+#define BADIO           2
+#define FILENOTFOUND    3
+#define RANGEERR        4
+#define STACKNEG        5
+#define STACKCOLL       6
+#define BADBRANCH       7
+#define BADLBRANCH      8
+#define SETLERROR       9
+#define TOOMUCHFILES    10
+#define NOMOREHEAP      11
+#define BADBOOL         12
+#define EXTLANGNSUP     13
+#define STRINGSPACE     14
+#define UNDEFSTRING     15
+#define STRINGSIZE      16
+#define STRINGRANGE     17
+#define NILPOINTER      18
+#define FTNFUNCNDEF     19
+#define UNDEFPOINTER    20
+#define ERROR_CALL      21
 
 static const char *runtime_errmsg [] =
 
@@ -161,6 +163,7 @@ static const char *runtime_errmsg [] =
    "NILPOINTER",
    "FTNFUNCNDEF",
    "UNDEFPOINTER",
+   "$ERROR_CALL",
    NULL
 };
 

@@ -122,6 +122,19 @@ program PCODE_TRANSLATOR ( INPUT , OUTPUT , OBJCODE , LIST002 , TRACEF
 (*                                                                  *)
 (********************************************************************)
 (*                                                                  *)
+(*  Jan 2020 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*             (berndoppolzer@yahoo.com)                            *)
+(*                                                                  *)
+(*  - some corrections to the LAST_FILE structure and its           *)
+(*    logic / see SAVE_FILEOPERAND. The P-Codes SIO and EIO         *)
+(*    are importand for invalidating the information about          *)
+(*    files recently used.                                          *)
+(*                                                                  *)
+(*  - CHK E implemented to support runtime exceptions on the        *)
+(*    mainframe (new Pascal procedure $ERROR).                      *)
+(*                                                                  *)
+(********************************************************************)
+(*                                                                  *)
 (*  Nov 2019 - Extensions to the Compiler by Bernd Oppolzer         *)
 (*             (berndoppolzer@yahoo.com)                            *)
 (*                                                                  *)
@@ -832,6 +845,7 @@ const VERSION = '2020.01' ;        // Version for display message
       XBALR = 5 ;
       XBCTR = 6 ;
       XBCR = 7 ;
+      XSVC = 10 ;
       XMVCL = 14 ;
       XCLCL = 15 ;
       XLPR = 16 ;
@@ -929,7 +943,7 @@ type OPTYPE = ( PCTS , PCTI , PLOD , PSTR , PLDA , PLOC , PSTO , PLDC ,
                , PWLN , PRLN , PRDI , PEOF , PELN , PRDS , PTRP , PXIT
                , PFDF , PSIO , PEIO , PMSG , PSKP , PLIM , PTRA , PWRP
                , PCLS , PDAT , PTIM , PFLR , PTRC , PRND , PWRV , PRDV
-               , UNDEF_CSP ) ;
+               , PRFC , PRFS , PRFV , UNDEF_CSP ) ;
      BETA = array [ 1 .. 3 ] of CHAR ;
      HINTEGER = - 32768 .. 32767 ;
      STRNG = packed array [ 1 .. MAXSTRL ] of CHAR ;
@@ -1475,7 +1489,7 @@ var GS : GLOBAL_STATE ;
     (***************************************)
 
     LAST_CC : record
-                LPC : ICRNG ;
+                LAST_PC : ICRNG ;
                 LOP : BYTE ;
                 LR : RGRNG
               end ;
@@ -1498,18 +1512,33 @@ var GS : GLOBAL_STATE ;
     LAST_STR : record
                  STOPND : LVLDSP ;
                  STRGX : RGRNG ;
-                 LPC : ICRNG ;
+                 LAST_PC : ICRNG ;
                  STDT : DATATYPE ;
                end ;
 
-    (****************************)
-    (* REMEMBERS LAST FILE USED *)
-    (****************************)
+    //*******************************************************
+    // REMEMBERS LAST FILE USED                              
+    //*******************************************************
+    // comments added 01.2020 - oppolzer                     
+    // this is used to avoid reloading of register 9         
+    // (filadr) in case of repeated i/O operations to        
+    // the same file;                                        
+    // works only, if the I/O operations immediately follow  
+    // each other, due to the comparison of LAST_PC being    
+    // equal. LAST_PC is set in GOTO_CSP and EIO processing  
+    //*******************************************************
+    // There was a problem: the old file operand was not     
+    // recorded in the field LAST_FILEOPERAND properly       
+    // in all cases. It turned out that a sequence of        
+    // SIO and EIO did not invalidate the LAST_FILEOPERAND   
+    // recorded here, leading to wrong files accessed.       
+    // I added the procedure SAVE_FILEOPERAND to cure this.  
+    //*******************************************************
 
     LAST_FILE : record
-                  LPC : ICRNG ;
-                  LFOPND : LVLDSP ;
-                  LFV : BOOLEAN
+                  LAST_PC : ICRNG ;
+                  LAST_FILEOPERAND : LVLDSP ;
+                  LAST_FILE_IS_VAR : BOOLEAN
                 end ;
 
     (**********************************)
@@ -1517,7 +1546,7 @@ var GS : GLOBAL_STATE ;
     (**********************************)
 
     LAST_MVC : record
-                 LPC : ICRNG ;
+                 LAST_PC : ICRNG ;
                  LLEN : BYTE ;
                end ;
 
@@ -1741,7 +1770,7 @@ const HEXTAB : array [ 0 .. 15 ] of CHAR = '0123456789abcdef' ;
         'WLN' , 'RLN' , 'RDI' , 'EOF' , 'ELN' , 'RDS' , 'TRP' , 'XIT' ,
         'FDF' , 'SIO' , 'EIO' , 'MSG' , 'SKP' , 'LIM' , 'TRA' , 'WRP' ,
         'CLS' , 'DAT' , 'TIM' , 'FLR' , 'TRC' , 'RND' , 'WRV' , 'RDV' ,
-        '-?-' ) ;
+        'RFC' , 'RFS' , 'RFV' , '-?-' ) ;
 
 
 
@@ -2772,6 +2801,255 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
       end (* LIST_PROCEDURE_ENTRY *) ;
 
 
+   procedure READ_XBG ;
+
+      begin (* READ_XBG *)
+        READLN ( Q ) ;
+        if ASM then
+          begin
+            WRITE ( LIST002 , ' ' : 2 , Q : 1 ) ;
+            LIST002_NEWLINE
+          end (* then *) ;
+        if MODUS = 1 then
+          begin
+            if XXIANKER = NIL then
+              begin
+                NEW ( XXIANKER ) ;
+                XXIAKT := XXIANKER
+              end (* then *)
+            else
+              begin
+                NEW ( XXIAKT -> . NEXT ) ;
+                XXIAKT := XXIAKT -> . NEXT
+              end (* else *) ;
+            XXIAKT -> . NEXT := NIL ;
+            XXIAKT -> . XBG_NO := Q ;
+            XXIAKT -> . VALID := TRUE ;
+          end (* then *)
+        else
+          begin
+            XXILAUF := XXIANKER ;
+            while XXILAUF <> NIL do
+              begin
+                if XXILAUF -> . XBG_NO = Q then
+                  break ;
+                XXILAUF := XXILAUF -> . NEXT ;
+              end (* while *) ;
+            if XXILAUF <> NIL then
+              if not XXILAUF -> . VALID then
+                GS . XBG_XEN_SUPPRESSED := Q ;
+          end (* else *)
+      end (* READ_XBG *) ;
+
+
+   procedure READ_XEN ;
+
+      begin (* READ_XEN *)
+        READLN ( Q , CH , P ) ;
+        if ASM then
+          begin
+            WRITE ( LIST002 , ' ' : 2 , Q : 1 , ',' , P : 1 ) ;
+            LIST002_NEWLINE
+          end (* then *) ;
+        if MODUS = 1 then
+          begin
+            XXILAUF := XXIANKER ;
+            while XXILAUF <> NIL do
+              begin
+                if XXILAUF -> . XBG_NO = Q then
+                  break ;
+                XXILAUF := XXILAUF -> . NEXT ;
+              end (* while *) ;
+            if XXILAUF <> NIL then
+              XXILAUF -> . VALID := ( P <> 0 ) ;
+          end (* then *)
+        else
+          begin
+            XXILAUF := XXIANKER ;
+            while XXILAUF <> NIL do
+              begin
+                if XXILAUF -> . XBG_NO = Q then
+                  break ;
+                XXILAUF := XXILAUF -> . NEXT ;
+              end (* while *) ;
+            if XXILAUF <> NIL then
+              GS . XBG_XEN_SUPPRESSED := - 1 ;
+          end (* else *)
+      end (* READ_XEN *) ;
+
+
+   procedure READ_DEF ;
+
+      begin (* READ_DEF *)
+        if MODUS = 1 then
+          begin
+            SKIPBLANKS ;
+            case GS . MOD1DEFSTEP of
+              0 : begin
+                    READLN ( CH , CH , Q ) ;
+                    PIAKT -> . DATA_SIZE := Q ;
+                    GS . MOD1DEFSTEP := 1 ;
+                  end (* tag/ca *) ;
+              1 : begin
+                    READLN ( CH , CH , Q ) ;
+                    PIAKT -> . CODE_SIZE := Q ;
+                    PIAKT -> . LARGE_PROC := ( PIAKT -> . CODE_SIZE >
+                                             SHRT_PROC ) or DEBUG ;
+                    GS . MOD1DEFSTEP := 2 ;
+                  end (* tag/ca *) ;
+              2 : begin
+                    READLN ( CH , CH , Q ) ;
+                    PIAKT -> . CALL_HIGHER := ( Q <> 0 ) ;
+                    GS . MOD1DEFSTEP := - 1 ;
+                  end (* tag/ca *) ;
+              otherwise
+                READLN
+            end (* case *) ;
+            return
+          end (* then *) ;
+
+        (*****************************************)
+        (* Type-Code and Integer or Char Operand *)
+        (*****************************************)
+
+        SKIPBLANKS ;
+        if INPUT -> = 'C' then
+          begin
+            READLN ( CH , CH , CH , CH1 , CH ) ;
+            if ASM then
+              begin
+                WRITE ( LIST002 , '  C,''' , CH1 : 1 , '''' ) ;
+                LIST002_NEWLINE
+              end (* then *) ;
+            Q := ORD ( CH1 ) ;
+            OPNDTYPE := TYPCDE [ 'C' ] ;
+          end (* then *)
+        else
+          if INPUT -> = 'I' then
+            begin
+              READLN ( CH , CH , Q ) ;
+              if ASM then
+                begin
+                  WRITE ( LIST002 , '  I,' , Q : 1 ) ;
+                  LIST002_NEWLINE
+                end (* then *) ;
+              OPNDTYPE := TYPCDE [ 'I' ] ;
+            end (* then *)
+          else
+            if INPUT -> = 'B' then
+              begin
+                READLN ( CH , CH , Q ) ;
+                if ASM then
+                  begin
+                    WRITE ( LIST002 , '  I,' , Q : 1 ) ;
+                    LIST002_NEWLINE
+                  end (* then *) ;
+                OPNDTYPE := TYPCDE [ 'I' ] ;
+              end (* then *)
+            else
+              begin
+                READLN ( Q ) ;
+                if ASM then
+                  begin
+                    WRITE ( LIST002 , ' ' : 2 , Q : 1 ) ;
+                    LIST002_NEWLINE
+                  end (* then *) ;
+                OPNDTYPE := TYPCDE [ 'I' ] ;
+              end (* else *)
+      end (* READ_DEF *) ;
+
+
+   procedure READ_ENT ;
+
+      begin (* READ_ENT *)
+
+        (*************************************************************)
+        (* TYPE-CODE,LEXIC-LEVEL,LABEL,THREE FLAGS,INTEGER OPERANDS  *)
+        (*************************************************************)
+        (*************************************************************)
+
+        if MODUS = 1 then
+          begin
+            if PIANKER = NIL then
+              begin
+                NEW ( PIANKER ) ;
+                PIAKT := PIANKER
+              end (* then *)
+            else
+              begin
+                NEW ( PIAKT -> . NEXT ) ;
+                PIAKT := PIAKT -> . NEXT
+              end (* else *) ;
+            PIAKT -> . NEXT := NIL ;
+            SKIPBLANKS ;
+            PIAKT -> . OPNDTYPE := TYPCDE [ INPUT -> ] ;
+            READ ( CH1 , CH , P , CH ) ;
+            READLBL ( PIAKT -> . SEGSZE ) ;
+            if INPUT -> = ' ' then
+              SKIPBLANKS ;
+            READ ( PIAKT -> . CURPNAME , CH ) ;
+            READ ( PIAKT -> . SAVERGS , CH ) ;
+            READ ( PIAKT -> . ASM , CH ) ;
+            READ ( PIAKT -> . GET_STAT , CH ) ;
+            READ ( PIAKT -> . ASMVERB , CH ) ;
+            READ ( PIAKT -> . DEBUG_LEV , CH ) ;
+            READ ( PIAKT -> . CURPNO , CH ) ;
+            PIAKT -> . STATNAME := ' ' ;
+            PIAKT -> . SOURCENAME := ' ' ;
+            if INPUT -> <> ',' then
+              READ ( PIAKT -> . STATNAME , CH )
+            else
+              READ ( CH ) ;
+            READ ( PIAKT -> . SOURCENAME ) ;
+            READLN ( INPUT ) ;
+            DEBUG := PIAKT -> . DEBUG_LEV >= 2 ;
+            PIAKT -> . FLOW_TRACE := PIAKT -> . DEBUG_LEV >= 3 ;
+            return ;
+          end (* then *)
+        else
+          begin
+            SKIPBLANKS ;
+            READ ( CH1 , CH , P , CH ) ;
+            READLBL ( DUMMYLABEL ) ;
+            if INPUT -> = ' ' then
+              SKIPBLANKS ;
+            READ ( DUMMYNAME , CH , DUMMYBOOL , CH , DUMMYBOOL , CH ,
+                   DUMMYBOOL , CH , DUMMYBOOL , CH , DUMMYINT , CH ,
+                   MATCH_CURPNO , CH ) ;
+            READLN ( INPUT ) ;
+            PIAKT := PIANKER ;
+            while PIAKT <> NIL do
+              begin
+                if PIAKT -> . CURPNO <> MATCH_CURPNO then
+                  PIAKT := PIAKT -> . NEXT
+                else
+                  break ;
+              end (* while *) ;
+            OPNDTYPE := PIAKT -> . OPNDTYPE ;
+            ASM := PIAKT -> . ASM ;
+            FLOW_TRACE := PIAKT -> . FLOW_TRACE ;
+            PCOUNTER := 0 ;
+
+        //************************************************************
+        // init tables of offsets and statement numbers               
+        //************************************************************
+
+            TOS_COUNT := 1 ;
+            TOS [ 1 ] . STMT := LINECNT ;
+            TOS [ 1 ] . OFFS := PCOUNTER ;
+            if FIRST_LIST002 then
+              begin
+                REWRITE ( LIST002 ) ;
+                FIRST_LIST002 := FALSE
+              end (* then *) ;
+            DUMMYINT := LIST002_HEADLINE ( 'S' , LBL1 . NAM , PIAKT ->
+                        . CURPNAME , CH1 ) ;
+            if ASM then
+              LIST_PROCEDURE_ENTRY
+          end (* else *)
+      end (* READ_ENT *) ;
+
+
    begin (* READNXTINST *)
      P := 0 ;
      Q := 0 ;
@@ -2898,75 +3176,8 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
      // (if the indicator - boolean VALID - is off)                
      //************************************************************
 
-       PXBG : begin
-                READLN ( Q ) ;
-                if ASM then
-                  begin
-                    WRITE ( LIST002 , ' ' : 2 , Q : 1 ) ;
-                    LIST002_NEWLINE
-                  end (* then *) ;
-                if MODUS = 1 then
-                  begin
-                    if XXIANKER = NIL then
-                      begin
-                        NEW ( XXIANKER ) ;
-                        XXIAKT := XXIANKER
-                      end (* then *)
-                    else
-                      begin
-                        NEW ( XXIAKT -> . NEXT ) ;
-                        XXIAKT := XXIAKT -> . NEXT
-                      end (* else *) ;
-                    XXIAKT -> . NEXT := NIL ;
-                    XXIAKT -> . XBG_NO := Q ;
-                    XXIAKT -> . VALID := TRUE ;
-                  end (* then *)
-                else
-                  begin
-                    XXILAUF := XXIANKER ;
-                    while XXILAUF <> NIL do
-                      begin
-                        if XXILAUF -> . XBG_NO = Q then
-                          break ;
-                        XXILAUF := XXILAUF -> . NEXT ;
-                      end (* while *) ;
-                    if XXILAUF <> NIL then
-                      if not XXILAUF -> . VALID then
-                        GS . XBG_XEN_SUPPRESSED := Q ;
-                  end (* else *)
-              end (* tag/ca *) ;
-       PXEN : begin
-                READLN ( Q , CH , P ) ;
-                if ASM then
-                  begin
-                    WRITE ( LIST002 , ' ' : 2 , Q : 1 , ',' , P : 1 ) ;
-                    LIST002_NEWLINE
-                  end (* then *) ;
-                if MODUS = 1 then
-                  begin
-                    XXILAUF := XXIANKER ;
-                    while XXILAUF <> NIL do
-                      begin
-                        if XXILAUF -> . XBG_NO = Q then
-                          break ;
-                        XXILAUF := XXILAUF -> . NEXT ;
-                      end (* while *) ;
-                    if XXILAUF <> NIL then
-                      XXILAUF -> . VALID := ( P <> 0 ) ;
-                  end (* then *)
-                else
-                  begin
-                    XXILAUF := XXIANKER ;
-                    while XXILAUF <> NIL do
-                      begin
-                        if XXILAUF -> . XBG_NO = Q then
-                          break ;
-                        XXILAUF := XXILAUF -> . NEXT ;
-                      end (* while *) ;
-                    if XXILAUF <> NIL then
-                      GS . XBG_XEN_SUPPRESSED := - 1 ;
-                  end (* else *)
-              end (* tag/ca *) ;
+       PXBG : READ_XBG ;
+       PXEN : READ_XEN ;
        PSTP : begin
                 if MODUS = 1 then
                   begin
@@ -2982,85 +3193,7 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
                 if ASM then
                   LIST002_NEWLINE ;
               end (* tag/ca *) ;
-       PDEF : begin
-                if MODUS = 1 then
-                  begin
-                    SKIPBLANKS ;
-                    case GS . MOD1DEFSTEP of
-                      0 : begin
-                            READLN ( CH , CH , Q ) ;
-                            PIAKT -> . DATA_SIZE := Q ;
-                            GS . MOD1DEFSTEP := 1 ;
-                          end (* tag/ca *) ;
-                      1 : begin
-                            READLN ( CH , CH , Q ) ;
-                            PIAKT -> . CODE_SIZE := Q ;
-                            PIAKT -> . LARGE_PROC := ( PIAKT -> .
-                                                   CODE_SIZE >
-                                                   SHRT_PROC ) or DEBUG
-                                                   ;
-                            GS . MOD1DEFSTEP := 2 ;
-                          end (* tag/ca *) ;
-                      2 : begin
-                            READLN ( CH , CH , Q ) ;
-                            PIAKT -> . CALL_HIGHER := ( Q <> 0 ) ;
-                            GS . MOD1DEFSTEP := - 1 ;
-                          end (* tag/ca *) ;
-                      otherwise
-                        READLN
-                    end (* case *) ;
-                    return
-                  end (* then *) ;
-
-     (*****************************************)
-     (* Type-Code and Integer or Char Operand *)
-     (*****************************************)
-
-                SKIPBLANKS ;
-                if INPUT -> = 'C' then
-                  begin
-                    READLN ( CH , CH , CH , CH1 , CH ) ;
-                    if ASM then
-                      begin
-                        WRITE ( LIST002 , '  C,''' , CH1 : 1 , '''' ) ;
-                        LIST002_NEWLINE
-                      end (* then *) ;
-                    Q := ORD ( CH1 ) ;
-                    OPNDTYPE := TYPCDE [ 'C' ] ;
-                  end (* then *)
-                else
-                  if INPUT -> = 'I' then
-                    begin
-                      READLN ( CH , CH , Q ) ;
-                      if ASM then
-                        begin
-                          WRITE ( LIST002 , '  I,' , Q : 1 ) ;
-                          LIST002_NEWLINE
-                        end (* then *) ;
-                      OPNDTYPE := TYPCDE [ 'I' ] ;
-                    end (* then *)
-                  else
-                    if INPUT -> = 'B' then
-                      begin
-                        READLN ( CH , CH , Q ) ;
-                        if ASM then
-                          begin
-                            WRITE ( LIST002 , '  I,' , Q : 1 ) ;
-                            LIST002_NEWLINE
-                          end (* then *) ;
-                        OPNDTYPE := TYPCDE [ 'I' ] ;
-                      end (* then *)
-                    else
-                      begin
-                        READLN ( Q ) ;
-                        if ASM then
-                          begin
-                            WRITE ( LIST002 , ' ' : 2 , Q : 1 ) ;
-                            LIST002_NEWLINE
-                          end (* then *) ;
-                        OPNDTYPE := TYPCDE [ 'I' ] ;
-                      end (* else *)
-              end (* tag/ca *) ;
+       PDEF : READ_DEF ;
        PCTI , PIXA , PASE , PMOV , PMFI , PMZE , PMSE , PDBG :
          begin
 
@@ -3375,93 +3508,7 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
                     LIST002_NEWLINE
                   end (* then *) ;
               end (* tag/ca *) ;
-       PENT : begin
-
-     (*************************************************************)
-     (* TYPE-CODE,LEXIC-LEVEL,LABEL,THREE FLAGS,INTEGER OPERANDS  *)
-     (*************************************************************)
-
-                if MODUS = 1 then
-                  begin
-                    if PIANKER = NIL then
-                      begin
-                        NEW ( PIANKER ) ;
-                        PIAKT := PIANKER
-                      end (* then *)
-                    else
-                      begin
-                        NEW ( PIAKT -> . NEXT ) ;
-                        PIAKT := PIAKT -> . NEXT
-                      end (* else *) ;
-                    PIAKT -> . NEXT := NIL ;
-                    SKIPBLANKS ;
-                    PIAKT -> . OPNDTYPE := TYPCDE [ INPUT -> ] ;
-                    READ ( CH1 , CH , P , CH ) ;
-                    READLBL ( PIAKT -> . SEGSZE ) ;
-                    if INPUT -> = ' ' then
-                      SKIPBLANKS ;
-                    READ ( PIAKT -> . CURPNAME , CH ) ;
-                    READ ( PIAKT -> . SAVERGS , CH ) ;
-                    READ ( PIAKT -> . ASM , CH ) ;
-                    READ ( PIAKT -> . GET_STAT , CH ) ;
-                    READ ( PIAKT -> . ASMVERB , CH ) ;
-                    READ ( PIAKT -> . DEBUG_LEV , CH ) ;
-                    READ ( PIAKT -> . CURPNO , CH ) ;
-                    PIAKT -> . STATNAME := ' ' ;
-                    PIAKT -> . SOURCENAME := ' ' ;
-                    if INPUT -> <> ',' then
-                      READ ( PIAKT -> . STATNAME , CH )
-                    else
-                      READ ( CH ) ;
-                    READ ( PIAKT -> . SOURCENAME ) ;
-                    READLN ( INPUT ) ;
-                    DEBUG := PIAKT -> . DEBUG_LEV >= 2 ;
-                    PIAKT -> . FLOW_TRACE := PIAKT -> . DEBUG_LEV >= 3
-                                             ;
-                    return ;
-                  end (* then *)
-                else
-                  begin
-                    SKIPBLANKS ;
-                    READ ( CH1 , CH , P , CH ) ;
-                    READLBL ( DUMMYLABEL ) ;
-                    if INPUT -> = ' ' then
-                      SKIPBLANKS ;
-                    READ ( DUMMYNAME , CH , DUMMYBOOL , CH , DUMMYBOOL
-                           , CH , DUMMYBOOL , CH , DUMMYBOOL , CH ,
-                           DUMMYINT , CH , MATCH_CURPNO , CH ) ;
-                    READLN ( INPUT ) ;
-                    PIAKT := PIANKER ;
-                    while PIAKT <> NIL do
-                      begin
-                        if PIAKT -> . CURPNO <> MATCH_CURPNO then
-                          PIAKT := PIAKT -> . NEXT
-                        else
-                          break ;
-                      end (* while *) ;
-                    OPNDTYPE := PIAKT -> . OPNDTYPE ;
-                    ASM := PIAKT -> . ASM ;
-                    FLOW_TRACE := PIAKT -> . FLOW_TRACE ;
-                    PCOUNTER := 0 ;
-
-     //************************************************************
-     // init tables of offsets and statement numbers               
-     //************************************************************
-
-                    TOS_COUNT := 1 ;
-                    TOS [ 1 ] . STMT := LINECNT ;
-                    TOS [ 1 ] . OFFS := PCOUNTER ;
-                    if FIRST_LIST002 then
-                      begin
-                        REWRITE ( LIST002 ) ;
-                        FIRST_LIST002 := FALSE
-                      end (* then *) ;
-                    DUMMYINT := LIST002_HEADLINE ( 'S' , LBL1 . NAM ,
-                                PIAKT -> . CURPNAME , CH1 ) ;
-                    if ASM then
-                      LIST_PROCEDURE_ENTRY
-                  end (* else *)
-              end (* tag/ca *) ;
+       PENT : READ_ENT ;
        PLDC , PLCA , PDFC :
          READLOADINSTRUCTIONS ;
        PCSP : begin
@@ -4369,7 +4416,7 @@ procedure ASMNXTINST ;
         if OPT_FLG then
           if ( OP = XLTR ) or ( OP = XLTDR ) then
             with LAST_CC do
-              if PCOUNTER = LPC then
+              if PCOUNTER = LAST_PC then
 
         (*******************************)
         (* NO INTERVENING INSTRUCTIONS *)
@@ -4420,7 +4467,7 @@ procedure ASMNXTINST ;
         PCOUNTER := NEXTPC ( 1 ) ;
         with LAST_CC do
           begin
-            LPC := PCOUNTER ;
+            LAST_PC := PCOUNTER ;
             LR := R1 ;
             LOP := OP
           end (* with *) ;
@@ -4527,7 +4574,7 @@ procedure ASMNXTINST ;
         PCOUNTER := NEXTPC ( 2 ) ;
         with LAST_CC do
           begin
-            LPC := PCOUNTER ;
+            LAST_PC := PCOUNTER ;
             LR := R ;
             LOP := OP
           end (* with *) ;
@@ -4643,7 +4690,7 @@ procedure ASMNXTINST ;
         PCOUNTER := NEXTPC ( 2 ) ;
         with LAST_CC do
           begin
-            LPC := PCOUNTER ;
+            LAST_PC := PCOUNTER ;
             LR := R ;
             LOP := OP
           end (* with *)
@@ -4687,7 +4734,7 @@ procedure ASMNXTINST ;
         PCOUNTER := NEXTPC ( 2 ) ;
         with LAST_CC do
           begin
-            LPC := PCOUNTER ;
+            LAST_PC := PCOUNTER ;
             LR := R ;
             LOP := OP
           end (* with *) ;
@@ -5077,7 +5124,7 @@ procedure ASMNXTINST ;
       end (* CONS_REGS *) ;
 
 
-   procedure BRANCH_CHAIN ( LPC : ICRNG ) ;
+   procedure BRANCH_CHAIN ( LAST_PC : ICRNG ) ;
 
       label 10 ;
 
@@ -5125,7 +5172,7 @@ procedure ASMNXTINST ;
                       goto 10
                     else
                       DPC := DPC + 2046 ;
-                  if DPC >= LPC then
+                  if DPC >= LAST_PC then
                     goto 10 ;
                   DI . I := CODE . H [ DPC ] ;
                   if DI . I <= X4700 then
@@ -5165,7 +5212,7 @@ procedure ASMNXTINST ;
         (* SS   *)
         (********)
 
-        until TPC >= LPC ;
+        until TPC >= LAST_PC ;
       end (* BRANCH_CHAIN *) ;
 
 
@@ -6635,37 +6682,86 @@ procedure ASMNXTINST ;
       end (* CALLSUB *) ;
 
 
+   procedure SAVE_FILEOPERAND ( STP : STKPTR ) ;
+
+   //***************************************
+   // this procedure saves the fileoperand  
+   // in the structure LAST_FILE to avoid   
+   // register loads in some cases          
+   // (repeated I/O to the same file)       
+   //***************************************
+
+
+      var Q1 : ADRRNG ;
+          P1 : RGRNG ;
+
+      begin (* SAVE_FILEOPERAND *)
+        with STK [ STP ] do
+          begin
+            if VRBL then
+              begin
+                Q1 := MEMADR . DSPLMT ;
+                P1 := MEMADR . LVL
+              end (* then *)
+            else
+              begin
+                Q1 := FPA . DSPLMT ;
+                P1 := FPA . LVL
+              end (* else *) ;
+            with LAST_FILE do
+              begin
+                LAST_FILEOPERAND . DSPLMT := Q1 ;
+                LAST_FILEOPERAND . LVL := P1 ;
+                LAST_FILE_IS_VAR := VRBL ;
+              end (* with *) ;
+          end (* with *) ;
+      end (* SAVE_FILEOPERAND *) ;
+
+
    procedure LOADFCBADDRESS ( STP : STKPTR ) ;
+
+   //*****************************
+   // load FCB address if needed  
+   //*****************************
+
 
       var OPC : BYTE ;
 
       begin (* LOADFCBADDRESS *)
+
+        //**********************************
+        // first save the file operand      
+        // then get displacement and level  
+        // from the saved structure         
+        //**********************************
+
+        SAVE_FILEOPERAND ( STP ) ;
+
+        //****************************************
+        // if the file register (register 9)      
+        // has not yet been loaded, then load it  
+        //****************************************
+
         if not CSPACTIVE [ FILADR ] then
           if CSP in [ PRES , PREW , PGET , PPUT , PRLN , PWLN , PPAG ,
           PSKP , PLIM , PRDB , PWRB , PRDH , PRDY , PEOL , PEOT , PEOF
-          , PELN , PRDC , PWRC , PRDI , PWRI , PRDS , PRDV , PWRS ,
-          PWRV , PRDR , PWRR , PWRP , PWRX , PFDF , PWRD , PWRE , PCLS
-          ] then
+          , PELN , PRDC , PWRC , PRDI , PWRI , PRDS , PRDV , PRFC ,
+          PRFS , PRFV , PWRS , PWRV , PRDR , PWRR , PWRP , PWRX , PFDF
+          , PWRD , PWRE , PCLS ] then
             with STK [ STP ] do
               begin
                 if VRBL then
-                  begin
-                    OPC := XL ;
-                    Q1 := MEMADR . DSPLMT ;
-                    P1 := MEMADR . LVL
-                  end (* then *)
+                  OPC := XL
                 else
-                  begin
-                    OPC := XLA ;
-                    Q1 := FPA . DSPLMT ;
-                    P1 := FPA . LVL
-                  end (* else *) ;
-                with LAST_FILE do
-                  begin
-                    LFOPND . DSPLMT := Q1 ;
-                    LFOPND . LVL := P1 ;
-                    LFV := VRBL ;
-                  end (* with *) ;
+                  OPC := XLA ;
+
+        //*****************************************
+        // get displacement and level              
+        // from the saved structure (saved above)  
+        //*****************************************
+
+                Q1 := LAST_FILE . LAST_FILEOPERAND . DSPLMT ;
+                P1 := LAST_FILE . LAST_FILEOPERAND . LVL ;
                 BASE ( Q1 , P1 , B1 ) ;
                 GENRX ( OPC , FILADR , Q1 , B1 , P1 ) ;
                 CSPACTIVE [ FILADR ] := TRUE ;
@@ -6747,7 +6843,7 @@ procedure ASMNXTINST ;
         /* save some values for next call */
         /**********************************/
 
-        LAST_FILE . LPC := PCOUNTER ;
+        LAST_FILE . LAST_PC := PCOUNTER ;
       end (* GOTOCSP *) ;
 
 
@@ -7147,22 +7243,71 @@ procedure ASMNXTINST ;
                        PCOUNTER := NEXTPC ( 1 ) ;
                      end (* else *) ;
                  end (* tag/ca *) ;
+
+        //***************************************
+        // start i/O and end i/O do nothing      
+        // but they are there to make sure that  
+        // the file registers are set properly   
+        // prior to the actual I/O               
+        //***************************************
+
           PSIO : begin
                    if not AVAIL [ FILADR ] then
                      if FILECNT = 0 then
                        ERROR ( 757 ) ;
                    AVAIL [ FILADR ] := FALSE ;
-                   CSPACTIVE [ FILADR ] := FALSE ;
                    FILECNT := FILECNT + 1 ;
+                   if FALSE then
+                     begin
+                       WRITELN ( TRACEF ,
+                             '---------------------------------------'
+                                 ) ;
+                       WRITELN ( TRACEF , 'SIO at linecnt    = ' ,
+                                 LINECNT ) ;
+                       WRITELN ( TRACEF , 'last_file.last_pc = ' ,
+                                 LAST_FILE . LAST_PC ) ;
+                       WRITELN ( TRACEF , 'pcounter          = ' ,
+                                 PCOUNTER ) ;
+                       WRITELN ( TRACEF , 'last_fileoperand  = ' ,
+                                 LAST_FILE . LAST_FILEOPERAND . LVL : 1
+                                 , '/' , LAST_FILE . LAST_FILEOPERAND .
+                                 DSPLMT : 1 ) ;
+                     end (* then *) ;
+
+        //***********************************************
+        // check if the file register from the last I/O  
+        // is still valid                                
+        //***********************************************
+
                    with LAST_FILE do
-                     if LPC = PCOUNTER then
-                       with STK [ TOP ] do
-                         if VRBL then
-                           CSPACTIVE [ FILADR ] := LFV and ( LFOPND =
+                     if LAST_PC = PCOUNTER then
+                       begin
+                         with STK [ TOP ] do
+                           if VRBL then
+                             CSPACTIVE [ FILADR ] := LAST_FILE_IS_VAR
+                                                   and (
+                                                   LAST_FILEOPERAND =
                                                    MEMADR )
-                         else
-                           CSPACTIVE [ FILADR ] := ( not LFV ) and (
-                                                   LFOPND = FPA ) ;
+                           else
+                             CSPACTIVE [ FILADR ] := ( not
+                                                   LAST_FILE_IS_VAR )
+                                                   and (
+                                                   LAST_FILEOPERAND =
+                                                   FPA )
+                       end (* then *)
+                     else
+                       begin
+                         CSPACTIVE [ FILADR ] := FALSE ;
+                       end (* else *) ;
+
+        //****************************************
+        // save the file information in any case  
+        //****************************************
+
+                   SAVE_FILEOPERAND ( TOP ) ;
+                   if FALSE then
+                     WRITELN ( TRACEF , 'cspactive [9]     = ' ,
+                               CSPACTIVE [ FILADR ] ) ;
                    CSPACTIVE [ TRG1 ] := FALSE ;
                    TOP := TOP + 1 ;
 
@@ -7180,9 +7325,14 @@ procedure ASMNXTINST ;
                    FILECNT := FILECNT - 1 ;
                    if FILECNT = 0 then
                      AVAIL [ FILADR ] := TRUE ;
+
+        //*****************************************
+        // the file register is invalid after EIO  
+        //*****************************************
+
                    CSPACTIVE [ FILADR ] := FALSE ;
                    CSPACTIVE [ TRG1 ] := FALSE ;
-                   LAST_FILE . LPC := PCOUNTER ;
+                   LAST_FILE . LAST_PC := PCOUNTER ;
 
         (************************************************)
         (* TOP := TOP-1 IS DONE AT ENTRY TO CALLSTNDRD  *)
@@ -7360,6 +7510,9 @@ procedure ASMNXTINST ;
             end (* tag/ca *) ;
           PWRV : FILESETUP ( 2 ) ;
           PRDV : FILESETUP ( 2 ) ;
+          PRFC : FILESETUP ( 2 ) ;
+          PRFS , PRFV :
+            FILESETUP ( 3 ) ;
           otherwise
             ERROR_SYMB ( 607 , P_OPCODE )
         end (* case *) ;
@@ -7382,151 +7535,158 @@ procedure ASMNXTINST ;
           BPC : ICRNG ;
 
       begin (* CHKOPERATION *)
-        with STK [ TOP - 1 ] do
-          if VRBL then
+        case OPNDTYPE of
 
-        (************************************)
-        (* GENERATE CODE FOR RUN TIME CHECK *)
-        (************************************)
+        //************************************************************
+        // check addresses - if they are nil                          
+        //************************************************************
 
-            if OPNDTYPE = ADR then
-
-        (*****************)
-        (* POINTER CHECK *)
-        (*****************)
-
-              begin
-                if not AVAIL [ 2 ] then
-                  if not ( ( VPA = RGS ) and ( RGADR = 2 ) ) then
-                    begin
-                      J := 0 ;
+          ADR : begin
+                  with STK [ TOP - 1 ] do
+                    if VRBL then
+                      begin
+                        if not AVAIL [ 2 ] then
+                          if not ( ( VPA = RGS ) and ( RGADR = 2 ) )
+                          then
+                            begin
+                              J := 0 ;
 
         (***************)
         (* CLEAR GPR 2 *)
         (***************)
 
-                      for I := TOP - 2 DOWNTO 1 do
-                        with STK [ I ] do
-                          if VRBL then
-                            if ( not DRCT ) or ( DTYPE <> REEL ) then
-                              if ( VPA = RGS ) and ( RGADR = 2 ) then
-                                J := I ;
-                      if J = 0 then
-                        ERROR ( 758 )
-                      else
-                        with STK [ J ] do
-                          begin
-                            FINDRG ;
+                              for I := TOP - 2 DOWNTO 1 do
+                                with STK [ I ] do
+                                  if VRBL then
+                                    if ( not DRCT ) or ( DTYPE <> REEL
+                                    ) then
+                                      if ( VPA = RGS ) and ( RGADR = 2
+                                      ) then
+                                        J := I ;
+                              if J = 0 then
+                                ERROR ( 758 )
+                              else
+                                with STK [ J ] do
+                                  begin
+                                    FINDRG ;
 
         (******************************)
         (* TRADE GPR2 FOR ANOTHER ONE *)
         (******************************)
 
-                            GENRR ( XLR , NXTRG , 2 ) ;
+                                    GENRR ( XLR , NXTRG , 2 ) ;
 
         (********************)
         (* THIS FREES REG 2 *)
         (********************)
 
-                            RGADR := NXTRG ;
-                          end (* with *) ;
-                    end (* then *) ;
-                AVAIL [ 2 ] := TRUE ;
+                                    RGADR := NXTRG ;
+                                  end (* with *) ;
+                            end (* then *) ;
+                        AVAIL [ 2 ] := TRUE ;
 
         (***********)
         (* IN CASE *)
         (***********)
 
-                LOAD ( STK [ TOP - 1 ] ) ;
-                AVAIL [ 2 ] := FALSE ;
-                if RGADR <> 2 then
+                        LOAD ( STK [ TOP - 1 ] ) ;
+                        AVAIL [ 2 ] := FALSE ;
+                        if RGADR <> 2 then
 
         (**************************)
         (* VALUE IS IN WRONG REG. *)
         (**************************)
 
-                  begin
-                    AVAIL [ RGADR ] := TRUE ;
-                    GENRR ( XLR , 2 , RGADR ) ;
-                    RGADR := 2
-                  end (* then *) ;
-                RTA := PTRCHK ;
-                if P < 0 then
-                  RTA := PTACHK ;
-                GENRX ( XBAL , RTREG , RTA , GBR , 0 ) ;
-                CSPACTIVE [ TRG15 ] := FALSE ;
-                CSPACTIVE [ TRG1 ] := FALSE ;
+                          begin
+                            AVAIL [ RGADR ] := TRUE ;
+                            GENRR ( XLR , 2 , RGADR ) ;
+                            RGADR := 2
+                          end (* then *) ;
+                        RTA := PTRCHK ;
+                        if P < 0 then
+                          RTA := PTACHK ;
+                        GENRX ( XBAL , RTREG , RTA , GBR , 0 ) ;
+                        CSPACTIVE [ TRG15 ] := FALSE ;
+                        CSPACTIVE [ TRG1 ] := FALSE ;
 
         (********************)
         (* R1,R15 DESTROYED *)
         (********************)
 
-              end (* then *)
-            else
+                      end (* then *)
+                    else
 
-        (*******************)
-        (* OPNDTYPE <> ADR *)
-        (*******************)
+        (********************************************)
+        (* ^ VAR,  I.E. CHECK A CONSTANT EXPRESSION *)
+        (********************************************)
 
-              begin
-                if not DRCT then
-                  LOAD ( STK [ TOP - 1 ] ) ;
-                FPA . DSPLMT := FPA . DSPLMT - P ;
-                LOAD ( STK [ TOP - 1 ] ) ;
+                      if ( FPA . DSPLMT < P ) or ( FPA . DSPLMT > Q )
+                      then
+                        begin
+                          ERROR ( 302 ) ;
+                          WRITELN ( OUTPUT , '****' : 7 , FPA . DSPLMT
+                                    : 9 , ' IS NOT IN THE RANGE:' , P :
+                                    9 , Q : 10 ) ;
+                        end (* then *) ;
+                end (* tag/ca *) ;
+
+        //************************************************************
+        // check integers or indexes for ranges                       
+        //************************************************************
+
+          INT , INX :
+            begin
+              with STK [ TOP - 1 ] do
+                if VRBL then
+                  begin
+                    if not DRCT then
+                      LOAD ( STK [ TOP - 1 ] ) ;
+                    FPA . DSPLMT := FPA . DSPLMT - P ;
+                    LOAD ( STK [ TOP - 1 ] ) ;
 
         (*******************************)
         (* later literal will be built *)
         (* with two margin values      *)
         (*******************************)
 
-                I_S_R . I1 := Q - P ;
-                I_S_R . I2 := P ;
+                    I_S_R . I1 := Q - P ;
+                    I_S_R . I2 := P ;
 
         (*********************************************)
         (* address of CL = first part of literal     *)
         (*********************************************)
 
-                GENRX_2 ( XCL , RGADR , 0 , 0 , 0 , 99 ) ;
-                if ASM then
-                  begin
-                    WRITE ( LIST002 , '=A(' , Q - P : 1 , ',' , P : 1 ,
-                            ')' ) ;
-                    LIST002_NEWLINE ;
-                  end (* then *) ;
-                UPD_DBLTBL ( PCOUNTER - 1 , I_S_R . R ) ;
+                    GENRX_2 ( XCL , RGADR , 0 , 0 , 0 , 99 ) ;
+                    if ASM then
+                      begin
+                        WRITE ( LIST002 , '=A(' , Q - P : 1 , ',' , P :
+                                1 , ')' ) ;
+                        LIST002_NEWLINE ;
+                      end (* then *) ;
+                    UPD_DBLTBL ( PCOUNTER - 1 , I_S_R . R ) ;
 
         (*********************************************)
         (* address of branch will be filled in later *)
         (*********************************************)
 
-                GENRX ( XBC , LEQCND , 0 , 0 , 0 ) ;
-                BPC := PCOUNTER ;
-                if ASM then
-                  begin
-                    WRITE ( LIST002 , ' ' , '## ' , ' ' : SPACEASMX ,
-                            'BNH   @OK' ) ;
-                    LIST002_NEWLINE ;
-                  end (* then *) ;
-
-        (***************************************)
-        (* REMEMBER WHERE BRANCH FIX-UP NEEDED *)
-        (***************************************)
-
-                if RGADR <> 2 then
-                  GENRR ( XLR , 2 , RGADR ) ;
-                if OPNDTYPE = PROC then
-                  RTA := PRMCHK
-                else
-                  if OPNDTYPE = INX then
-                    RTA := INXCHK
-                  else
-
-        (***************)
-        (* HINT OR INT *)
-        (***************)
-
-                    RTA := RNGCHK ;
-                GENRX ( XBAL , RTREG , RTA , GBR , 0 ) ;
+                    GENRX ( XBC , LEQCND , 0 , 0 , 0 ) ;
+                    BPC := PCOUNTER ;
+                    if ASM then
+                      begin
+                        WRITE ( LIST002 , ' ' , '## ' , ' ' : SPACEASMX
+                                , 'BNH   @OK' ) ;
+                        LIST002_NEWLINE ;
+                      end (* then *) ;
+                    if RGADR <> 2 then
+                      GENRR ( XLR , 2 , RGADR ) ;
+                    if OPNDTYPE = PROC then
+                      RTA := PRMCHK
+                    else
+                      if OPNDTYPE = INX then
+                        RTA := INXCHK
+                      else
+                        RTA := RNGCHK ;
+                    GENRX ( XBAL , RTREG , RTA , GBR , 0 ) ;
 
         (*********************************************)
         (* subprogram needs both parts of literal    *)
@@ -7534,40 +7694,58 @@ procedure ASMNXTINST ;
         (* after call                                *)
         (*********************************************)
 
-                UPD_DBLTBL ( PCOUNTER , I_S_R . R ) ;
-                if ASM then
-                  begin
-                    HEXHW ( PCOUNTER * 2 , HEXPC ) ;
-                    WRITE ( LIST002 , ' ' , ASMTAG , HEXPC , ': ' ) ;
-                    WRITE ( LIST002 , ' ' : COLASMI , ' ' : SPACEASMI )
-                            ;
-                    WRITE ( LIST002 , '=A(' , Q - P : 1 , ',' , P : 1 ,
-                            ')' ) ;
-                    LIST002_NEWLINE ;
-                  end (* then *) ;
-                PCOUNTER := NEXTPC ( 1 ) ;
-                FPA . DSPLMT := P ;
-                CODE . H [ BPC - 1 ] := TO_HINT ( BASE_DSPLMT (
-                                        PCOUNTER ) ) ;
-                if ASM then
-                  begin
-                    WRITE ( LIST002 , ' ' , '## ' , ' ' : SPACEASML ,
-                            '@OK    DS    0H' ) ;
-                    LIST002_NEWLINE ;
+                    UPD_DBLTBL ( PCOUNTER , I_S_R . R ) ;
+                    if ASM then
+                      begin
+                        HEXHW ( PCOUNTER * 2 , HEXPC ) ;
+                        WRITE ( LIST002 , ' ' , ASMTAG , HEXPC , ': ' )
+                                ;
+                        WRITE ( LIST002 , ' ' : COLASMI , ' ' :
+                                SPACEASMI ) ;
+                        WRITE ( LIST002 , '=A(' , Q - P : 1 , ',' , P :
+                                1 , ')' ) ;
+                        LIST002_NEWLINE ;
+                      end (* then *) ;
+                    PCOUNTER := NEXTPC ( 1 ) ;
+                    FPA . DSPLMT := P ;
+                    CODE . H [ BPC - 1 ] := TO_HINT ( BASE_DSPLMT (
+                                            PCOUNTER ) ) ;
+                    if ASM then
+                      begin
+                        WRITE ( LIST002 , ' ' , '## ' , ' ' : SPACEASML
+                                , '@OK    DS    0H' ) ;
+                        LIST002_NEWLINE ;
+                      end (* then *)
                   end (* then *)
-              end (* else *)
-          else
+                else
 
         (********************************************)
         (* ^ VAR,  I.E. CHECK A CONSTANT EXPRESSION *)
         (********************************************)
 
-            if ( FPA . DSPLMT < P ) or ( FPA . DSPLMT > Q ) then
-              begin
-                ERROR ( 302 ) ;
-                WRITELN ( OUTPUT , '****' : 7 , FPA . DSPLMT : 9 ,
-                          ' IS NOT IN THE RANGE:' , P : 9 , Q : 10 ) ;
-              end (* then *) ;
+                  if ( FPA . DSPLMT < P ) or ( FPA . DSPLMT > Q ) then
+                    begin
+                      ERROR ( 302 ) ;
+                      WRITELN ( OUTPUT , '****' : 7 , FPA . DSPLMT : 9
+                                , ' IS NOT IN THE RANGE:' , P : 9 , Q :
+                                10 ) ;
+                    end (* then *) ;
+            end (* tag/ca *) ;
+
+        //************************************************************
+        // non means CHK E ... that is: generate runtime error        
+        //************************************************************
+
+          NON : begin
+                  LOAD ( STK [ TOP - 1 ] ) ;
+                  FREEREG ( STK [ TOP - 1 ] ) ;
+                  GENRR ( XLR , 1 , 2 ) ;
+                  GENRR ( 0 , 5 , 3 ) ;
+                  TOP := TOP - 1 ;
+                end (* tag/ca *) ;
+          otherwise
+            ;
+        end (* case *) ;
       end (* CHKOPERATION *) ;
 
 
@@ -10007,11 +10185,11 @@ procedure ASMNXTINST ;
            POOL_SIZE := 0 ;
            NUMLITS := 0 ;
            DBLALN := FALSE ;
-           LAST_CC . LPC := 0 ;
+           LAST_CC . LAST_PC := 0 ;
            TXR_CONTENTS . VALID := FALSE ;
-           LAST_STR . LPC := 0 ;
-           LAST_MVC . LPC := 0 ;
-           LAST_FILE . LPC := 0 ;
+           LAST_STR . LAST_PC := 0 ;
+           LAST_MVC . LAST_PC := 0 ;
+           LAST_FILE . LAST_PC := 0 ;
            PRCTBL [ 0 ] . NAME := LBL1 . NAM ;
            PRCTBL [ 0 ] . LNK := 0 ;
            PRCTBL [ 1 ] . LNK := 0 ;
@@ -11505,10 +11683,10 @@ procedure ASMNXTINST ;
            CSPACTIVE [ TRG15 ] := FALSE ;
            PROCOFFSET_OLD := 0 ;
            TXR_CONTENTS . VALID := FALSE ;
-           LAST_CC . LPC := 0 ;
-           LAST_STR . LPC := 0 ;
-           LAST_FILE . LPC := 0 ;
-           LAST_MVC . LPC := 0 ;
+           LAST_CC . LAST_PC := 0 ;
+           LAST_STR . LAST_PC := 0 ;
+           LAST_FILE . LAST_PC := 0 ;
+           LAST_MVC . LAST_PC := 0 ;
            if CKMODE then
              CHECKFREEREGS ;
          end (* LAB_OPERATION *) ;
@@ -13695,7 +13873,7 @@ procedure ASMNXTINST ;
               if XOPC = XMVC then
                 with LAST_MVC do
                   begin
-                    if PCOUNTER = ( LPC + 3 ) then
+                    if PCOUNTER = ( LAST_PC + 3 ) then
 
         //******************************************************
         // CONSECUTIVE MVC INSTS                                
@@ -13703,10 +13881,10 @@ procedure ASMNXTINST ;
         // length of previous MVC                               
         //******************************************************
 
-                      if ( CODE . H [ LPC - 2 ] + LLEN ) = CODE . H [
-                      PCOUNTER - 2 ] then
-                        if ( CODE . H [ LPC - 1 ] + LLEN ) = CODE . H [
-                        PCOUNTER - 1 ] then
+                      if ( CODE . H [ LAST_PC - 2 ] + LLEN ) = CODE . H
+                      [ PCOUNTER - 2 ] then
+                        if ( CODE . H [ LAST_PC - 1 ] + LLEN ) = CODE .
+                        H [ PCOUNTER - 1 ] then
                           if ( LLEN + LENPARM ) <= 256 then
                             begin
                               if ASM then
@@ -13731,11 +13909,11 @@ procedure ASMNXTINST ;
                                           ) ;
                                   LIST002_NEWLINE ;
                                 end (* then *) ;
-                              CODE . H [ LPC - 3 ] := TO_HINT ( CODE .
-                                                   H [ LPC - 3 ] +
-                                                   LENPARM ) ;
+                              CODE . H [ LAST_PC - 3 ] := TO_HINT (
+                                                   CODE . H [ LAST_PC -
+                                                   3 ] + LENPARM ) ;
                               LENPARM := LENPARM + LLEN ;
-                              PCOUNTER := LPC ;
+                              PCOUNTER := LAST_PC ;
                               if B2 = - 1 then
                                 if RIGHT . SCNSTNO = NXTLIT - 1 then
                                   NXTLIT := NXTLIT - 1
@@ -13747,7 +13925,7 @@ procedure ASMNXTINST ;
                                     OPTIMIZED := TRUE
                                   end (* else *) ;
                             end (* then *) ;
-                    LPC := PCOUNTER ;
+                    LAST_PC := PCOUNTER ;
                     LLEN := LENPARM ;
                   end (* with *) ;
           end (* then *)
@@ -16391,7 +16569,7 @@ procedure ASMNXTINST ;
      (* THEN CHANGE TO FALSE IF NEEDED*)
      (*********************************)
 
-                 LAST_CC . LPC := 0 ;
+                 LAST_CC . LAST_PC := 0 ;
 
      (****************************)
      (* THIS C.C. HAS NO MEANING *)
@@ -16463,7 +16641,7 @@ procedure ASMNXTINST ;
                   MEMADR . LVL := P ;
                   MEMADR . DSPLMT := Q ;
                   with LAST_STR do
-                    if LPC = PCOUNTER then
+                    if LAST_PC = PCOUNTER then
 
      (********************************)
      (* TRY TO OPTIMIZE STR/LOD PAIR *)
@@ -16534,9 +16712,9 @@ procedure ASMNXTINST ;
                     STDT := OPNDTYPE ;
                     STORE ( TOP , FALSE ) ;
                     if OPNDTYPE <= CHRC then
-                      LPC := 0
+                      LAST_PC := 0
                     else
-                      LPC := PCOUNTER ;
+                      LAST_PC := PCOUNTER ;
                     STRGX := STK [ TOP ] . RGADR ;
                   end (* with *) ;
               end (* tag/ca *) ;
@@ -17228,10 +17406,10 @@ procedure SETUP ;
      FLOW_TRACE := FALSE ;
      NXTLIT := 0 ;
      LX . NXTDBL := 0 ;
-     LAST_CC . LPC := 0 ;
+     LAST_CC . LAST_PC := 0 ;
      TXR_CONTENTS . VALID := FALSE ;
-     LAST_MVC . LPC := 0 ;
-     LAST_STR . LPC := 0 ;
+     LAST_MVC . LAST_PC := 0 ;
+     LAST_STR . LAST_PC := 0 ;
      LAST_STR . STOPND := ZEROBL ;
      OPT_FLG := TRUE ;
      HEXCHARS := '0123456789ABCDEF' ;

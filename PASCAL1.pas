@@ -58,6 +58,32 @@ program PASCALCOMPILER ( INPUT , OUTPUT , PCODE , LISTING , LISTDEF ,
 (*                                                                  *)
 (********************************************************************)
 (*                                                                  *)
+(*  Jan 2020 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*             (berndoppolzer@yahoo.com)                            *)
+(*                                                                  *)
+(*  - Implement new READ procedures (new CSPs) which allow          *)
+(*    width parameters like in Pascal/VS. At first, the new         *)
+(*    procedures are implemented for chars, char arrays and         *)
+(*    strings (varchars). The new CSPs are called RFC, RFS and      *)
+(*    RFV. The old CSPs RDC, RDS and RDV are obsolete now           *)
+(*    and will be phased out in a later release.                    *)
+(*                                                                  *)
+(*  - Implement a new READ function for integers. This new          *)
+(*    function is implemented in Pascal (called $PASRDI) and        *)
+(*    is located in the module PASLIBX. It allows the width         *)
+(*    parameter, too. The compiler generates calls to $PASRDI       *)
+(*    instead of a CSP, when doing an integer READ.                 *)
+(*                                                                  *)
+(*  - Implement a new procedure $ERROR, which allows the            *)
+(*    runtime to throw real exceptions. Up until now, the           *)
+(*    runtime issued EXIT calls, which was not ok, because          *)
+(*    the stack traces were not triggered in this case.             *)
+(*    The new $ERROR procedure generates a P-Code instruction       *)
+(*    CHK E, which throws an exception and triggers all the         *)
+(*    corrective actions that a "normal" exception does.            *)
+(*                                                                  *)
+(********************************************************************)
+(*                                                                  *)
 (*  Dec 2019 - Extensions to the Compiler by Bernd Oppolzer         *)
 (*             (berndoppolzer@yahoo.com)                            *)
 (*                                                                  *)
@@ -1587,8 +1613,8 @@ type ALPHA = array [ 1 .. IDLNGTH ] of CHAR ;
                , PRDY , PEOL , PEOT , PRDD , PWRD , PCLK , PWLN , PRLN
                , PRDI , PEOF , PELN , PRDS , PTRP , PXIT , PFDF , PSIO
                , PEIO , PMSG , PSKP , PLIM , PTRA , PWRP , PCLS , PDAT
-               , PTIM , PFLR , PTRC , PRND , PWRV , PAPN , PRDV ,
-               UNDEF_CSP ) ;
+               , PTIM , PFLR , PTRC , PRND , PWRV , PAPN , PRDV , PRFC
+               , PRFS , PRFV , UNDEF_CSP ) ;
 
      (******************************)
      (* types of parameters        *)
@@ -2322,13 +2348,14 @@ const BLANKID : ALPHA = '            ' ;
       (*   but it is indexed by ORD (CSP) in GEN1 ...          *)
       (*********************************************************)
 
-      CSPNAME : array [ 0 .. 47 ] of array [ 1 .. 3 ] of CHAR =
+      CSPNAME : array [ 0 .. 55 ] of array [ 1 .. 3 ] of CHAR =
       ( 'PAG' , 'GET' , 'PUT' , 'RES' , 'REW' , 'RDC' , 'WRI' , 'WRE' ,
         'WRR' , 'WRC' , 'WRS' , 'WRX' , 'RDB' , 'WRB' , 'RDR' , 'RDH' ,
         'RDY' , 'EOL' , 'EOT' , 'RDD' , 'WRD' , 'CLK' , 'WLN' , 'RLN' ,
         'RDI' , 'EOF' , 'ELN' , 'RDS' , 'TRP' , 'XIT' , 'FDF' , 'SIO' ,
         'EIO' , 'MSG' , 'SKP' , 'LIM' , 'TRA' , 'WRP' , 'CLS' , 'DAT' ,
-        'TIM' , 'FLR' , 'TRC' , 'RND' , 'WRV' , 'APN' , 'RDV' , '   ' )
+        'TIM' , 'FLR' , 'TRC' , 'RND' , 'WRV' , 'APN' , 'RDV' , 'RFC' ,
+        'RFS' , 'RFV' , '   ' , '   ' , '   ' , '   ' , '   ' , '   ' )
         ;
 
       (*********************************************************)
@@ -2478,6 +2505,11 @@ procedure INTTOSTR ( CP : VOIDPTR ; LEN : INTEGER ; VALX : INTEGER ;
        end (* else *) ;
      LENX := 20 - I ;
      POSX := LEN - LENX ;
+     if POSX < 0 then
+       begin
+         I := I - POSX ;
+         POSX := 0 ;
+       end (* then *) ;
      MEMSET ( CP , ' ' , LEN ) ;
      MEMCPY ( PTRADD ( CP , POSX ) , ADDR ( BUFFER [ I + 1 ] ) , LENX )
               ;
@@ -11983,11 +12015,10 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                begin (* PREPLIBRARYFUNC *)
                  GEN2 ( PCODE_MST , 0 , 0 ) ;
 
-                 //************************************
-                 // wenn wasize <> 0                   
-                 // arbeitsbereich fuer lib function re
-                 //servieren                           
-                 //************************************
+                 //*******************************************************
+                 // wenn wasize <> 0                                      
+                 // arbeitsbereich fuer lib function reservieren          
+                 //*******************************************************
 
                  if WASIZE > 0 then
                    begin
@@ -12028,6 +12059,23 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                      WRITELN ( PCODE , ',' , LLCALLER : 1 ) ;
                    end (* then *) ;
                end (* CALLLIBRARYFUNC *) ;
+
+
+            procedure CALLLIBFUNC_PARMS ( PTYPE : CHAR ; PARMCNT :
+                                        INTEGER ; FUNCNAME : CHAR ( 8 )
+                                        ; LLCALLER : INTEGER ) ;
+
+               begin (* CALLLIBFUNC_PARMS *)
+                 if OPT . PRCODE then
+                   begin
+                     PUTIC ;
+                     WRITE ( PCODE , MN [ PCODE_CUP ] ) ;
+                     WRITE ( PCODE , PTYPE : 2 ) ;
+                     WRITE ( PCODE , ',' , PARMCNT * 2 + 1 : 1 ) ;
+                     WRITE ( PCODE , ',' , FUNCNAME ) ;
+                     WRITELN ( PCODE , ',' , LLCALLER : 1 ) ;
+                   end (* then *) ;
+               end (* CALLLIBFUNC_PARMS *) ;
 
 
             procedure FILESETUP ( DFILE : IDP ; GENSIO : BOOLEAN ) ;
@@ -12096,7 +12144,9 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                end (* FILESETUP *) ;
 
 
-            procedure RWSETUP ( DFILE : IDP ; GENSIO : BOOLEAN ) ;
+            procedure RWSETUP ( DFILE : IDP ; var ACCESS_RET : CHAR ;
+                              var VLEVEL_RET : LEVRANGE ; var DISPL_RET
+                              : ADDRRANGE ) ;
 
             (***************************************************)
             (* TO SET UP FILE ADDRESS PARAMETER FOR READ/WRITE *)
@@ -12108,6 +12158,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                    TEMPID : ALPHA ;
                    TEMPSY : SYMB ;
                    DUMMYB : BOOLEAN ;
+                   OK : BOOLEAN ;
 
                begin (* RWSETUP *)
                  SAVED := TRUE ;
@@ -12147,27 +12198,54 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                  SELECTOR ( FSYS + [ SYCOMMA , SYRPARENT ] , LCP , TRUE
                             , DUMMYB ) ;
                  with GATTR do
-                   if COMPTYPES ( TYPTR , PTYPE_TEXT ) <> 1 then
-                     if TYPTR <> NIL then
-                       if TYPTR -> . FORM <> FILES then
-                         ERROR ( 116 )
-                       else
-                         begin
-                           RWFILE := TYPTR -> . FILTYPE ;
-                           if not ( LKEY in [ 1 .. 6 , 25 , 36 , 37 ,
-                           46 , 70 ] ) then
-                             ERROR ( 116 ) ;
+                   begin
+                     if COMPTYPES ( TYPTR , PTYPE_TEXT ) <> 1 then
+                       if TYPTR <> NIL then
+                         if TYPTR -> . FORM <> FILES then
+                           ERROR ( 116 )
+                         else
+                           begin
+                             RWFILE := TYPTR -> . FILTYPE ;
+                             if not ( LKEY in [ 1 .. 6 , 25 , 36 , 37 ,
+                             46 , 70 ] ) then
+                               ERROR ( 116 ) ;
 
-                 (**********************************************)
-                 (*   NON-TEXT FILES PERMITTED ONLY FOR:       *)
-                 (*   GET, PUT, RESET, READ, WRITE,            *)
-                 (*   REWRITE, EOF, SKIP, LINELIMIT            *)
-                 (**********************************************)
+                 //********************************************
+                 //   NON-TEXT FILES PERMITTED ONLY FOR:       
+                 //   GET, PUT, RESET, READ, WRITE,            
+                 //   REWRITE, EOF, SKIP, LINELIMIT            
+                 //********************************************
 
-                         end (* else *) ;
-                 LOADADDRESS ;
-                 if GENSIO then
-                   GEN1 ( PCODE_CSP , ORD ( PSIO ) ) ;
+                           end (* else *) ;
+
+                 //**************************************
+                 // changed 10.01.2020                   
+                 // don't load address here              
+                 // but return vlevel and dplmt instead  
+                 // to do a lda (pcode) later            
+                 //**************************************
+
+                     OK := KIND = VARBL ;
+                     OK := OK and ( ( ACCESS = DRCT ) or ( ( ACCESS =
+                           INDRCT ) and ( IDPLMT = 0 ) ) ) ;
+                     if not OK then
+                       begin
+                         WRITELN ( KIND , ' ' , ACCESS ) ;
+                         ERROR ( 431 ) ;
+                       end (* then *) ;
+                     if ACCESS = DRCT then
+                       begin
+                         ACCESS_RET := 'D' ;
+                         VLEVEL_RET := VLEVEL ;
+                         DISPL_RET := DPLMT
+                       end (* then *)
+                     else
+                       begin
+                         ACCESS_RET := 'I' ;
+                         VLEVEL_RET := LCP -> . VLEV ;
+                         DISPL_RET := LCP -> . VADDR ;
+                       end (* else *) ;
+                   end (* with *) ;
                  if SAVED then
                    begin
                      SYID := TEMPID ;
@@ -12208,42 +12286,79 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
 
             procedure READ1 ;
 
+            //***************************************************
+            // this procedure implements the read statement      
+            // colon_ok : true if colon and length are synt. ok  
+            // gen_length : true if length parm must be genned   
+            //***************************************************
+            // rwsetup reworked, so that informations about      
+            // file handles are returned ... no loadadress is    
+            // done. problem with files passed as var parameters;
+            // the address has already been loaded. access_file  
+            // is I (indirect) in this case                      
+            //***************************************************
+
+
                var XCSP : CSPTYPE ;
                    DONE : BOOLEAN ;
+                   COLON_OK : BOOLEAN ;
+                   GEN_LENGTH : BOOLEAN ;
+                   PASREAD_NAME : CHAR ( 8 ) ;
+                   STORE_TYPE : CHAR ;
+                   ACCESS_FILE : CHAR ;
+                   VLEVEL_FILE : LEVRANGE ;
+                   DISPL_FILE : ADDRRANGE ;
+                   CHKTYPE : TTP ;
 
                begin (* READ1 *)
-                 RWSETUP ( INPUTPTR , TRUE ) ;
+                 RWSETUP ( INPUTPTR , ACCESS_FILE , VLEVEL_FILE ,
+                           DISPL_FILE ) ;
+                 if ACCESS_FILE = 'D' then
+                   GEN2 ( PCODE_LDA , VLEVEL_FILE , DISPL_FILE ) ;
+
+                 //**********************************************
+                 // sio and eio do nothing on non-mainframe env  
+                 // on mainframe they don't generate code, too   
+                 // but they are needed for PASCAL2 to handle    
+                 // the file register correctly                  
+                 // they are generated here even if the actual   
+                 // I/O is done in subroutines like $PASRDx      
+                 //**********************************************
+
+                 GEN1 ( PCODE_CSP , ORD ( PSIO ) ) ;
                  if RWFILE <> NIL then
                    if LKEY = 11 then
                      ERROR ( 116 ) ;
+
+                 //***********************************************
+                 // if not matchpar then there are no parameters  
+                 //***********************************************
+
                  if MATCHPAR then
-
-                 (*************************************)
-                 (* OTHERWISE THERE ARE NO PARAMETERS *)
-                 (*************************************)
-
                    begin
                      if SY = SYCOMMA then
                        INSYMBOL ;
+
+                 //***********************
+                 // lkey = 5 means: read  
+                 //***********************
+
                      if LKEY = 5 then
-
-                 //****************************
-                 // READ                       
-                 //****************************
-
                        if SY <> IDENT then
                          ERROR ( 2 ) ;
                      DONE := FALSE ;
                      if SY = IDENT then
                        repeat
-                         VARIABLE ( FSYS + [ SYCOMMA , SYRPARENT ] ,
-                                    TRUE ) ;
-                         LOADADDRESS ;
+                         VARIABLE ( FSYS + [ SYCOMMA , SYRPARENT ,
+                                    SYCOLON ] , TRUE ) ;
 
                  //****************************
                  // one time loop              
                  //****************************
 
+                         COLON_OK := FALSE ;
+                         GEN_LENGTH := FALSE ;
+                         PASREAD_NAME := ' ' ;
                          repeat
 
                  //*****************************
@@ -12264,6 +12379,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                  //****************************
 
                              begin
+                               LOADADDRESS ;
                                if COMPTYPES ( GATTR . TYPTR , RWFILE )
                                <> 1 then
                                  ERROR ( 153 ) ;
@@ -12274,27 +12390,47 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                                break ;
                              end (* then *) ;
 
-                 //****************************
-                 // character array            
-                 //****************************
+                 //********************************************
+                 // character array                            
+                 // check for colon and length later           
+                 //********************************************
 
+                           COLON_OK := TRUE ;
                            if IS_CARRAY ( GATTR . TYPTR ) then
                              begin
+                               LOADADDRESS ;
                                GEN2 ( PCODE_LDC , 1 , GATTR . TYPTR ->
                                       . SIZE ) ;
-                               XCSP := PRDS ;
+                               GEN_LENGTH := TRUE ;
+                               XCSP := PRFS ;
+                               break ;
+                             end (* then *) ;
+
+                 //********************************************
+                 // variable length string                     
+                 // check for colon and length later           
+                 //********************************************
+
+                           if GATTR . TYPTR -> . FORM = CSTRING then
+                             begin
+                               LOADADDRESS ;
+                               GEN2 ( PCODE_LDC , 1 , GATTR . TYPTR ->
+                                      . SIZE - 4 ) ;
+                               COLON_OK := TRUE ;
+                               GEN_LENGTH := TRUE ;
+                               XCSP := PRFV ;
                                break ;
                              end (* then *) ;
 
                  //****************************
-                 // variable length string     
+                 // single character           
                  //****************************
 
-                           if GATTR . TYPTR -> . FORM = CSTRING then
+                           if GATTR . TYPTR = PTYPE_CHAR then
                              begin
-                               GEN2 ( PCODE_LDC , 1 , GATTR . TYPTR ->
-                                      . SIZE - 4 ) ;
-                               XCSP := PRDV ;
+                               LOADADDRESS ;
+                               GEN_LENGTH := TRUE ;
+                               XCSP := PRFC ;
                                break ;
                              end (* then *) ;
 
@@ -12304,44 +12440,184 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
 
                            if IS_STDTYPE ( GATTR . TYPTR , 'R' ) then
                              begin
-                               XCSP := PRDR ;
+                               CHKTYPE := GATTR . TYPTR ;
+
+                 //************************************
+                 // sample coding like in the integer  
+                 // case                               
+                 //************************************
+
+                               PREPLIBRARYFUNC ( 0 , LCCALLER , LCPARM
+                                                 , LCWORK ) ;
+                               PASREAD_NAME := '$PASRDR' ;
+
+                 //******************************
+                 // store FCB address into parm  
+                 //******************************
+
+                               if ACCESS_FILE = 'D' then
+                                 GEN2 ( PCODE_LDA , VLEVEL_FILE ,
+                                        DISPL_FILE )
+                               else
+                                 GEN3 ( PCODE_LOD , ORD ( 'A' ) ,
+                                        VLEVEL_FILE , DISPL_FILE ) ;
+                               GEN3 ( PCODE_STR , ORD ( 'I' ) , LEVEL ,
+                                      LCPARM ) ;
+                               LCPARM := LCPARM + INTSIZE ;
+
+                 //**********************
+                 // load target address  
+                 //**********************
+
+                               LOADADDRESS ;
+                               GEN_LENGTH := TRUE ;
+                               STORE_TYPE := 'R' ;
                                break
                              end (* then *) ;
 
-                 //****************************
-                 // integer different lengths  
-                 //****************************
+                 //**************************************************
+                 // integer different lengths                        
+                 // integer is the first read variant which has been 
+                 // implemented in Pascal (see PASLIBX)              
+                 //**************************************************
 
                            if GATTR . TYPTR = PTYPE_INT then
                              begin
+                               CHKTYPE := GATTR . BTYPE ;
+
+                 //************************************
+                 // sample coding:                     
+                 //************************************
+                 // STR A,1,544           - store FCB  
+                 // LDA 1,400             - target addr
+                 // LDC I,1               - colon parm 
+                 // NGI                                
+                 // STR I,1,548           - store      
+                 // CUP I,5,$PASRDI ,432  - call func  
+                 // STO I                 - store res  
+                 //                         indirect   
+                 //************************************
+
+                               PREPLIBRARYFUNC ( 0 , LCCALLER , LCPARM
+                                                 , LCWORK ) ;
+                               PASREAD_NAME := '$PASRDI' ;
+
+                 //******************************
+                 // store FCB address into parm  
+                 //******************************
+
+                               if ACCESS_FILE = 'D' then
+                                 GEN2 ( PCODE_LDA , VLEVEL_FILE ,
+                                        DISPL_FILE )
+                               else
+                                 GEN3 ( PCODE_LOD , ORD ( 'A' ) ,
+                                        VLEVEL_FILE , DISPL_FILE ) ;
+                               GEN3 ( PCODE_STR , ORD ( 'I' ) , LEVEL ,
+                                      LCPARM ) ;
+                               LCPARM := LCPARM + INTSIZE ;
+
+                 //**********************
+                 // load target address  
+                 //**********************
+
+                               LOADADDRESS ;
+                               GEN_LENGTH := TRUE ;
                                if GATTR . BTYPE -> . SIZE = INTSIZE
                                then
-                                 XCSP := PRDI
+                                 STORE_TYPE := 'I'
                                else
                                  if GATTR . BTYPE -> . SIZE = HINTSIZE
                                  then
-                                   XCSP := PRDH
+                                   STORE_TYPE := 'H'
                                  else
-                                   XCSP := PRDY ;
+                                   STORE_TYPE := 'C' ;
                                break
                              end (* then *) ;
 
                  //****************************
-                 // character or boolean       
+                 // boolean                    
                  //****************************
 
-                           if GATTR . TYPTR = PTYPE_CHAR then
-                             XCSP := PRDC
-                           else
-                             if GATTR . TYPTR = PTYPE_BOOL then
+                           if GATTR . TYPTR = PTYPE_BOOL then
+                             begin
+                               LOADADDRESS ;
                                XCSP := PRDB
+                             end (* then *)
+                           else
+                             begin
+                               ERROR ( 116 ) ;
+                               LOADADDRESS ;
+                               GEN_LENGTH := TRUE ;
+                               XCSP := PRFC
+                             end (* else *) ;
+                         until TRUE ;
+
+                 //***************************************
+                 // if colon and colon not ok:            
+                 // throw error message                   
+                 // else read length after colon          
+                 // and LDC length found                  
+                 // if no colon found, but length needed  
+                 // LDC default length                    
+                 //***************************************
+
+                         if SY = SYCOLON then
+                           begin
+                             if not COLON_OK then
+                               ERROR ( 361 ) ;
+                             INSYMBOL ;
+                             EXPRESSION ( FSYS + [ SYCOMMA , SYRPARENT
+                                          ] ) ;
+                             if GATTR . TYPTR <> NIL then
+                               if GATTR . TYPTR <> PTYPE_INT then
+                                 ERROR ( 116 ) ;
+                             if GEN_LENGTH then
+                               LOAD ;
+                           end (* then *)
+                         else
+                           begin
+                             if GEN_LENGTH then
+                               GEN2 ( PCODE_LDC , 1 , - 1 ) ;
+                           end (* else *) ;
+
+                 //****************************************
+                 // different coding                       
+                 // only csp                               
+                 // or else ... see below                  
+                 //****************************************
+
+                         if PASREAD_NAME = ' ' then
+                           begin
+                             GEN1 ( PCODE_CSP , ORD ( XCSP ) )
+                           end (* then *)
+                         else
+                           begin
+
+                 //**********************************
+                 // store length information         
+                 // call read function (Pascal)      
+                 // store result indirect            
+                 //**********************************
+
+                             GEN3 ( PCODE_STR , ORD ( 'I' ) , LEVEL ,
+                                    LCPARM ) ;
+                             LCPARM := LCPARM + INTSIZE ;
+                             if STORE_TYPE = 'R' then
+                               begin
+                                 CALLLIBFUNC_PARMS ( 'R' , 2 ,
+                                                   PASREAD_NAME ,
+                                                   LCCALLER ) ;
+                               end (* then *)
                              else
                                begin
-                                 ERROR ( 116 ) ;
-                                 XCSP := PRDI
+                                 CALLLIBFUNC_PARMS ( 'I' , 2 ,
+                                                   PASREAD_NAME ,
+                                                   LCCALLER ) ;
+                                 if OPT . DEBUG then
+                                   CHKBNDS ( 6 , TRUE , CHKTYPE ) ;
                                end (* else *) ;
-                         until TRUE ;
-                         GEN1 ( PCODE_CSP , ORD ( XCSP ) ) ;
+                             GEN1 ( PCODE_STO , ORD ( STORE_TYPE ) )
+                           end (* else *) ;
                          if SY = SYCOMMA then
                            INSYMBOL
                          else
@@ -12362,6 +12638,9 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                    LEN : ADDRRANGE ;
                    XCSP : CSPTYPE ;
                    LLC : ADDRRANGE ;
+                   ACCESS_FILE : CHAR ;
+                   VLEVEL_FILE : LEVRANGE ;
+                   DISPL_FILE : ADDRRANGE ;
 
 
                procedure WRITE2 ;
@@ -12513,7 +12792,11 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                  XCSP := UNDEF_CSP ;
                  LLKEY := LKEY ;
                  DONE := FALSE ;
-                 RWSETUP ( OUTPUTPTR , TRUE ) ;
+                 RWSETUP ( OUTPUTPTR , ACCESS_FILE , VLEVEL_FILE ,
+                           DISPL_FILE ) ;
+                 if ACCESS_FILE = 'D' then
+                   GEN2 ( PCODE_LDA , VLEVEL_FILE , DISPL_FILE ) ;
+                 GEN1 ( PCODE_CSP , ORD ( PSIO ) ) ;
                  if RWFILE <> NIL then
                    if LLKEY = 12 then
                      ERROR ( 116 ) ;
@@ -12641,8 +12924,16 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
 
             procedure SKIPLIM ;
 
+               var ACCESS_FILE : CHAR ;
+                   VLEVEL_FILE : LEVRANGE ;
+                   DISPL_FILE : ADDRRANGE ;
+
                begin (* SKIPLIM *)
-                 RWSETUP ( OUTPUTPTR , TRUE ) ;
+                 RWSETUP ( OUTPUTPTR , ACCESS_FILE , VLEVEL_FILE ,
+                           DISPL_FILE ) ;
+                 if ACCESS_FILE = 'D' then
+                   GEN2 ( PCODE_LDA , VLEVEL_FILE , DISPL_FILE ) ;
+                 GEN1 ( PCODE_CSP , ORD ( PSIO ) ) ;
                  if SY = SYCOMMA then
                    begin
                      INSYMBOL ;
@@ -15875,11 +16166,6 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
 
                begin (* TRAPEXIT *)
                  LLC := LCOUNTER ;
-
-                 (********************************)
-                 (* IN CASE OF SET TYPE ARGUMENT *)
-                 (********************************)
-
                  if GATTR . TYPTR <> PTYPE_INT then
                    ERROR ( 116 ) ;
                  if LKEY = 14 then
@@ -15922,6 +16208,23 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                  GEN1 ( PCODE_CSP , LKEY + 14 ) ;
                  LCOUNTER := LLC ;
                end (* TRAPEXIT *) ;
+
+
+            procedure $ERROR1 ;
+
+            (**********************************************************)
+            (*   generate a CHK E instruction                         *)
+            (*   which throws a runtime exception                     *)
+            (*   the value on the stack is the error number           *)
+            (*   bernd oppolzer - 11.01.2020                          *)
+            (**********************************************************)
+
+
+               begin (* $ERROR1 *)
+                 if GATTR . TYPTR <> PTYPE_INT then
+                   ERROR ( 116 ) ;
+                 GEN3 ( PCODE_CHK , ORD ( 'E' ) , 0 , 0 ) ;
+               end (* $ERROR1 *) ;
 
 
             procedure SQRABS ;
@@ -16716,11 +17019,12 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                         ERROR ( 7 ) ;
                       MATCHPAR := FALSE ;
                     end (* else *) ;
-                  if LKEY in [ 14 .. 24 , 30 , 33 , 39 , 47 ] then
+                  if LKEY in [ 14 .. 24 , 30 , 33 , 39 , 47 , 102 ]
+                  then
 
-              (*********************************)
-              (*TRAP,EXIT,ABS...,TRACE,ODD,EXPO*)
-              (*********************************)
+              //*****************************************
+              //  TRAP, EXIT, ABS ..., TRACE, ODD, EXPO  
+              //*****************************************
 
                     begin
 
@@ -16806,6 +17110,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                     99 : LASTINDEX1 ;
                     100 : LEFT1 ;
                     101 : RIGHT1 ;
+                    102 : $ERROR1 ;
                   end (* case *) ;
                   if LKEY in [ 16 .. 26 , 28 , 29 , 33 , 38 , 39 , 40 ,
                   41 , 42 , 43 , 44 , 47 , 63 , 64 , 78 , 79 ] then
@@ -20991,7 +21296,7 @@ procedure ENTSTDNAMES ;
            ( 'RESULTP     ' , 92 , FUNC ) ,    // ptr to result
            ( 'MEMCMP      ' , 96 , FUNC ) ,    // like C memcmp
            ( 'APPEND      ' , 97 , PROC ) ,    // open file for append
-           ( '           ' , - 1 , PROC ) ,    //
+           ( '$ERROR      ' , 102 , PROC ) ,   // show runtime error
            ( '           ' , - 1 , PROC ) ,    //
            ( '           ' , - 1 , PROC ) ) ;  //
 

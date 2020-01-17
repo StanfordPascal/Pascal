@@ -5,18 +5,28 @@
 * zuerst Version 2019.09 auf MVS ausliefern
 * Fehler bei CSP RDV auf Mainframe - Maxlaenge ueberschr. bei RDV - TESTREAD.pas
 * Testen Unterschied bei Ausgabe Leerzeilen in Textfiles - TESTCOPY.pas
-- Lesen CHAR(10) und STRING(10) tickt anders als einzelne CHARs - siehe TESTREAD.pas
-- Implementieren READ (X : N) - d.h. Change Read einzelne Chars, feste Strings, Varchars
-- READ Ints usw. neu als Pascal-Funktion
+* Fehler Mainframe bei TESTRDV.PAS - am Dateiende
+* Fehler Mainframe bei TESTREA3.PAS - bei zweitem Lesen fehlt Anfang
+* Fehler Mainframe bei TESTRDC2.PAS - bei leerer Eingabe
+* Lesen CHAR(10) und STRING(10) tickt anders als einzelne CHARs - siehe TESTREAD.pas
+* Implementieren READ (X : N) - d.h. Change Read einzelne Chars, feste Strings, Varchars
+* READ Ints usw. neu als Pascal-Funktion (neue CSVs)
+* Problem bei INDEX-Funktion in TESTREA6
 - READSTR usw. als Pascal-Funktion
 - WRITESTR usw. als Pascal-Funktion
-- Fehler (PASCAL1-Abbruch) bei falschem Funktionsnamen - siehe TESTERR4
+- Fehler (PASCAL1-Abbruch) bei falschem IF - siehe COMPERR1
+- Fehler (PASCAL1-Abbruch) bei falschem Funktionsnamen - siehe COMPERR2
 - Fehler bei CONST-Parameter mit Struktur
+- Tabs in Pascal-Source akzeptieren
+- Aufruf von externen GCC-Funktionen
 - PASCAL1N angleichen an PASCAL1, PASCAL1N mit WITH-Erweiterung
 - Problem auf Mainframe, wenn PCODE_CHK fuer Pointer aktiv ist (NIL-Pointer-Check)
   CHK N muss wohl neu implementiert werden
 - Pointer-Konstruktor ist nicht ueberall in Funktionskopf zulaessig
   (z.B. nicht bei var-Parameter, bei value schon)
+- spaeter: klaeren was bei Windows-Textfiles mit Hex-Nullen passiert
+- spaeter: klaeren Ein-Ausgabe variante Records
+  (insbesondere Mainframe und RECFM=V)
 
 =======================================================================================
 

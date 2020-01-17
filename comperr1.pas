@@ -16,7 +16,7 @@ module $PASLIBX ;
 (*                                                                  *)
 (*  - string handling functions (from Pascal/VS)                    *)
 (*                                                                  *)
-(*  - new READ functions for integers and reals                     *)
+(*  - new READ functions                                            *)
 (*                                                                  *)
 (*  - other fancy stuff                                             *)
 (*                                                                  *)
@@ -47,22 +47,15 @@ module $PASLIBX ;
 (*                                                                  *)
 (*  History:                                                        *)
 (*                                                                  *)
-(*  12.01.2020: new function $PASRDR - read reals                   *)
-(*                                                                  *)
-(*  11.01.2020: all former EXIT calls replaced by $ERROR calls      *)
-(*  $ERROR calls will trigger error recovery from runtime           *)
-(*  for example stack trace etc. (symbolic dump on the mainframe    *)
-(*  if compiled with the DEBUG option, which is the default)        *)
-(*                                                                  *)
 (*  10.01.2020: new function $PASRDI - read integers                *)
 (*  replaces platform specific implementations of CSPs RDI, RDH     *)
 (*  and RDY (read integers of length 4, 2 and 1).                   *)
 (*  Compiler uses $PASRDI only, old implementations will be         *)
 (*  phased out ...                                                  *)
 (*                                                                  *)
-(*  17.02.2019: found critical error in MODIFY_TREE                 *)
-(*  near the call of SUCHE_HFRE (look at the variable               *)
-(*  VMODUS2 and inserting the new HFRE when same length)            *)
+(*  17.02.2019: kritischer Fehler gefunden in MODIFY_TREE           *)
+(*  in der Umgebung des Aufrufs von SUCHE_HFRE (siehe Variable      *)
+(*  VMODUS2 und Einsortieren des neuen HFREs bei gleicher Laenge)   *)
 (*                                                                  *)
 (********************************************************************)
 
@@ -748,17 +741,17 @@ local procedure MODIFY_TREE ( MODUS : CHAR ; HANC_ACT : PHANC ; SIZE :
             begin
 
         //****************************************
-        // schauen ob size von plaufx >= der      
-        // geforderten groesse ist                
-        // falls ja, passt diese stelle           
+        // schauen ob size von plaufx >= der
+        // geforderten groesse ist
+        // falls ja, passt diese stelle
         //****************************************
 
               if SIZE_ALT <= SIZE_FREE then
                 break ;
 
         //****************************************
-        // falls nein, weiterschalten zu          
-        // naechst tieferem element               
+        // falls nein, weiterschalten zu
+        // naechst tieferem element
         //****************************************
 
               if FREELOW = NIL then
@@ -1226,7 +1219,7 @@ local procedure MODIFY_TREE ( MODUS : CHAR ; HANC_ACT : PHANC ; SIZE :
 
        otherwise
          begin
-           
+
          end (* otherw *) ;
      end (* case *) ;
    end (* MODIFY_TREE *) ;
@@ -2593,10 +2586,10 @@ function $PASSTR2 ( FUNCCODE : INTEGER ; const S1 : STRING ; const S2 :
        1 : begin
 
      //***************************************
-     // ergebnis zuerst mal auf Null          
-     // laengen besorgen                      
-     // wenn laenge des suchstrings groesser  
-     // kann nichts gefunden werden           
+     // ergebnis zuerst mal auf Null
+     // laengen besorgen
+     // wenn laenge des suchstrings groesser
+     // kann nichts gefunden werden
      //***************************************
 
              $PASSTR2 := 0 ;
@@ -2606,8 +2599,8 @@ function $PASSTR2 ( FUNCCODE : INTEGER ; const S1 : STRING ; const S2 :
                return ;
 
      //**************************************************
-     // spezialvariante fuer laenge des suchstrings = 1  
-     // dann ist einiges einfacher                       
+     // spezialvariante fuer laenge des suchstrings = 1
+     // dann ist einiges einfacher
      //**************************************************
 
              if LS2 = 1 then
@@ -2630,8 +2623,8 @@ function $PASSTR2 ( FUNCCODE : INTEGER ; const S1 : STRING ; const S2 :
                end (* then *)
 
      //****************************************************
-     // optimierung: zuerst wird nach anfang und ende des  
-     // suchstrings gesucht                                
+     // optimierung: zuerst wird nach anfang und ende des
+     // suchstrings gesucht
      //****************************************************
 
              else
@@ -2716,10 +2709,10 @@ function $PASSTR2 ( FUNCCODE : INTEGER ; const S1 : STRING ; const S2 :
        3 : begin
 
      //***************************************
-     // ergebnis zuerst mal auf Null          
-     // laengen besorgen                      
-     // wenn laenge des suchstrings groesser  
-     // kann nichts gefunden werden           
+     // ergebnis zuerst mal auf Null
+     // laengen besorgen
+     // wenn laenge des suchstrings groesser
+     // kann nichts gefunden werden
      //***************************************
 
              $PASSTR2 := 0 ;
@@ -2729,8 +2722,8 @@ function $PASSTR2 ( FUNCCODE : INTEGER ; const S1 : STRING ; const S2 :
                return ;
 
      //**************************************************
-     // spezialvariante fuer laenge des suchstrings = 1  
-     // dann ist einiges einfacher                       
+     // spezialvariante fuer laenge des suchstrings = 1
+     // dann ist einiges einfacher
      //**************************************************
 
              if LS2 = 1 then
@@ -2753,8 +2746,8 @@ function $PASSTR2 ( FUNCCODE : INTEGER ; const S1 : STRING ; const S2 :
                end (* then *)
 
      //****************************************************
-     // optimierung: zuerst wird nach anfang und ende des  
-     // suchstrings gesucht                                
+     // optimierung: zuerst wird nach anfang und ende des
+     // suchstrings gesucht
      //****************************************************
 
              else
@@ -2954,11 +2947,11 @@ function FILESTAT ( var X : ANYFILE ) : CHAR ;
 function $PASRDR ( var F : TEXT ; WIDTH : INTEGER ) : REAL ;
 
 //**********************************************************
-// function to read reals from files                        
-// rewritten in Pascal - portable solution in 2020          
-// supports width parameter like in Pascal/VS               
+// function to read reals from files
+// rewritten in Pascal - portable solution in 2020
+// supports width parameter like in Pascal/VS
 //**********************************************************
-// Bernd Oppolzer - New Stanford Pascal                     
+// Bernd Oppolzer - New Stanford Pascal
 //**********************************************************
 
 
@@ -2968,20 +2961,10 @@ function $PASRDR ( var F : TEXT ; WIDTH : INTEGER ) : REAL ;
        SCALE : REAL ;
        SCALEI : INTEGER ;
        LEADINGZ : BOOLEAN ;
-       DIGITS : INTEGER ;
+       digits : integer ;
        BEFOREDP : BOOLEAN ;
        SKIP : BOOLEAN ;
-       EXPO : BOOLEAN ;
-       SCALEXP : REAL ;
-       EXPVALI : INTEGER ;
-       SIGNEXP : INTEGER ;
-
-   const SCALTAB_PLUS : array [ 1 .. 10 ] of REAL =
-         ( 10.0 , 100.0 , 1000.0 , 10000.0 , 100000.0 , 1000000.0 ,
-           10000000.0 , 100000000.0 , 1000000000.0 , 10000000000.0 ) ;
-         SCALTAB_MINUS : array [ 1 .. 10 ] of REAL =
-         ( 0.1 , 0.01 , 0.001 , 0.0001 , 0.00001 , 0.000001 , 0.0000001
-           , 0.00000001 , 0.000000001 , 0.0000000001 ) ;
+   exponent : BOOLEAN ;
 
    begin (* $PASRDR *)
      if WIDTH = 0 then
@@ -3008,9 +2991,7 @@ function $PASRDR ( var F : TEXT ; WIDTH : INTEGER ) : REAL ;
      RETVAL := 0.0 ;
      RETVALI := 0 ;
 
-     //**********************
-     // skip leading blanks  
-     //**********************
+     // skip leading blanks
 
      while ( F -> = ' ' ) and ( WIDTH > 0 ) and not EOLN ( F ) do
        begin
@@ -3023,36 +3004,26 @@ function $PASRDR ( var F : TEXT ; WIDTH : INTEGER ) : REAL ;
          return
        end (* then *) ;
 
-     //********************************************************
-     // leadingz = reading and ignoring leading zeroes         
-     // digits = number of digits (if < 10 then integer math)  
-     // beforedp = decimal point not yet found                 
-     // scale, scalei = compute scale factor from dec point    
-     //********************************************************
+     // leadingz = reading and ignoring leading zeroes
+     // digits = number of digits (if < 10 then integer math)
+     // beforedp = decimal point not yet found
+     // scale, scalei = compute scale factor from dec point
 
      LEADINGZ := TRUE ;
-     DIGITS := 0 ;
+     digits := 0 ;
      BEFOREDP := TRUE ;
      SCALE := 1.0 ;
      SCALEI := 1 ;
-     EXPO := FALSE ;
+               exponent := false ;
      case F -> of
        '-' : begin
                SIGN := - 1 ;
                GET ( F ) ;
                WIDTH := WIDTH - 1 ;
-               if WIDTH <= 0 then
-                 $ERROR ( 1204 ) ;
-               if not ( F -> in [ '0' .. '9' ] ) then
-                 $ERROR ( 1204 ) ;
              end (* tag/ca *) ;
        '+' : begin
                GET ( F ) ;
                WIDTH := WIDTH - 1 ;
-               if WIDTH <= 0 then
-                 $ERROR ( 1204 ) ;
-               if not ( F -> in [ '0' .. '9' ] ) then
-                 $ERROR ( 1204 ) ;
              end (* tag/ca *) ;
        '.' : begin
                GET ( F ) ;
@@ -3063,8 +3034,8 @@ function $PASRDR ( var F : TEXT ; WIDTH : INTEGER ) : REAL ;
          begin
            RETVALI := ORD ( F -> ) - ORD ( '0' ) ;
            LEADINGZ := RETVALI = 0 ;
-           if not LEADINGZ then
-             DIGITS := 1 ;
+           if not leadingz then digits := 1;
+           if
            GET ( F ) ;
            WIDTH := WIDTH - 1 ;
          end (* tag/ca *) ;
@@ -3078,18 +3049,14 @@ function $PASRDR ( var F : TEXT ; WIDTH : INTEGER ) : REAL ;
          return
        end (* then *) ;
 
-     //*************************************************
-     // main loop for mantissa                          
-     // logic controlled by leadingz, digits, beforedp  
-     // final results in retval and scale               
-     //*************************************************
+     // main loop for mantissa
+     // logic controlled by leadingz, digits, beforedp
+     // final results in retval and scale
 
      while WIDTH > 0 do
        begin
          case F -> of
            '.' : begin
-                   if not BEFOREDP then
-                     $ERROR ( 1205 ) ;
                    GET ( F ) ;
                    WIDTH := WIDTH - 1 ;
                    BEFOREDP := FALSE ;
@@ -3098,36 +3065,26 @@ function $PASRDR ( var F : TEXT ; WIDTH : INTEGER ) : REAL ;
              begin
                GET ( F ) ;
                WIDTH := WIDTH - 1 ;
-               EXPO := TRUE ;
+               exponent := true ;
                break ;
              end (* tag/ca *) ;
            '0' .. '9' :
              begin
-               if F -> <> '0' then
-                 LEADINGZ := FALSE ;
-               if not LEADINGZ then
-                 begin
-                   DIGITS := DIGITS + 1 ;
-                   if DIGITS < 10 then
-                     begin
-                       RETVALI := RETVALI * 10 + ( ORD ( F -> ) - ORD (
-                                  '0' ) ) ;
-                       if not BEFOREDP then
-                         SCALEI := SCALEI * 10 ;
-                       if DIGITS = 9 then
-                         begin
-                           RETVAL := RETVALI ;
-                           SCALE := SCALEI ;
-                         end (* then *)
-                     end (* then *)
-                   else
-                     begin
-                       RETVAL := RETVAL * 10 + ( ORD ( F -> ) - ORD (
-                                 '0' ) ) ;
-                       if not BEFOREDP then
-                         SCALE := SCALE * 10 ;
-                     end (* else *) ;
-                 end (* then *) ;
+               if f -> <> '0' then leadingz := false;
+               if not leadingz then begin
+   digits := digits + 1 ;
+   if digits < 10 then
+               begin
+               RETVALI := RETVALI * 10 + ( ORD ( F -> ) - ORD ( '0' ) )
+                          ;
+               if not beforedp then
+                 scalei := scalei * 10;
+   if digits = 9 then begin
+      retval := retvali ;
+      scale := scalei ;
+   end
+               end ;
+               end ;
                GET ( F ) ;
                WIDTH := WIDTH - 1 ;
              end (* tag/ca *) ;
@@ -3135,111 +3092,17 @@ function $PASRDR ( var F : TEXT ; WIDTH : INTEGER ) : REAL ;
              break
          end (* case *) ;
        end (* while *) ;
-
-     //*******************************************************
-     // if real value fields have not been set, set them now  
-     //*******************************************************
-
-     if DIGITS < 9 then
-       begin
-         RETVAL := RETVALI ;
-         SCALE := SCALEI ;
-       end (* then *) ;
-
-     //*******************************
-     // read exponent if expo = true  
-     // and compose final result      
-     //*******************************
-
-     SCALEXP := 1.0 ;
-     if EXPO then
-       begin
-
-     //*******************************
-     // E has already been found      
-     // exponent may have sign        
-     //*******************************
-
-         SIGNEXP := 1 ;
-         EXPVALI := 0 ;
-         case F -> of
-           '-' : begin
-                   SIGNEXP := - 1 ;
-                   GET ( F ) ;
-                   WIDTH := WIDTH - 1 ;
-                   if WIDTH <= 0 then
-                     $ERROR ( 1206 ) ;
-                   if not ( F -> in [ '0' .. '9' ] ) then
-                     $ERROR ( 1206 ) ;
-                 end (* tag/ca *) ;
-           '+' : begin
-                   GET ( F ) ;
-                   WIDTH := WIDTH - 1 ;
-                   if WIDTH <= 0 then
-                     $ERROR ( 1206 ) ;
-                   if not ( F -> in [ '0' .. '9' ] ) then
-                     $ERROR ( 1206 ) ;
-                 end (* tag/ca *) ;
-           '0' .. '9' :
-             begin
-               EXPVALI := ORD ( F -> ) - ORD ( '0' ) ;
-               GET ( F ) ;
-               WIDTH := WIDTH - 1 ;
-             end (* tag/ca *) ;
-           otherwise
-             $ERROR ( 1206 )
-         end (* case *) ;
-         while ( F -> in [ '0' .. '9' ] ) and ( WIDTH > 0 ) do
-           begin
-             EXPVALI := EXPVALI * 10 + ( ORD ( F -> ) - ORD ( '0' ) ) ;
-             GET ( F ) ;
-             WIDTH := WIDTH - 1 ;
-           end (* while *) ;
-
-     //*******************************************
-     // compute scalexp depending on exponent     
-     //*******************************************
-
-         if SIGNEXP = - 1 then
-           begin
-             while EXPVALI > 10 do
-               begin
-                 SCALEXP := SCALEXP * SCALTAB_MINUS [ 10 ] ;
-                 EXPVALI := EXPVALI - 10
-               end (* while *) ;
-             SCALEXP := SCALEXP * SCALTAB_MINUS [ EXPVALI ] ;
-           end (* then *)
-         else
-           begin
-             while EXPVALI > 10 do
-               begin
-                 SCALEXP := SCALEXP * SCALTAB_PLUS [ 10 ] ;
-                 EXPVALI := EXPVALI - 10
-               end (* while *) ;
-             SCALEXP := SCALEXP * SCALTAB_PLUS [ EXPVALI ] ;
-           end (* else *) ;
-
-     //*******************************************
-     // compose final result with scalexp         
-     //*******************************************
-
-         $PASRDR := RETVAL / SCALE * SCALEXP * SIGN ;
-       end (* then *)
-     else
-       $PASRDR := RETVAL / SCALE * SIGN ;
-
-     //*******************************************
-     // if width specified, skip remaining chars  
-     //*******************************************
-
      if SKIP then
-       while TRUE do
+       while WIDTH > 0 do
          begin
-           if EOLN ( F ) or ( WIDTH <= 0 ) then
-             break ;
            GET ( F ) ;
            WIDTH := WIDTH - 1 ;
          end (* while *) ;
+   if digits = 9 then begin
+      retval := retvali ;
+      scale := scalei ;
+   end
+     $PASRDR := RETVAL / scale * SIGN ;
    end (* $PASRDR *) ;
 
 
@@ -3247,11 +3110,11 @@ function $PASRDR ( var F : TEXT ; WIDTH : INTEGER ) : REAL ;
 function $PASRDI ( var F : TEXT ; WIDTH : INTEGER ) : INTEGER ;
 
 //**********************************************************
-// function to read integers from files                     
-// rewritten in Pascal - portable solution in 2020          
-// supports width parameter like in Pascal/VS               
+// function to read integers from files
+// rewritten in Pascal - portable solution in 2020
+// supports width parameter like in Pascal/VS
 //**********************************************************
-// Bernd Oppolzer - New Stanford Pascal                     
+// Bernd Oppolzer - New Stanford Pascal
 //**********************************************************
 
 
@@ -3282,11 +3145,6 @@ function $PASRDI ( var F : TEXT ; WIDTH : INTEGER ) : INTEGER ;
        end (* then *) ;
      SIGN := 1 ;
      RETVAL := 0 ;
-
-     //**********************
-     // skip leading blanks  
-     //**********************
-
      while ( F -> = ' ' ) and ( WIDTH > 0 ) and not EOLN ( F ) do
        begin
          GET ( F ) ;
@@ -3302,18 +3160,10 @@ function $PASRDI ( var F : TEXT ; WIDTH : INTEGER ) : INTEGER ;
                SIGN := - 1 ;
                GET ( F ) ;
                WIDTH := WIDTH - 1 ;
-               if WIDTH <= 0 then
-                 $ERROR ( 1203 ) ;
-               if not ( F -> in [ '0' .. '9' ] ) then
-                 $ERROR ( 1203 ) ;
              end (* tag/ca *) ;
        '+' : begin
                GET ( F ) ;
                WIDTH := WIDTH - 1 ;
-               if WIDTH <= 0 then
-                 $ERROR ( 1203 ) ;
-               if not ( F -> in [ '0' .. '9' ] ) then
-                 $ERROR ( 1203 ) ;
              end (* tag/ca *) ;
        '0' .. '9' :
          begin
@@ -3329,40 +3179,23 @@ function $PASRDI ( var F : TEXT ; WIDTH : INTEGER ) : INTEGER ;
          $PASRDI := RETVAL ;
          return
        end (* then *) ;
-
-     //*************************************************
-     // main loop                                       
-     //*************************************************
-
      while ( F -> in [ '0' .. '9' ] ) and ( WIDTH > 0 ) do
        begin
          RETVAL := RETVAL * 10 + ( ORD ( F -> ) - ORD ( '0' ) ) ;
          GET ( F ) ;
          WIDTH := WIDTH - 1 ;
        end (* while *) ;
-
-     //*******************************************
-     // compose final result                      
-     //*******************************************
-
-     $PASRDI := RETVAL * SIGN ;
-
-     //*******************************************
-     // if width specified, skip remaining chars  
-     //*******************************************
-
      if SKIP then
-       while TRUE do
+       while WIDTH > 0 do
          begin
-           if EOLN ( F ) or ( WIDTH <= 0 ) then
-             break ;
            GET ( F ) ;
            WIDTH := WIDTH - 1 ;
          end (* while *) ;
+     $PASRDI := RETVAL * SIGN
    end (* $PASRDI *) ;
 
 
 
 begin (* HAUPTPROGRAMM *)
-  
+
 end (* HAUPTPROGRAMM *) .

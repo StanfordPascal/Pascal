@@ -1778,6 +1778,12 @@ procedure $PASSNAP ( LEVEL : INTEGER ; DUMPPTR : VOIDPTR ) ;
           ABADDR : INTEGER ;
           ABREG10 : INTEGER ;
           CP : -> CODE_AT_PSW ;
+          CP_CHAR : -> CHAR ;
+          $ERROR_CALL : BOOLEAN ;
+          $ERROR_PARM : INTEGER ;
+          IP : -> INTEGER ;
+          REG1 : INTEGER ;
+          REG2 : INTEGER ;
 
       begin (* PRINT_SYSD *)
         WRITELN ;
@@ -1828,6 +1834,54 @@ procedure $PASSNAP ( LEVEL : INTEGER ; DUMPPTR : VOIDPTR ) ;
         ABREG10 := PTR2INT ( P -> . CHKREGS [ 10 ] ) ;
         with P -> do
           begin
+
+        //********************************************************
+        // change 11.01.2020 - oppolzer
+        // call to procedure $error generates p-code instruction
+        // CHK E, which in turn generates instruction X'00'
+        // and certain operands ... if the 2001 exception
+        // turns out to be this sort of exception, other
+        // output is generated
+        //********************************************************
+
+            $ERROR_CALL := FALSE ;
+            if CHKERRC = 2001 then
+              begin
+                CP_CHAR := PTRCAST ( CP ) ;
+                CP_CHAR := PTRADD ( CP_CHAR , 2 ) ;
+                if CP_CHAR -> = x'18' then
+                  begin
+                    CP_CHAR := PTRADD ( CP_CHAR , 1 ) ;
+                    if CP_CHAR -> = x'12' then
+                      begin
+                        CP_CHAR := PTRADD ( CP_CHAR , 1 ) ;
+                        if CP_CHAR -> = x'0' then
+                          begin
+                            CP_CHAR := PTRADD ( CP_CHAR , 1 ) ;
+                            if CP_CHAR -> = x'53' then
+                              begin
+                                $ERROR_CALL := TRUE
+                              end (* then *)
+                          end (* then *)
+                      end (* then *)
+                  end (* then *)
+              end (* then *) ;
+            if $ERROR_CALL then
+              begin
+                IP := ADDR ( P -> . CHKREGS [ 1 ] ) ;
+                REG1 := IP -> ;
+                IP := ADDR ( P -> . CHKREGS [ 2 ] ) ;
+                REG2 := IP -> ;
+                if REG1 <> REG2 then
+                  $ERROR_CALL := FALSE
+                else
+                  $ERROR_PARM := REG1
+              end (* then *) ;
+
+        //***********************
+        // handle runtime error
+        //***********************
+
             WRITE ( '**** RUN ERROR: ' , CHKERRC : 4 ) ;
             GET_PROCNAME ( S , I , J , TPROCN , DUMMYST , ISDEBUG ,
                            SOURCENAME ) ;
@@ -1846,6 +1900,22 @@ procedure $PASSNAP ( LEVEL : INTEGER ; DUMPPTR : VOIDPTR ) ;
             WRITELN ;
             WRITELN ;
             WRITE ( '**** ' ) ;
+
+        //**********************************************
+        // call to runtime error procedure $ERROR
+        //**********************************************
+
+            if $ERROR_CALL then
+              begin
+                WRITELN ( '$ERROR CALL WITH PARAMETER ' , $ERROR_PARM :
+                          1 ) ;
+                return
+              end (* then *) ;
+
+        //**********************************************
+        // error codes less than 2000 : pascal runtime
+        //**********************************************
+
             if CHKERRC < 2000 then
               begin
                 CODE := CHKERRC - 1000 ;
@@ -1880,34 +1950,37 @@ procedure $PASSNAP ( LEVEL : INTEGER ; DUMPPTR : VOIDPTR ) ;
                                     : 1 , '..' , CHKUPPR : 1 ) ;
                         end (* else *)
                   end (* then *) ;
-              end (* then *)
-            else
-              if ( CHKERRC < 3000 ) and ( CHKERRC >= 2000 ) then
-                begin
-                  CODE := CHKERRC - 2000 ;
-                  case CODE of
-                    1 : WRITE ( 'OPERATION' ) ;
-                    2 : WRITE ( 'PRIVILEGED OPERATION' ) ;
-                    3 : WRITE ( 'EXECUTE' ) ;
-                    4 : WRITE ( 'PROTECTION' ) ;
-                    5 : WRITE ( 'ADDRESSING' ) ;
-                    6 : WRITE ( 'SPECIFICATION' ) ;
-                    7 : WRITE ( 'DATA' ) ;
-                    8 : WRITE ( 'FIXED-POINT OVERFLOW' ) ;
-                    9 : WRITE ( 'FIXED-POINT DIVIDE' ) ;
-                    10 : WRITE ( 'DECIMAL OVERFLOW' ) ;
-                    11 : WRITE ( 'DECIMAL DIVIDE' ) ;
-                    12 : WRITE ( 'EXPONENT OVERFLOW' ) ;
-                    13 : WRITE ( 'EXPONENT UNDERFLOW' ) ;
-                    14 : WRITE ( 'SIGNIFICANCE' ) ;
-                    15 : WRITE ( 'FLOATING-POINT DIVIDE' ) ;
-                  end (* case *) ;
-                  WRITELN ( ' EXCEPTION.' ) ;
-                end (* then *)
-              else
-                if CHKERRC = 3001 then
-                  WRITELN ( 'EXTERNAL ERROR: ' , CHKMSG -> : CHKMSGL )
-                            ;
+                return
+              end (* then *) ;
+
+        //***************************
+        // machine check interrupts
+        //***************************
+
+            if CHKERRC < 3000 then
+              begin
+                CODE := CHKERRC - 2000 ;
+                case CODE of
+                  1 : WRITE ( 'OPERATION' ) ;
+                  2 : WRITE ( 'PRIVILEGED OPERATION' ) ;
+                  3 : WRITE ( 'EXECUTE' ) ;
+                  4 : WRITE ( 'PROTECTION' ) ;
+                  5 : WRITE ( 'ADDRESSING' ) ;
+                  6 : WRITE ( 'SPECIFICATION' ) ;
+                  7 : WRITE ( 'DATA' ) ;
+                  8 : WRITE ( 'FIXED-POINT OVERFLOW' ) ;
+                  9 : WRITE ( 'FIXED-POINT DIVIDE' ) ;
+                  10 : WRITE ( 'DECIMAL OVERFLOW' ) ;
+                  11 : WRITE ( 'DECIMAL DIVIDE' ) ;
+                  12 : WRITE ( 'EXPONENT OVERFLOW' ) ;
+                  13 : WRITE ( 'EXPONENT UNDERFLOW' ) ;
+                  14 : WRITE ( 'SIGNIFICANCE' ) ;
+                  15 : WRITE ( 'FLOATING-POINT DIVIDE' ) ;
+                end (* case *) ;
+                WRITELN ( ' EXCEPTION.' ) ;
+                return
+              end (* then *) ;
+            WRITELN ( 'EXTERNAL ERROR: ' , CHKMSG -> : CHKMSGL ) ;
           end (* with *) ;
       end (* PRINT_SYSD *) ;
 
@@ -2065,5 +2138,5 @@ procedure $PASSNAP ( LEVEL : INTEGER ; DUMPPTR : VOIDPTR ) ;
 
 
 begin (* HAUPTPROGRAMM *)
-  
+
 end (* HAUPTPROGRAMM *) .

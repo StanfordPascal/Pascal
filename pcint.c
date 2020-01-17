@@ -58,6 +58,10 @@
 /*  19.11.2019 ! Oppolzer    ! Allow strings as byvalue arg to chars  */
 /*  19.11.2019 ! Oppolzer    ! that is: negative length on VMV        */
 /*  19.12.2019 ! Oppolzer    ! read new line on eoln (RDS and RDV)    */
+/*  07.01.2020 ! Oppolzer    ! New P-Code instructions RFC, RFS, RFV  */
+/*  07.01.2020 ! Oppolzer    ! to support READ with width specific.   */
+/*  .......... ! ........    ! .....................................  */
+/*  .......... ! ........    ! .....................................  */
 /*  .......... ! ........    ! .....................................  */
 /*  .......... ! ........    ! .....................................  */
 /*  .......... ! ........    ! .....................................  */
@@ -2267,6 +2271,16 @@ static void *cspf_get (void *vgs,
                        int parm4)
 
 {
+   //*******************************************************
+   // change 08.01.2020
+   // get with textfiles does not respect the terminal flag
+   // that is: some special functions can force buffers
+   // to be read by using get on terminal files
+   // like for example the new Pascal function which
+   // implements read on integers
+   // this function reads a new console buffer by using GET
+   //*******************************************************
+
    global_store *gs = vgs;
    filecb *fcb;
    char *charp;
@@ -2284,7 +2298,14 @@ static void *cspf_get (void *vgs,
 
    if (fcb -> textfile)
    {
-      file_getch (gs, fcb);
+      if (fcb -> eoln)
+      {
+         file_input (gs, fcb);
+      }
+      else
+      {
+         file_getch (gs, fcb);
+      }
    }
    else
    {
@@ -2657,156 +2678,6 @@ static void *cspf_rdd (void *vgs,
 
 
 
-static void *cspf_rds (void *vgs,
-                       int parm1,
-                       int parm2,
-                       int parm3,
-                       int parm4)
-
-{
-   global_store *gs = vgs;
-   filecb *fcb;
-   char ch;
-   char *charp;
-   int i;
-
-#if 0
-
-   fprintf (stderr, "rds: parm1 = %d\n", parm1);
-   fprintf (stderr, "rds: parm2 = %d\n", parm2);
-   fprintf (stderr, "rds: parm3 = %d\n", parm3);
-
-#endif
-
-   STOR_FCB (parm1, fcb);
-
-   check_read (gs, fcb);
-
-   if (fcb -> status != '3' || fcb -> eof)
-      runtime_error (gs, BADIO, fcb -> ddname);
-
-   //*************************************
-   // if eoln read new line
-   // only if not at begin of line
-   //*************************************
-
-   if (fcb -> eoln && ! fcb -> begoln)
-   {
-      if (fcb -> terminal != 'Y')
-      {
-         file_input (gs, fcb);
-      }
-   }
-
-   fcb -> begoln = 0;
-
-   //*************************************
-   // Pointer to target from parm2
-   //*************************************
-
-   charp = ADDRSTOR (parm2);
-
-   //*************************************
-   // Init to blanks - length = parm3
-   //*************************************
-
-   memset (charp, ' ', parm3);
-
-   for (i = 0; i < parm3; i ++)
-   {
-      if (fcb -> eof || fcb -> eoln)
-         break;
-
-      ch = file_getch (gs, fcb);
-      *charp = ch;
-      charp ++;
-   }
-
-   return NULL;
-}
-
-
-
-
-static void *cspf_rdv (void *vgs,
-                       int parm1,
-                       int parm2,
-                       int parm3,
-                       int parm4)
-
-{
-   global_store *gs = vgs;
-   filecb *fcb;
-   char ch;
-   char *charp;
-   char *charp1;
-   short *plen;
-   int i;
-
-#if 0
-
-   fprintf (stderr, "rdv: parm1 = %d\n", parm1);
-   fprintf (stderr, "rdv: parm2 = %d\n", parm2);
-   fprintf (stderr, "rdv: parm3 = %d\n", parm3);
-
-#endif
-
-   STOR_FCB (parm1, fcb);
-
-   check_read (gs, fcb);
-
-   if (fcb -> status != '3' || fcb -> eof)
-      runtime_error (gs, BADIO, fcb -> ddname);
-
-   //*************************************
-   // if eoln read new line
-   //*************************************
-
-   if (fcb -> eoln && ! fcb -> begoln)
-   {
-      if (fcb -> terminal != 'Y')
-      {
-         file_input (gs, fcb);
-      }
-   }
-
-   fcb -> begoln = 0;
-
-   //*************************************
-   // Pointer to target from parm2
-   //*************************************
-
-   charp = ADDRSTOR (parm2);
-   plen = (short *) charp;
-   charp += 4;
-
-   //*************************************
-   // Init to blanks - length = parm3
-   //*************************************
-
-   plen [0] = parm3;
-   plen [1] = parm3;
-   memset (charp, ' ', parm3);
-
-   charp1 = charp;
-   for (i = 0; i < parm3; i ++)
-   {
-      if (fcb -> eof || fcb -> eoln)
-         break;
-
-      ch = file_getch (gs, fcb);
-      *charp = ch;
-      charp ++;
-   }
-
-   plen [1] = charp - charp1;
-
-   return NULL;
-}
-
-
-
-
 static void *cspf_rdr (void *vgs,
                        int parm1,
                        int parm2,
@@ -3027,6 +2898,79 @@ static void *cspf_rdh (void *vgs,
 
 
 
+static void *cspf_rdy (void *vgs,
+                       int parm1,
+                       int parm2,
+                       int parm3,
+                       int parm4)
+
+{
+   global_store *gs = vgs;
+   filecb *fcb;
+   int minus = 0;
+   char ch;
+   char chnext;
+   int wert;
+   short *shortp;
+   char *charp;
+
+#if 0
+
+   fprintf (stderr, "rdy: parm1 = %d\n", parm1);
+   fprintf (stderr, "rdy: parm2 = %d\n", parm2);
+
+#endif
+
+   STOR_FCB (parm1, fcb);
+
+   check_read (gs, fcb);
+
+   if (fcb -> status != '3' || fcb -> eof)
+      runtime_error (gs, BADIO, fcb -> ddname);
+
+   ch = file_getch_noblank (gs, fcb);
+
+   if (fcb -> eof)
+      runtime_error (gs, BADIO, fcb -> ddname);
+
+   if (ch == '-')
+   {
+      minus = 1;
+      ch = file_getch_noblank (gs, fcb);
+      if (fcb -> eof)
+         runtime_error (gs, BADIO, fcb -> ddname);
+   }
+
+   if (ch < '0' || ch > '9')
+      runtime_error (gs, BADIO, fcb -> ddname);
+
+   wert = ch - '0';
+
+   do
+   {
+      charp = ADDRSTOR (fcb -> pfilvar);
+      chnext = *charp;
+      if (chnext < '0' || chnext > '9')
+         break;
+      ch = file_getch (gs, fcb);
+      wert *= 10;
+      wert += ch - '0';
+   }
+   while (1);
+
+   charp = ADDRSTOR (parm2);
+
+   if (minus)
+      (* charp) = - wert;
+   else
+      (* charp) = wert;
+
+   return NULL;
+}
+
+
+
+
 static void *cspf_rdb (void *vgs,
                        int parm1,
                        int parm2,
@@ -3182,6 +3126,420 @@ static void *cspf_rdc (void *vgs,
 
 
 
+static void *cspf_rds (void *vgs,
+                       int parm1,
+                       int parm2,
+                       int parm3,
+                       int parm4)
+
+{
+   global_store *gs = vgs;
+   filecb *fcb;
+   char ch;
+   char *charp;
+   int i;
+
+#if 0
+
+   fprintf (stderr, "rds: parm1 = %d\n", parm1);
+   fprintf (stderr, "rds: parm2 = %d\n", parm2);
+   fprintf (stderr, "rds: parm3 = %d\n", parm3);
+
+#endif
+
+   STOR_FCB (parm1, fcb);
+
+   check_read (gs, fcb);
+
+   if (fcb -> status != '3' || fcb -> eof)
+      runtime_error (gs, BADIO, fcb -> ddname);
+
+   //*************************************
+   // if eoln read new line
+   // only if not at begin of line
+   //*************************************
+
+   if (fcb -> eoln && ! fcb -> begoln)
+   {
+      if (fcb -> terminal != 'Y')
+      {
+         file_input (gs, fcb);
+      }
+   }
+
+   fcb -> begoln = 0;
+
+   //*************************************
+   // Pointer to target from parm2
+   //*************************************
+
+   charp = ADDRSTOR (parm2);
+
+   //*************************************
+   // Init to blanks - length = parm3
+   //*************************************
+
+   memset (charp, ' ', parm3);
+
+   for (i = 0; i < parm3; i ++)
+   {
+      if (fcb -> eof || fcb -> eoln)
+         break;
+
+      ch = file_getch (gs, fcb);
+      *charp = ch;
+      charp ++;
+   }
+
+   return NULL;
+}
+
+
+
+
+static void *cspf_rdv (void *vgs,
+                       int parm1,
+                       int parm2,
+                       int parm3,
+                       int parm4)
+
+{
+   global_store *gs = vgs;
+   filecb *fcb;
+   char ch;
+   char *charp;
+   char *charp1;
+   short *plen;
+   int i;
+
+#if 0
+
+   fprintf (stderr, "rdv: parm1 = %d\n", parm1);
+   fprintf (stderr, "rdv: parm2 = %d\n", parm2);
+   fprintf (stderr, "rdv: parm3 = %d\n", parm3);
+
+#endif
+
+   STOR_FCB (parm1, fcb);
+
+   check_read (gs, fcb);
+
+   if (fcb -> status != '3' || fcb -> eof)
+      runtime_error (gs, BADIO, fcb -> ddname);
+
+   //*************************************
+   // if eoln read new line
+   //*************************************
+
+   if (fcb -> eoln && ! fcb -> begoln)
+   {
+      if (fcb -> terminal != 'Y')
+      {
+         file_input (gs, fcb);
+      }
+   }
+
+   fcb -> begoln = 0;
+
+   //*************************************
+   // Pointer to target from parm2
+   //*************************************
+
+   charp = ADDRSTOR (parm2);
+   plen = (short *) charp;
+   charp += 4;
+
+   //*************************************
+   // Init to blanks - length = parm3
+   //*************************************
+
+   plen [0] = parm3;
+   plen [1] = parm3;
+   memset (charp, ' ', parm3);
+
+   charp1 = charp;
+   for (i = 0; i < parm3; i ++)
+   {
+      if (fcb -> eof || fcb -> eoln)
+         break;
+
+      ch = file_getch (gs, fcb);
+      *charp = ch;
+      charp ++;
+   }
+
+   plen [1] = charp - charp1;
+
+   return NULL;
+}
+
+
+
+
+static void *cspf_rfc (void *vgs,
+                       int parm1,
+                       int parm2,
+                       int parm3,
+                       int parm4)
+
+{
+   //*********************************************
+   // read one character
+   // parm1 = fcb
+   // parm2 = address of target char
+   // parm3 = optional field width (defaults to -1,
+   // which means 1 in the single char case)
+   // if length is zero, no read is done
+   // and the char is set to blank
+   //*********************************************
+
+   global_store *gs = vgs;
+   filecb *fcb;
+   char ch;
+   char *charp;
+   int i;
+
+#if 0
+
+   fprintf (stderr, "rfc: parm1 = %d\n", parm1);
+   fprintf (stderr, "rfc: parm2 = %d\n", parm2);
+   fprintf (stderr, "rfc: parm3 = %d\n", parm3);
+
+#endif
+
+   STOR_FCB (parm1, fcb);
+
+   check_read (gs, fcb);
+
+   if (fcb -> status != '3' || fcb -> eof)
+      runtime_error (gs, BADIO, fcb -> ddname);
+
+   charp = ADDRSTOR (parm2);
+   *charp = ' ';
+
+   if (parm3 < 0)
+      parm3 = 1;
+
+   for (i = 0; i < parm3; i ++)
+   {
+      if (fcb -> eof || fcb -> eoln)
+         break;
+
+      ch = file_getch (gs, fcb);
+
+      if (i <= 0)
+         *charp = ch;
+   }
+
+   return NULL;
+}
+
+
+
+
+static void *cspf_rfs (void *vgs,
+                       int parm1,
+                       int parm2,
+                       int parm3,
+                       int parm4)
+
+{
+   //*********************************************
+   // read character array
+   // parm1 = fcb
+   // parm2 = address of target char array
+   // parm3 = length of char array
+   // parm4 = optional field width (defaults to -1,
+   // -1 means: use defined length, that is: parm3
+   // if length is zero, no read is done
+   // and the char array is set to blank)
+   //*********************************************
+
+   global_store *gs = vgs;
+   filecb *fcb;
+   char ch;
+   char *charp;
+   int i;
+
+#if 0
+
+   fprintf (stderr, "rfs: parm1 = %d\n", parm1);
+   fprintf (stderr, "rfs: parm2 = %d\n", parm2);
+   fprintf (stderr, "rfs: parm3 = %d\n", parm3);
+   fprintf (stderr, "rfs: parm4 = %d\n", parm4);
+
+#endif
+
+   STOR_FCB (parm1, fcb);
+
+   check_read (gs, fcb);
+
+   if (fcb -> status != '3' || fcb -> eof)
+      runtime_error (gs, BADIO, fcb -> ddname);
+
+   if (parm4 < 0)
+      parm4 = parm3;
+
+   //*************************************
+   // if eoln read new line
+   // only if not at begin of line
+   // not if parm4 == 0
+   //*************************************
+
+   if (parm4 > 0)
+   {
+      if (fcb -> eoln && ! fcb -> begoln)
+      {
+         if (fcb -> terminal != 'Y')
+         {
+            file_input (gs, fcb);
+         }
+      }
+
+      fcb -> begoln = 0;
+   }
+
+   //*************************************
+   // Pointer to target from parm2
+   //*************************************
+
+   charp = ADDRSTOR (parm2);
+
+   //*************************************
+   // Init to blanks - length = parm3
+   //*************************************
+
+   memset (charp, ' ', parm3);
+
+   //*************************************
+   // loop runs parm4 times, but chars are
+   // stored only parm3 times
+   //*************************************
+
+   for (i = 0; i < parm4; i ++)
+   {
+      if (fcb -> eof || fcb -> eoln)
+         break;
+
+      ch = file_getch (gs, fcb);
+
+      if (i < parm3)
+      {
+         *charp = ch;
+         charp ++;
+      }
+   }
+
+   return NULL;
+}
+
+
+
+
+static void *cspf_rfv (void *vgs,
+                       int parm1,
+                       int parm2,
+                       int parm3,
+                       int parm4)
+
+{
+   //*********************************************
+   // read string a.k.a varchar
+   // parm1 = fcb
+   // parm2 = address of string
+   // parm3 = maxlength of string
+   // parm4 = optional field width (defaults to -1,
+   // -1 means: use defined length, that is: parm3
+   // if length is zero, no read is done
+   // and the string is set to the null string)
+   //*********************************************
+
+   global_store *gs = vgs;
+   filecb *fcb;
+   char ch;
+   char *charp;
+   char *charp1;
+   short *plen;
+   int i;
+
+#if 0
+
+   fprintf (stderr, "rfv: parm1 = %d\n", parm1);
+   fprintf (stderr, "rfv: parm2 = %d\n", parm2);
+   fprintf (stderr, "rfv: parm3 = %d\n", parm3);
+   fprintf (stderr, "rfv: parm4 = %d\n", parm4);
+
+#endif
+
+   STOR_FCB (parm1, fcb);
+
+   check_read (gs, fcb);
+
+   if (fcb -> status != '3' || fcb -> eof)
+      runtime_error (gs, BADIO, fcb -> ddname);
+
+   if (parm4 < 0)
+      parm4 = parm3;
+
+   //*************************************
+   // if eoln read new line
+   // not if parm4 == 0
+   //*************************************
+
+   if (parm4 > 0)
+   {
+      if (fcb -> eoln && ! fcb -> begoln)
+      {
+         if (fcb -> terminal != 'Y')
+         {
+            file_input (gs, fcb);
+         }
+      }
+
+      fcb -> begoln = 0;
+   }
+
+   //*************************************
+   // Pointer to target from parm2
+   //*************************************
+
+   charp = ADDRSTOR (parm2);
+   plen = (short *) charp;
+   charp += 4;
+
+   //*************************************
+   // Init to blanks - length = parm3
+   //*************************************
+
+   plen [0] = parm3;
+   plen [1] = parm3;
+   memset (charp, ' ', parm3);
+
+   charp1 = charp;
+   for (i = 0; i < parm4; i ++)
+   {
+      if (fcb -> eof || fcb -> eoln)
+         break;
+
+      ch = file_getch (gs, fcb);
+
+      if (i < parm3)
+      {
+         *charp = ch;
+         charp ++;
+      }
+   }
+
+   plen [1] = charp - charp1;
+   if (plen [1] > parm4)
+      plen [1] = parm4;
+
+   return NULL;
+}
+
+
+
+
 /**********************************************************/
 /*                                                        */
 /*   CSP-Table / Stand 2016                               */
@@ -3246,6 +3604,9 @@ static void *cspf_rdc (void *vgs,
 #define CSP_WRV    54
 #define CSP_APN    55
 #define CSP_RDV    56
+#define CSP_RFC    57     // read char from file
+#define CSP_RFS    58     // read char array from file
+#define CSP_RFV    59     // read varchar from file
 
 
 static funtab ft [] =
@@ -3277,7 +3638,7 @@ static funtab ft [] =
    { "WRB", CSP_WRB, cspf_wrb, 3, 2, 0, ' ' },
    { "RDR", CSP_RDR, cspf_rdr, 2, 1, 0, ' ' },
    { "RDH", CSP_RDH, cspf_rdh, 2, 1, 0, ' ' },
-   { "RDY", CSP_RDY, NULL,     0, 0, 0, ' ' },
+   { "RDY", CSP_RDY, cspf_rdy, 2, 1, 0, ' ' },
    { "EOL", CSP_EOL, cspf_eol, 1, -1, 0, ' ' },
    { "EOT", CSP_EOT, cspf_eot, 1, -1, 0, ' ' },
    { "RDD", CSP_RDD, cspf_rdd, 3, 2, 0, ' ' },
@@ -3308,6 +3669,9 @@ static funtab ft [] =
    { "WRV", CSP_WRV, cspf_wrv, 3, 2, 0, ' ' },
    { "APN", CSP_APN, cspf_apn, 1, 0, 0, ' ' },
    { "RDV", CSP_RDV, cspf_rdv, 3, 2, 0, ' ' },
+   { "RFC", CSP_RFC, cspf_rfc, 3, 2, 0, ' ' },
+   { "RFS", CSP_RFS, cspf_rfs, 4, 3, 0, ' ' },
+   { "RFV", CSP_RFV, cspf_rfv, 4, 3, 0, ' ' },
    {  NULL,      -1, NULL,     0, 0, 0, ' ' }
 };
 
@@ -3671,6 +4035,7 @@ static void int1 (global_store *gs)
    int backs;
 
    char *errmsg;
+   char errbuffer [64];
 
    /************************************************/
    /*   Branch Table fuer XJP                      */
@@ -3940,6 +4305,11 @@ static void int1 (global_store *gs)
 
          switch (pcode -> t)
          {
+            case 'E':
+               sprintf (errbuffer, "%d", wert1);
+               runtime_error (gs, ERROR_CALL, errbuffer);
+               break;
+
             case 'I':
                if (wert1 < pcode -> p || wert1 > pcode -> q)
                   runtime_error (gs, RANGEERR, NULL);
@@ -4234,7 +4604,7 @@ static void int1 (global_store *gs)
          /************************************************/
 
          pent = (ent_section *) (pcode_ent -> psect);
-         if ((gs -> maxstor = newcups + pent -> size) >
+         if ((gs -> maxstor = newcups + pent -> size) + ST_SAFETY >
               gs -> hp)
          {
             runtime_error (gs, STACKCOLL, NULL);
@@ -4421,11 +4791,29 @@ static void int1 (global_store *gs)
 
          gs -> entry_act = gs -> ip;
 
+         /**********************************************************/
+         /*   neu 01.2020:                                         */
+         /*   Kontrolle, ob der erforderliche Speicherbereich      */
+         /*   ueberhaupt Platz hat                                 */
+         /*   nur bei Level 1, bei den hoeheren Levels wird das    */
+         /*   von der CUP-Instruktion gemacht                      */
+         /**********************************************************/
+
+         if (gs -> level == 1)
+         {
+            pent = (ent_section *) (pcode -> psect);
+            if ((gs -> maxstor = pent -> size) + ST_SAFETY >
+                 gs -> hp)
+            {
+               runtime_error (gs, STACKCOLL, NULL);
+            }
+         }
+
+#if 0
+
          /************************************************/
          /*   trace output                               */
          /************************************************/
-
-#if 0
 
          if (gs -> level > 1 && pcup -> is_procparm)
          {
@@ -6447,7 +6835,7 @@ static void int1 (global_store *gs)
          gs -> hp -= wert1;
          gs -> hp -= (gs -> hp % wert2);
 
-         if (gs -> maxstor > gs -> hp)
+         if (gs -> maxstor + ST_SAFETY > gs -> hp)
          {
             runtime_error (gs, STACKCOLL, NULL);
          }

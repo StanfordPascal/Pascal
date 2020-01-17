@@ -3,14 +3,14 @@ rem **********************************************************
 rem +++ Version 2020.01 +++
 rem **********************************************************
 
-    call copyrdr pasmonn.ass      pascomp pasmonn assemble
+rem call copyrdr pasmonn.ass      pascomp pasmonn assemble
+rem call topas pascal1a
+rem call topas pascal2a
 
     call topas passcan
     call topas paslibx
     call topas pascal1
     call topas pascal2
-    call topas pascal1a
-    call topas pascal2a
 
 rem **********************************************************
 rem +++ Version 2019.09 +++

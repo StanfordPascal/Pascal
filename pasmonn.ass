@@ -149,6 +149,23 @@
 *
 ***********************************************************************
 *
+*    Some more modifications in 2020 by Bernd Oppolzer
+*    (berndoppolzer@yahoo.com)
+*
+*    - new CSPs (Pascal Standard Procedures):
+*      RFC, RFS and RFV - read char, char array and varchar from file
+*      these new CSPs replace the old CSPs RDC, RDS and RDV;
+*      they have an additional parameter - the optional field width
+*      if the field width is negative, they behave as the old CSPs
+*      (READ with field width is a feature of IBMs Pascal/VS)
+*
+*    - CSP GET sets terminal flag to N temporarily
+*      GET this way forces reading a new buffer, even on terminal file
+*      this is needed for the new READ functions implemented in Pascal
+*      for example $PASRDI, which reads integers
+*
+***********************************************************************
+*
 *    Some more modifications in 2019 by Bernd Oppolzer
 *    (berndoppolzer@yahoo.com)
 *
@@ -488,8 +505,8 @@ FIL&NAM  DC    CL8'&NAME'          PASCAL FILE IDENTIFIER
 *                                  DCB bei offset 40
          DC    C' '                Terminal Flag
          DC    X'00'               READLN scheduled
-         DC    C' '                unused2
-         DC    C' '                unused3
+         DC    X'00'               unused2
+         DC    X'00'               unused3
          DC    CL8' '              Member Name for PDS I/O
          DCB   DSORG=PS,DDNAME=&NAME,EODAD=EOD,SYNAD=SYNADRT,          X
                EXLST=XL&DIRECT,BFTEK=A,MACRF=(&OPT1,&OPT2)
@@ -3162,7 +3179,8 @@ SUBTBL2  DS    0A
          DC    A(RDY,EOL,EOT,RDD,WRD,CLK,WLN,RLN)
          DC    A(RDI,EOF,ELN,RDS,TRP,XIT,FDF,SIO)
          DC    A(EIO,MSG,SKP,LIM,TRA,WRP,CLS,DAT)
-         DC    A(TIM,FLR,TRC,RND,WRV,RDV)
+         DC    A(TIM,FLR,TRC,RND,WRV,RDV,RFC,RFS)
+         DC    A(RFV)
          DC    A(0,0,0,0,0,0,0,0)
 SUBTBLZ2 DS    0A
 *
@@ -3839,9 +3857,8 @@ PAFCHK3  DS    0H
          CLI   FILRDBS(AE),1       READBUF SCHEDULED ?
          BNE   PAFCHKE             JUMP IF NOT
 *
+         MVI   FILRDBS(AE),0       switch readbuf schedule off
          STM   R1,R5,SAVECHK       save regs
-*
-         MVI   FILRDBS(AE),0
 *
 *        MVC   TREOF+18(1),FILEOF(AE)
 *        OI    TREOF+18,X'F0'
@@ -3942,11 +3959,11 @@ RES      DS    0H
          BNE   RES1
 *
 *                                  only in case of textfile there is
-*                                  a return from filgop, otherwise
-*                                  there is a branch to label get1
+*                                  a return from PAFGOP, otherwise
+*                                  there is a branch to label GET1
 *
-         CLI   FILTERM(AE),C'Y'    don't call PAFGET on terminal files
-         BE    RES3
+*------- CLI   FILTERM(AE),C'Y'    don't call PAFGET on terminal files
+*------- BE    RES3
          BAL   R5,PAFGET
          B     RES2
 *
@@ -3976,9 +3993,14 @@ GET      DS    0H
          TM    FILEOF(AE),1
          BO    RTN
          TM    FILOPN(AE),TEXTFLAG
-         BZ    GET1                JUMP IF NON-TEXT FILE
-         BAL   R5,PAFCHK           CHECK FILE STATUS
+         BZ    GET1                jump if non-text file
+         IC    R1,FILTERM(AE)      save terminal flag
+         STM   R1,R5,SAVEGET       save regs 1 to 5
+         MVI   FILTERM(AE),C'N'    set terminal flag to N
+         BAL   R5,PAFCHK           check file status
          BAL   R5,PAFGFE
+         LM    R1,R5,SAVEGET       restore regs 1 to 5
+         STC   R1,FILTERM(AE)      restore terminal flag
          B     RTN
 *
 GET1     DS    0H
@@ -4020,6 +4042,14 @@ EOT      DS    0H
          DC    CL4'RLN'
 RLN      DS    0H
          FILADR ,
+*
+*****************************************************************
+*        SET readbuf_sched to 0, because readln is done anyway
+*        otherwise PAFCHK will do an additional pafget,
+*        which is plain wrong
+*****************************************************************
+*
+         MVI   FILRDBS(AE),0       READBUF SCHEDULED := 0
          BAL   R5,PAFCHK           CHECK FILE STATUS
 *
          CLI   FILTERM(AE),C'Y'    don't filget on terminal files
@@ -4151,14 +4181,14 @@ RDI      DS    0H
          BAL   R5,PAFCHK           CHECK FILE STATUS
          LR    R4,R2               CLEAR A REGISTER PAIR  (R2,R3)
          SR    R3,R3
-         MVI   SIGN,1              ASSUME POSITIVE
+         MVI   RDISIGN,1           ASSUME POSITIVE
          BAL   R5,PAFGNB           ADVANCE TO A NON-BLANK
          B     EOFREAD             ERROR RETURN FOR EOF
          CLI   PFILCOMP(AD),FILPLU
          BE    RDI23
          CLI   PFILCOMP(AD),FILMIN
          BNE   RDI25
-         MVI   SIGN,0              CHANGE TO NEGATIVE
+         MVI   RDISIGN,0           CHANGE TO NEGATIVE
 RDI23    BAL   R5,PAFGFE
 RDI25    LA    R15,BADINT          PREPARE ERROR RT ADDRESS
 RDI4     DS    0H
@@ -4187,7 +4217,7 @@ RDI4     DS    0H
          BAL   R5,PAFGFE
          BAL   R15,RDI4            LOOP BACK & SET EXIT ADDRESS
 *
-         TM    SIGN,1
+         TM    RDISIGN,1
          BO    *+6
          LCR   R3,R3
 RDH1     BC    0,RDH2              JUMP FOR RDH/RDY ROUTINES
@@ -4208,6 +4238,7 @@ RDY2     NI    RDY1+1,X'0F'        RESET JUMP BACK TO NO-OP
          B     RTN
 *
 TRRDI1   DC    CL80'TRACE: ZEICHEN RDI = XXXXXXXXX'
+RDISIGN  DC    C' '
 *
 *
 *
@@ -4222,6 +4253,17 @@ RDS      DS    0H
 *
          BAL   R5,PAFCHK           check file status
 *
+         CLI   FILEOF(AE),TRUE     if eof set then
+         BNE   RDSNOEOF
+*
+         XR    R14,R14             source address irrelevant
+         L     R15,=X'40000000'    source length zero, fill w. blank
+         MVCL  R2,R14              set string to blank
+         LA    R0,FILBLA           end of line character
+         STC   R0,PFILCOMP(AD)     set current char
+         B     RDSZ                go to end of function
+*
+RDSNOEOF DS    0H
          LH    R15,FILEND(AE)
          LH    R14,FILPTR(AE)
          SR    R15,R14             compute number of chars left
@@ -4230,10 +4272,12 @@ RDS      DS    0H
          MVC   FILPTR(2,AE),FILEND(AE)  filptr to filend
          MVI   FILEOLN(AE),TRUE         incidate eoln
          B     RDS01
+*
 RDSL     DS    0H
          LR    R0,R14              R14 = filptr (see above)
          AR    R0,R3               add length (R3) to filptr
          STH   R0,FILPTR(AE)       new position to filptr
+*
 RDS01    DS    0H
          IC    R0,PFILCOMP(AD)     start with current character
 *
@@ -4251,10 +4295,12 @@ RDS01    DS    0H
          LTR   R15,R15
          BNM   RDSF2
          SR    R15,R15
+*
 RDSF2    DS    0H
          AR    R14,AF              addr of first char
          ICM   R15,8,=AL1(FILBLA)  set fill char
          MVCL  R2,R14              now copy string
+*
 RDSF3    DS    0H
          LH    R14,FILPTR(AE)
          CLI   FILEOLN(AE),TRUE    eoln ?
@@ -4262,10 +4308,18 @@ RDSF3    DS    0H
          IC    R0,0(R14,AF)        load next input char
          STC   R0,PFILCOMP(AD)     set current char
          B     RDSZ
+*
 RDSF4    DS    0H
          LA    R0,FILBLA           end of line character
          STC   R0,PFILCOMP(AD)     set current char
-         B     RDSZ
+*
+*****************************************************************
+*        if eoln, do readbuf on next iteration
+*****************************************************************
+*
+         CLI   FILTERM(AE),C'Y'    if not a terminal file
+         BE    RDSZ
+         MVI   FILRDBS(AE),1       schedule Readbuf for next RDS
 *
 RDSZ     DS    0H
 *
@@ -4303,6 +4357,17 @@ RDV      DS    0H
 *
          BAL   R5,PAFCHK           check file status
 *
+         CLI   FILEOF(AE),TRUE     if eof set then
+         BNE   RDVNOEOF
+*
+         STH   R3,0(R2)            store R3 to maxlength
+         XR    R14,R14
+         STH   R14,2(R2)           store zero to actual length
+         LA    R0,FILBLA           end of line character
+         STC   R0,PFILCOMP(AD)     set current char
+         B     RDVZ                go to end of function
+*
+RDVNOEOF DS    0H
          LH    R15,FILEND(AE)
          LH    R14,FILPTR(AE)
          SR    R15,R14             compute number of chars left
@@ -4322,8 +4387,10 @@ RDV01    DS    0H
          STH   R3,0(R2)            store maxlength to String maxl
          STH   R15,2(R2)           store actlength to String actl
          LA    R2,4(R2)            point R2 to String content
-*
          IC    R0,PFILCOMP(AD)     start with current character
+         LTR   R15,R15             if actlen = zero
+         BNP   RDV02A              don't copy characters
+*
 RDV02    DS    0H
          STC   R0,0(R2)            copy chars one by one
          LA    R14,1(R14)          increment source address
@@ -4331,6 +4398,7 @@ RDV02    DS    0H
          IC    R0,0(R14,AF)        load next input char
          BCT   R15,RDV02
 *
+RDV02A   DS    0H
          CLI   FILEOLN(AE),TRUE    eoln ?
          BE    RDV03
          STC   R0,PFILCOMP(AD)     set current char
@@ -4339,6 +4407,14 @@ RDV02    DS    0H
 RDV03    DS    0H
          LA    R0,FILBLA           end of line character
          STC   R0,PFILCOMP(AD)     set current char
+*
+*****************************************************************
+*        if eoln, do readbuf on next iteration
+*****************************************************************
+*
+         CLI   FILTERM(AE),C'Y'    if not a terminal file
+         BE    RDVZ
+         MVI   FILRDBS(AE),1       schedule Readbuf for next RDS
 *
 RDVZ     DS    0H
 *
@@ -4357,6 +4433,237 @@ TRRDV2   DC    CL80'TRACE: RETURN RDV = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
          DS    0F
 HEX5     DS    CL5
 HEX9     DS    CL9
+*
+         LTORG
+*
+*
+*
+*****************************************************************
+*        RFC (READ CHAR FROM FILE)
+*        R2 = ADDR. OF CHAR
+*        R3 = field width (-1 = default)
+*****************************************************************
+*
+         DS    0H
+         DC    CL4'RFC'
+RFC      DS    0H
+         FILADR ,
+*
+         LTR   R3,R3               check field width
+         BZ    RFC01               if zero read nothing
+         BP    RFC02               if positive use it as is
+         LA    R3,1                otherwise set to 1 (default)
+*
+RFC02    DS    0H
+         BAL   R5,PAFCHK           check file status
+*
+         IC    R0,PFILCOMP(AD)     insert char from file buffer
+         STC   R0,0(R2)            store into target
+*
+RFC03    DS    0H
+         BAL   R5,PAFGFE           get next character
+         CLI   FILEOLN(AE),TRUE    if eoln leave loop
+         BE    RTN
+         BCT   R3,RFC03            repeat get until r3 = zero
+*
+         B     RTN                 and quit
+*
+RFC01    DS    0H
+         LA    R0,FILBLA           store blank
+         STC   R0,0(R2)            into target
+         B     RTN                 and quit
+*
+*
+*
+*****************************************************************
+*        RFS (READ char array - fixed size)
+*        R2 = address of char array
+*        R3 = length of char array
+*        R4 = field width (-1 = default)
+*****************************************************************
+*
+         DS    0H
+         DC    CL4'RFS'
+RFS      DS    0H
+         FILADR ,
+*
+         LTR   R4,R4               check field width
+         BZ    RFS01               if zero read nothing
+         BP    RFS02               if positive use it as is
+         LR    R4,R3               otherwise set to field length (R3)
+*
+RFS02    DS    0H
+         BAL   R5,PAFCHK           check file status
+*
+         CLI   FILEOF(AE),TRUE     if eof set then
+         BNE   RFSNOEOF
+*
+         LA    R0,FILBLA           end of line character
+         STC   R0,PFILCOMP(AD)     set current char
+*
+RFS01    DS    0H
+         XR    R14,R14             source address irrelevant
+         L     R15,=X'40000000'    source length zero, fill w. blank
+         MVCL  R2,R14              set string to blank
+         B     RFSZ                go to end of function
+*
+RFSNOEOF DS    0H
+         LH    R15,FILEND(AE)
+         LH    R14,FILPTR(AE)
+         SR    R15,R14             compute number of chars left
+         CR    R15,R4              enough chars left (w.r. field width)
+         BH    RFSH
+         MVC   FILPTR(2,AE),FILEND(AE)  filptr to filend
+         MVI   FILEOLN(AE),TRUE         incidate eoln
+         B     RFSL1
+*
+RFSH     DS    0H
+         LR    R0,R14              R14 = filptr (see above)
+         AR    R0,R4               add field width (R4) to filptr
+         STH   R0,FILPTR(AE)       new position to filptr
+*
+RFSL1    DS    0H
+         CR    R15,R4              if length of sender > field width
+         BNH   RFSL2               then
+         LR    R15,R4              set length of sender to field width
+*
+RFSL2    DS    0H
+         IC    R0,PFILCOMP(AD)     start with current character
+*
+**********************************************************************
+*        (ibm370 dependency: MVCL)
+**********************************************************************
+*
+         STC   R0,0(R2)            copy first char from file buffer
+         LA    R14,1(R14)          increment source address
+         BCTR  R15,0               reduce length of sender
+         LA    R2,1(R2)            increment target address
+         BCTR  R3,0                reduce length of target
+         LTR   R3,R3               if no more bytes to transfer
+         BNP   RFSF3               we're done
+         LTR   R15,R15             check length of sender
+         BNM   RFSF2               if negative
+         SR    R15,R15             set to zero
+*
+RFSF2    DS    0H
+         AR    R14,AF              addr of first char
+         ICM   R15,8,=AL1(FILBLA)  set fill char
+         MVCL  R2,R14              now copy (rest of string)
+*
+RFSF3    DS    0H
+         LH    R14,FILPTR(AE)
+         CLI   FILEOLN(AE),TRUE    eoln ?
+         BE    RFSF4
+         IC    R0,0(R14,AF)        load next input char
+         STC   R0,PFILCOMP(AD)     set current char
+         B     RFSZ
+*
+RFSF4    DS    0H
+         LA    R0,FILBLA           end of line character
+         STC   R0,PFILCOMP(AD)     set current char
+*
+*****************************************************************
+*        if eoln, do readbuf on next iteration
+*****************************************************************
+*
+         CLI   FILTERM(AE),C'Y'    if not a terminal file
+         BE    RFSZ
+         MVI   FILRDBS(AE),1       schedule Readbuf for next RFS
+*
+RFSZ     DS    0H
+         B     RTN
+*
+         LTORG
+*
+*
+*
+*****************************************************************
+*        RFV (READ varchar a.k.a. string)
+*        R2 = address of string
+*        R3 = maxlength of string
+*        R4 = field width (-1 = default)
+*****************************************************************
+*
+         DS    0H
+         DC    CL4'RFV'
+RFV      DS    0H
+         FILADR ,
+*
+         LTR   R4,R4               check field width
+         BZ    RFV01               if zero read nothing
+         BP    RFV02               if positive use it as is
+         LR    R4,R3               otherwise set to field length (R3)
+*
+RFV02    DS    0H
+*
+         BAL   R5,PAFCHK           check file status
+*
+         CLI   FILEOF(AE),TRUE     if eof set then
+         BNE   RFVNOEOF
+*
+         LA    R0,FILBLA           end of line character
+         STC   R0,PFILCOMP(AD)     set current char
+*
+RFV01    DS    0H
+         STH   R3,0(R2)            store R3 to maxlength
+         XR    R14,R14
+         STH   R14,2(R2)           store zero to actual length
+         B     RFVZ                go to end of function
+*
+RFVNOEOF DS    0H
+         LH    R15,FILEND(AE)
+         LH    R14,FILPTR(AE)
+         SR    R15,R14             compute number of chars left
+         CR    R15,R4              enough chars left (w.r. field width)
+         BH    RFVH
+         MVC   FILPTR(2,AE),FILEND(AE)  filptr to filend
+         MVI   FILEOLN(AE),TRUE         incidate eoln
+         B     RFVL1
+*
+RFVH     DS    0H
+         LR    R0,R14              R14 = filptr (see above)
+         AR    R0,R4               add field width (R4) to filptr
+         STH   R0,FILPTR(AE)       new position to filptr
+         LR    R15,R4              only transfer max. R4 bytes
+         CR    R15,R3
+         BNH   RFVL1
+         LR    R15,R3              but not more than maxlength
+*
+RFVL1    DS    0H
+         STH   R3,0(R2)            store maxlength to String maxl
+         STH   R15,2(R2)           store actlength to String actl
+         LA    R2,4(R2)            point R2 to String content
+         IC    R0,PFILCOMP(AD)     start with current character
+         LTR   R15,R15             if actlen = zero
+         BNP   RFVL2A              don't copy characters
+*
+RFVL2    DS    0H
+         STC   R0,0(R2)            copy chars one by one
+         LA    R14,1(R14)          increment source address
+         LA    R2,1(R2)            increment target address
+         IC    R0,0(R14,AF)        load next input char
+         BCT   R15,RFVL2
+*
+RFVL2A   DS    0H
+         CLI   FILEOLN(AE),TRUE    eoln ?
+         BE    RFVL3
+         STC   R0,PFILCOMP(AD)     set current char
+         B     RFVZ
+*
+RFVL3    DS    0H
+         LA    R0,FILBLA           end of line character
+         STC   R0,PFILCOMP(AD)     set current char
+*
+*****************************************************************
+*        if eoln, do readbuf on next iteration
+*****************************************************************
+*
+         CLI   FILTERM(AE),C'Y'    if not a terminal file
+         BE    RFVZ
+         MVI   FILRDBS(AE),1       schedule Readbuf for next RFS
+*
+RFVZ     DS    0H
+         B     RTN
 *
          LTORG
 *
@@ -4847,7 +5154,7 @@ RDR75    LA    R3,1
 RDR8     BAL   R5,PAFGFE
          CLI   PFILCOMP(AD),FILBLA
          BE    RDR8
-         ST    R4,EXPONENT
+         ST    R4,RDREXPO
          SR    R4,R4
 RDR9     CLI   PFILCOMP(AD),FILPLU
          BE    RDR10
@@ -4869,7 +5176,7 @@ RDR115   SR    R1,R1
 RDR12    LTR   R3,R3
          BNM   *+6
          LCR   R4,R4
-         A     R4,EXPONENT
+         A     R4,RDREXPO
 RDR13    LTR   R4,R4
          BZ    RDR16
          BP    RDR14
@@ -4882,6 +5189,8 @@ RDR15    DD    0,=D'10.0'
          BCT   R4,RDR15
 RDR16    STD   0,0(R2)             PUT THE RESULT IN PASCAL VARIABLE
          B     RTN
+*
+RDREXPO  DC    F'0'
 *
 *
 *
@@ -6896,19 +7205,60 @@ SHOWINT6 DS    0H
 *
          BAL   R6,SKIP1
 *
-         LA    R1,PWRS
-         LA    R2,MSG12
-         LA    R4,L'MSG12
+         L     R2,CHKERRC             check for 2001 error code
+         CH    R2,=H'2001'
+         BNE   NORTERR
+*
+         L     R4,CHKINTRP            check 4 bytes before error psw
+         SH    R4,=H'4'
+         CLC   0(4,R4),=X'18120053'   this pattern indicates $ERROR
+         BNE   NORTERR
+*
+         LA    R1,PWRS             output $ERROR call
+         LA    R2,MSG12A
+         LA    R4,L'MSG12A
          LR    R3,R4
          BALR  R14,R15
 *
-         LA    R1,PWRI
+         LA    R1,PWRS             output colon
+         LA    R2,MSG13
+         LA    R4,L'MSG13
+         LR    R3,R4
+         BALR  R14,R15
+*
+         LA    R1,PWRS             output 'ERROR CODE IS'
+         LA    R2,MSG12C
+         LA    R4,L'MSG12C
+         LR    R3,R4
+         BALR  R14,R15
+*
+         LA    R1,PWRI             output error number
+         L     R2,CHKREGS+4        from register 1
+         LA    R4,1
+         LR    R3,R4
+         BALR  R14,R15
+         B     CMNEXT
+*
+NORTERR  DS    0H
+         LA    R1,PWRS             output ' **** '
+         LA    R2,MSG12B
+         LA    R4,L'MSG12B
+         LR    R3,R4
+         BALR  R14,R15
+*
+         LA    R1,PWRS             output 'ERROR CODE IS'
+         LA    R2,MSG12C
+         LA    R4,L'MSG12C
+         LR    R3,R4
+         BALR  R14,R15
+*
+         LA    R1,PWRI             output error number
          L     R2,CHKERRC
          LA    R4,7
          LR    R3,R4
          BALR  R14,R15
 *
-         LA    R1,PWRS
+         LA    R1,PWRS             output colon
          LA    R2,MSG13
          LA    R4,L'MSG13
          LR    R3,R4
@@ -6958,6 +7308,7 @@ NOFILE   DS    0H
 *
 *        BAL   R6,PRNTLOC
 *
+CMNEXT   DS    0H
          BAL   R6,SKIP1
 *
          CLI   CHKITYPE,C'S'       system error (0Cx)
@@ -7305,7 +7656,9 @@ MSG9A    DC    C' **** REGS   0 -  3 : '
 MSG9B    DC    C' **** REGS   4 -  7 : '
 MSG9C    DC    C' **** REGS   8 - 11 : '
 MSG9D    DC    C' **** REGS  12 - 15 : '
-MSG12    DC    C' **** ERROR CODE IS '
+MSG12A   DC    C' **** CALL TO PROC $ERROR  '
+MSG12B   DC    C' **** '
+MSG12C   DC    C'ERROR CODE IS '
 MSG13    DC    C' : '
 MSG14    DC    C'OTHER FILE ERROR, SEE NEXT LINE'
 MSG15    DC    C' **** INTERRUPT ADDRESS AT  : '

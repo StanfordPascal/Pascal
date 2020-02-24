@@ -2966,7 +2966,6 @@ function $PASRDR ( var F : TEXT ; WIDTH : INTEGER ) : REAL ;
        RETVAL : REAL ;
        RETVALI : INTEGER ;
        SCALE : REAL ;
-       SCALEI : INTEGER ;
        LEADINGZ : BOOLEAN ;
        DIGITS : INTEGER ;
        BEFOREDP : BOOLEAN ;
@@ -3027,14 +3026,13 @@ function $PASRDR ( var F : TEXT ; WIDTH : INTEGER ) : REAL ;
      // leadingz = reading and ignoring leading zeroes         
      // digits = number of digits (if < 10 then integer math)  
      // beforedp = decimal point not yet found                 
-     // scale, scalei = compute scale factor from dec point    
+     // scale = compute scale factor from dec point            
      //********************************************************
 
      LEADINGZ := TRUE ;
      DIGITS := 0 ;
      BEFOREDP := TRUE ;
      SCALE := 1.0 ;
-     SCALEI := 1 ;
      EXPO := FALSE ;
      case F -> of
        '-' : begin
@@ -3103,6 +3101,8 @@ function $PASRDR ( var F : TEXT ; WIDTH : INTEGER ) : REAL ;
              end (* tag/ca *) ;
            '0' .. '9' :
              begin
+               if not BEFOREDP then
+                 SCALE := SCALE * 10.0 ;
                if F -> <> '0' then
                  LEADINGZ := FALSE ;
                if not LEADINGZ then
@@ -3112,20 +3112,13 @@ function $PASRDR ( var F : TEXT ; WIDTH : INTEGER ) : REAL ;
                      begin
                        RETVALI := RETVALI * 10 + ( ORD ( F -> ) - ORD (
                                   '0' ) ) ;
-                       if not BEFOREDP then
-                         SCALEI := SCALEI * 10 ;
                        if DIGITS = 9 then
-                         begin
-                           RETVAL := RETVALI ;
-                           SCALE := SCALEI ;
-                         end (* then *)
+                         RETVAL := RETVALI ;
                      end (* then *)
                    else
                      begin
                        RETVAL := RETVAL * 10 + ( ORD ( F -> ) - ORD (
                                  '0' ) ) ;
-                       if not BEFOREDP then
-                         SCALE := SCALE * 10 ;
                      end (* else *) ;
                  end (* then *) ;
                GET ( F ) ;
@@ -3141,10 +3134,7 @@ function $PASRDR ( var F : TEXT ; WIDTH : INTEGER ) : REAL ;
      //*******************************************************
 
      if DIGITS < 9 then
-       begin
-         RETVAL := RETVALI ;
-         SCALE := SCALEI ;
-       end (* then *) ;
+       RETVAL := RETVALI ;
 
      //*******************************
      // read exponent if expo = true  
@@ -3360,6 +3350,858 @@ function $PASRDI ( var F : TEXT ; WIDTH : INTEGER ) : INTEGER ;
            WIDTH := WIDTH - 1 ;
          end (* while *) ;
    end (* $PASRDI *) ;
+
+
+
+function $PASRSC ( const S : STRING ;         // source string
+                 var RPOS : INTEGER ;         // reading position
+                 WIDTH : INTEGER ) : CHAR ;   // optional width
+
+//************************************************************
+// this function implements READSTR for single chars          
+// s = the source string                                      
+// rpos = the reading position (counts from 1) - is updated   
+// width = the optional width (default -1)                    
+//************************************************************
+
+
+   var RES : CHAR ;
+
+   begin (* $PASRSC *)
+     if WIDTH = 0 then
+       begin
+         $PASRSC := ' ' ;
+         return
+       end (* then *) ;
+     if RPOS <= 0 then
+       RPOS := 1 ;
+     if RPOS > LENGTH ( S ) then
+       begin
+         $PASRSC := ' ' ;
+         return
+       end (* then *) ;
+     RES := S [ RPOS ] ;
+     if WIDTH < 0 then
+       RPOS := RPOS + 1
+     else
+       RPOS := RPOS + WIDTH ;
+     $PASRSC := RES
+   end (* $PASRSC *) ;
+
+
+
+procedure $PASRSS ( const S : STRING ;     // source string
+                  var RPOS : INTEGER ;     // reading position
+                  WIDTH : INTEGER ;        // optional width
+                  RES : VOIDPTR ;          // pointer to target
+                  LEN : INTEGER ) ;        // len of target
+
+//************************************************************
+// this function implements READSTR for character arrays      
+// s = the source string                                      
+// rpos = the reading position (counts from 1) - is updated   
+// width = the optional width (default -1)                    
+// res = address of target char array                         
+// len = length of target char array                          
+//************************************************************
+
+
+   var CP_TARGET : -> CHAR ;
+       CP_SOURCE : -> CHAR ;
+       RLEN : INTEGER ;
+
+   begin (* $PASRSS *)
+     CP_TARGET := RES ;
+     MEMSET ( CP_TARGET , ' ' , LEN ) ;
+     if WIDTH = 0 then
+       return ;
+     if RPOS <= 0 then
+       RPOS := 1 ;
+     if RPOS > LENGTH ( S ) then
+       return ;
+     CP_SOURCE := ADDR ( S [ RPOS ] ) ;
+     RLEN := LENGTH ( S ) - RPOS + 1 ;
+     if RLEN < LEN then
+       LEN := RLEN ;
+     if WIDTH > 0 then
+       if WIDTH < LEN then
+         LEN := WIDTH ;
+     MEMCPY ( CP_TARGET , CP_SOURCE , LEN ) ;
+     if WIDTH < 0 then
+       RPOS := RPOS + LEN
+     else
+       RPOS := RPOS + WIDTH ;
+   end (* $PASRSS *) ;
+
+
+
+procedure $PASRSV ( const S : STRING ;     // source string
+                  var RPOS : INTEGER ;     // reading position
+                  WIDTH : INTEGER ;        // optional width
+                  var RES : STRING ) ;     // target string
+
+//************************************************************
+// this function implements READSTR for strings (varchars)    
+// s = the source string                                      
+// rpos = the reading position (counts from 1) - is updated   
+// width = the optional width (default -1)                    
+// res = target string (var parameter, conformant string)     
+// maximum length of target string = maxlength of res         
+//************************************************************
+
+
+   var LEN : INTEGER ;
+       RLEN : INTEGER ;
+
+   begin (* $PASRSV *)
+     LEN := MAXLENGTH ( RES ) ;
+     RES := '' ;
+     if WIDTH = 0 then
+       return ;
+     if RPOS <= 0 then
+       RPOS := 1 ;
+     if RPOS > LENGTH ( S ) then
+       return ;
+     RLEN := LENGTH ( S ) - RPOS + 1 ;
+     if RLEN < LEN then
+       LEN := RLEN ;
+     if WIDTH > 0 then
+       if WIDTH < LEN then
+         LEN := WIDTH ;
+     RES := SUBSTR ( S , RPOS , LEN ) ;
+     if WIDTH < 0 then
+       RPOS := RPOS + LEN
+     else
+       RPOS := RPOS + WIDTH ;
+   end (* $PASRSV *) ;
+
+
+
+function $PASRSI ( const S : STRING ;     // source string
+                 var RPOS : INTEGER ;     // reading position
+                 WIDTH : INTEGER )        // optional width
+                 : INTEGER ;              // result type
+
+//**********************************************************
+// this function implements READSTR for integers            
+// s = the source string                                    
+// rpos = the reading position (counts from 1) - is updated 
+// width = the optional width (default -1)                  
+//**********************************************************
+// Bernd Oppolzer - New Stanford Pascal                     
+//**********************************************************
+
+
+   var SIGN : INTEGER ;
+       RETVAL : INTEGER ;
+       SKIP : BOOLEAN ;
+       F : -> CHAR ;
+       RLEN : INTEGER ;
+
+   begin (* $PASRSI *)
+     if WIDTH = 0 then
+       begin
+         $PASRSI := 0 ;
+         return
+       end (* then *) ;
+     SKIP := TRUE ;
+     if WIDTH < 0 then
+       begin
+         WIDTH := 999999999 ;
+         SKIP := FALSE
+       end (* then *) ;
+     if RPOS <= 0 then
+       RPOS := 1 ;
+     if RPOS > LENGTH ( S ) then
+       begin
+         $PASRSI := 0 ;
+         return
+       end (* then *) ;
+     F := ADDR ( S [ RPOS ] ) ;
+     RLEN := LENGTH ( S ) - RPOS + 1 ;
+     SIGN := 1 ;
+     RETVAL := 0 ;
+
+     //**********************
+     // skip leading blanks  
+     //**********************
+
+     while ( F -> = ' ' ) and ( WIDTH > 0 ) and ( RLEN > 0 ) do
+       begin
+         F := PTRADD ( F , 1 ) ;
+         RLEN := RLEN - 1 ;
+         WIDTH := WIDTH - 1 ;
+       end (* while *) ;
+     if ( RLEN <= 0 ) or ( WIDTH <= 0 ) then
+       begin
+         RPOS := PTRDIFF ( F , ADDR ( S [ 1 ] ) ) + 1 ;
+         $PASRSI := RETVAL ;
+         return
+       end (* then *) ;
+     case F -> of
+       '-' : begin
+               SIGN := - 1 ;
+               F := PTRADD ( F , 1 ) ;
+               RLEN := RLEN - 1 ;
+               WIDTH := WIDTH - 1 ;
+               if WIDTH <= 0 then
+                 $ERROR ( 1203 ) ;
+               if RLEN <= 0 then
+                 $ERROR ( 1203 ) ;
+               if not ( F -> in [ '0' .. '9' ] ) then
+                 $ERROR ( 1203 ) ;
+             end (* tag/ca *) ;
+       '+' : begin
+               F := PTRADD ( F , 1 ) ;
+               RLEN := RLEN - 1 ;
+               WIDTH := WIDTH - 1 ;
+               if WIDTH <= 0 then
+                 $ERROR ( 1203 ) ;
+               if RLEN <= 0 then
+                 $ERROR ( 1203 ) ;
+               if not ( F -> in [ '0' .. '9' ] ) then
+                 $ERROR ( 1203 ) ;
+             end (* tag/ca *) ;
+       '0' .. '9' :
+         begin
+           RETVAL := ORD ( F -> ) - ORD ( '0' ) ;
+           F := PTRADD ( F , 1 ) ;
+           RLEN := RLEN - 1 ;
+           WIDTH := WIDTH - 1 ;
+         end (* tag/ca *) ;
+       otherwise
+         $ERROR ( 1203 )
+     end (* case *) ;
+     if ( RLEN <= 0 ) or ( WIDTH <= 0 ) then
+       begin
+         RPOS := PTRDIFF ( F , ADDR ( S [ 1 ] ) ) + 1 ;
+         $PASRSI := RETVAL ;
+         return
+       end (* then *) ;
+
+     //*************************************************
+     // main loop                                       
+     //*************************************************
+
+     while ( F -> in [ '0' .. '9' ] ) and ( WIDTH > 0 ) and ( RLEN > 0
+     ) do
+       begin
+         RETVAL := RETVAL * 10 + ( ORD ( F -> ) - ORD ( '0' ) ) ;
+         F := PTRADD ( F , 1 ) ;
+         RLEN := RLEN - 1 ;
+         WIDTH := WIDTH - 1 ;
+       end (* while *) ;
+
+     //*******************************************
+     // compose final result                      
+     //*******************************************
+
+     $PASRSI := RETVAL * SIGN ;
+
+     //*******************************************
+     // if width specified, skip remaining chars  
+     //*******************************************
+
+     if SKIP then
+       while TRUE do
+         begin
+           if ( RLEN <= 0 ) or ( WIDTH <= 0 ) then
+             break ;
+           F := PTRADD ( F , 1 ) ;
+           RLEN := RLEN - 1 ;
+           WIDTH := WIDTH - 1 ;
+         end (* while *) ;
+     RPOS := PTRDIFF ( F , ADDR ( S [ 1 ] ) ) + 1 ;
+   end (* $PASRSI *) ;
+
+
+
+function $PASRSR ( const S : STRING ;     // source string
+                 var RPOS : INTEGER ;     // reading position
+                 WIDTH : INTEGER )        // optional width
+                 : REAL ;                 // result type
+
+//**********************************************************
+// this function implements READSTR for reals               
+// s = the source string                                    
+// rpos = the reading position (counts from 1) - is updated 
+// width = the optional width (default -1)                  
+//**********************************************************
+// Bernd Oppolzer - New Stanford Pascal                     
+//**********************************************************
+
+
+   var SIGN : INTEGER ;
+       RETVAL : REAL ;
+       RETVALI : INTEGER ;
+       SCALE : REAL ;
+       LEADINGZ : BOOLEAN ;
+       DIGITS : INTEGER ;
+       BEFOREDP : BOOLEAN ;
+       SKIP : BOOLEAN ;
+       F : -> CHAR ;
+       RLEN : INTEGER ;
+       EXPO : BOOLEAN ;
+       SCALEXP : REAL ;
+       EXPVALI : INTEGER ;
+       SIGNEXP : INTEGER ;
+
+   const SCALTAB_PLUS : array [ 1 .. 10 ] of REAL =
+         ( 10.0 , 100.0 , 1000.0 , 10000.0 , 100000.0 , 1000000.0 ,
+           10000000.0 , 100000000.0 , 1000000000.0 , 10000000000.0 ) ;
+         SCALTAB_MINUS : array [ 1 .. 10 ] of REAL =
+         ( 0.1 , 0.01 , 0.001 , 0.0001 , 0.00001 , 0.000001 , 0.0000001
+           , 0.00000001 , 0.000000001 , 0.0000000001 ) ;
+
+   begin (* $PASRSR *)
+     if WIDTH = 0 then
+       begin
+         $PASRSR := 0.0 ;
+         return
+       end (* then *) ;
+     SKIP := TRUE ;
+     if WIDTH < 0 then
+       begin
+         WIDTH := 999999999 ;
+         SKIP := FALSE
+       end (* then *) ;
+     if RPOS <= 0 then
+       RPOS := 1 ;
+     if RPOS > LENGTH ( S ) then
+       begin
+         $PASRSR := 0.0 ;
+         return
+       end (* then *) ;
+     F := ADDR ( S [ RPOS ] ) ;
+     RLEN := LENGTH ( S ) - RPOS + 1 ;
+     SIGN := 1 ;
+     RETVAL := 0.0 ;
+     RETVALI := 0 ;
+
+     //**********************
+     // skip leading blanks  
+     //**********************
+
+     while ( F -> = ' ' ) and ( WIDTH > 0 ) and ( RLEN > 0 ) do
+       begin
+         F := PTRADD ( F , 1 ) ;
+         RLEN := RLEN - 1 ;
+         WIDTH := WIDTH - 1 ;
+       end (* while *) ;
+     if ( RLEN <= 0 ) or ( WIDTH <= 0 ) then
+       begin
+         RPOS := PTRDIFF ( F , ADDR ( S [ 1 ] ) ) + 1 ;
+         $PASRSR := RETVAL ;
+         return
+       end (* then *) ;
+
+     //********************************************************
+     // leadingz = reading and ignoring leading zeroes         
+     // digits = number of digits (if < 10 then integer math)  
+     // beforedp = decimal point not yet found                 
+     // scale = compute scale factor from dec point            
+     //********************************************************
+
+     LEADINGZ := TRUE ;
+     DIGITS := 0 ;
+     BEFOREDP := TRUE ;
+     SCALE := 1.0 ;
+     EXPO := FALSE ;
+     case F -> of
+       '-' : begin
+               SIGN := - 1 ;
+               F := PTRADD ( F , 1 ) ;
+               RLEN := RLEN - 1 ;
+               WIDTH := WIDTH - 1 ;
+               if WIDTH <= 0 then
+                 $ERROR ( 1204 ) ;
+               if RLEN <= 0 then
+                 $ERROR ( 1204 ) ;
+               if not ( F -> in [ '0' .. '9' ] ) then
+                 $ERROR ( 1204 ) ;
+             end (* tag/ca *) ;
+       '+' : begin
+               F := PTRADD ( F , 1 ) ;
+               RLEN := RLEN - 1 ;
+               WIDTH := WIDTH - 1 ;
+               if WIDTH <= 0 then
+                 $ERROR ( 1204 ) ;
+               if RLEN <= 0 then
+                 $ERROR ( 1204 ) ;
+               if not ( F -> in [ '0' .. '9' ] ) then
+                 $ERROR ( 1204 ) ;
+             end (* tag/ca *) ;
+       '.' : begin
+               F := PTRADD ( F , 1 ) ;
+               RLEN := RLEN - 1 ;
+               WIDTH := WIDTH - 1 ;
+               BEFOREDP := FALSE ;
+             end (* tag/ca *) ;
+       '0' .. '9' :
+         begin
+           RETVALI := ORD ( F -> ) - ORD ( '0' ) ;
+           LEADINGZ := RETVALI = 0 ;
+           if not LEADINGZ then
+             DIGITS := 1 ;
+           F := PTRADD ( F , 1 ) ;
+           RLEN := RLEN - 1 ;
+           WIDTH := WIDTH - 1 ;
+         end (* tag/ca *) ;
+       otherwise
+         $ERROR ( 1204 )
+     end (* case *) ;
+     if ( RLEN <= 0 ) or ( WIDTH <= 0 ) then
+       begin
+         RPOS := PTRDIFF ( F , ADDR ( S [ 1 ] ) ) + 1 ;
+         RETVAL := RETVALI ;
+         $PASRSR := RETVAL ;
+         return
+       end (* then *) ;
+
+     //*************************************************
+     // main loop for mantissa                          
+     // logic controlled by leadingz, digits, beforedp  
+     // final results in retval and scale               
+     //*************************************************
+
+     while ( WIDTH > 0 ) and ( RLEN > 0 ) do
+       begin
+         case F -> of
+           '.' : begin
+                   if not BEFOREDP then
+                     $ERROR ( 1205 ) ;
+                   F := PTRADD ( F , 1 ) ;
+                   RLEN := RLEN - 1 ;
+                   WIDTH := WIDTH - 1 ;
+                   BEFOREDP := FALSE ;
+                 end (* tag/ca *) ;
+           'e' , 'E' :
+             begin
+               F := PTRADD ( F , 1 ) ;
+               RLEN := RLEN - 1 ;
+               WIDTH := WIDTH - 1 ;
+               EXPO := TRUE ;
+               break ;
+             end (* tag/ca *) ;
+           '0' .. '9' :
+             begin
+               if not BEFOREDP then
+                 SCALE := SCALE * 10.0 ;
+               if F -> <> '0' then
+                 LEADINGZ := FALSE ;
+               if not LEADINGZ then
+                 begin
+                   DIGITS := DIGITS + 1 ;
+                   if DIGITS < 10 then
+                     begin
+                       RETVALI := RETVALI * 10 + ( ORD ( F -> ) - ORD (
+                                  '0' ) ) ;
+                       if DIGITS = 9 then
+                         RETVAL := RETVALI ;
+                     end (* then *)
+                   else
+                     begin
+                       RETVAL := RETVAL * 10 + ( ORD ( F -> ) - ORD (
+                                 '0' ) ) ;
+                     end (* else *) ;
+                 end (* then *) ;
+               F := PTRADD ( F , 1 ) ;
+               RLEN := RLEN - 1 ;
+               WIDTH := WIDTH - 1 ;
+             end (* tag/ca *) ;
+           otherwise
+             break
+         end (* case *) ;
+       end (* while *) ;
+
+     //*******************************************************
+     // if real value fields have not been set, set them now  
+     //*******************************************************
+
+     if DIGITS < 9 then
+       RETVAL := RETVALI ;
+
+     //*******************************
+     // read exponent if expo = true  
+     // and compose final result      
+     //*******************************
+
+     SCALEXP := 1.0 ;
+     if EXPO then
+       begin
+
+     //*******************************
+     // E has already been found      
+     // exponent may have sign        
+     //*******************************
+
+         SIGNEXP := 1 ;
+         EXPVALI := 0 ;
+         case F -> of
+           '-' : begin
+                   SIGNEXP := - 1 ;
+                   F := PTRADD ( F , 1 ) ;
+                   RLEN := RLEN - 1 ;
+                   WIDTH := WIDTH - 1 ;
+                   if WIDTH <= 0 then
+                     $ERROR ( 1206 ) ;
+                   if RLEN <= 0 then
+                     $ERROR ( 1206 ) ;
+                   if not ( F -> in [ '0' .. '9' ] ) then
+                     $ERROR ( 1206 ) ;
+                 end (* tag/ca *) ;
+           '+' : begin
+                   F := PTRADD ( F , 1 ) ;
+                   RLEN := RLEN - 1 ;
+                   WIDTH := WIDTH - 1 ;
+                   if WIDTH <= 0 then
+                     $ERROR ( 1206 ) ;
+                   if RLEN <= 0 then
+                     $ERROR ( 1206 ) ;
+                   if not ( F -> in [ '0' .. '9' ] ) then
+                     $ERROR ( 1206 ) ;
+                 end (* tag/ca *) ;
+           '0' .. '9' :
+             begin
+               EXPVALI := ORD ( F -> ) - ORD ( '0' ) ;
+               F := PTRADD ( F , 1 ) ;
+               RLEN := RLEN - 1 ;
+               WIDTH := WIDTH - 1 ;
+             end (* tag/ca *) ;
+           otherwise
+             $ERROR ( 1206 )
+         end (* case *) ;
+         while ( F -> in [ '0' .. '9' ] ) and ( RLEN > 0 ) and ( WIDTH
+         > 0 ) do
+           begin
+             EXPVALI := EXPVALI * 10 + ( ORD ( F -> ) - ORD ( '0' ) ) ;
+             F := PTRADD ( F , 1 ) ;
+             RLEN := RLEN - 1 ;
+             WIDTH := WIDTH - 1 ;
+           end (* while *) ;
+
+     //*******************************************
+     // compute scalexp depending on exponent     
+     //*******************************************
+
+         if SIGNEXP = - 1 then
+           begin
+             while EXPVALI > 10 do
+               begin
+                 SCALEXP := SCALEXP * SCALTAB_MINUS [ 10 ] ;
+                 EXPVALI := EXPVALI - 10
+               end (* while *) ;
+             SCALEXP := SCALEXP * SCALTAB_MINUS [ EXPVALI ] ;
+           end (* then *)
+         else
+           begin
+             while EXPVALI > 10 do
+               begin
+                 SCALEXP := SCALEXP * SCALTAB_PLUS [ 10 ] ;
+                 EXPVALI := EXPVALI - 10
+               end (* while *) ;
+             SCALEXP := SCALEXP * SCALTAB_PLUS [ EXPVALI ] ;
+           end (* else *) ;
+
+     //*******************************************
+     // compose final result with scalexp         
+     //*******************************************
+
+         $PASRSR := RETVAL / SCALE * SCALEXP * SIGN ;
+       end (* then *)
+     else
+       $PASRSR := RETVAL / SCALE * SIGN ;
+
+     //*******************************************
+     // if width specified, skip remaining chars  
+     //*******************************************
+
+     if SKIP then
+       while TRUE do
+         begin
+           if ( RLEN <= 0 ) or ( WIDTH <= 0 ) then
+             break ;
+           F := PTRADD ( F , 1 ) ;
+           RLEN := RLEN - 1 ;
+           WIDTH := WIDTH - 1 ;
+         end (* while *) ;
+     RPOS := PTRDIFF ( F , ADDR ( S [ 1 ] ) ) + 1 ;
+   end (* $PASRSR *) ;
+
+
+
+procedure $PASWRI ( var F : TEXT ; WIDTH : INTEGER ; V : INTEGER ) ;
+
+//**********************************************************
+// write integers to files                                  
+// rewritten in Pascal - portable solution in 2020          
+//**********************************************************
+// Bernd Oppolzer - New Stanford Pascal                     
+//**********************************************************
+
+
+   var BUFFER : CHAR ( 12 ) ;
+       BUFFOUT : CHAR ( 12 ) ;
+       CP : -> CHAR ;
+       MINUS : BOOLEAN ;
+       LEADZ : BOOLEAN ;
+       L : INTEGER ;
+       ZEROES : INTEGER ;
+       X : INTEGER ;
+       DIG : CHAR ;
+
+   begin (* $PASWRI *)
+     if WIDTH = 0 then
+       return ;
+     LEADZ := FALSE ;
+     if WIDTH < 0 then
+       begin
+         LEADZ := TRUE ;
+         WIDTH := - WIDTH
+       end (* then *) ;
+     MINUS := FALSE ;
+     BUFFER := ' ' ;
+     CP := ADDR ( BUFFER [ 12 ] ) ;
+     if V = 0 then
+       begin
+         BUFFER [ 12 ] := '0' ;
+         CP := PTRADD ( CP , - 1 ) ;
+       end (* then *)
+     else
+       if V < 0 then
+         begin
+           MINUS := TRUE ;
+           V := - V
+         end (* then *) ;
+     while V > 0 do
+       begin
+         DIG := CHR ( ORD ( '0' ) + V MOD 10 ) ;
+         CP -> := DIG ;
+         CP := PTRADD ( CP , - 1 ) ;
+         V := V DIV 10 ;
+       end (* while *) ;
+     L := PTRDIFF ( ADDR ( BUFFER [ 12 ] ) , CP ) ;
+     CP := PTRADD ( CP , 1 ) ;
+     MEMCPY ( ADDR ( BUFFOUT ) , CP , L ) ;
+     if MINUS then
+       L := L + 1 ;
+     if L >= WIDTH then
+       begin
+         if MINUS then
+           WRITE ( F , '-' ) ;
+         WRITE ( F , BUFFOUT : L ) ;
+       end (* then *)
+     else
+       begin
+         ZEROES := WIDTH - L ;
+         if LEADZ then
+           begin
+             if MINUS then
+               WRITE ( F , '-' ) ;
+             for X := 1 to ZEROES do
+               WRITE ( F , '0' ) ;
+             if MINUS then
+               WRITE ( F , BUFFOUT : L - 1 )
+             else
+               WRITE ( F , BUFFOUT : L ) ;
+           end (* then *)
+         else
+           begin
+             WRITE ( F , ' ' : ZEROES ) ;
+             if MINUS then
+               begin
+                 WRITE ( F , '-' ) ;
+                 WRITE ( F , BUFFOUT : L - 1 ) ;
+               end (* then *)
+             else
+               WRITE ( F , BUFFOUT : L ) ;
+           end (* else *)
+       end (* else *)
+   end (* $PASWRI *) ;
+
+
+
+procedure $PASWRR ( var F : TEXT ; WIDTH : INTEGER ; SCALE : INTEGER ;
+                  V : REAL ) ;
+
+//**********************************************************
+// write reals to files                                     
+// rewritten in Pascal - portable solution in 2020          
+//**********************************************************
+// Bernd Oppolzer - New Stanford Pascal                     
+//**********************************************************
+
+
+   var BUFFER : CHAR ( 100 ) ;
+       MINUS : BOOLEAN ;
+       LEADZ : BOOLEAN ;
+       LEN : INTEGER ;
+       DIG : INTEGER ;
+       EXPO : CHAR ( 4 ) ;
+       ZEROES : INTEGER ;
+       X : INTEGER ;
+       EXPONENT : INTEGER ;
+       FERTIG : BOOLEAN ;
+
+   begin (* $PASWRR *)
+     if WIDTH = 0 then
+       return ;
+     if SCALE > 16 then
+       $ERROR ( 1207 ) ;
+     LEADZ := FALSE ;
+     if WIDTH < 0 then
+       begin
+         LEADZ := TRUE ;
+         WIDTH := - WIDTH
+       end (* then *) ;
+     MINUS := FALSE ;
+     BUFFER := ' ' ;
+
+     //*************************
+     // output real value zero  
+     //*************************
+
+     if V = 0.0 then
+       if SCALE < 0 then
+
+     //*************************
+     // write zero in E-Format  
+     //*************************
+
+         begin
+           if WIDTH < 9 then
+             begin
+               BUFFER := '0.0E+00' ;
+               LEN := 7 ;
+               WIDTH := LEN + 1 ;
+               LEADZ := FALSE ;
+             end (* then *)
+           else
+             begin
+               DIG := WIDTH - 7 ;
+               if DIG > 16 then
+                 DIG := 16 ;
+               BUFFER := '0.' ;
+               MEMSET ( ADDR ( BUFFER [ 3 ] ) , '0' , DIG ) ;
+               EXPO := 'E+00' ;
+               MEMCPY ( ADDR ( BUFFER [ 3 + DIG ] ) , ADDR ( EXPO ) , 4
+                        ) ;
+               LEN := DIG + 6 ;
+               LEADZ := FALSE ;
+             end (* else *)
+         end (* then *)
+       else
+
+     //*********************************
+     // write zero in F-Format          
+     // no decimal point, if scale = 0  
+     //*********************************
+
+         if SCALE = 0 then
+           begin
+             BUFFER [ 1 ] := '0' ;
+             LEN := 1 ;
+           end (* then *)
+         else
+           begin
+             MEMSET ( ADDR ( BUFFER ) , '0' , SCALE + 2 ) ;
+             BUFFER [ 2 ] := '.' ;
+             LEN := SCALE + 2 ;
+           end (* else *)
+
+     //*************************
+     // output non-zero value   
+     //*************************
+
+     else
+       begin
+         if V < 0.0 then
+           begin
+             MINUS := TRUE ;
+             V := - V
+           end (* then *) ;
+         FERTIG := FALSE ;
+         EXPONENT := 0 ;
+         WRITELN ( 'v = ' , V : 12 : 6 , ' expo = ' , EXPONENT : 1 ) ;
+         while not FERTIG do
+           begin
+             if V >= 100000000.0 then
+               begin
+                 V := V / 100000000.0 ;
+                 EXPONENT := EXPONENT + 8
+               end (* then *)
+             else
+               if V < 0.000000001 then
+                 begin
+                   V := V * 100000000.0 ;
+                   EXPONENT := EXPONENT - 8
+                 end (* then *)
+               else
+                 if V >= 10000.0 then
+                   begin
+                     V := V / 10000.0 ;
+                     EXPONENT := EXPONENT + 4
+                   end (* then *)
+                 else
+                   if V < 0.00001 then
+                     begin
+                       V := V * 10000.0 ;
+                       EXPONENT := EXPONENT - 4
+                     end (* then *)
+                   else
+                     if V >= 10.0 then
+                       begin
+                         V := V / 10.0 ;
+                         EXPONENT := EXPONENT + 1
+                       end (* then *)
+                     else
+                       if V < 1.0 then
+                         begin
+                           V := V * 10.0 ;
+                           EXPONENT := EXPONENT - 1
+                         end (* then *)
+                       else
+                         FERTIG := TRUE
+           end (* while *) ;
+         WRITELN ( 'v = ' , V : 12 : 6 , ' expo = ' , EXPONENT : 1 ) ;
+       end (* else *) ;
+
+     //*********************************
+     // add leading zeroes or blanks    
+     // like in the integer procedure   
+     //*********************************
+
+     if MINUS then
+       LEN := LEN + 1 ;
+     if LEN < WIDTH then
+       begin
+         ZEROES := WIDTH - LEN ;
+         if LEADZ then
+           begin
+             if MINUS then
+               WRITE ( F , '-' ) ;
+             for X := 1 to ZEROES do
+               WRITE ( F , '0' ) ;
+             if MINUS then
+               WRITE ( F , BUFFER : LEN - 1 )
+             else
+               WRITE ( F , BUFFER : LEN ) ;
+           end (* then *)
+         else
+           begin
+             WRITE ( F , ' ' : ZEROES ) ;
+             if MINUS then
+               begin
+                 WRITE ( F , '-' ) ;
+                 WRITE ( F , BUFFER : LEN - 1 ) ;
+               end (* then *)
+             else
+               WRITE ( F , BUFFER : LEN ) ;
+           end (* else *)
+       end (* then *)
+     else
+       $ERROR ( 1208 )
+   end (* $PASWRR *) ;
 
 
 

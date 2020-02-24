@@ -1,0 +1,496 @@
+..TITLE 0204,038000
+..SRC
+..RBEZ "BETRIEBLICHE ALTERSVERSORGUNG L650/L652"
+  REPORT 135,AZP=L0204AZP79,ESA=PE_100,ZPS=65,ACCT=N
+     SORT FA,NL,PERSNR
+************************************************************************
+*  ERSTELLT ALS L10.PP.SOURCE.REPORT(D038135) IN RDS 80
+*
+*  CHG MORCHE AUF RDS = 80 UND UMGESETZT
+*      MORCHE ANGEPASST AN BRANCHE
+*  CHG MORCHE 25072005 GEMAESS FAX (RIZVO)
+*  CHG 05082009 GEMAESS BAV-ERWEITERUNG + BAV AB 2009
+*               NEUE SPALTE RV-NR NACH PERSNR.
+*               NEUE SPALTE U ODER D NACH RV-NR. (U=BIS 2008/D AB 2009)
+*               NEUE SPALTE V5 VOR GESAMT
+*  CHG 24112010 DEMOGRAFIEBEITRAG + 4 SPALTEN MIT VERTRAGSINFORMATIONEN
+*               +AUSLANDSPLZ +NEUE SPALTE NATIONALITAETSKZ + L652 IM JAN
+************************************************************************
+* ueberarbeitung durch b. oppolzer (catenate) 2020-02-12
+* mit dem ziel, eine bessere verstaendlichkeit herzustellen
+* (kommentare und fehlende definitionen ergaenzen)
+************************************************************************
+* DEFINITIONEN                                                         *
+* opp: definition I3 ergaenzt (I3 muss wie I definiert sein)           *
+************************************************************************
+*
+ DEF SATZ   C  255
+ DEF SATZ1  C  23
+ DEF SATZ2  C  110
+ DEF SATZ3  C  110
+ DEF SATZ4  C  50
+ DEF SATZ5  C  52
+ DEF BR     P  9.2
+ DEF GEB    C  8    1 '  .  .  '
+ DEF EINTR  C  8    1 '  .  .  '
+ DEF AUSTR  C  8
+ DEF AA     C  2
+ DEF M1     P  9.2
+ DEF M2A    P  9.2
+ DEF M2Z    P  9.2
+ DEF M3A    P  9.2
+ DEF M3Z    P  9.2
+ DEF M4A    P  9.2
+ DEF M4Z    P  9.2
+ DEF M5A    P  9.2
+ DEF MD     P  9.2
+ DEF MGES   P  9.2
+ DEF K1     P  9.2
+ DEF K2A    P  9.2
+ DEF K2Z    P  9.2
+ DEF K3A    P  9.2
+ DEF K3Z    P  9.2
+ DEF K4A    P  9.2
+ DEF K4Z    P  9.2
+ DEF K5A    P  9.2
+ DEF KD     P  9.2
+ DEF KGES   P  9.2
+ DEF V1     P  9.2
+ DEF V2A    P  9.2
+ DEF V2Z    P  9.2
+ DEF V3A    P  9.2
+ DEF V3Z    P  9.2
+ DEF V4A    P  9.2
+ DEF V4Z    P  9.2
+ DEF V5A    P  9.2
+ DEF VD     P  9.2
+ DEF TZF    P  5.2
+ DEF KZV    C  1
+ DEF HIRE   C  1
+ DEF BUFR   C  1
+ DEF BUREFR C  1
+ DEF I      N  3
+ DEF J      N  3
+ DEF K      N  3
+ DEF L      N  3
+ DEF I1     P  2
+ DEF I2     P  2
+ DEF I3     P  2
+ DEF SEL1   N  1 1 0
+*
+************************************************************************
+* PHASE 1 DES REPORTS                                                  *
+************************************************************************
+*
+     IF GESPERRT = '1' GOTO EX
+*
+************************************************************************
+* opp: bei gesperrt = 1 geht man direkt raus
+* opp: sel = 1 usw.: ueberschrift wird nur einmal am Anfang erzeugt
+* opp: alles bis M1 ist damit geklaert
+************************************************************************
+*
+     IF SEL1 = 1 GOTO M1
+     SEL1 = 1
+     SATZ  = &STR('FA  NL',,,1)
+     SATZ  = &STR('PNR',,,11)
+     SATZ  = &STR('RVNR',,,16)
+     SATZ  = &STR('TVNR',,,29)
+     SATZ  = &STR('V',,,37)
+     SATZ  = &STR('NAME',,,39)
+     SATZ  = &STR('TITEL',,,70)
+     SATZ  = &STR('VORNAME',,,91)
+     SATZ  = &STR('STRASSE',,,112)
+     SATZ  = &STR('NAT',,,143)
+     SATZ  = &STR('PLZ',,,147)
+     SATZ  = &STR('ORT',,,158)
+     SATZ  = &STR('G',,,189)
+     SATZ  = &STR('GEBDAT',,,191)
+     SATZ  = &STR('EINTRITT',,,200)
+     SATZ  = &STR('AUSTRITT',,,209)
+     SATZ  = &STR('A',,,218)
+     SATZ  = &STR('HI-RENTE',,,220)
+     SATZ  = &STR('BU',,,229)
+     SATZ1 = &STR('TZF   JR MO     BRUTTO',,,1)
+     SATZ2 = &STR('V1(M)',,,6)
+     SATZ2 = &STR('V2(M)     V2Z(M)',,,17)
+     SATZ2 = &STR('V3(M)     V3Z(M)',,,39)
+     SATZ2 = &STR('V4(M)     V4Z(M)',,,61)
+     SATZ2 = &STR('V5(M)     VD(M) ',,,83)
+     SATZ2 = &STR('GES(M)',,,104)
+     SATZ3 = &STR('V1(K)',,,6)
+     SATZ3 = &STR('V2(K)     V2Z(K)',,,17)
+     SATZ3 = &STR('V3(K)     V3Z(K)',,,39)
+     SATZ3 = &STR('V4(K)     V4Z(K)',,,61)
+     SATZ3 = &STR('V5(K)     VD(K) ',,,83)
+     SATZ3 = &STR('GES(K)',,,104)
+     SATZ4 = &STR('AENDERUNGEN',,,1)
+     SATZ5 = ' '
+     SATZ = &STR(';',1,1,4)
+     SATZ = &STR(';',1,1,7)
+     SATZ = &STR(';',1,1,15)
+     SATZ = &STR(';',1,1,28)
+     SATZ = &STR(';',1,1,36)
+     SATZ = &STR(';',1,1,38)
+     SATZ = &STR(';',1,1,69)
+     SATZ = &STR(';',1,1,90)
+     SATZ = &STR(';',1,1,111)
+     SATZ = &STR(';',1,1,142)
+     SATZ = &STR(';',1,1,146)
+     SATZ = &STR(';',1,1,157)
+     SATZ = &STR(';',1,1,188)
+     SATZ = &STR(';',1,1,190)
+     SATZ = &STR(';',1,1,199)
+     SATZ = &STR(';',1,1,208)
+     SATZ = &STR(';',1,1,217)
+     SATZ = &STR(';',1,1,219)
+     SATZ = &STR(';',1,1,228)
+     SATZ = &STR(';',1,1,255)
+     SATZ1 = &STR(';',1,1,6)
+     SATZ1 = &STR(';',1,1,9)
+     SATZ1 = &STR(';',1,1,12)
+     SATZ1 = &STR(';',1,1,23)
+     SATZ2 = &STR(';',1,1,11)
+     SATZ2 = &STR(';',1,1,22)
+     SATZ2 = &STR(';',1,1,33)
+     SATZ2 = &STR(';',1,1,44)
+     SATZ2 = &STR(';',1,1,55)
+     SATZ2 = &STR(';',1,1,66)
+     SATZ2 = &STR(';',1,1,77)
+     SATZ2 = &STR(';',1,1,88)
+     SATZ2 = &STR(';',1,1,99)
+     SATZ2 = &STR(';',1,1,110)
+     SATZ3 = &STR(';',1,1,11)
+     SATZ3 = &STR(';',1,1,22)
+     SATZ3 = &STR(';',1,1,33)
+     SATZ3 = &STR(';',1,1,44)
+     SATZ3 = &STR(';',1,1,55)
+     SATZ3 = &STR(';',1,1,66)
+     SATZ3 = &STR(';',1,1,77)
+     SATZ3 = &STR(';',1,1,88)
+     SATZ3 = &STR(';',1,1,99)
+     SATZ3 = &STR(';',1,1,110)
+     WRITE 650,00000,SATZ,SATZ1,SATZ2,SATZ3,SATZ4,SATZ5
+      IF ABRMONF NE 01 GOTO M1
+     WRITE 652,00000,SATZ,SATZ1,SATZ2,SATZ3,SATZ4,SATZ5
+*
+************************************************************************
+* opp: hier geht's richtig los
+* opp: ermitteln von KZV, TZF, EINTR, AUSTR und GEB aus den
+* opp: entsprechenden Schnittstellenfeldern (SBB PE_100)
+************************************************************************
+*
+M1   SATZ  = ' '
+     SATZ1 = ' '
+     SATZ2 = ' '
+     SATZ3 = ' '
+     SATZ4 = ' '
+     KZV   = 'U'
+     IF LABEAB(11) NE '610' GOTO M16
+     IF KZBEAB(11) EQ '2' GOTO M17
+     IF KZBEAB(11) EQ '0' GOTO M18
+     IF KZBEAB(11) NE '6' GOTO M16
+M18  KZV = 'D'
+     GOTO M16
+M17  KZV = 'U'
+M16  TZF   = FAKTOR(8)
+     IF TZF NE 0 GOTO M2
+     TZF   = 100
+M2   EINTR = &NUCHA(EINTRT,,,1)
+     EINTR = &NUCHA(EINTRM,,,4)
+     EINTR = &NUCHA(EINTRJ,,,7)
+     AUSTR = ' '
+     IF ENTLT = 0 GOTO M2A
+     AUSTR = '  .  .  '
+     AUSTR = &NUCHA(ENTLT,,,1)
+     AUSTR = &NUCHA(ENTLM,,,4)
+     AUSTR = &NUCHA(ENTLJ,,,7)
+M2A  GEB   = &NUCHA(GEBDATT,,,1)
+     GEB   = &NUCHA(GEBDATM,,,4)
+     GEB   = &NUCHA(GEBDATJ,,,7)
+     AA    = &NUCHA(ABRART,,,1)
+*
+************************************************************************
+* opp: initialisieren vieler Arbeitsfelder
+************************************************************************
+*
+     BR    = 0
+     M1    = 0
+     M2A   = 0
+     M2Z   = 0
+     M3A   = 0
+     M3Z   = 0
+     M4A   = 0
+     M4Z   = 0
+     M5A   = 0
+     MD    = 0
+     K1    = 0
+     K2A   = 0
+     K2Z   = 0
+     K3A   = 0
+     K3Z   = 0
+     K4A   = 0
+     K4Z   = 0
+     K5A   = 0
+     KD    = 0
+     V1    = 0
+     V2A   = 0
+     V2Z   = 0
+     V3A   = 0
+     V3Z   = 0
+     V4A   = 0
+     V4Z   = 0
+     V5A   = 0
+     VD    = 0
+*
+************************************************************************
+* opp: schleife, I laeuft von 1 bis ABRMONAT plus 12
+************************************************************************
+*
+     J = ABRMONF + 12
+     DO I  = 1,J
+*
+************************************************************************
+* opp: Kxx sind die kumulierten felder (ueber alle monate)
+************************************************************************
+*
+      K1   = K1   + P49SUM_123(I)
+      K2A  = K2A  + P49SUM_125(I)
+      K2A  = K2A  + P49SUM_275(I)
+      K2Z  = K2Z  + P49SUM_124(I)
+      K3A  = K3A  + P49SUM_127(I)
+      K3A  = K3A  + P49SUM_277(I)
+      K3A  = K3A  + P49SUM_278(I)
+      K3A  = K3A  + P49SUM_128(I)
+      K3Z  = K3Z  + P49SUM_126(I)
+      K4A  = K4A  + P49SUM_130(I)
+      K4A  = K4A  + P49SUM_270(I)
+      K4Z  = K4Z  + P49SUM_129(I)
+      K5A  = K5A  + P49SUM_131(I)
+      KD   = KD   + P49SUM_271(I)
+*
+************************************************************************
+* opp: BR spielt eine besondere Rolle
+* opp: Mxx sind die Felder des aktuellen Monats
+************************************************************************
+*
+      BR   = P49SUM_121(I) + P49SUM_122(I)
+      M1   = P49SUM_123(I)
+      M2A  = P49SUM_125(I)
+      M2A  = M2A  + P49SUM_275(I)
+      M2Z  = P49SUM_124(I)
+      M3A  = P49SUM_127(I) + P49SUM_128(I)
+      M3A  = M3A  + P49SUM_277(I)
+      M3A  = M3A  + P49SUM_278(I)
+      M3Z  = P49SUM_126(I)
+      M4Z  = P49SUM_129(I)
+      M4A  = P49SUM_130(I)
+      M4A  = M4A  + P49SUM_270(I)
+      M5A  = P49SUM_131(I)
+      MD   = P49SUM_271(I)
+*
+************************************************************************
+* opp: Vxx sind die Felder des Vormonats
+* opp: diese werden nicht berechnet, wenn K = 0 (d.h. wenn es keinen
+* opp: Vormonat gibt
+************************************************************************
+*
+      K = I - 1
+      IF K = 0 GOTO E1
+      V1   = P49SUM_123(K)
+      V2A  = P49SUM_125(K)
+      V2A  = V2A  + P49SUM_275(K)
+      V2Z  = P49SUM_124(K)
+      V3A  = P49SUM_127(K) + P49SUM_128(K)
+      V3A  = V3A  + P49SUM_277(K)
+      V3A  = V3A  + P49SUM_278(K)
+      V3Z  = P49SUM_126(K)
+      V4Z  = P49SUM_129(K)
+      V4A  = P49SUM_130(K)
+      V4A  = V4A  + P49SUM_270(K)
+      V5A  = P49SUM_131(K)
+      VD   = P49SUM_271(K)
+*
+************************************************************************
+* opp: Quersummen MGES und KGES fuer Monat und kumuliert
+************************************************************************
+*
+E1    MGES = M1   + M2A
+      MGES = MGES + M2Z
+      MGES = MGES + M3A
+      MGES = MGES + M3Z
+      MGES = MGES + M4A
+      MGES = MGES + M4Z
+      MGES = MGES + M5A
+      MGES = MGES + MD
+      KGES = K1   + K2A
+      KGES = KGES + K2Z
+      KGES = KGES + K3A
+      KGES = KGES + K3Z
+      KGES = KGES + K4A
+      KGES = KGES + K4Z
+      KGES = KGES + K5A
+      KGES = KGES + KD
+*
+************************************************************************
+* opp: nur Ausgabe, wenn BR ungleich Null oder KGES ungleich Null
+* opp: sonst (wenn beide NULL) keine Ausgabe
+************************************************************************
+*
+      IF BR NE 0 GOTO M4
+      IF KGES NE 0 GOTO M4
+      GOTO F1
+*
+************************************************************************
+* opp: nur Ausgabe, wenn BR ungleich Null oder KGES ungleich Null
+* opp: sonst (wenn beide NULL) keine Ausgabe
+************************************************************************
+*
+M4    SATZ = &STR(FA,1,3,1)
+      SATZ = &STR(NL,1,2,5)
+      SATZ = &STR(PERSNR,1,7,8)
+      SATZ = &STR(RVNR,1,12,16)
+      SATZ = &STR(STATBER1,21,7,29)
+      SATZ = &STR(KZV,1,1,37)
+      SATZ = &STR(E_F_NAME,1,30,39)
+      SATZ = &STR(E_TITEL,1,20,70)
+      SATZ = &STR(E_V_NAME,1,20,91)
+      SATZ = &STR(E_STRASSE,1,30,112)
+      SATZ = &STR(E_NAT_KZ,1,3,143)
+      SATZ = &STR(' ',1,10,147)
+      SATZ = &STR(E_PLZ_STR,1,5,147)
+      IF E_PLZ_AUSL = ' ' GOTO EP
+      SATZ = &STR(E_PLZ_AUSL,1,10,147)
+EP    SATZ = &STR(E_ORT,1,30,158)
+      SATZ = &STR(GESCHL,1,1,189)
+      SATZ = &STR(GEB,1,8,191)
+      SATZ = &STR(EINTR,1,8,200)
+      SATZ = &STR(AUSTR,1,8,209)
+      SATZ = &STR(AA,1,1,218)
+      HIRE  = &STR(STATBER1,28,1,1)
+      SATZ = &STR('        ',1,8,220)
+      IF HIRE NE '1' GOTO ER1
+      SATZ = &STR('HI-RENTE',1,8,220)
+ER1   BUFR  = &STR(STATBER1,29,1,1)
+      BUREFR= &STR(STATBER1,30,1,1)
+      SATZ = &STR('                         ',1,25,229)
+      IF BUFR NE '1' GOTO ER2
+      SATZ = &STR('BEITRAGSFREI BEI BU      ',1,25,229)
+ER2   IF BUREFR NE '1' GOTO ER3
+      SATZ = &STR('BU-RE M.BEITRAGSFREI B.BU',1,25,229)
+ER3   SATZ1 = &NUCHA(TZF,,,1)
+      IF I > 12 GOTO E2
+      I1 = ABRJAHR - 1
+      SATZ1 = &NUCHA(I1,2,,7)
+      I2 = I
+      GOTO E3
+E2    I1 = ABRJAHR
+      SATZ1 = &NUCHA(I1,2,,7)
+      I2 = I - 12
+E3    SATZ1 = &NUCHA(I2,2,,10)
+      SATZ1 = &NUCHA(BR,,'V',13)
+      SATZ2 = &NUCHA(M1,,'V',1)
+      SATZ2 = &NUCHA(M2A,,'V',12)
+      SATZ2 = &NUCHA(M2Z,,'V',23)
+      SATZ2 = &NUCHA(M3A,,'V',34)
+      SATZ2 = &NUCHA(M3Z,,'V',45)
+      SATZ2 = &NUCHA(M4A,,'V',56)
+      SATZ2 = &NUCHA(M4Z,,'V',67)
+      SATZ2 = &NUCHA(M5A,,'V',78)
+      SATZ2 = &NUCHA(MD,,'V',89)
+      SATZ2 = &NUCHA(MGES,,'V',100)
+      IF ABRMONF NE 1 GOTO EK1
+      I3= J-1
+      IF I=I3  GOTO EK2
+EK1   IF I NE J GOTO M5
+EK2   SATZ3 = &NUCHA(K1,,'V',1)
+      SATZ3 = &NUCHA(K2A,,'V',12)
+      SATZ3 = &NUCHA(K2Z,,'V',23)
+      SATZ3 = &NUCHA(K3A,,'V',34)
+      SATZ3 = &NUCHA(K3Z,,'V',45)
+      SATZ3 = &NUCHA(K4A,,'V',56)
+      SATZ3 = &NUCHA(K4Z,,'V',67)
+      SATZ3 = &NUCHA(K5A,,'V',78)
+      SATZ3 = &NUCHA(KD,,'V',89)
+      SATZ3 = &NUCHA(KGES,,'V',100)
+M5    L = 1
+      SATZ4 = ' '
+      IF K = 0 GOTO M12
+      IF M1 = V1 GOTO M6
+      SATZ4 = &STR('V1',,,L)
+      L = L + 3
+M6    IF M2A = V2A GOTO M7
+      SATZ4 = &STR('V2',,,L)
+      L = L + 3
+M7    IF M2Z = V2Z GOTO M8
+      SATZ4 = &STR('V2Z',,,L)
+      L = L + 4
+M8    IF M3A = V3A GOTO M9
+      SATZ4 = &STR('V3',,,L)
+      L = L + 3
+M9    IF M3Z = V3Z GOTO M10
+      SATZ4 = &STR('V3Z',,,L)
+      L = L + 4
+M10   IF M4A = V4A GOTO M11
+      SATZ4 = &STR('V4',,,L)
+      L = L + 3
+M11   IF M4Z = V4Z GOTO M14
+      SATZ4 = &STR('V4Z',,,L)
+      L = L + 4
+M14   IF M5A = V5A GOTO M15
+      SATZ4 = &STR('V5',,,L)
+      L = L + 3
+M15   IF MD  = VD  GOTO M12
+      SATZ4 = &STR('VD',,,L)
+M12   SATZ = &STR(';',1,1,4)
+      SATZ = &STR(';',1,1,7)
+      SATZ = &STR(';',1,1,15)
+      SATZ = &STR(';',1,1,28)
+      SATZ = &STR(';',1,1,36)
+      SATZ = &STR(';',1,1,38)
+      SATZ = &STR(';',1,1,69)
+      SATZ = &STR(';',1,1,90)
+      SATZ = &STR(';',1,1,111)
+      SATZ = &STR(';',1,1,142)
+      SATZ = &STR(';',1,1,146)
+      SATZ = &STR(';',1,1,157)
+      SATZ = &STR(';',1,1,188)
+      SATZ = &STR(';',1,1,190)
+      SATZ = &STR(';',1,1,199)
+      SATZ = &STR(';',1,1,208)
+      SATZ = &STR(';',1,1,217)
+      SATZ = &STR(';',1,1,219)
+      SATZ = &STR(';',1,1,228)
+      SATZ = &STR(';',1,1,255)
+      SATZ1 = &STR(';',1,1,6)
+      SATZ1 = &STR(';',1,1,9)
+      SATZ1 = &STR(';',1,1,12)
+      SATZ1 = &STR(';',1,1,23)
+      SATZ2 = &STR(';',1,1,11)
+      SATZ2 = &STR(';',1,1,22)
+      SATZ2 = &STR(';',1,1,33)
+      SATZ2 = &STR(';',1,1,44)
+      SATZ2 = &STR(';',1,1,55)
+      SATZ2 = &STR(';',1,1,66)
+      SATZ2 = &STR(';',1,1,77)
+      SATZ2 = &STR(';',1,1,88)
+      SATZ2 = &STR(';',1,1,99)
+      SATZ2 = &STR(';',1,1,110)
+      SATZ3 = &STR(';',1,1,11)
+      SATZ3 = &STR(';',1,1,22)
+      SATZ3 = &STR(';',1,1,33)
+      SATZ3 = &STR(';',1,1,44)
+      SATZ3 = &STR(';',1,1,55)
+      SATZ3 = &STR(';',1,1,66)
+      SATZ3 = &STR(';',1,1,77)
+      SATZ3 = &STR(';',1,1,88)
+      SATZ3 = &STR(';',1,1,99)
+      SATZ3 = &STR(';',1,1,110)
+      WRITE 650,00000,SATZ,SATZ1,SATZ2,SATZ3,SATZ4,SATZ5
+      IF I1 = ABRJAHR GOTO F1
+      IF ABRMONF NE 01 GOTO F1
+      WRITE 652,00000,SATZ,SATZ1,SATZ2,SATZ3,SATZ4,SATZ5
+F1   END
+EX   EXIT
+..REPS
+..END

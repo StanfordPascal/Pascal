@@ -12,10 +12,23 @@
 * Implementieren READ (X : N) - d.h. Change Read einzelne Chars, feste Strings, Varchars
 * READ Ints usw. neu als Pascal-Funktion (neue CSVs)
 * Problem bei INDEX-Funktion in TESTREA6
-- READSTR usw. als Pascal-Funktion
+* READSTR fuer reals
+* Fehler reparieren bei REAL-Eingabe (Nullen nach Dezimalpunkt)
+* Write Boolean reparieren (WIDTH-Angaben)
+* Write Real reparieren (negative Laenge)
+* Write VarChar reparieren (negative Laenge)
+* Write Skalars reparieren (negative Laenge)
+* Write reparieren auf Mainframe (WRR und WRX bei linksbuendig)
+- Write bei Real 0.0 korrigieren (Mainframe)
+- Write bei Real mit fuehrenden Nullen (Mainframe)
+- Write bei Skalar mit korrekter Laenge (Mainframe)
+- Write fuer Skalar mit Laenge nur, wenn Skalar in dieser Laenge eindeutig
+- Neue READ-Funktionen auch fuer Boolean, evtl. Skalar ??
+- Parameterposition bei Unterfunktionen am Statement-Ende wieder zurueck
 - WRITESTR usw. als Pascal-Funktion
 - Fehler (PASCAL1-Abbruch) bei falschem IF - siehe COMPERR1
 - Fehler (PASCAL1-Abbruch) bei falschem Funktionsnamen - siehe COMPERR2
+- Fehler (PASCAL1-Abbruch) - siehe COMPERR3
 - Fehler bei CONST-Parameter mit Struktur
 - Tabs in Pascal-Source akzeptieren
 - Aufruf von externen GCC-Funktionen

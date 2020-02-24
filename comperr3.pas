@@ -50,7 +50,7 @@ local function AVLSRCH_INTERN ( SKEY : VOIDPTR ;         // look
                               var PP : PTR_AVLNODE ;     // AVLSRCH
                               var HCHANGED : BOOLEAN ;   // below
                               EINFUEGEN : BOOLEAN ;      //
-                              MODUS : CHAR ;             //
+                              modus : char ;             //
                               function AVLCOMP           // look
                               ( X1 : VOIDPTR ;           // for
                               L1 : INTEGER ;             // comments
@@ -179,32 +179,9 @@ local function AVLSRCH_INTERN ( SKEY : VOIDPTR ;         // look
      /* eventuelles Einfuegen verlaengert hat.                   */
      /************************************************************/
 
-         if P -> . PLN = NIL then
-
-     /***********************************************************/
-     /* new in 02.2020:                                         */
-     /* if modus = '>', data is not returned                    */
-     /* instead the key of the found entry (which may be        */
-     /* greater than the requested key) is returned in the      */
-     /* pobj fields. Another request is needed to retrieve      */
-     /* the data.                                               */
-     /***********************************************************/
-
-           if MODUS = '>' then
-             begin
-               GEFUNDEN := TRUE ;
-               PRES := P ;
-               POBJ := ADDR ( PRES -> . KEY ) ;
-               POBJLEN := ADDR ( PRES -> . KEYLEN ) ;
-               if EINFUEGEN then
-                 HCHANGED := FALSE ;
-               PP := P ;
-               AVLSRCH_INTERN := PRES ;
-               return
-             end (* then *) ;
          PRES := AVLSRCH_INTERN ( SKEY , SKEYLEN , POBJ , POBJLEN ,
-                 GEFUNDEN , P -> . PLN , HCHANGED , EINFUEGEN , MODUS ,
-                 AVLCOMP ) ;
+                 GEFUNDEN , P -> . PLN , HCHANGED , EINFUEGEN , AVLCOMP
+                 ) ;
          if EINFUEGEN and HCHANGED then
            begin
              PVORG_SAVE := P -> . PVORG ;
@@ -313,8 +290,8 @@ local function AVLSRCH_INTERN ( SKEY : VOIDPTR ;         // look
      /************************************************************/
 
            PRES := AVLSRCH_INTERN ( SKEY , SKEYLEN , POBJ , POBJLEN ,
-                   GEFUNDEN , P -> . PRN , HCHANGED , EINFUEGEN , MODUS
-                   , AVLCOMP ) ;
+                   GEFUNDEN , P -> . PRN , HCHANGED , EINFUEGEN ,
+                   AVLCOMP ) ;
            if EINFUEGEN and HCHANGED then
              begin
                PVORG_SAVE := P -> . PVORG ;
@@ -454,29 +431,29 @@ function AVLSRCH ( SKEY : VOIDPTR ;        // ptr to key
            EXIT ( 2001 ) ;
          end (* then *) ;
      AVLSRCH := AVLSRCH_INTERN ( SKEY , SKEYLEN , POBJ , POBJLEN ,
-                GEFUNDEN , PP , HCHANGED , EINFUEGEN , '=' , AVLCOMP )
-                ;
+                GEFUNDEN , PP , HCHANGED , EINFUEGEN , '=',
+                AVLCOMP ) ;
    end (* AVLSRCH *) ;
 
 
 
-function AVLSRCHX ( SKEY : VOIDPTR ;        // ptr to key
-                  SKEYLEN : INTEGER ;       // keylen (if deep copy)
-                  var POBJ : VOIDPTR ;      // ptr to obj ptr
-                  var POBJLEN : VOIDPTR ;   // ptr to objlen field
-                  var GEFUNDEN : BOOLEAN ;  // true if found
-                  var PP : PTR_AVLNODE ;    // tree pointer
-                  var HCHANGED : BOOLEAN ;  // height changed
-                  EINFUEGEN : BOOLEAN ;     // if insert then true
-                  MODUS : CHAR ;            // = or > (type of search)
-                  function AVLCOMP          // passed as parameter:
-                  ( X1 : VOIDPTR ;          // compare func for
-                  L1 : INTEGER ;            // nodes in avl tree
-                  X2 : VOIDPTR ;            // integer return values
-                  L2 : INTEGER )            // like memcmp
-                  : INTEGER ) : PTR_AVLNODE ;
+function AVLSRCHx ( SKEY : VOIDPTR ;        // ptr to key
+                 SKEYLEN : INTEGER ;       // keylen (if deep copy)
+                 var POBJ : VOIDPTR ;      // ptr to obj ptr
+                 var POBJLEN : VOIDPTR ;   // ptr to objlen field
+                 var GEFUNDEN : BOOLEAN ;  // true if found
+                 var PP : PTR_AVLNODE ;    // tree pointer
+                 var HCHANGED : BOOLEAN ;  // height changed
+                 EINFUEGEN : BOOLEAN ;     // if insert then true
+                 modus : char ;            // = or > (type of search)
+                 function AVLCOMP          // passed as parameter:
+                 ( X1 : VOIDPTR ;          // compare func for
+                 L1 : INTEGER ;            // nodes in avl tree
+                 X2 : VOIDPTR ;            // integer return values
+                 L2 : INTEGER )            // like memcmp
+                 : INTEGER ) : PTR_AVLNODE ;
 
-   begin (* AVLSRCHX *)
+   begin (* AVLSRCH *)
      if PP <> NIL then
        if PP -> . MAGIC <> 'AVLNODEX' then
          begin
@@ -485,10 +462,10 @@ function AVLSRCHX ( SKEY : VOIDPTR ;        // ptr to key
                      ) ;
            EXIT ( 2001 ) ;
          end (* then *) ;
-     AVLSRCHX := AVLSRCH_INTERN ( SKEY , SKEYLEN , POBJ , POBJLEN ,
-                 GEFUNDEN , PP , HCHANGED , EINFUEGEN , MODUS , AVLCOMP
-                 ) ;
-   end (* AVLSRCHX *) ;
+     AVLSRCH := AVLSRCH_INTERN ( SKEY , SKEYLEN , POBJ , POBJLEN ,
+                GEFUNDEN , PP , HCHANGED , EINFUEGEN , modus,
+                AVLCOMP ) ;
+   end (* AVLSRCH *) ;
 
 
 
@@ -773,10 +750,10 @@ procedure AVLPRINT ( P : PTR_AVLNODE ;     // tree to print
            end (* then *) ;
 
      //************************************************************
-     //  if (p -> pvorg <> NIL)                                    
-     //     printf ("%05d/", p -> pvorg -> key);                   
-     //  else                                                      
-     //     printf (" NIL/");                                      
+     //  if (p -> pvorg <> NIL)
+     //     printf ("%05d/", p -> pvorg -> key);
+     //  else
+     //     printf (" NIL/");
      //************************************************************
 
          AVLPKEY ( AUSGFILE , P -> . KEY ) ;
@@ -957,8 +934,6 @@ function AVLCACHE ( FUNKCODE : CHAR ( 8 ) ;   // Funktionscode
        PAVLC : PTR_AVLC ;
        POBJ : PVOIDPTR ;
        POBJLEN : -> INTEGER ;
-       PKEYNEU : PVOIDPTR ;
-       LKEYNEU : -> INTEGER ;
        PLEN : -> INTEGER ;
        PRES : VOIDPTR ;
        GEFUNDEN : BOOLEAN ;
@@ -974,18 +949,18 @@ function AVLCACHE ( FUNKCODE : CHAR ( 8 ) ;   // Funktionscode
 
    static PCACHEDIR : VOIDPTR ;
 
-   const COMMAND_COUNT = 9 ;
+   const COMMAND_COUNT = 8 ;
          COMMANDS : array [ 1 .. COMMAND_COUNT ] of CHAR ( 8 ) =
          ( 'CREATE' , 'GET' , 'PUT' , 'GFIRST' , 'GNEXT' , 'TRACE' ,
-           'DELETE' , 'SHOWALL' , 'START' ) ;
+           'DELETE' , 'SHOWALL' ) ;
 
 
    function DIRCOMP ( X1 : VOIDPTR ; L1 : INTEGER ; X2 : VOIDPTR ; L2 :
                     INTEGER ) : INTEGER ;
 
    //****************************************************************
-   // compare function for AVL tree key values (here: char (8) keys) 
-   // this function is passed as a parameter to avlsrch              
+   // compare function for AVL tree key values (here: char (8) keys)
+   // this function is passed as a parameter to avlsrch
    //****************************************************************
 
 
@@ -997,8 +972,8 @@ function AVLCACHE ( FUNKCODE : CHAR ( 8 ) ;   // Funktionscode
       begin (* DIRCOMP *)
 
         //**********************************************
-        // this coding simply to avoid warning message  
-        // about parameters not used :-)                
+        // this coding simply to avoid warning message
+        // about parameters not used :-)
         //**********************************************
 
         if FALSE then
@@ -1025,9 +1000,9 @@ function AVLCACHE ( FUNKCODE : CHAR ( 8 ) ;   // Funktionscode
                       : INTEGER ) : INTEGER ;
 
    //****************************************************************
-   // compare function for AVL tree key values                       
-   // here: arbitrary structures of varying length                   
-   // this function is passed as a parameter to avlsrch              
+   // compare function for AVL tree key values
+   // here: arbitrary structures of varying length
+   // this function is passed as a parameter to avlsrch
    //****************************************************************
 
 
@@ -1091,7 +1066,7 @@ function AVLCACHE ( FUNKCODE : CHAR ( 8 ) ;   // Funktionscode
                PAVLC := PHANDLE ;
 
      //************************************************************
-     // check handle and return if handle nok                      
+     // check handle and return if handle nok
      //************************************************************
 
                if PAVLC = NIL then
@@ -1106,7 +1081,7 @@ function AVLCACHE ( FUNKCODE : CHAR ( 8 ) ;   // Funktionscode
                  end (* then *) ;
 
      //************************************************************
-     // search for key and return data if found                    
+     // search for key and return data if found
      //************************************************************
 
                PBAUMX := PAVLC -> . PTREE ;
@@ -1133,7 +1108,7 @@ function AVLCACHE ( FUNKCODE : CHAR ( 8 ) ;   // Funktionscode
                PAVLC := PHANDLE ;
 
      //************************************************************
-     // check handle and return if handle nok                      
+     // check handle and return if handle nok
      //************************************************************
 
                if PAVLC = NIL then
@@ -1148,7 +1123,7 @@ function AVLCACHE ( FUNKCODE : CHAR ( 8 ) ;   // Funktionscode
                  end (* then *) ;
 
      //************************************************************
-     // search for key and insert if notfound                      
+     // search for key and insert if notfound
      //************************************************************
 
                PBAUMX := PAVLC -> . PTREE ;
@@ -1160,7 +1135,7 @@ function AVLCACHE ( FUNKCODE : CHAR ( 8 ) ;   // Funktionscode
                  begin
 
      //************************************************************
-     // insert data if notfound                                    
+     // insert data if notfound
      //************************************************************
 
                    PAVLC -> . COUNT := PAVLC -> . COUNT + 1 ;
@@ -1174,7 +1149,7 @@ function AVLCACHE ( FUNKCODE : CHAR ( 8 ) ;   // Funktionscode
                  begin
 
      //************************************************************
-     // replace data if notfound                                   
+     // replace data if notfound
      //************************************************************
 
                    FREE ( POBJ -> ) ;
@@ -1190,7 +1165,7 @@ function AVLCACHE ( FUNKCODE : CHAR ( 8 ) ;   // Funktionscode
                PAVLC := PHANDLE ;
 
      //************************************************************
-     // check handle and return if handle nok                      
+     // check handle and return if handle nok
      //************************************************************
 
                if PAVLC = NIL then
@@ -1205,7 +1180,7 @@ function AVLCACHE ( FUNKCODE : CHAR ( 8 ) ;   // Funktionscode
                  end (* then *) ;
 
      //************************************************************
-     // search for first key using AVLGET / F                      
+     // search for first key using AVLGET / F
      //************************************************************
 
                PBAUMX := PAVLC -> . PTREE ;
@@ -1230,7 +1205,7 @@ function AVLCACHE ( FUNKCODE : CHAR ( 8 ) ;   // Funktionscode
                PAVLC := PHANDLE ;
 
      //************************************************************
-     // check handle and return if handle nok                      
+     // check handle and return if handle nok
      //************************************************************
 
                if PAVLC = NIL then
@@ -1245,7 +1220,7 @@ function AVLCACHE ( FUNKCODE : CHAR ( 8 ) ;   // Funktionscode
                  end (* then *) ;
 
      //************************************************************
-     // search for next key using AVLGET / N                       
+     // search for next key using AVLGET / N
      //************************************************************
 
                PBAUMX := PAVLC -> . PTREE ;
@@ -1270,7 +1245,7 @@ function AVLCACHE ( FUNKCODE : CHAR ( 8 ) ;   // Funktionscode
                PAVLC := PHANDLE ;
 
      //************************************************************
-     // check handle and return if handle nok                      
+     // check handle and return if handle nok
      //************************************************************
 
                if PAVLC = NIL then
@@ -1285,7 +1260,7 @@ function AVLCACHE ( FUNKCODE : CHAR ( 8 ) ;   // Funktionscode
                  end (* then *) ;
 
      //************************************************************
-     // output the whole cache using AVLGET                        
+     // output the whole cache using AVLGET
      //************************************************************
 
                WRITELN ;
@@ -1321,61 +1296,14 @@ function AVLCACHE ( FUNKCODE : CHAR ( 8 ) ;   // Funktionscode
              until TRUE
            end (* tag/ca *) ;
        7 : begin
-             
+
            end (* tag/ca *) ;
        8 : begin
-             
-           end (* tag/ca *) ;
-       9 : begin
-             repeat  // START - one time loop
-               PAVLC := PHANDLE ;
 
-     //************************************************************
-     // check handle and return if handle nok                      
-     //************************************************************
-
-               if PAVLC = NIL then
-                 begin
-                   RC := 20 ;
-                   break
-                 end (* then *) ;
-               if PAVLC -> . MAGIC <> 'AVLCACHE' then
-                 begin
-                   RC := 20 ;
-                   break
-                 end (* then *) ;
-
-     //************************************************************
-     // search for key and return data if found                    
-     //************************************************************
-
-               PBAUMX := PAVLC -> . PTREE ;
-               HCHANGED := FALSE ;
-               PRES := AVLSRCHX ( PKEY , LKEY , PKEYNEU , LKEYNEU ,
-                       GEFUNDEN , PBAUMX , HCHANGED , FALSE , '>' ,
-                       CACHECOMP ) ;
-               if not GEFUNDEN then
-                 begin
-                   PDAT := NIL ;
-                   LDAT := 0 ;
-                   RC := 8 ;
-                 end (* then *)
-               else
-                 begin
-                   PKEY := PKEYNEU -> ;
-                   LKEY := LKEYNEU -> ;
-                   PRES := AVLSRCHX ( PKEY , LKEY , POBJ , POBJLEN ,
-                           GEFUNDEN , PBAUMX , HCHANGED , FALSE , '=' ,
-                           CACHECOMP ) ;
-                   PDAT := POBJ -> ;
-                   LDAT := POBJLEN -> ;
-                   RC := 0 ;
-                 end (* else *)
-             until TRUE
            end (* tag/ca *) ;
        otherwise
          begin
-           
+
          end (* otherw *)
      end (* case *) ;
      AVLCACHE := RC ;
@@ -1384,5 +1312,5 @@ function AVLCACHE ( FUNKCODE : CHAR ( 8 ) ;   // Funktionscode
 
 
 begin (* HAUPTPROGRAMM *)
-  
+
 end (* HAUPTPROGRAMM *) .

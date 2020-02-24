@@ -1738,7 +1738,7 @@ static void *cspf_wre (void *vgs,
 #if 0
 
    fprintf (stderr, "wre: parm1 = %d\n", parm1);
-   fprintf (stderr, "wrr: parmd = %15.7f\n", parmd);
+   fprintf (stderr, "wre: parmd = %15.7f\n", parmd);
    fprintf (stderr, "wre: parm3 = %d\n", parm3);
 
 #endif
@@ -1771,6 +1771,7 @@ static void *cspf_wrr (void *vgs,
    global_store *gs = vgs;
    filecb *fcb;
    char buffer [256];
+   int lz = 0;
 
 #if 0
 
@@ -1785,8 +1786,14 @@ static void *cspf_wrr (void *vgs,
 
    check_write (gs, fcb);
 
-   if (parm3 <= 0)
+   if (parm3 == 0)
       return NULL;
+
+   if (parm3 < 0)
+   {
+      lz = 1;
+      parm3 = - parm3;
+   }
 
    if (parm4 >= 0)
    {
@@ -1799,14 +1806,27 @@ static void *cspf_wrr (void *vgs,
       if (parm4 <= 15)
          parmd = roundx (parmd, - parm4);
 
-      sprintf (buffer, "%*.*f", parm3, parm4, parmd);
+      if (lz)
+         sprintf (buffer, "%0*.*f", parm3, parm4, parmd);
+      else
+         sprintf (buffer, "%*.*f", parm3, parm4, parmd);
    }
    else
    {
-      if (parm3 >= 8)
-         sprintf (buffer, "%*.*E", parm3, parm3 - 8, parmd);
+      if (lz)
+      {
+         if (parm3 >= 8)
+            sprintf (buffer, "%0*.*E", parm3, parm3 - 8, parmd);
+         else
+            sprintf (buffer, "%0*E", parm3, parmd);
+      }
       else
-         sprintf (buffer, "%*E", parm3, parmd);
+      {
+         if (parm3 >= 8)
+            sprintf (buffer, "%*.*E", parm3, parm3 - 8, parmd);
+         else
+            sprintf (buffer, "%*E", parm3, parmd);
+      }
    }
 
    fprintf (fcb -> fhandle, "%s", buffer);
@@ -1911,6 +1931,7 @@ static void *cspf_wrv (void *vgs,
    int maxl;
    int actl;
    int straddr;
+   int linksb = 0;
 
 #if 0
 
@@ -1924,8 +1945,15 @@ static void *cspf_wrv (void *vgs,
 
    check_write (gs, fcb);
 
+   //*******************************************************
+   // if parm3 < 0 then output is adjusted to the left
+   //*******************************************************
+
    if (parm3 < 0)
-      return NULL;
+   {
+      linksb = 1;
+      parm3 = - parm3;
+   }
 
    //*******************************************************
    // Ausgeben VARCHAR:
@@ -1954,20 +1982,42 @@ static void *cspf_wrv (void *vgs,
    }
 
    //*******************************************************
-   // wenn parm3 > actl, blanks in entsprechender anzahl ausg.
+   // if parm3 is zero, then output width is actual size
    //*******************************************************
 
-   if (parm3 > actl)
-      fprintf (fcb -> fhandle, "%*c", parm3 - actl, ' ');
+   if (parm3 == 0)
+   {
+      parm3 = actl;
+   }
 
    //*******************************************************
-   // wenn parm3 < actl, nur in laenge parm3 ausgeben
+   // if parm3 > actl, write spaces before, if not left just
    //*******************************************************
 
-   if (parm3 > 0 && parm3 < actl)
+   if (! linksb)
+   {
+      if (parm3 > actl)
+         fprintf (fcb -> fhandle, "%*c", parm3 - actl, ' ');
+   }
+
+   //*******************************************************
+   // if parm3 < actl, only write in parm3 length
+   //*******************************************************
+
+   if (parm3 < actl)
       actl = parm3;
 
    fprintf (fcb -> fhandle, "%-*.*s", actl, actl, charp);
+
+   //*******************************************************
+   // if parm3 > actl, write spaces after, if left just
+   //*******************************************************
+
+   if (linksb)
+   {
+      if (parm3 > actl)
+         fprintf (fcb -> fhandle, "%*c", parm3 - actl, ' ');
+   }
 
    return NULL;
 }
@@ -1990,6 +2040,7 @@ static void *cspf_wrx (void *vgs,
    char buf [31];
    int len;
    int offs;
+   int linksb = 0;
 
 #if 0
 
@@ -2004,8 +2055,14 @@ static void *cspf_wrx (void *vgs,
 
    check_write (gs, fcb);
 
-   if (parm3 <= 0)
+   if (parm3 == 0)
       return NULL;
+
+   if (parm3 < 0)
+   {
+      linksb = 1;
+      parm3 = - parm3;
+   }
 
    shortp = ADDRSTOR (parm4);
    charp = ADDRSTOR (parm4);
@@ -2033,10 +2090,10 @@ static void *cspf_wrx (void *vgs,
 
 #endif
 
-   if (parm3 > len)
-      fprintf (fcb -> fhandle, "%*c", parm3 - len, ' ');
-
-   fprintf (fcb -> fhandle, "%-*.*s", len, len, buf);
+   if (linksb)
+      fprintf (fcb -> fhandle, "%-*.*s", parm3, parm3, buf);
+   else
+      fprintf (fcb -> fhandle, "%*.*s", parm3, parm3, buf);
 
    return NULL;
 }
@@ -2109,12 +2166,6 @@ static void *cspf_wrb (void *vgs,
 
    check_write (gs, fcb);
 
-   if (parm3 <= 0)
-      return NULL;
-
-   if (parm3 > 5)
-      fprintf (fcb -> fhandle, "%*c", parm3 - 5, ' ');
-
    if (parm2 == 0)
       strcpy (buf, "FALSE");
    else if (parm2 == 1)
@@ -2122,7 +2173,18 @@ static void *cspf_wrb (void *vgs,
    else
       strcpy (buf, "WRB:?");
 
-   fprintf (fcb -> fhandle, "%*.*s", parm3, parm3, buf);
+   if (parm3 <= 0)
+   {
+      parm3 = - parm3;
+      fprintf (fcb -> fhandle, "%-*.*s", parm3, parm3, buf);
+   }
+   else
+   {
+      fprintf (fcb -> fhandle, "%*.*s", parm3, parm3, buf);
+   }
+
+   return NULL;
+
 
    return NULL;
 }

@@ -4773,7 +4773,10 @@ WLN2     DS    0H
 *
 *
 *****************************************************************
-*        WRB (WRITE BOOLEAN):  ADR(FILE),BOOLEAN,FIELD_WIDTH
+*        WRB (WRITE BOOLEAN)
+*        R1 = ADR(FILE)
+*        R2 = BOOLEAN
+*        R3 = FIELD_WIDTH (see comment on WRS)
 *****************************************************************
 *
          DC    CL4'WRB'
@@ -4789,7 +4792,10 @@ WRB1     LA    R2,=C'FALSE'
 *
 *
 *****************************************************************
-*        WRV (WRITE VARCHAR):  ADR(FILE),VARCHAR,FIELD_WIDTH
+*        WRV (WRITE VARCHAR)
+*        R1 = ADR(FILE)
+*        R2 = VARCHAR
+*        R3 = FIELD_WIDTH (see comment on WRS)
 *****************************************************************
 *
          DC    CL4'WRV'
@@ -4814,8 +4820,12 @@ WRV2     DS    0H
          B     WRS                 continue with WRS
 *
 *
+*
 *****************************************************************
-*        WRP (WRITE pointer):  ADR(FILE),Pointer,FIELD_WIDTH
+*        WRP (WRITE pointer)
+*        R1 = ADR(FILE)
+*        R2 = Pointer
+*        R3 = FIELD_WIDTH
 *****************************************************************
 *
          DC    CL4'WRP'
@@ -4840,6 +4850,7 @@ WRP1     DS    0H
 *
 *****************************************************************
 *        WRX (WRITE scalar)
+*        R1 = ADR(FILE)
 *        R2 = Scalar value
 *        R3 = Length value
 *        R4 = Pointer to Scalar String Vektor
@@ -4866,9 +4877,6 @@ WRX      DS    0H
          L     R3,PINT+4           restore R3
 *
 WRXC     DS    0H
-         CR    R3,R4               compare R3 (parm length) to
-         BNL   WRS                    R4 (length of scalar name)
-         LR    R3,R4               adjust R3
          B     WRS
 *
 WRXERR   DS    0H
@@ -4883,7 +4891,10 @@ WRXERR   DS    0H
 *
 *
 *****************************************************************
-*        WRC   R1: ADR(FILE),  R3: FIELD_WIDTH,  R2: CHAR
+*        WRC
+*        R1 = ADR(FILE)
+*        R2 = Char
+*        R3 = FIELD_WIDTH
 *****************************************************************
 *
          DS    0H
@@ -4905,7 +4916,11 @@ WRC3     STC   R2,PFILCOMP(AD)
 *
 *
 *****************************************************************
-*     WRS   ADR(FILE):R1, STRLGTH:R4, FIELD_WIDTH:R3, R2:ADR(STRING)
+*        WRS
+*        R1 = ADR(FILE)
+*        R2 = Char
+*        R3 = FIELD_WIDTH (if negative, adjust left)
+*        R4 = String length (may be longer than R3, or shorter)
 *****************************************************************
 *
          DS    0H
@@ -5011,11 +5026,13 @@ WRSF5    DS    0H
 *
 *
 *****************************************************************
-*
-*        WRI ADR(FILE),WIDTH,INT
+*        WRI
 *
 *        09.2017: allow negative width to print leading zeroes
 *
+*        R1 = ADR(FILE)
+*        R2 = Integer
+*        R3 = FIELD_WIDTH (if negative, fill with leading zeros)
 *****************************************************************
 *
          DC    CL4'WRI '
@@ -5081,17 +5098,22 @@ WRI3     DS    0H
 *
 *
 *****************************************************************
-*        WRR, REAL NUMBER IN FPRG2, FIELDWITH IN GRG3
+*        WRR
+*
+*        R1 = ADR(FILE)
+*        FP2 = Real
+*        R3 = FIELD_WIDTH (if negative, fill with leading zeros)
+*        R4 = Scale (if negative, E-Notation)
+*
+*        Implementation in WRRSUB
 *****************************************************************
 *
          DS    0H
          DC    CL4'WRR'
 WRR      DS    0H
          FILADR ,
-*
          L     R15,=A(WRRSUB)
          BALR  R14,R15
-*
          B     RTN
 *
 *
@@ -5957,6 +5979,11 @@ PAFCLSZ  DS    0H
 *
 *****************************************************************
 *        OUTPUT OF FLOATING POINT VALUES
+*
+*        R1 = ADR(FILE)
+*        R2 = Real
+*        R3 = FIELD_WIDTH (if negative, fill with leading zeros)
+*        R4 = Scale (if negative, E-Notation)
 *****************************************************************
 *
 WRRSUB   DS    0H
@@ -5970,50 +5997,68 @@ WRRSUB   DS    0H
          DROP  R15
          USING WRRSUB,R11
 *
-         BAL   R5,PAFCHKW          CHECK FILE STATUS (WRITE)
-         SR    R2,R2               R2 <-- POWER OF 10
-         STC   R2,SIGN
-         STC   R2,EFORM
-         SDR   FPR0,FPR0
-         ADR   FPR2,FPR0           FORCE NORMALIZATION
-         LDR   FPR0,FPR2           SAVE THE ORIGINAL VALUE
-         BNZ   WRR20
+         SR    R2,R2
+         STC   R2,SIGN             SIGN := 0
+         STC   R2,EFORM            EFORM := 0
+         MVI   LEADZ,C' '          LEADZ := ' '
 *
+         LTR   R3,R3
+         BZ    WRRSUBZ
+         BP    WRR10               IF R3 < 0
+         MVI   LEADZ,C'0'          LEADZ := '0'
+         LCR   R3,R3               R3 := - R3
+WRR10    DS    0H
+*
+         BAL   R5,PAFCHKW          CHECK FILE STATUS (WRITE)
+*
+         SR    R2,R2               Exponent := 0
+         SDR   FPR0,FPR0           set FP0 to zero
+         ADR   FPR2,FPR0           FORCE NORMALIZATION
+         LDR   FPR0,FPR2           FP0 := FP2 (ORIGINAL VALUE)
+         BNZ   WRR20
 *
 ************************************************************
 *        PRINT 'ZERO' IN THE PROPER FORMAT
 ************************************************************
 *
-         LTR   R4,R4               'F' FORMAT ?
+         LTR   R4,R4               write zero in 'F' FORMAT ?
          BNM   WRR40
 *
 **************************************************
 *        E-FORMAT ZERO
 **************************************************
 *
-         MVI   PFILCOMP(AD),FILBLA
+         MVC   PFILCOMP(1,AD),LEADZ    write 2 blanks (or zeros)
          BAL   R5,PAFPST
          BAL   R5,PAFPST
-         SH    R3,=H'4'
          LR    R4,R3
-         MVI   PFILCOMP(AD),FILZER
+         SH    R4,=H'8'                at least 9 positions needed
+         MVI   PFILCOMP(AD),FILZER     write 0
          BAL   R5,PAFPST
-         MVI   PFILCOMP(AD),FILDOT
+         MVI   PFILCOMP(AD),FILDOT     write .
          BAL   R5,PAFPST
-         MVI   PFILCOMP(AD),FILZER
+         MVI   PFILCOMP(AD),FILZER     write 0
          BAL   R5,PAFPST
 *
 **************************************************
-*        PRINT TRAILING BLANKS
+*        PRINT additional zeros after decimal point
 **************************************************
 *
          LTR   R4,R4
-         BNP   WRRSUBZ
-         MVI   PFILCOMP(AD),FILBLA
-         BALR  R5,0                SET RETURN ADDRESS FOR PAFPST
-         BCT   R4,PAFPST           CALL REPEATEDLY
-         B     WRRSUBZ
+         BNP   WRR12
+         MVI   PFILCOMP(AD),FILZER
+         BALR  R5,0                    SET RETURN ADDRESS FOR PAFPST
+         BCT   R4,PAFPST               CALL REPEATEDLY
 *
+WRR12    DS    0H
+         MVI   PFILCOMP(AD),FILEXP     write E
+         BAL   R5,PAFPST
+         MVI   PFILCOMP(AD),FILPLU     write +
+         BAL   R5,PAFPST
+         MVI   PFILCOMP(AD),FILZER     write 00
+         BAL   R5,PAFPST
+         BAL   R5,PAFPST
+         B     WRRSUBZ
 *
 ************************************************************
 *        PRINT A NON_ZERO REAL NUMBER
@@ -6030,13 +6075,13 @@ WRR24    DS    0H
          CD    FPR2,=D'1.0'        PUT FPR2 INTO RANGE 1.0 to 10
          BNL   WRR26               AND COUNT EXPONENT
          MD    FPR2,=D'10.0'
-         BCT   R2,WRR24
+         BCT   R2,WRR24            expo := expo - 1
 *
 WRR26    DS    0H
          CD    FPR2,=D'10.0'
          BL    WRR30
          DD    FPR2,=D'10.0'
-         AH    R2,=H'1'
+         AH    R2,=H'1'            expo := expo + 1
          B     WRR26
 *
 **************************************************
@@ -6047,7 +6092,6 @@ WRR26    DS    0H
 WRR30    DS    0H
          LTR   R4,R4               SEE IF F_FORMAT REQUESTED
          BNM   WRR40
-*
 *
 ************************************************************
 *        PRINT THE VALUE IN E_FORM
@@ -6063,21 +6107,14 @@ WRR30    DS    0H
          AH    R2,=H'1'
 *
 WRR31    DS    0H
+*
          MVI   EFORM,X'01'         SET E_FORMAT FLAG
          ST    R2,EXPONENT         SAVE EXPONENT VALUE
-         MVI   PFILCOMP(AD),FILBLA
-         BAL   R5,PAFPST
-         LR    R4,R3               R4 <-- FIELD WIDTH (AT LEAST 9)
-         SH    R4,=H'7'
-         TM    SIGN,X'01'
-         BNZ   WRR32
-         MVI   PFILCOMP(AD),FILBLA     PRINT UP TO TWO LEADING BLANKS
-         BAL   R5,PAFPST
-         BCTR  R4,0
-WRR32    LTR   R4,R4
-         BP    *+8
-         LA    R4,1
          SR    R2,R2               ONLY ONE DIGIT BEFORE DEC. P.
+         LR    R4,R3
+         SH    R4,=H'7'            subtract used positions
+         BP    WRR50
+         LA    R4,1
          B     WRR50
 *
 *
@@ -6122,6 +6159,34 @@ WRR43    DS    0H
          MDR   FPR0,FPR2
          ADR   FPR2,FPR0
 *
+*        ST    R3,SAVEWRR3
+*
+*        CVD   R2,DOWOWRR
+*        UNPK  TRWRRS2+22(9),DOWOWRR+3(5)
+*        OI    TRWRRS2+30,X'F0'
+*        LA    R3,TRWRRS2
+*        L     R15,=A(PTRACE)
+*        BALR  R14,R15
+*
+*        L     R3,SAVEWRR3
+*        CVD   R3,DOWOWRR
+*        UNPK  TRWRRS3+22(9),DOWOWRR+3(5)
+*        OI    TRWRRS3+30,X'F0'
+*        LA    R3,TRWRRS3
+*        L     R15,=A(PTRACE)
+*        BALR  R14,R15
+*
+*        CVD   R4,DOWOWRR
+*        UNPK  TRWRRS4+22(9),DOWOWRR+3(5)
+*        OI    TRWRRS4+30,X'F0'
+*        LA    R3,TRWRRS4
+*        L     R15,=A(PTRACE)
+*        BALR  R14,R15
+*
+*        L     R3,SAVEWRR3
+*
+         BCTR  R3,0                eine stelle weg bei width
+*
          LTR   R4,R4               IF SCALE = 0, NO DEC. POINT
          BZ    WRR45
          SR    R3,R4               COMPUTE THE # OF LEADING BLANKS
@@ -6132,9 +6197,9 @@ WRR45    DS    0H
          BNP   WRR50
 *
 WRR46    DS    0H
-         MVI   PFILCOMP(AD),FILBLA
-         BALR  R5,0                SET RETURN ADDRESS FOR PAFPST
-         BCT   R3,PAFPST           CALL REPEATEDLY
+         MVC   PFILCOMP(1,AD),LEADZ
+         BALR  R5,0                    SET RETURN ADDRESS FOR PAFPST
+         BCT   R3,PAFPST               CALL REPEATEDLY
 *
 **************************************************
 *        R2 # OF DIGITS BEFORE DECIMAL POINT
@@ -6142,12 +6207,30 @@ WRR46    DS    0H
 *        IF R4 = ZERO, NO DECIMAL POINT
 **************************************************
 *
-WRR50    TM    SIGN,X'01'
-         BZ    WRR52
+WRR50    DS    0H
+         TM    SIGN,X'01'
+         BZ    WRR51
+         CLI   LEADZ,C'0'
+         BNE   WRR50A
          MVI   PFILCOMP(AD),FILMIN
          BAL   R5,PAFPST
+         MVC   PFILCOMP(1,AD),LEADZ
+         BAL   R5,PAFPST
+         B     WRR52
 *
-WRR52    LA    R2,2(R2)
+WRR50A   DS    0H
+         MVC   PFILCOMP(1,AD),LEADZ
+         BAL   R5,PAFPST
+         MVI   PFILCOMP(AD),FILMIN
+         BAL   R5,PAFPST
+         B     WRR52
+*
+WRR51    DS    0H
+         MVC   PFILCOMP(1,AD),LEADZ
+         BAL   R5,PAFPST
+*
+WRR52    DS    0H
+         LA    R2,2(R2)
          BALR  R3,0                SET RETURN ADDRESS FOR WRRDGTS
          BCT   R2,WRRDGTS          CALL REPEATEDLY
          TM    EFORM,X'01'
@@ -6194,9 +6277,16 @@ WRRSUBZ  DS    0H
 *        local variables of wrrsub
 **************************************************
 *
+LEADZ    DC    C' '
 SIGN     DC    C' '
 EFORM    DC    C' '
 EXPONENT DC    F'0'
+*
+SAVEWRR3 DS    F
+DOWOWRR  DS    D
+TRWRRS2  DC    CL80'TRACE: WRRSUB REG 2 = XXXXXXXXX'
+TRWRRS3  DC    CL80'TRACE: WRRSUB REG 3 = XXXXXXXXX'
+TRWRRS4  DC    CL80'TRACE: WRRSUB REG 4 = XXXXXXXXX'
 *
          LTORG
 *

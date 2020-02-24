@@ -15476,6 +15476,339 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                end (* TRANSLATE1 *) ;
 
 
+            procedure READSTR1 ;
+
+            //***************************************************
+            // this procedure implements the read statement      
+            // colon_ok : true if colon and length are synt. ok  
+            // gen_length : true if length parm must be genned   
+            //***************************************************
+
+
+               var XCSP : CSPTYPE ;
+                   DONE : BOOLEAN ;
+                   COLON_OK : BOOLEAN ;
+                   GEN_LENGTH : BOOLEAN ;
+                   PASREAD_NAME : CHAR ( 8 ) ;
+                   STORE_TYPE : CHAR ;
+                   CHKTYPE : TTP ;
+                   CT_RESULT : INTEGER ;
+                   LLC : ADDRRANGE ;
+                   LCPARM1 : ADDRRANGE ;
+                   LCPARM2 : ADDRRANGE ;
+                   LCPARM3 : ADDRRANGE ;
+
+               begin (* READSTR1 *)
+
+                 //************************************
+                 // string expression                  
+                 //************************************
+
+                 EXPRESSION ( FSYS + [ SYCOMMA , SYRPARENT ] ) ;
+                 if GATTR . TYPTR -> . FORM = CSTRING then
+                   begin
+                     if GATTR . KIND <> EXPR then
+                       begin
+                         LOADADDRESS ;
+                         GEN2 ( PCODE_VLD , 1 , GATTR . TYPTR -> . SIZE
+                                - 4 ) ;
+                       end (* then *) ;
+                     CTLS . VPO1_NEEDED := TRUE ;
+                     GATTR . KIND := EXPR ;
+                   end (* then *)
+                 else
+                   begin
+                     CT_RESULT := COMPTYPES ( PTYPE_VARCHAR , GATTR .
+                                  TYPTR ) ;
+                     case CT_RESULT of
+                       4 : begin
+                             LOAD ;
+                             CTLS . VPO1_NEEDED := TRUE ;
+                             GEN0 ( PCODE_VC1 ) ;
+                           end (* tag/ca *) ;
+                       5 : begin
+                             LOADADDRESS ;
+                             CTLS . VPO1_NEEDED := TRUE ;
+                             GEN1 ( PCODE_VC2 , GATTR . TYPTR -> . SIZE
+                                    ) ;
+                           end (* tag/ca *) ;
+                       otherwise
+                         begin
+                           ERROR ( 342 ) ;
+                           GATTR . TYPTR := NIL
+                         end (* otherw *)
+                     end (* case *) ;
+                     GATTR . TYPTR := PTYPE_VARCHAR ;
+                     GATTR . KIND := EXPR ;
+                   end (* else *) ;
+
+                 //**************************************************
+                 // this function needs a work area                  
+                 // the work area consists of the "string in stack"  
+                 // representation (8 bytes) and the position field  
+                 // which is zero at the beginning                   
+                 //**************************************************
+
+                 PREPLIBRARYFUNC ( 2 , LCCALLER , LCPARM , LCWORK ) ;
+                 LCPARM1 := LCPARM ;               // str addr
+                 LCPARM2 := LCPARM1 + PTRSIZE ;    // rpos addr
+                 LCPARM3 := LCPARM2 + INTSIZE ;    // 3rd parm = width
+                 LLC := LCWORK ;
+                 LCWORK := LLC + STRSTACKSZ ;
+
+                 //**********************************************
+                 // store string rep at first parameter address  
+                 //**********************************************
+
+                 GEN2 ( PCODE_LDA , LEVEL , LLC ) ;
+                 GEN2 ( PCODE_VST , 1 , - 1 ) ;
+                 GEN3 ( PCODE_STR , ORD ( 'A' ) , LEVEL , LCPARM1 ) ;
+
+                 //*******************************************
+                 // store zero (start value for reading pos)  
+                 // at second parameter address               
+                 //*******************************************
+
+                 LLC := LCWORK ;
+                 LCWORK := LLC + STRSTACKSZ ;
+                 GEN2 ( PCODE_LDC , 1 , 0 ) ;
+                 GEN3 ( PCODE_STR , ORD ( 'I' ) , LEVEL , LLC ) ;
+                 GEN2 ( PCODE_LDA , LEVEL , LLC ) ;
+                 GEN3 ( PCODE_STR , ORD ( 'A' ) , LEVEL , LCPARM2 ) ;
+
+                 //***********************************************
+                 // if not matchpar then there are no parameters  
+                 //***********************************************
+
+                 if MATCHPAR then
+                   begin
+                     if SY = SYCOMMA then
+                       INSYMBOL ;
+
+                 //***********************
+                 // lkey = 103 = readstr  
+                 //***********************
+
+                     if LKEY = 103 then
+                       if SY <> IDENT then
+                         ERROR ( 2 ) ;
+                     DONE := FALSE ;
+                     if SY = IDENT then
+                       repeat
+                         VARIABLE ( FSYS + [ SYCOMMA , SYRPARENT ,
+                                    SYCOLON ] , TRUE ) ;
+
+                 //****************************
+                 // one time loop              
+                 //****************************
+
+                         COLON_OK := FALSE ;
+                         GEN_LENGTH := FALSE ;
+                         PASREAD_NAME := ' ' ;
+                         repeat
+
+                 //*****************************
+                 // do nothing if typtr is nil  
+                 //*****************************
+
+                           if GATTR . TYPTR = NIL then
+                             break ;
+
+                 //********************************************
+                 // character array                            
+                 // check for colon and length later           
+                 //********************************************
+
+                           COLON_OK := TRUE ;
+                           if IS_CARRAY ( GATTR . TYPTR ) then
+                             begin
+                               CHKTYPE := GATTR . TYPTR ;
+                               PASREAD_NAME := '$PASRSS' ;
+                               LOADADDRESS ;
+                               LCPARM := LCPARM3 + INTSIZE ;
+                               GEN3 ( PCODE_STR , ORD ( 'A' ) , LEVEL ,
+                                      LCPARM ) ;
+                               LCPARM := LCPARM + INTSIZE ;
+                               GEN2 ( PCODE_LDC , 1 , GATTR . TYPTR ->
+                                      . SIZE ) ;
+                               GEN3 ( PCODE_STR , ORD ( 'I' ) , LEVEL ,
+                                      LCPARM ) ;
+                               GEN_LENGTH := TRUE ;
+                               STORE_TYPE := 'S' ;
+                               break ;
+                             end (* then *) ;
+
+                 //********************************************
+                 // variable length string                     
+                 // check for colon and length later           
+                 //********************************************
+
+                           if GATTR . TYPTR -> . FORM = CSTRING then
+                             begin
+                               CHKTYPE := GATTR . TYPTR ;
+                               PASREAD_NAME := '$PASRSV' ;
+                               LOADADDRESS ;
+                               GEN1 ( PCODE_VSM , GATTR . TYPTR -> .
+                                      SIZE - 4 ) ;
+                               LCPARM := LCPARM3 + INTSIZE ;
+                               GEN3 ( PCODE_STR , ORD ( 'A' ) , LEVEL ,
+                                      LCPARM ) ;
+                               GEN_LENGTH := TRUE ;
+                               STORE_TYPE := 'V' ;
+                               break ;
+                             end (* then *) ;
+
+                 //****************************
+                 // single character           
+                 //****************************
+
+                           if GATTR . TYPTR = PTYPE_CHAR then
+                             begin
+                               CHKTYPE := GATTR . TYPTR ;
+                               PASREAD_NAME := '$PASRSC' ;
+                               LOADADDRESS ;
+                               GEN_LENGTH := TRUE ;
+                               STORE_TYPE := 'C' ;
+                               break ;
+                             end (* then *) ;
+
+                 //****************************
+                 // real                       
+                 //****************************
+
+                           if IS_STDTYPE ( GATTR . TYPTR , 'R' ) then
+                             begin
+                               CHKTYPE := GATTR . TYPTR ;
+                               PASREAD_NAME := '$PASRSR' ;
+                               LOADADDRESS ;
+                               GEN_LENGTH := TRUE ;
+                               STORE_TYPE := 'R' ;
+                               break
+                             end (* then *) ;
+
+                 //**************************************************
+                 // integer different lengths                        
+                 // integer is the first read variant which has been 
+                 // implemented in Pascal (see PASLIBX)              
+                 //**************************************************
+
+                           if GATTR . TYPTR = PTYPE_INT then
+                             begin
+                               CHKTYPE := GATTR . TYPTR ;
+                               PASREAD_NAME := '$PASRSI' ;
+                               LOADADDRESS ;
+                               GEN_LENGTH := TRUE ;
+                               if GATTR . BTYPE -> . SIZE = INTSIZE
+                               then
+                                 STORE_TYPE := 'I'
+                               else
+                                 if GATTR . BTYPE -> . SIZE = HINTSIZE
+                                 then
+                                   STORE_TYPE := 'H'
+                                 else
+                                   STORE_TYPE := 'C' ;
+                               break
+                             end (* then *) ;
+
+                 //****************************
+                 // boolean                    
+                 //****************************
+
+                           if GATTR . TYPTR = PTYPE_BOOL then
+                             begin
+                               LOADADDRESS ;
+                               XCSP := PRDB
+                             end (* then *)
+                           else
+                             begin
+                               ERROR ( 116 ) ;
+                               LOADADDRESS ;
+                               GEN_LENGTH := TRUE ;
+                               XCSP := PRFC
+                             end (* else *) ;
+                         until TRUE ;
+
+                 //***************************************
+                 // if colon and colon not ok:            
+                 // throw error message                   
+                 // else read length after colon          
+                 // and LDC length found                  
+                 // if no colon found, but length needed  
+                 // LDC default length                    
+                 //***************************************
+
+                         if SY = SYCOLON then
+                           begin
+                             if not COLON_OK then
+                               ERROR ( 361 ) ;
+                             INSYMBOL ;
+                             EXPRESSION ( FSYS + [ SYCOMMA , SYRPARENT
+                                          ] ) ;
+                             if GATTR . TYPTR <> NIL then
+                               if GATTR . TYPTR <> PTYPE_INT then
+                                 ERROR ( 116 ) ;
+                             if GEN_LENGTH then
+                               LOAD ;
+                           end (* then *)
+                         else
+                           begin
+                             if GEN_LENGTH then
+                               GEN2 ( PCODE_LDC , 1 , - 1 ) ;
+                           end (* else *) ;
+
+                 //**********************************
+                 // store length information         
+                 // call read function (Pascal)      
+                 // store result indirect            
+                 //**********************************
+
+                         GEN3 ( PCODE_STR , ORD ( 'I' ) , LEVEL ,
+                                LCPARM3 ) ;
+                         if STORE_TYPE = 'C' then
+                           begin
+                             CALLLIBFUNC_PARMS ( 'C' , 3 , PASREAD_NAME
+                                                 , LCCALLER ) ;
+                           end (* then *)
+                         else
+                           if STORE_TYPE = 'S' then
+                             begin
+                               CALLLIBFUNC_PARMS ( 'P' , 5 ,
+                                                   PASREAD_NAME ,
+                                                   LCCALLER ) ;
+                             end (* then *)
+                           else
+                             if STORE_TYPE = 'V' then
+                               begin
+                                 CALLLIBFUNC_PARMS ( 'P' , 4 ,
+                                                   PASREAD_NAME ,
+                                                   LCCALLER ) ;
+                               end (* then *)
+                             else
+                               if STORE_TYPE = 'R' then
+                                 begin
+                                   CALLLIBFUNC_PARMS ( 'R' , 2 ,
+                                                   PASREAD_NAME ,
+                                                   LCCALLER ) ;
+                                 end (* then *)
+                               else
+                                 begin
+                                   CALLLIBFUNC_PARMS ( 'I' , 2 ,
+                                                   PASREAD_NAME ,
+                                                   LCCALLER ) ;
+                                   if OPT . DEBUG then
+                                     CHKBNDS ( 6 , TRUE , CHKTYPE ) ;
+                                 end (* else *) ;
+                         if not ( STORE_TYPE in [ 'S' , 'V' ] ) then
+                           GEN1 ( PCODE_STO , ORD ( STORE_TYPE ) ) ;
+                         if SY = SYCOMMA then
+                           INSYMBOL
+                         else
+                           DONE := TRUE ;
+                       until DONE ;
+                   end (* then *) ;
+               end (* READSTR1 *) ;
+
+
             procedure ALLOC1 ;
 
                begin (* ALLOC1 *)
@@ -17111,6 +17444,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                     100 : LEFT1 ;
                     101 : RIGHT1 ;
                     102 : $ERROR1 ;
+                    103 : READSTR1 ;
                   end (* case *) ;
                   if LKEY in [ 16 .. 26 , 28 , 29 , 33 , 38 , 39 , 40 ,
                   41 , 42 , 43 , 44 , 47 , 63 , 64 , 78 , 79 ] then
@@ -21256,7 +21590,7 @@ procedure ENTSTDNAMES ;
          // known to the compiler                              
          //****************************************************
 
-         STDP : array [ 1 .. 60 ] of STDPROC =
+         STDP : array [ 1 .. 65 ] of STDPROC =
          ( ( 'PAGE      ' , 0 , PROC ) , ( 'GET       ' , 1 , PROC ) ,
            ( 'PUT       ' , 2 , PROC ) , ( 'RESET     ' , 3 , PROC ) ,
            ( 'REWRITE   ' , 4 , PROC ) , ( 'READ      ' , 5 , PROC ) ,
@@ -21297,6 +21631,11 @@ procedure ENTSTDNAMES ;
            ( 'MEMCMP      ' , 96 , FUNC ) ,    // like C memcmp
            ( 'APPEND      ' , 97 , PROC ) ,    // open file for append
            ( '$ERROR      ' , 102 , PROC ) ,   // show runtime error
+           ( 'READSTR     ' , 103 , PROC ) ,   // from Pascal/VS
+           ( 'WRITESTR    ' , 104 , PROC ) ,   // from Pascal/VS
+           ( '           ' , - 1 , PROC ) ,    //
+           ( '           ' , - 1 , PROC ) ,    //
+           ( '           ' , - 1 , PROC ) ,    //
            ( '           ' , - 1 , PROC ) ,    //
            ( '           ' , - 1 , PROC ) ) ;  //
 
@@ -21313,11 +21652,21 @@ procedure ENTSTDNAMES ;
            ( '        ' , '        ' ) , ( '        ' , '        ' ) )
            ;
 
-         //****************************************************
-         // extended standard functions and procedures         
-         // implemented in pascal                              
-         // see sourcefile paslibx.pas                         
-         //****************************************************
+         //****************************************************  
+         // extended standard functions and procedures           
+         // implemented in pascal                                
+         // see sourcefile paslibx.pas                           
+         //****************************************************  
+         // If standard functions have a workarea size (WASIZE)  
+         // not equal to zero, this number of double words       
+         // is reserved to be used by the standard function      
+         // or by the calling sequence. The work area            
+         // is located before the parameters area, that is:      
+         // LCWORK is set to LCOUNTER, LCOUNTER is then          
+         // augmented by WASIZE * 8 ... otherwise LCWORK is zero.
+         // LCCALLER is set to LCOUNTER after that (base for     
+         // the parameters). See PREPLIBRARYCALL.                
+         //****************************************************  
 
          XSTDP : array [ 1 .. 30 ] of XSTDPROC =
          ( ( 'ALLOC    ' , 61 , FUNC , '$PASMEM ' , 1 , 1 , 'A' , 0 ) ,

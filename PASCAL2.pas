@@ -2171,9 +2171,10 @@ procedure DUMPSTKELEM ( STK : DATUM ) ;
    begin (* DUMPSTKELEM *)
      with STK do
        begin
-         WRITE ( TRACEF , ' STKADR=' , STKADR : 5 , ' PLEN=' , PLEN : 3
-                 , ' SCNSTNO=' , SCNSTNO : 3 , ' FPA=' , FPA . LVL : 3
-                 , FPA . DSPLMT : 6 , ' VPA=' , VPA ) ;
+         WRITE ( TRACEF , ' VRBL=' , VRBL : 1 , ' STKADR=' , STKADR : 5
+                 , ' PLEN=' , PLEN : 3 , ' SCNSTNO=' , SCNSTNO : 3 ,
+                 ' FPA=' , FPA . LVL : 3 , FPA . DSPLMT : 6 , ' VPA=' ,
+                 VPA ) ;
          if VRBL then
            begin
              WRITELN ( TRACEF ) ;
@@ -6864,11 +6865,16 @@ procedure ASMNXTINST ;
 
       procedure FILESETUP ( PRMCNT : RGRNG ) ;
 
-      (************************************************)
-      (* TO SET UP PARAMETERS FOR THE FILE I/O        *)
-      (* AND CALL THE I/O ROUTINE                     *)
-      (* -------------------------------------------- *)
-      (************************************************)
+      //*************************************************
+      // TO SET UP PARAMETERS FOR THE FILE I/O           
+      // AND CALL THE I/O ROUTINE                        
+      // ------------------------------------------------
+      // registers must be freed so that the parameters  
+      // are passed in the registers 2, 3 and 4          
+      //*************************************************
+      // register 4 is only needed by a small number     
+      // of runtime functions like WRR, WRX etc.         
+      //*************************************************
 
 
          label 10 ;
@@ -6879,6 +6885,7 @@ procedure ASMNXTINST ;
              STP2 : STKPTR ;
              STP3 : STKPTR ;
              CPARM3 : INTEGER ;
+             CPARM3_SET : BOOLEAN ;
              TOPSTART : STKPTR ;
 
          begin (* FILESETUP *)
@@ -6946,24 +6953,49 @@ procedure ASMNXTINST ;
                DUMPSTK ( 1 , TOPSTART ) ;
              end (* then *) ;
 
-           (*******************************)
-           (* stack abarbeiten            *)
-           (*******************************)
+           //************************************************
+           // stack abarbeiten                               
+           //************************************************
 
-           CPARM3 := - 1 ;
+           CPARM3_SET := FALSE ;
            for I := 2 to PRMCNT + 1 do
              with STK [ STP ] do
                begin
+
+           //************************************************
+           // trace stack content                            
+           //************************************************
+
+                 if FALSE then
+                   begin
+                     WRITELN ( TRACEF , 'dumpstk vor load bei csp ' ,
+                               'bei zeile ' , LINECNT ) ;
+                     DUMPSTK ( STP , STP ) ;
+                   end (* then *) ;
+
+           //************************************************
+           // trace stack content                            
+           //************************************************
+
                  if not VRBL then
-                   if I = 3 then
-                     CPARM3 := FPA . DSPLMT
-                   else
-                     if I = 4 then
-                       if CPARM3 = FPA . DSPLMT then
-                         begin
-                           RGADR := 3 ;
-                           goto 10
-                         end (* then *) ;
+                   case I of
+                     3 : begin
+                           CPARM3 := FPA . DSPLMT ;
+                           CPARM3_SET := TRUE ;
+                         end (* tag/ca *) ;
+                     4 : begin
+                           if CPARM3_SET then
+                             if CPARM3 = FPA . DSPLMT then
+                               begin
+                                 RGADR := 3 ;
+                                 goto 10
+                               end (* then *) ;
+                         end (* tag/ca *) ;
+                     otherwise
+                       begin
+                         
+                       end (* otherw *)
+                   end (* case *) ;
                  LOAD ( STK [ STP ] ) ;
                  10 :
                  if DTYPE <> REEL then

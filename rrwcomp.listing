@@ -1,0 +1,694 @@
+
+==========================================
+Protokoll des eingelesenen Reports
+==========================================
+
+    1: CONTROL ..TITLE 0204,038000
+    2: CONTROL ..SRC
+    3: CONTROL ..RBEZ "BETRIEBLICHE ALTERSVERSORGUNG L650/L652"
+    4: ........         REPORT 135,AZP=L0204AZP79,ESA=PE_100,ZPS=65,ACCT=N
+    5: ........         SORT FA,NL,PERSNR
+    6: COMMENT ************************************************************************
+    7: COMMENT *  ERSTELLT ALS L10.PP.SOURCE.REPORT(D038135) IN RDS 80
+    8: COMMENT *
+    9: COMMENT *  CHG MORCHE AUF RDS = 80 UND UMGESETZT
+   10: COMMENT *      MORCHE ANGEPASST AN BRANCHE
+   11: COMMENT *  CHG MORCHE 25072005 GEMAESS FAX (RIZVO)
+   12: COMMENT *  CHG 05082009 GEMAESS BAV-ERWEITERUNG + BAV AB 2009
+   13: COMMENT *               NEUE SPALTE RV-NR NACH PERSNR.
+   14: COMMENT *               NEUE SPALTE U ODER D NACH RV-NR. (U=BIS 2008/D AB 2009)
+   15: COMMENT *               NEUE SPALTE V5 VOR GESAMT
+   16: COMMENT *  CHG 24112010 DEMOGRAFIEBEITRAG + 4 SPALTEN MIT VERTRAGSINFORMATIONEN
+   17: COMMENT *               +AUSLANDSPLZ +NEUE SPALTE NATIONALITAETSKZ + L652 IM JAN
+   18: COMMENT ************************************************************************
+   19: COMMENT * ueberarbeitung durch b. oppolzer (catenate) 2020-02-12
+   20: COMMENT * mit dem ziel, eine bessere verstaendlichkeit herzustellen
+   21: COMMENT * (kommentare und fehlende definitionen ergaenzen)
+   22: COMMENT ************************************************************************
+   23: COMMENT * DEFINITIONEN                                                         *
+   24: COMMENT * opp: definition I3 ergaenzt (I3 muss wie I definiert sein)           *
+   25: COMMENT ************************************************************************
+   26: COMMENT *
+   27: ........         DEF SATZ       C 255     0
+   28: ........         DEF SATZ1      C  23     0
+   29: ........         DEF SATZ2      C 110     0
+   30: ........         DEF SATZ3      C 110     0
+   31: ........         DEF SATZ4      C  50     0
+   32: ........         DEF SATZ5      C  52     0
+   33: ........         DEF BR         P   9.2   0
+   34: ........         DEF GEB        C   8     1
+   35: ........         DEF EINTR      C   8     1
+   36: ........         DEF AUSTR      C   8     0
+   37: ........         DEF AA         C   2     0
+   38: ........         DEF M1         P   9.2   0
+   39: ........         DEF M2A        P   9.2   0
+   40: ........         DEF M2Z        P   9.2   0
+   41: ........         DEF M3A        P   9.2   0
+   42: ........         DEF M3Z        P   9.2   0
+   43: ........         DEF M4A        P   9.2   0
+   44: ........         DEF M4Z        P   9.2   0
+   45: ........         DEF M5A        P   9.2   0
+   46: ........         DEF MD         P   9.2   0
+   47: ........         DEF MGES       P   9.2   0
+   48: ........         DEF K1         P   9.2   0
+   49: ........         DEF K2A        P   9.2   0
+   50: ........         DEF K2Z        P   9.2   0
+   51: ........         DEF K3A        P   9.2   0
+   52: ........         DEF K3Z        P   9.2   0
+   53: ........         DEF K4A        P   9.2   0
+   54: ........         DEF K4Z        P   9.2   0
+   55: ........         DEF K5A        P   9.2   0
+   56: ........         DEF KD         P   9.2   0
+   57: ........         DEF KGES       P   9.2   0
+   58: ........         DEF V1         P   9.2   0
+   59: ........         DEF V2A        P   9.2   0
+   60: ........         DEF V2Z        P   9.2   0
+   61: ........         DEF V3A        P   9.2   0
+   62: ........         DEF V3Z        P   9.2   0
+   63: ........         DEF V4A        P   9.2   0
+   64: ........         DEF V4Z        P   9.2   0
+   65: ........         DEF V5A        P   9.2   0
+   66: ........         DEF VD         P   9.2   0
+   67: ........         DEF TZF        P   5.2   0
+   68: ........         DEF KZV        C   1     0
+   69: ........         DEF HIRE       C   1     0
+   70: ........         DEF BUFR       C   1     0
+   71: ........         DEF BUREFR     C   1     0
+   72: ........         DEF I          N   3     0
+   73: ........         DEF J          N   3     0
+   74: ........         DEF K          N   3     0
+   75: ........         DEF L          N   3     0
+   76: ........         DEF I1         P   2     0
+   77: ........         DEF I2         P   2     0
+   78: ........         DEF I3         P   2     0
+   79: ........         DEF SEL1       N   1     1
+   80: COMMENT *
+   81: COMMENT ************************************************************************
+   82: COMMENT * PHASE 1 DES REPORTS                                                  *
+   83: COMMENT ************************************************************************
+   84: COMMENT *
+   85: ........         IF GESPERRT = '1' GOTO EX        
+   86: COMMENT *
+   87: COMMENT ************************************************************************
+   88: COMMENT * opp: bei gesperrt = 1 geht man direkt raus
+   89: COMMENT * opp: sel = 1 usw.: ueberschrift wird nur einmal am Anfang erzeugt
+   90: COMMENT * opp: alles bis M1 ist damit geklaert
+   91: COMMENT ************************************************************************
+   92: COMMENT *
+   93: ........         IF SEL1 = 1 GOTO M1        
+   94: ........         SEL1 = 1  
+   95: ........         SATZ = &STR('FA  NL',,,1)  
+   96: ........         SATZ = &STR('PNR',,,11)  
+   97: ........         SATZ = &STR('RVNR',,,16)  
+   98: ........         SATZ = &STR('TVNR',,,29)  
+   99: ........         SATZ = &STR('V',,,37)  
+  100: ........         SATZ = &STR('NAME',,,39)  
+  101: ........         SATZ = &STR('TITEL',,,70)  
+  102: ........         SATZ = &STR('VORNAME',,,91)  
+  103: ........         SATZ = &STR('STRASSE',,,112)  
+  104: ........         SATZ = &STR('NAT',,,143)  
+  105: ........         SATZ = &STR('PLZ',,,147)  
+  106: ........         SATZ = &STR('ORT',,,158)  
+  107: ........         SATZ = &STR('G',,,189)  
+  108: ........         SATZ = &STR('GEBDAT',,,191)  
+  109: ........         SATZ = &STR('EINTRITT',,,200)  
+  110: ........         SATZ = &STR('AUSTRITT',,,209)  
+  111: ........         SATZ = &STR('A',,,218)  
+  112: ........         SATZ = &STR('HI-RENTE',,,220)  
+  113: ........         SATZ = &STR('BU',,,229)  
+  114: ........         SATZ1 = &STR('TZF   JR MO     BRUTTO',,,1)  
+  115: ........         SATZ2 = &STR('V1(M)',,,6)  
+  116: ........         SATZ2 = &STR('V2(M)     V2Z(M)',,,17)  
+  117: ........         SATZ2 = &STR('V3(M)     V3Z(M)',,,39)  
+  118: ........         SATZ2 = &STR('V4(M)     V4Z(M)',,,61)  
+  119: ........         SATZ2 = &STR('V5(M)     VD(M) ',,,83)  
+  120: ........         SATZ2 = &STR('GES(M)',,,104)  
+  121: ........         SATZ3 = &STR('V1(K)',,,6)  
+  122: ........         SATZ3 = &STR('V2(K)     V2Z(K)',,,17)  
+  123: ........         SATZ3 = &STR('V3(K)     V3Z(K)',,,39)  
+  124: ........         SATZ3 = &STR('V4(K)     V4Z(K)',,,61)  
+  125: ........         SATZ3 = &STR('V5(K)     VD(K) ',,,83)  
+  126: ........         SATZ3 = &STR('GES(K)',,,104)  
+  127: ........         SATZ4 = &STR('AENDERUNGEN',,,1)  
+  128: ........         SATZ5 = ' '  
+  129: ........         SATZ = &STR(';',1,1,4)  
+  130: ........         SATZ = &STR(';',1,1,7)  
+  131: ........         SATZ = &STR(';',1,1,15)  
+  132: ........         SATZ = &STR(';',1,1,28)  
+  133: ........         SATZ = &STR(';',1,1,36)  
+  134: ........         SATZ = &STR(';',1,1,38)  
+  135: ........         SATZ = &STR(';',1,1,69)  
+  136: ........         SATZ = &STR(';',1,1,90)  
+  137: ........         SATZ = &STR(';',1,1,111)  
+  138: ........         SATZ = &STR(';',1,1,142)  
+  139: ........         SATZ = &STR(';',1,1,146)  
+  140: ........         SATZ = &STR(';',1,1,157)  
+  141: ........         SATZ = &STR(';',1,1,188)  
+  142: ........         SATZ = &STR(';',1,1,190)  
+  143: ........         SATZ = &STR(';',1,1,199)  
+  144: ........         SATZ = &STR(';',1,1,208)  
+  145: ........         SATZ = &STR(';',1,1,217)  
+  146: ........         SATZ = &STR(';',1,1,219)  
+  147: ........         SATZ = &STR(';',1,1,228)  
+  148: ........         SATZ = &STR(';',1,1,255)  
+  149: ........         SATZ1 = &STR(';',1,1,6)  
+  150: ........         SATZ1 = &STR(';',1,1,9)  
+  151: ........         SATZ1 = &STR(';',1,1,12)  
+  152: ........         SATZ1 = &STR(';',1,1,23)  
+  153: ........         SATZ2 = &STR(';',1,1,11)  
+  154: ........         SATZ2 = &STR(';',1,1,22)  
+  155: ........         SATZ2 = &STR(';',1,1,33)  
+  156: ........         SATZ2 = &STR(';',1,1,44)  
+  157: ........         SATZ2 = &STR(';',1,1,55)  
+  158: ........         SATZ2 = &STR(';',1,1,66)  
+  159: ........         SATZ2 = &STR(';',1,1,77)  
+  160: ........         SATZ2 = &STR(';',1,1,88)  
+  161: ........         SATZ2 = &STR(';',1,1,99)  
+  162: ........         SATZ2 = &STR(';',1,1,110)  
+  163: ........         SATZ3 = &STR(';',1,1,11)  
+  164: ........         SATZ3 = &STR(';',1,1,22)  
+  165: ........         SATZ3 = &STR(';',1,1,33)  
+  166: ........         SATZ3 = &STR(';',1,1,44)  
+  167: ........         SATZ3 = &STR(';',1,1,55)  
+  168: ........         SATZ3 = &STR(';',1,1,66)  
+  169: ........         SATZ3 = &STR(';',1,1,77)  
+  170: ........         SATZ3 = &STR(';',1,1,88)  
+  171: ........         SATZ3 = &STR(';',1,1,99)  
+  172: ........         SATZ3 = &STR(';',1,1,110)  
+  173: ........         WRITE 650,00000,SATZ,SATZ1,SATZ2,SATZ3,SATZ4,SATZ5
+  174: ........         IF ABRMONF NE 01 GOTO M1        
+  175: ........         WRITE 652,00000,SATZ,SATZ1,SATZ2,SATZ3,SATZ4,SATZ5
+  176: COMMENT *
+  177: COMMENT ************************************************************************
+  178: COMMENT * opp: hier geht's richtig los
+  179: COMMENT * opp: ermitteln von KZV, TZF, EINTR, AUSTR und GEB aus den
+  180: COMMENT * opp: entsprechenden Schnittstellenfeldern (SBB PE_100)
+  181: COMMENT ************************************************************************
+  182: COMMENT *
+  183: ........M1       SATZ = ' '  
+  184: ........         SATZ1 = ' '  
+  185: ........         SATZ2 = ' '  
+  186: ........         SATZ3 = ' '  
+  187: ........         SATZ4 = ' '  
+  188: ........         KZV = 'U'  
+  189: ........         IF LABEAB(11) NE '610' GOTO M16       
+  190: ........         IF KZBEAB(11) EQ '2' GOTO M17       
+  191: ........         IF KZBEAB(11) EQ '0' GOTO M18       
+  192: ........         IF KZBEAB(11) NE '6' GOTO M16       
+  193: ........M18      KZV = 'D'  
+  194: ........         GOTO M16       
+  195: ........M17      KZV = 'U'  
+  196: ........M16      TZF = FAKTOR(8)  
+  197: ........         IF TZF NE 0 GOTO M2        
+  198: ........         TZF = 100  
+  199: ........M2       EINTR = &NUCHA(EINTRT,,,1)  
+  200: ........         EINTR = &NUCHA(EINTRM,,,4)  
+  201: ........         EINTR = &NUCHA(EINTRJ,,,7)  
+  202: ........         AUSTR = ' '  
+  203: ........         IF ENTLT = 0 GOTO M2A       
+  204: ........         AUSTR = '  .  .  '  
+  205: ........         AUSTR = &NUCHA(ENTLT,,,1)  
+  206: ........         AUSTR = &NUCHA(ENTLM,,,4)  
+  207: ........         AUSTR = &NUCHA(ENTLJ,,,7)  
+  208: ........M2A      GEB = &NUCHA(GEBDATT,,,1)  
+  209: ........         GEB = &NUCHA(GEBDATM,,,4)  
+  210: ........         GEB = &NUCHA(GEBDATJ,,,7)  
+  211: ........         AA = &NUCHA(ABRART,,,1)  
+  212: COMMENT *
+  213: COMMENT ************************************************************************
+  214: COMMENT * opp: initialisieren vieler Arbeitsfelder
+  215: COMMENT ************************************************************************
+  216: COMMENT *
+  217: ........         BR = 0  
+  218: ........         M1 = 0  
+  219: ........         M2A = 0  
+  220: ........         M2Z = 0  
+  221: ........         M3A = 0  
+  222: ........         M3Z = 0  
+  223: ........         M4A = 0  
+  224: ........         M4Z = 0  
+  225: ........         M5A = 0  
+  226: ........         MD = 0  
+  227: ........         K1 = 0  
+  228: ........         K2A = 0  
+  229: ........         K2Z = 0  
+  230: ........         K3A = 0  
+  231: ........         K3Z = 0  
+  232: ........         K4A = 0  
+  233: ........         K4Z = 0  
+  234: ........         K5A = 0  
+  235: ........         KD = 0  
+  236: ........         V1 = 0  
+  237: ........         V2A = 0  
+  238: ........         V2Z = 0  
+  239: ........         V3A = 0  
+  240: ........         V3Z = 0  
+  241: ........         V4A = 0  
+  242: ........         V4Z = 0  
+  243: ........         V5A = 0  
+  244: ........         VD = 0  
+  245: COMMENT *
+  246: COMMENT ************************************************************************
+  247: COMMENT * opp: schleife, I laeuft von 1 bis ABRMONAT plus 12
+  248: COMMENT ************************************************************************
+  249: COMMENT *
+  250: ........         J = ABRMONF + 12
+  251: ........         DO I = 1,J
+  252: COMMENT *
+  253: COMMENT ************************************************************************
+  254: COMMENT * opp: Kxx sind die kumulierten felder (ueber alle monate)
+  255: COMMENT ************************************************************************
+  256: COMMENT *
+  257: ........            K1 = K1 + P49SUM_123(I)
+  258: ........            K2A = K2A + P49SUM_125(I)
+  259: ........            K2A = K2A + P49SUM_275(I)
+  260: ........            K2Z = K2Z + P49SUM_124(I)
+  261: ........            K3A = K3A + P49SUM_127(I)
+  262: ........            K3A = K3A + P49SUM_277(I)
+  263: ........            K3A = K3A + P49SUM_278(I)
+  264: ........            K3A = K3A + P49SUM_128(I)
+  265: ........            K3Z = K3Z + P49SUM_126(I)
+  266: ........            K4A = K4A + P49SUM_130(I)
+  267: ........            K4A = K4A + P49SUM_270(I)
+  268: ........            K4Z = K4Z + P49SUM_129(I)
+  269: ........            K5A = K5A + P49SUM_131(I)
+  270: ........            KD = KD + P49SUM_271(I)
+  271: COMMENT *
+  272: COMMENT ************************************************************************
+  273: COMMENT * opp: BR spielt eine besondere Rolle
+  274: COMMENT * opp: Mxx sind die Felder des aktuellen Monats
+  275: COMMENT ************************************************************************
+  276: COMMENT *
+  277: ........            BR = P49SUM_121(I) + P49SUM_122(I)
+  278: ........            M1 = P49SUM_123(I)  
+  279: ........            M2A = P49SUM_125(I)  
+  280: ........            M2A = M2A + P49SUM_275(I)
+  281: ........            M2Z = P49SUM_124(I)  
+  282: ........            M3A = P49SUM_127(I) + P49SUM_128(I)
+  283: ........            M3A = M3A + P49SUM_277(I)
+  284: ........            M3A = M3A + P49SUM_278(I)
+  285: ........            M3Z = P49SUM_126(I)  
+  286: ........            M4Z = P49SUM_129(I)  
+  287: ........            M4A = P49SUM_130(I)  
+  288: ........            M4A = M4A + P49SUM_270(I)
+  289: ........            M5A = P49SUM_131(I)  
+  290: ........            MD = P49SUM_271(I)  
+  291: COMMENT *
+  292: COMMENT ************************************************************************
+  293: COMMENT * opp: Vxx sind die Felder des Vormonats
+  294: COMMENT * opp: diese werden nicht berechnet, wenn K = 0 (d.h. wenn es keinen
+  295: COMMENT * opp: Vormonat gibt
+  296: COMMENT ************************************************************************
+  297: COMMENT *
+  298: ........            K = I - 1
+  299: ........            IF K = 0 GOTO E1        
+  300: ........            V1 = P49SUM_123(K)  
+  301: ........            V2A = P49SUM_125(K)  
+  302: ........            V2A = V2A + P49SUM_275(K)
+  303: ........            V2Z = P49SUM_124(K)  
+  304: ........            V3A = P49SUM_127(K) + P49SUM_128(K)
+  305: ........            V3A = V3A + P49SUM_277(K)
+  306: ........            V3A = V3A + P49SUM_278(K)
+  307: ........            V3Z = P49SUM_126(K)  
+  308: ........            V4Z = P49SUM_129(K)  
+  309: ........            V4A = P49SUM_130(K)  
+  310: ........            V4A = V4A + P49SUM_270(K)
+  311: ........            V5A = P49SUM_131(K)  
+  312: ........            VD = P49SUM_271(K)  
+  313: COMMENT *
+  314: COMMENT ************************************************************************
+  315: COMMENT * opp: Quersummen MGES und KGES fuer Monat und kumuliert
+  316: COMMENT ************************************************************************
+  317: COMMENT *
+  318: ........E1          MGES = M1 + M2A
+  319: ........            MGES = MGES + M2Z
+  320: ........            MGES = MGES + M3A
+  321: ........            MGES = MGES + M3Z
+  322: ........            MGES = MGES + M4A
+  323: ........            MGES = MGES + M4Z
+  324: ........            MGES = MGES + M5A
+  325: ........            MGES = MGES + MD
+  326: ........            KGES = K1 + K2A
+  327: ........            KGES = KGES + K2Z
+  328: ........            KGES = KGES + K3A
+  329: ........            KGES = KGES + K3Z
+  330: ........            KGES = KGES + K4A
+  331: ........            KGES = KGES + K4Z
+  332: ........            KGES = KGES + K5A
+  333: ........            KGES = KGES + KD
+  334: COMMENT *
+  335: COMMENT ************************************************************************
+  336: COMMENT * opp: nur Ausgabe, wenn BR ungleich Null oder KGES ungleich Null
+  337: COMMENT * opp: sonst (wenn beide NULL) keine Ausgabe
+  338: COMMENT ************************************************************************
+  339: COMMENT *
+  340: ........            IF BR NE 0 GOTO M4        
+  341: ........            IF KGES NE 0 GOTO M4        
+  342: ........            GOTO F1        
+  343: COMMENT *
+  344: COMMENT ************************************************************************
+  345: COMMENT * opp: nur Ausgabe, wenn BR ungleich Null oder KGES ungleich Null
+  346: COMMENT * opp: sonst (wenn beide NULL) keine Ausgabe
+  347: COMMENT ************************************************************************
+  348: COMMENT *
+  349: ........M4          SATZ = &STR(FA,1,3,1)  
+  350: ........            SATZ = &STR(NL,1,2,5)  
+  351: ........            SATZ = &STR(PERSNR,1,7,8)  
+  352: ........            SATZ = &STR(RVNR,1,12,16)  
+  353: ........            SATZ = &STR(STATBER1,21,7,29)  
+  354: ........            SATZ = &STR(KZV,1,1,37)  
+  355: ........            SATZ = &STR(E_F_NAME,1,30,39)  
+  356: ........            SATZ = &STR(E_TITEL,1,20,70)  
+  357: ........            SATZ = &STR(E_V_NAME,1,20,91)  
+  358: ........            SATZ = &STR(E_STRASSE,1,30,112)  
+  359: ........            SATZ = &STR(E_NAT_KZ,1,3,143)  
+  360: ........            SATZ = &STR(' ',1,10,147)  
+  361: ........            SATZ = &STR(E_PLZ_STR,1,5,147)  
+  362: ........            IF E_PLZ_AUSL = ' ' GOTO EP        
+  363: ........            SATZ = &STR(E_PLZ_AUSL,1,10,147)  
+  364: ........EP          SATZ = &STR(E_ORT,1,30,158)  
+  365: ........            SATZ = &STR(GESCHL,1,1,189)  
+  366: ........            SATZ = &STR(GEB,1,8,191)  
+  367: ........            SATZ = &STR(EINTR,1,8,200)  
+  368: ........            SATZ = &STR(AUSTR,1,8,209)  
+  369: ........            SATZ = &STR(AA,1,1,218)  
+  370: ........            HIRE = &STR(STATBER1,28,1,1)  
+  371: ........            SATZ = &STR('        ',1,8,220)  
+  372: ........            IF HIRE NE '1' GOTO ER1       
+  373: ........            SATZ = &STR('HI-RENTE',1,8,220)  
+  374: ........ER1         BUFR = &STR(STATBER1,29,1,1)  
+  375: ........            BUREFR = &STR(STATBER1,30,1,1)  
+  376: ........            SATZ = &STR('                         ',1,25,229)  
+  377: ........            IF BUFR NE '1' GOTO ER2       
+  378: ........            SATZ = &STR('BEITRAGSFREI BEI BU      ',1,25,229)  
+  379: ........ER2         IF BUREFR NE '1' GOTO ER3       
+  380: ........            SATZ = &STR('BU-RE M.BEITRAGSFREI B.BU',1,25,229)  
+  381: ........ER3         SATZ1 = &NUCHA(TZF,,,1)  
+  382: ........            IF I > 12 GOTO E2        
+  383: ........            I1 = ABRJAHR - 1
+  384: ........            SATZ1 = &NUCHA(I1,2,,7)  
+  385: ........            I2 = I  
+  386: ........            GOTO E3        
+  387: ........E2          I1 = ABRJAHR  
+  388: ........            SATZ1 = &NUCHA(I1,2,,7)  
+  389: ........            I2 = I - 12
+  390: ........E3          SATZ1 = &NUCHA(I2,2,,10)  
+  391: ........            SATZ1 = &NUCHA(BR,,'V',13)  
+  392: ........            SATZ2 = &NUCHA(M1,,'V',1)  
+  393: ........            SATZ2 = &NUCHA(M2A,,'V',12)  
+  394: ........            SATZ2 = &NUCHA(M2Z,,'V',23)  
+  395: ........            SATZ2 = &NUCHA(M3A,,'V',34)  
+  396: ........            SATZ2 = &NUCHA(M3Z,,'V',45)  
+  397: ........            SATZ2 = &NUCHA(M4A,,'V',56)  
+  398: ........            SATZ2 = &NUCHA(M4Z,,'V',67)  
+  399: ........            SATZ2 = &NUCHA(M5A,,'V',78)  
+  400: ........            SATZ2 = &NUCHA(MD,,'V',89)  
+  401: ........            SATZ2 = &NUCHA(MGES,,'V',100)  
+  402: ........            IF ABRMONF NE 1 GOTO EK1       
+  403: ........            I3 = J - 1
+  404: ........            IF I = I3 GOTO EK2       
+  405: ........EK1         IF I NE J GOTO M5        
+  406: ........EK2         SATZ3 = &NUCHA(K1,,'V',1)  
+  407: ........            SATZ3 = &NUCHA(K2A,,'V',12)  
+  408: ........            SATZ3 = &NUCHA(K2Z,,'V',23)  
+  409: ........            SATZ3 = &NUCHA(K3A,,'V',34)  
+  410: ........            SATZ3 = &NUCHA(K3Z,,'V',45)  
+  411: ........            SATZ3 = &NUCHA(K4A,,'V',56)  
+  412: ........            SATZ3 = &NUCHA(K4Z,,'V',67)  
+  413: ........            SATZ3 = &NUCHA(K5A,,'V',78)  
+  414: ........            SATZ3 = &NUCHA(KD,,'V',89)  
+  415: ........            SATZ3 = &NUCHA(KGES,,'V',100)  
+  416: ........M5          L = 1  
+  417: ........            SATZ4 = ' '  
+  418: ........            IF K = 0 GOTO M12       
+  419: ........            IF M1 = V1 GOTO M6        
+  420: ........            SATZ4 = &STR('V1',,,L)  
+  421: ........            L = L + 3
+  422: ........M6          IF M2A = V2A GOTO M7        
+  423: ........            SATZ4 = &STR('V2',,,L)  
+  424: ........            L = L + 3
+  425: ........M7          IF M2Z = V2Z GOTO M8        
+  426: ........            SATZ4 = &STR('V2Z',,,L)  
+  427: ........            L = L + 4
+  428: ........M8          IF M3A = V3A GOTO M9        
+  429: ........            SATZ4 = &STR('V3',,,L)  
+  430: ........            L = L + 3
+  431: ........M9          IF M3Z = V3Z GOTO M10       
+  432: ........            SATZ4 = &STR('V3Z',,,L)  
+  433: ........            L = L + 4
+  434: ........M10         IF M4A = V4A GOTO M11       
+  435: ........            SATZ4 = &STR('V4',,,L)  
+  436: ........            L = L + 3
+  437: ........M11         IF M4Z = V4Z GOTO M14       
+  438: ........            SATZ4 = &STR('V4Z',,,L)  
+  439: ........            L = L + 4
+  440: ........M14         IF M5A = V5A GOTO M15       
+  441: ........            SATZ4 = &STR('V5',,,L)  
+  442: ........            L = L + 3
+  443: ........M15         IF MD = VD GOTO M12       
+  444: ........            SATZ4 = &STR('VD',,,L)  
+  445: ........M12         SATZ = &STR(';',1,1,4)  
+  446: ........            SATZ = &STR(';',1,1,7)  
+  447: ........            SATZ = &STR(';',1,1,15)  
+  448: ........            SATZ = &STR(';',1,1,28)  
+  449: ........            SATZ = &STR(';',1,1,36)  
+  450: ........            SATZ = &STR(';',1,1,38)  
+  451: ........            SATZ = &STR(';',1,1,69)  
+  452: ........            SATZ = &STR(';',1,1,90)  
+  453: ........            SATZ = &STR(';',1,1,111)  
+  454: ........            SATZ = &STR(';',1,1,142)  
+  455: ........            SATZ = &STR(';',1,1,146)  
+  456: ........            SATZ = &STR(';',1,1,157)  
+  457: ........            SATZ = &STR(';',1,1,188)  
+  458: ........            SATZ = &STR(';',1,1,190)  
+  459: ........            SATZ = &STR(';',1,1,199)  
+  460: ........            SATZ = &STR(';',1,1,208)  
+  461: ........            SATZ = &STR(';',1,1,217)  
+  462: ........            SATZ = &STR(';',1,1,219)  
+  463: ........            SATZ = &STR(';',1,1,228)  
+  464: ........            SATZ = &STR(';',1,1,255)  
+  465: ........            SATZ1 = &STR(';',1,1,6)  
+  466: ........            SATZ1 = &STR(';',1,1,9)  
+  467: ........            SATZ1 = &STR(';',1,1,12)  
+  468: ........            SATZ1 = &STR(';',1,1,23)  
+  469: ........            SATZ2 = &STR(';',1,1,11)  
+  470: ........            SATZ2 = &STR(';',1,1,22)  
+  471: ........            SATZ2 = &STR(';',1,1,33)  
+  472: ........            SATZ2 = &STR(';',1,1,44)  
+  473: ........            SATZ2 = &STR(';',1,1,55)  
+  474: ........            SATZ2 = &STR(';',1,1,66)  
+  475: ........            SATZ2 = &STR(';',1,1,77)  
+  476: ........            SATZ2 = &STR(';',1,1,88)  
+  477: ........            SATZ2 = &STR(';',1,1,99)  
+  478: ........            SATZ2 = &STR(';',1,1,110)  
+  479: ........            SATZ3 = &STR(';',1,1,11)  
+  480: ........            SATZ3 = &STR(';',1,1,22)  
+  481: ........            SATZ3 = &STR(';',1,1,33)  
+  482: ........            SATZ3 = &STR(';',1,1,44)  
+  483: ........            SATZ3 = &STR(';',1,1,55)  
+  484: ........            SATZ3 = &STR(';',1,1,66)  
+  485: ........            SATZ3 = &STR(';',1,1,77)  
+  486: ........            SATZ3 = &STR(';',1,1,88)  
+  487: ........            SATZ3 = &STR(';',1,1,99)  
+  488: ........            SATZ3 = &STR(';',1,1,110)  
+  489: ........            WRITE 650,00000,SATZ,SATZ1,SATZ2,SATZ3,SATZ4,SATZ5
+  490: ........            IF I1 = ABRJAHR GOTO F1        
+  491: ........            IF ABRMONF NE 01 GOTO F1        
+  492: ........            WRITE 652,00000,SATZ,SATZ1,SATZ2,SATZ3,SATZ4,SATZ5
+  493: ........F1       END 
+  494: ........EX       EXIT 
+  495: CONTROL ..REPS
+  496: CONTROL ..END
+
+==========================================
+Ausgabe Referenzliste
+==========================================
+
+Liste der Variablen (RRW und ACCURAT)
+
+Name        Typ Laenge Nachk Dim   Defin  Verwendung
+AA          C        2     0   0     37D    211A  369F
+ABRART       -------------------            211F
+ABRJAHR      -------------------            383E  387E  490I
+ABRMONF      -------------------            174I  250E  402I  491I
+AUSTR       C        8     0   0     36D    202A  204A  205A  206A  207A  368F
+BR          P        9     2   0     33D    217A  277A  340I  391F
+BUFR        C        1     0   0     70D    374A  377I
+BUREFR      C        1     0   0     71D    375A  379I
+EINTR       C        8     0   1     35D    199A  200A  201A  367F
+EINTRJ       -------------------            201F
+EINTRM       -------------------            200F
+EINTRT       -------------------            199F
+ENTLJ        -------------------            207F
+ENTLM        -------------------            206F
+ENTLT        -------------------            203I  205F
+E_F_NAME     -------------------            355F
+E_NAT_KZ     -------------------            359F
+E_ORT        -------------------            364F
+E_PLZ_AUSL   -------------------            362I  363F
+E_PLZ_STR    -------------------            361F
+E_STRASSE    -------------------            358F
+E_TITEL      -------------------            356F
+E_V_NAME     -------------------            357F
+FA           -------------------              5S  349F
+FAKTOR       -------------------            196E
+GEB         C        8     0   1     34D    208A  209A  210A  366F
+GEBDATJ      -------------------            210F
+GEBDATM      -------------------            209F
+GEBDATT      -------------------            208F
+GESCHL       -------------------            365F
+GESPERRT     -------------------             85I
+HIRE        C        1     0   0     69D    370A  372I
+I           N        3     0   0     72D    251L  257X  258X  259X  260X  261X
+                                            262X  263X  264X  265X  266X  267X
+                                            268X  269X  270X  277X  277X  278X
+                                            279X  280X  281X  282X  282X  283X
+                                            284X  285X  286X  287X  288X  289X
+                                            290X  298E  382I  385E  389E  404I
+                                            405I
+I1          P        2     0   0     76D    383A  384F  387A  388F  490I
+I2          P        2     0   0     77D    385A  389A  390F
+I3          P        2     0   0     78D    403A  404I
+J           N        3     0   0     73D    250A  251E  403E  405I
+K           N        3     0   0     74D    298A  299I  300X  301X  302X  303X
+                                            304X  304X  305X  306X  307X  308X
+                                            309X  310X  311X  312X  418I
+K1          P        9     2   0     48D    227A  257A  257E  326E  406F
+K2A         P        9     2   0     49D    228A  258A  258E  259A  259E  326E
+                                            407F
+K2Z         P        9     2   0     50D    229A  260A  260E  327E  408F
+K3A         P        9     2   0     51D    230A  261A  261E  262A  262E  263A
+                                            263E  264A  264E  328E  409F
+K3Z         P        9     2   0     52D    231A  265A  265E  329E  410F
+K4A         P        9     2   0     53D    232A  266A  266E  267A  267E  330E
+                                            411F
+K4Z         P        9     2   0     54D    233A  268A  268E  331E  412F
+K5A         P        9     2   0     55D    234A  269A  269E  332E  413F
+KD          P        9     2   0     56D    235A  270A  270E  333E  414F
+KGES        P        9     2   0     57D    326A  327A  327E  328A  328E  329A
+                                            329E  330A  330E  331A  331E  332A
+                                            332E  333A  333E  341I  415F
+KZBEAB       -------------------            190I  191I  192I
+KZV         C        1     0   0     68D    188A  193A  195A  354F
+L           N        3     0   0     75D    416A  420F  421A  421E  423F  424A
+                                            424E  426F  427A  427E  429F  430A
+                                            430E  432F  433A  433E  435F  436A
+                                            436E  438F  439A  439E  441F  442A
+                                            442E  444F
+LABEAB       -------------------            189I
+M1          P        9     2   0     38D    218A  278A  318E  392F  419I
+M2A         P        9     2   0     39D    219A  279A  280A  280E  318E  393F
+                                            422I
+M2Z         P        9     2   0     40D    220A  281A  319E  394F  425I
+M3A         P        9     2   0     41D    221A  282A  283A  283E  284A  284E
+                                            320E  395F  428I
+M3Z         P        9     2   0     42D    222A  285A  321E  396F  431I
+M4A         P        9     2   0     43D    223A  287A  288A  288E  322E  397F
+                                            434I
+M4Z         P        9     2   0     44D    224A  286A  323E  398F  437I
+M5A         P        9     2   0     45D    225A  289A  324E  399F  440I
+MD          P        9     2   0     46D    226A  290A  325E  400F  443I
+MGES        P        9     2   0     47D    318A  319A  319E  320A  320E  321A
+                                            321E  322A  322E  323A  323E  324A
+                                            324E  325A  325E  401F
+NL           -------------------              5S  350F
+P49SUM_121   -------------------            277E
+P49SUM_122   -------------------            277E
+P49SUM_123   -------------------            257E  278E  300E
+P49SUM_124   -------------------            260E  281E  303E
+P49SUM_125   -------------------            258E  279E  301E
+P49SUM_126   -------------------            265E  285E  307E
+P49SUM_127   -------------------            261E  282E  304E
+P49SUM_128   -------------------            264E  282E  304E
+P49SUM_129   -------------------            268E  286E  308E
+P49SUM_130   -------------------            266E  287E  309E
+P49SUM_131   -------------------            269E  289E  311E
+P49SUM_270   -------------------            267E  288E  310E
+P49SUM_271   -------------------            270E  290E  312E
+P49SUM_275   -------------------            259E  280E  302E
+P49SUM_277   -------------------            262E  283E  305E
+P49SUM_278   -------------------            263E  284E  306E
+PERSNR       -------------------              5S  351F
+RVNR         -------------------            352F
+SATZ        C      255     0   0     27D     95A   96A   97A   98A   99A  100A
+                                            101A  102A  103A  104A  105A  106A
+                                            107A  108A  109A  110A  111A  112A
+                                            113A  129A  130A  131A  132A  133A
+                                            134A  135A  136A  137A  138A  139A
+                                            140A  141A  142A  143A  144A  145A
+                                            146A  147A  148A  173W  175W  183A
+                                            349A  350A  351A  352A  353A  354A
+                                            355A  356A  357A  358A  359A  360A
+                                            361A  363A  364A  365A  366A  367A
+                                            368A  369A  371A  373A  376A  378A
+                                            380A  445A  446A  447A  448A  449A
+                                            450A  451A  452A  453A  454A  455A
+                                            456A  457A  458A  459A  460A  461A
+                                            462A  463A  464A  489W  492W
+SATZ1       C       23     0   0     28D    114A  149A  150A  151A  152A  173W
+                                            175W  184A  381A  384A  388A  390A
+                                            391A  465A  466A  467A  468A  489W
+                                            492W
+SATZ2       C      110     0   0     29D    115A  116A  117A  118A  119A  120A
+                                            153A  154A  155A  156A  157A  158A
+                                            159A  160A  161A  162A  173W  175W
+                                            185A  392A  393A  394A  395A  396A
+                                            397A  398A  399A  400A  401A  469A
+                                            470A  471A  472A  473A  474A  475A
+                                            476A  477A  478A  489W  492W
+SATZ3       C      110     0   0     30D    121A  122A  123A  124A  125A  126A
+                                            163A  164A  165A  166A  167A  168A
+                                            169A  170A  171A  172A  173W  175W
+                                            186A  406A  407A  408A  409A  410A
+                                            411A  412A  413A  414A  415A  479A
+                                            480A  481A  482A  483A  484A  485A
+                                            486A  487A  488A  489W  492W
+SATZ4       C       50     0   0     31D    127A  173W  175W  187A  417A  420A
+                                            423A  426A  429A  432A  435A  438A
+                                            441A  444A  489W  492W
+SATZ5       C       52     0   0     32D    128A  173W  175W  489W  492W
+SEL1        N        1     0   1     79D     93I   94A
+STATBER1     -------------------            353F  370F  374F  375F
+TZF         P        5     2   0     67D    196A  197I  198A  381F
+V1          P        9     2   0     58D    236A  300A  419I
+V2A         P        9     2   0     59D    237A  301A  302A  302E  422I
+V2Z         P        9     2   0     60D    238A  303A  425I
+V3A         P        9     2   0     61D    239A  304A  305A  305E  306A  306E
+                                            428I
+V3Z         P        9     2   0     62D    240A  307A  431I
+V4A         P        9     2   0     63D    241A  309A  310A  310E  434I
+V4Z         P        9     2   0     64D    242A  308A  437I
+V5A         P        9     2   0     65D    243A  311A  440I
+VD          P        9     2   0     66D    244A  312A  443I
+
+Liste der Label (Sprungziele)
+
+Name        Typ    Defin  Verwendung
+E1          L       318D    299I
+E2          L       387D    382I
+E3          L       390D    386G
+EK1         L       405D    402I
+EK2         L       406D    404I
+EP          L       364D    362I
+ER1         L       374D    372I
+ER2         L       379D    377I
+ER3         L       381D    379I
+EX          L       494D     85I
+F1          L       493D    342G  490I  491I
+M1          L       183D     93I  174I
+M10         L       434D    431I
+M11         L       437D    434I
+M12         L       445D    418I  443I
+M14         L       440D    437I
+M15         L       443D    440I
+M16         L       196D    189I  192I  194G
+M17         L       195D    190I
+M18         L       193D    191I
+M2          L       199D    197I
+M2A         L       208D    203I
+M4          L       349D    340I  341I
+M5          L       416D    405I
+M6          L       422D    419I
+M7          L       425D    422I
+M8          L       428D    425I
+M9          L       431D    428I

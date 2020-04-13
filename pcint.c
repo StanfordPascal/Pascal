@@ -3380,7 +3380,26 @@ static void *cspf_rfc (void *vgs,
    *charp = ' ';
 
    if (parm3 < 0)
+   {
       parm3 = 1;
+
+      //*********************************************
+      // this coding added 12.04.2020
+      // because otherwise a sequence of single char
+      // reads would not handle eoln
+      //*********************************************
+      // error introduced in Jan 2020, when RFC
+      // replaced RDC
+      //*********************************************
+
+      if (fcb -> eoln)
+      {
+         ch = file_getch (gs, fcb);
+         charp = ADDRSTOR (parm2);
+         (* charp) = ch;
+         return NULL;
+      }
+   }
 
    for (i = 0; i < parm3; i ++)
    {
@@ -4000,6 +4019,123 @@ static char *check_fortran (global_store *gs,
    }
 
    return message;
+}
+
+
+
+
+static int compare_set (char what,
+                        unsigned char *setp2,
+                        unsigned char *setp1,
+                        int len2,
+                        int len1)
+
+/**********************************************************/
+/*                                                        */
+/*   compare sets                                         */
+/*                                                        */
+/*   lengths may differ                                   */
+/*                                                        */
+/*   what = E (equal) N (not equal) G (greater) L (less)  */
+/*   shorter sets are padded with binary zeroes to        */
+/*   be compared more easily using memcmp                 */
+/*                                                        */
+/**********************************************************/
+
+{
+   unsigned char buf1 [256];
+   unsigned char buf2 [256];
+   int len_neu;
+   int len;
+   unsigned char *cpu1;
+   unsigned char *cpu2;
+   int res;
+
+   switch (what)
+   {
+      case 'E':
+      case 'N':
+         if (len1 < len2)
+         {
+            memset (buf1, 0x00, len2);
+            memcpy (buf1, setp1, len1);
+            setp1 = buf1;
+            len1 = len2;
+         }
+         if (len2 < len1)
+         {
+            memset (buf2, 0x00, len1);
+            memcpy (buf2, setp2, len2);
+            setp2 = buf2;
+            len2 = len1;
+         }
+         res = memcmp (setp2, setp1, len1);
+         break;
+
+      case 'L':
+         len_neu = len1;
+         if (len1 < len2)
+         {
+            len_neu = len2;
+         }
+
+         memset (buf1, 0x00, len_neu);
+         memcpy (buf1, setp1, len1);
+
+         if (len2 < len_neu)
+         {
+            memset (buf2, 0x00, len_neu);
+            memcpy (buf2, setp2, len2);
+            setp2 = buf2;
+         }
+
+         for (cpu1 = buf1, cpu2 = setp2, len = len_neu;
+              len > 0;
+              cpu1 += 1, cpu2 += 1, len -= 1)
+         {
+            *cpu1 |= *cpu2;
+         }
+
+         if (memcmp (buf1, setp1, len1) == 0)
+            res = 0;
+         else
+            res = 1;
+
+         break;
+
+      case 'G':
+         len_neu = len1;
+         if (len1 < len2)
+         {
+            len_neu = len2;
+         }
+
+         memset (buf1, 0x00, len_neu);
+         memcpy (buf1, setp1, len1);
+
+         if (len2 < len_neu)
+         {
+            memset (buf2, 0x00, len_neu);
+            memcpy (buf2, setp2, len2);
+            setp2 = buf2;
+         }
+
+         for (cpu1 = buf1, cpu2 = setp2, len = len_neu;
+              len > 0;
+              cpu1 += 1, cpu2 += 1, len -= 1)
+         {
+            *cpu1 |= *cpu2;
+         }
+
+         if (memcmp (buf1, setp2, len2) == 0)
+            res = 0;
+         else
+            res = -1;
+
+         break;
+   }
+
+   return res;
 }
 
 
@@ -4960,10 +5096,7 @@ static void int1 (global_store *gs)
 
             STACKTYPE (gs -> sp) = 'B';
 
-            if (len1 != len2)
-               runtime_error (gs, SETLERROR, NULL);
-
-            res = memcmp (setp2, setp1, len1);
+            res = compare_set ('E', setp2, setp1, len2, len1);
          }
          else if (pcode -> t == 'V')
          {
@@ -5252,21 +5385,7 @@ static void int1 (global_store *gs)
 
             STACKTYPE (gs -> sp) = 'B';
 
-            if (len1 != len2)
-               runtime_error (gs, SETLERROR, NULL);
-
-            memcpy (setbuffer, setp1, len1);
-            for (cpu1 = setbuffer, cpu2 = setp2, len = len1;
-                 len > 0;
-                 cpu1 += 1, cpu2 += 1, len -= 1)
-            {
-               *cpu1 |= *cpu2;
-            }
-
-            if (memcmp (setbuffer, setp2, len1) == 0)
-               res = 0;
-            else
-               res = -1;
+            res = compare_set ('G', setp2, setp1, len2, len1);
          }
          else if (pcode -> t == 'V')
          {
@@ -5975,21 +6094,7 @@ static void int1 (global_store *gs)
 
             STACKTYPE (gs -> sp) = 'B';
 
-            if (len1 != len2)
-               runtime_error (gs, SETLERROR, NULL);
-
-            memcpy (setbuffer, setp1, len1);
-            for (cpu1 = setbuffer, cpu2 = setp2, len = len1;
-                 len > 0;
-                 cpu1 += 1, cpu2 += 1, len -= 1)
-            {
-               *cpu1 |= *cpu2;
-            }
-
-            if (memcmp (setbuffer, setp1, len1) == 0)
-               res = 0;
-            else
-               res = 1;
+            res = compare_set ('L', setp2, setp1, len2, len1);
          }
          else if (pcode -> t == 'V')
          {
@@ -6735,10 +6840,7 @@ static void int1 (global_store *gs)
 
             STACKTYPE (gs -> sp) = 'B';
 
-            if (len1 != len2)
-               runtime_error (gs, SETLERROR, NULL);
-
-            res = memcmp (setp2, setp1, len1);
+            res = compare_set ('N', setp2, setp1, len2, len1);
          }
          else if (pcode -> t == 'R')
          {

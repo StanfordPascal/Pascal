@@ -2518,9 +2518,12 @@ function $PASSTR1 ( FUNCCODE : INTEGER ; const S1 : STRING ; I1 :
              if LS1 > LEN then
                LS1 := LEN ;
              $PASSTR1 := REPEATSTR ( ' ' , LEN ) ;
-             P := STRRESULTP ;
-             Q := ADDR ( S1 [ START ] ) ;
-             MEMCPY ( P , Q , LS1 ) ;
+             if LS1 > 0 then
+               begin
+                 P := STRRESULTP ;
+                 Q := ADDR ( S1 [ START ] ) ;
+                 MEMCPY ( P , Q , LS1 )
+               end (* then *)
            end (* tag/ca *) ;
 
      /*********************************/
@@ -2545,11 +2548,14 @@ function $PASSTR1 ( FUNCCODE : INTEGER ; const S1 : STRING ; I1 :
                  X := LEN - LS1 ;
                end (* else *) ;
              $PASSTR1 := REPEATSTR ( ' ' , LEN ) ;
-             P := STRRESULTP ;
-             if X > 0 then
-               P := PTRADD ( P , X ) ;
-             Q := ADDR ( S1 [ START ] ) ;
-             MEMCPY ( P , Q , LS1 ) ;
+             if LS1 > 0 then
+               begin
+                 P := STRRESULTP ;
+                 if X > 0 then
+                   P := PTRADD ( P , X ) ;
+                 Q := ADDR ( S1 [ START ] ) ;
+                 MEMCPY ( P , Q , LS1 )
+               end (* then *)
            end (* tag/ca *) ;
 
      /*********************************/

@@ -122,6 +122,13 @@ program PCODE_TRANSLATOR ( INPUT , OUTPUT , OBJCODE , LIST002 , TRACEF
 (*                                                                  *)
 (********************************************************************)
 (*                                                                  *)
+(*  Apr 2020 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*             (berndoppolzer@yahoo.com)                            *)
+(*                                                                  *)
+(*  - see PASCAL1 - no changes here                                 *)
+(*                                                                  *)
+(********************************************************************)
+(*                                                                  *)
 (*  Jan 2020 - Extensions to the Compiler by Bernd Oppolzer         *)
 (*             (berndoppolzer@yahoo.com)                            *)
 (*                                                                  *)
@@ -518,9 +525,9 @@ program PCODE_TRANSLATOR ( INPUT , OUTPUT , OBJCODE , LIST002 , TRACEF
 
 
 
-const VERSION = '2020.01' ;        // Version for display message
-      VERSION2 = 0x2001 ;          // Version for load module
-      VERSION3 = 'XL2''2001''' ;   // Version for LIST002 listing
+const VERSION = '2020.04' ;        // Version for display message
+      VERSION2 = 0x2004 ;          // Version for load module
+      VERSION3 = 'XL2''2004''' ;   // Version for LIST002 listing
       MXADR = 65535 ;
       SHRTINT = 4095 ;
       HALFINT = 32700 ;

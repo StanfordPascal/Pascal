@@ -1,24 +1,9 @@
 
-2020.01:
+2020.04:
 
-* Testen CSP RDV bei Eingabe von Terminal
-* zuerst Version 2019.09 auf MVS ausliefern
-* Fehler bei CSP RDV auf Mainframe - Maxlaenge ueberschr. bei RDV - TESTREAD.pas
-* Testen Unterschied bei Ausgabe Leerzeilen in Textfiles - TESTCOPY.pas
-* Fehler Mainframe bei TESTRDV.PAS - am Dateiende
-* Fehler Mainframe bei TESTREA3.PAS - bei zweitem Lesen fehlt Anfang
-* Fehler Mainframe bei TESTRDC2.PAS - bei leerer Eingabe
-* Lesen CHAR(10) und STRING(10) tickt anders als einzelne CHARs - siehe TESTREAD.pas
-* Implementieren READ (X : N) - d.h. Change Read einzelne Chars, feste Strings, Varchars
-* READ Ints usw. neu als Pascal-Funktion (neue CSVs)
-* Problem bei INDEX-Funktion in TESTREA6
-* READSTR fuer reals
-* Fehler reparieren bei REAL-Eingabe (Nullen nach Dezimalpunkt)
-* Write Boolean reparieren (WIDTH-Angaben)
-* Write Real reparieren (negative Laenge)
-* Write VarChar reparieren (negative Laenge)
-* Write Skalars reparieren (negative Laenge)
-* Write reparieren auf Mainframe (WRR und WRX bei linksbuendig)
+- Fehler bei SET-Vergleich mit unterschiedlichen Laengen (PCINT)
+- Fehler bei COMPERR4 untersuchen und klaeren
+- AVLCACHE START
 - Write bei Real 0.0 korrigieren (Mainframe)
 - Write bei Real mit fuehrenden Nullen (Mainframe)
 - Write bei Skalar mit korrekter Laenge (Mainframe)
@@ -40,6 +25,30 @@
 - spaeter: klaeren was bei Windows-Textfiles mit Hex-Nullen passiert
 - spaeter: klaeren Ein-Ausgabe variante Records
   (insbesondere Mainframe und RECFM=V)
+
+=======================================================================================
+
+2020.01:
+
+* Testen CSP RDV bei Eingabe von Terminal
+* zuerst Version 2019.09 auf MVS ausliefern
+* Fehler bei CSP RDV auf Mainframe - Maxlaenge ueberschr. bei RDV - TESTREAD.pas
+* Testen Unterschied bei Ausgabe Leerzeilen in Textfiles - TESTCOPY.pas
+* Fehler Mainframe bei TESTRDV.PAS - am Dateiende
+* Fehler Mainframe bei TESTREA3.PAS - bei zweitem Lesen fehlt Anfang
+* Fehler Mainframe bei TESTRDC2.PAS - bei leerer Eingabe
+* Lesen CHAR(10) und STRING(10) tickt anders als einzelne CHARs - siehe TESTREAD.pas
+* Implementieren READ (X : N) - d.h. Change Read einzelne Chars, feste Strings, Varchars
+* READ Ints usw. neu als Pascal-Funktion (neue CSVs)
+* Problem bei INDEX-Funktion in TESTREA6
+* READSTR fuer reals
+* Fehler reparieren bei REAL-Eingabe (Nullen nach Dezimalpunkt)
+* Write Boolean reparieren (WIDTH-Angaben)
+* Write Real reparieren (negative Laenge)
+* Write VarChar reparieren (negative Laenge)
+* Write Skalars reparieren (negative Laenge)
+* Write reparieren auf Mainframe (WRR und WRX bei linksbuendig)
+* bei LEFT und RIGHT String mit Laenge Null akzeptieren
 
 =======================================================================================
 

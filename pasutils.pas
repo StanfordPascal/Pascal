@@ -220,7 +220,7 @@ procedure ASSIGNMEM ( var X : ANYFILE ; MEMBNAME : CHARPTR ; LEN :
        CHECK_PLATFORM ;
      if PLATF = PLATF_INTEL then
        begin
-
+         
        end (* then *)
      else
        begin
@@ -462,10 +462,11 @@ procedure INTTOSTR ( CP : VOIDPTR ; LEN : INTEGER ; VAL : INTEGER ;
        end (* then *) ;
      LENX := 20 - I ;
      POSX := LEN - LENX ;
-     if posx < 0 then begin
-        i := i - posx;
-        posx := 0;
-     end ;
+     if POSX < 0 then
+       begin
+         I := I - POSX ;
+         POSX := 0 ;
+       end (* then *) ;
      MEMSET ( CP , ' ' , LEN ) ;
      MEMCPY ( PTRADD ( CP , POSX ) , ADDR ( BUFFER [ I + 1 ] ) , LENX )
               ;
@@ -667,5 +668,5 @@ procedure READSYMB ( var F : TEXT ; X : VOIDPTR ; LEN : INTEGER ) ;
 
 
 begin (* HAUPTPROGRAMM *)
-
+  
 end (* HAUPTPROGRAMM *) .

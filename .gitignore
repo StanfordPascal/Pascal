@@ -18,6 +18,7 @@
 *.map
 *.tmp
 *.exe
+*.xxx
 !pcint.exe
 !pcint2.exe
 !mvsinst\*.obj
@@ -45,5 +46,6 @@ TRACEF
 # be published
 
 alt/
+error/
 rest/
 compsave/

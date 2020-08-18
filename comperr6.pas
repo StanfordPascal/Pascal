@@ -1,41 +1,41 @@
 program COBFORM ( SOURCE , NSOURCE , LISTING ) ;
 
 //***************************************************************
-//                                                               
-// Source Code Formatter for COBOL                               
-// Bernd Oppolzer - work started 02.2020                         
-//                                                               
+//
+// Source Code Formatter for COBOL
+// Bernd Oppolzer - work started 02.2020
+//
 //***************************************************************
-// to do list:                                                   
-// - write metadata for files to new output file                 
+// to do list:
+// - better indentation on EXEC CICS statements
+// - write metadata for files to new output file
 // - output remarks 1:6 depending on (external) switch - no const
-// - compute data offsets depending on (external) switch         
-// - control if level numbers are inconsistent                   
-// - control if END-IF terminates IF with missing END-EVALUATE   
-// - better formatting of level items (01, 05, 10 etc.)          
-// - insert THEN keyword on multi-line IFs                       
+// - compute data offsets depending on (external) switch
+// - control if level numbers are inconsistent
+// - control if END-IF terminates IF with missing END-EVALUATE
+// - better formatting of level items (01, 05, 10 etc.)
+// - insert THEN keyword on multi-line IFs
 //***************************************************************
-// solved problems:                                              
-// * skip line on statement starters (MOVE, NEXT SENTENCE)       
-// * solve problems with string constant including WRITE         
-// * correct formatting of multi-level IFs with ELSE             
-// * proper stacking of statement types                          
-// * solve problem with breakdown on LEICP82A                    
-// * solve problem with wrong indentation on OPEN                
-// * do major on keywords                                        
-// * print errors to listing                                     
-// * modify output on IF conditions                              
-// * test: control problems with missing END-EVALUATE            
-// * correct indentation on EVALUATE statement                   
-// * correct indentation on PERFORM statement                    
-// * remove blank lines after PERFORM                            
-// * statements INITIALIZE, INSPECT.                             
-// * correct indentation on READ statement                       
-// * correct indentation on WRITE statement                      
-// * check_outputline should do different on multi line output   
-// * better indentation on SEARCH statement                      
-// * skip lines at AND and OR inside WHEN clauses                
-// * better indentation on EXEC CICS statements                  
+// solved problems:
+// * skip line on statement starters (MOVE, NEXT SENTENCE)
+// * solve problems with string constant including WRITE
+// * correct formatting of multi-level IFs with ELSE
+// * proper stacking of statement types
+// * solve problem with breakdown on LEICP82A
+// * solve problem with wrong indentation on OPEN
+// * do major on keywords
+// * print errors to listing
+// * modify output on IF conditions
+// * test: control problems with missing END-EVALUATE
+// * correct indentation on EVALUATE statement
+// * correct indentation on PERFORM statement
+// * remove blank lines after PERFORM
+// * statements INITIALIZE, INSPECT.
+// * correct indentation on READ statement
+// * correct indentation on WRITE statement
+// * check_outputline should do different on multi line output
+// * better indentation on SEARCH statement
+// * skip lines at AND and OR inside WHEN clauses
 //***************************************************************
 
 
@@ -45,7 +45,7 @@ const MAXLEVEL = 20 ;
       DATAPOS1 = 38 ;
       DATAPOS2 = 52 ;
       REMARKS_1_6 = TRUE ;
-      TRACELVL = 0 ;
+      TRACELVL = 1 ;
 
 
 type STATUS_TYPE = ( INITST , VORCOBOL , INCOBOL , NACHCOBOL ) ;
@@ -63,26 +63,26 @@ type STATUS_TYPE = ( INITST , VORCOBOL , INCOBOL , NACHCOBOL ) ;
                        OCNT_POST : INTEGER ;
 
      //********************************************
-     // div_flag and sect_flag are set according   
-     // to the division and section actually       
-     // processed                                  
+     // div_flag and sect_flag are set according
+     // to the division and section actually
+     // processed
      //********************************************
 
                        DIV_FLAG : CHAR ;
                        SECT_FLAG : CHAR ;
 
      //********************************************
-     // variable punkt_gef is set after work_level 
-     // call and tells if next statement which     
-     // starts with a number is to be handled as   
-     // a new level statement or not               
+     // variable punkt_gef is set after work_level
+     // call and tells if next statement which
+     // starts with a number is to be handled as
+     // a new level statement or not
      //********************************************
 
                        PUNKT_GEF : BOOLEAN ;
 
      //********************************************
-     // variables from here handled by check_word  
-     // inside procedure work_normal_stmt          
+     // variables from here handled by check_word
+     // inside procedure work_normal_stmt
      //********************************************
 
                        INDENT : INTEGER ;
@@ -291,9 +291,9 @@ procedure ERR_CHECK ( ERRNO : INTEGER ) ;
 function COMP_COBOL ( const Z : STRING ) : STRING ;
 
 //***************************************************
-// compress cobol lines, that is:                    
-// remove multiple blanks but not inside of strings  
-// and: apply upper to chars outside of strings      
+// compress cobol lines, that is:
+// remove multiple blanks but not inside of strings
+// and: apply upper to chars outside of strings
 //***************************************************
 
 
@@ -368,7 +368,7 @@ function COMP_COBOL ( const Z : STRING ) : STRING ;
 procedure WORK_PROCESS ( var ZCNEU : CHAR ( 72 ) ; ZC : CHAR ( 72 ) ) ;
 
 //**************************
-// Bearbeite Process-Zeile  
+// Bearbeite Process-Zeile
 //**************************
 
 
@@ -381,8 +381,8 @@ procedure WORK_PROCESS ( var ZCNEU : CHAR ( 72 ) ; ZC : CHAR ( 72 ) ) ;
 function NEXT_BLANK ( const S : STRING ; X : INTEGER ) : INTEGER ;
 
 //**********************************************************
-// search next blank in string s, starting from position x  
-// return zero if no more blank found                       
+// search next blank in string s, starting from position x
+// return zero if no more blank found
 //**********************************************************
 
 
@@ -429,8 +429,8 @@ function NEXT_BLANK ( const S : STRING ; X : INTEGER ) : INTEGER ;
 function NEXT_NONBLANK ( const S : STRING ; X : INTEGER ) : INTEGER ;
 
 //**************************************************************
-// search next non-blank in string s, starting from position x  
-// return zero if no more non-blank character found             
+// search next non-blank in string s, starting from position x
+// return zero if no more non-blank character found
 //**************************************************************
 
 
@@ -454,10 +454,10 @@ procedure PARSE_DATA ( const COBSTMT : STRING ; var POS0 : INTEGER ;
                      var POS1 : INTEGER ; var POS2 : INTEGER ) ;
 
 //*************************************************
-// look for first attribute after variable (pos0)  
-// return attribute position in pos1               
-// and look, if there is a VALUE attribute         
-// return that in pos2                             
+// look for first attribute after variable (pos0)
+// return attribute position in pos1
+// and look, if there is a VALUE attribute
+// return that in pos2
 //*************************************************
 
 
@@ -501,10 +501,10 @@ procedure PARSE_DATA ( const COBSTMT : STRING ; var POS0 : INTEGER ;
 function BLANKS_LEVEL ( X : INTEGER ; ZONE : CHAR ) : STRING ;
 
 //**********************************************************
-// generate blanks depending on level                       
-// x = computed nesting level                               
-// zone = zone a or b                                       
-// if x > 1 and zone a, additional indentation needed       
+// generate blanks depending on level
+// x = computed nesting level
+// zone = zone a or b
+// if x > 1 and zone a, additional indentation needed
 //**********************************************************
 
 
@@ -528,7 +528,7 @@ function BLANKS_LEVEL ( X : INTEGER ; ZONE : CHAR ) : STRING ;
 function NUMMER2 ( X : INTEGER ) : STRING ;
 
 //*******************************
-// level number with two digits  
+// level number with two digits
 //*******************************
 
 
@@ -548,9 +548,9 @@ procedure WORK_LEVEL ( const COBSTMT : STRING ; var ZLEVEL : INTEGER ;
                      : INTEGER ; var PUNKT : BOOLEAN ) ;
 
 //*********************************************
-// parse data definition                       
-// starting with level number                  
-// and update information in vector level_tab  
+// parse data definition
+// starting with level number
+// and update information in vector level_tab
 //*********************************************
 
 
@@ -569,16 +569,16 @@ procedure WORK_LEVEL ( const COBSTMT : STRING ; var ZLEVEL : INTEGER ;
        WRITELN ( GS . ZKOMM1 , S ) ;
 
      //**************************************************************
-     // ersetzt durch readstr:                                       
-     // LEVEL := ORD ( S [ 1 ] ) - ORD ( '0' ) ;                     
-     // LEVEL := LEVEL * 10 + ORD ( S [ 2 ] ) - ORD ( '0' ) ;        
+     // ersetzt durch readstr:
+     // LEVEL := ORD ( S [ 1 ] ) - ORD ( '0' ) ;
+     // LEVEL := LEVEL * 10 + ORD ( S [ 2 ] ) - ORD ( '0' ) ;
      //**************************************************************
 
      READSTR ( S , LEVEL ) ;
      ZLEVEL := LEVEL ;
 
      //********************************
-     // parse data definition          
+     // parse data definition
      //********************************
 
      PARSE_DATA ( S , POS0 , POS1 , POS2 ) ;
@@ -586,7 +586,7 @@ procedure WORK_LEVEL ( const COBSTMT : STRING ; var ZLEVEL : INTEGER ;
        WRITELN ( '*pos   ' , POS0 , POS1 , POS2 ) ;
 
      //***************
-     // sonderfaelle  
+     // sonderfaelle
      //***************
 
      if LEVEL = 77 then
@@ -601,14 +601,14 @@ procedure WORK_LEVEL ( const COBSTMT : STRING ; var ZLEVEL : INTEGER ;
                  ) ;
 
      //**********************************
-     // neues level = bestehendes level  
+     // neues level = bestehendes level
      //**********************************
 
      if LEVEL_TAB [ ACTLEVEL ] = LEVEL then
        return ;
 
      //*******************************************
-     // neues level ist groesser als bestehendes  
+     // neues level ist groesser als bestehendes
      //*******************************************
 
      if LEVEL_TAB [ ACTLEVEL ] < LEVEL then
@@ -619,20 +619,20 @@ procedure WORK_LEVEL ( const COBSTMT : STRING ; var ZLEVEL : INTEGER ;
        end (* then *) ;
 
      //************************************************
-     // neues level ist kleiner als bestehendes        
-     // 02.03.2020:                                    
-     // koennte aber sein, dass das neue level         
-     // noch gar nicht da war und nur ein bisheriges   
-     // umgetauft wird. Beispiel:                      
-     //   01 UPRO200-DATA.                             
-     //      05  UPRO200-OUTPUT.                       
-     //        15 UPRO200-O-SATZ       PIC X(31900).   
-     //        15 UPRO200-O-SATZ-L     PIC 9(7).       
-     //        15 UPRO200-O-REST       PIC X(31900).   
-     //        15 UPRO200-O-REST-L     PIC 9(7).       
-     //        10 UPRO200-O-RCOD       PIC 9(2).       
-     //        10 UPRO200-O-RTEX       PIC X(50).      
-     // sieht richtig sch... aus, gibt's aber          
+     // neues level ist kleiner als bestehendes
+     // 02.03.2020:
+     // koennte aber sein, dass das neue level
+     // noch gar nicht da war und nur ein bisheriges
+     // umgetauft wird. Beispiel:
+     //   01 UPRO200-DATA.
+     //      05  UPRO200-OUTPUT.
+     //        15 UPRO200-O-SATZ       PIC X(31900).
+     //        15 UPRO200-O-SATZ-L     PIC 9(7).
+     //        15 UPRO200-O-REST       PIC X(31900).
+     //        15 UPRO200-O-REST-L     PIC 9(7).
+     //        10 UPRO200-O-RCOD       PIC 9(2).
+     //        10 UPRO200-O-RTEX       PIC X(50).
+     // sieht richtig sch... aus, gibt's aber
      //************************************************
 
      while LEVEL_TAB [ ACTLEVEL ] > LEVEL do
@@ -647,7 +647,7 @@ procedure WORK_LEVEL ( const COBSTMT : STRING ; var ZLEVEL : INTEGER ;
 procedure WORK_FD ( const COBSTMT : STRING ) ;
 
 //**************************************
-// Bearbeite FD (nichts weiter zu tun)  
+// Bearbeite FD (nichts weiter zu tun)
 //**************************************
 
 
@@ -662,8 +662,8 @@ procedure WORK_FD ( const COBSTMT : STRING ) ;
 procedure WORK_DATA_SECTION ( const COBSTMT : STRING ) ;
 
 //********************************************
-// Bearbeite SECTION innerhalb DATA DIVISION  
-// nur Flag setzen                            
+// Bearbeite SECTION innerhalb DATA DIVISION
+// nur Flag setzen
 //********************************************
 
 
@@ -689,7 +689,7 @@ procedure CHECK_WORD_1 ( var WORD : STRING ; var COBWORD : BOOLEAN ;
                        SPECIAL : CHAR ) ;
 
 //**********************************************************
-// checks for period and statement starters                 
+// checks for period and statement starters
 //**********************************************************
 
 
@@ -704,7 +704,7 @@ procedure CHECK_WORD_1 ( var WORD : STRING ; var COBWORD : BOOLEAN ;
        return ;
 
      //********************************
-     // punkt kommt einzeln :-)        
+     // punkt kommt einzeln :-)
      //********************************
 
      if WORD = '.' then
@@ -714,8 +714,8 @@ procedure CHECK_WORD_1 ( var WORD : STRING ; var COBWORD : BOOLEAN ;
        end (* then *) ;
 
      //********************************
-     // punkt haengt hinten dran,      
-     // sollte nicht mehr vorkommen    
+     // punkt haengt hinten dran,
+     // sollte nicht mehr vorkommen
      //********************************
 
      LWORD := LENGTH ( WORD ) ;
@@ -729,20 +729,20 @@ procedure CHECK_WORD_1 ( var WORD : STRING ; var COBWORD : BOOLEAN ;
        end (* then *) ;
 
      //***********************************************
-     // as long as inside EXEC CICS (special = 'X')   
-     // only END-EXEC starts a new statement          
+     // as long as inside EXEC CICS (special = 'X')
+     // only END-EXEC starts a new statement
      //***********************************************
 
      if SPECIAL = 'X' then
-       if WORD <> STR ( 'END-EXEC' ) then
+       if WORD <> 'END-EXEC' then
          return ;
 
      //***********************************************
-     // check for cobol words = statement starters    
+     // check for cobol words = statement starters
      //***********************************************
-     // the word is not a statement starter if it is  
-     // encountered inside of a special statement     
-     // mentioned in tags [3] ... e.g. read ... next  
+     // the word is not a statement starter if it is
+     // encountered inside of a special statement
+     // mentioned in tags [3] ... e.g. read ... next
      //***********************************************
 
      for ICW_TEMP := 1 to CWANZ do
@@ -794,10 +794,10 @@ procedure WORK_PARAGRAPH_SECT ( const COBSTMT : STRING ) ;
            end (* then *) ;
 
      //****************************************************
-     // check1 checks for period and statement starters    
-     // if statement starters (cobword) and not first      
-     // in line, then the first part of the line is        
-     // written, and the rest is processed                 
+     // check1 checks for period and statement starters
+     // if statement starters (cobword) and not first
+     // in line, then the first part of the line is
+     // written, and the rest is processed
      //****************************************************
 
          CHECK_WORD_1 ( WORD , COBWORD , PUNKT , ICW , ' ' ) ;
@@ -827,7 +827,7 @@ procedure WORK_PARAGRAPH_SECT ( const COBSTMT : STRING ) ;
        end (* while *) ;
 
      //***************************************************
-     // indent is always zero, when new paragraph starts  
+     // indent is always zero, when new paragraph starts
      //***************************************************
 
      GS . INDENT := 0 ;
@@ -986,7 +986,7 @@ procedure CHECK_OUTPUTLINE ( ZONE : CHAR ;                   //
        end (* then *) ;
 
      //**************************
-     // platz reicht fuer zeile  
+     // platz reicht fuer zeile
      //**************************
 
      if LENGTH ( COBSTMT ) + INDENT <= MAXL then
@@ -994,8 +994,8 @@ procedure CHECK_OUTPUTLINE ( ZONE : CHAR ;                   //
                 || COBSTMT
 
      //****************************************************************
-     // platz reicht nicht                                             
-     // dann unterschiedliche logik, je nach proc division oder nicht  
+     // platz reicht nicht
+     // dann unterschiedliche logik, je nach proc division oder nicht
      //****************************************************************
 
      else
@@ -1036,8 +1036,8 @@ procedure CHECK_OUTPUTLINE ( ZONE : CHAR ;                   //
 procedure MODIFY_INDENT ;
 
 //******************************************************
-// if indentation is required, do the needed actions    
-// and set indentation for the following lines          
+// if indentation is required, do the needed actions
+// and set indentation for the following lines
 //******************************************************
 
 
@@ -1055,8 +1055,8 @@ procedure MODIFY_INDENT ;
 procedure STACK_STATEMENT ;
 
 //******************************************************
-// put statement type and new indentation               
-// into statement stack                                 
+// put statement type and new indentation
+// into statement stack
 //******************************************************
 
 
@@ -1081,8 +1081,8 @@ procedure STACK_STATEMENT ;
 function UNSTACK_STATEMENT ( const STYPES : STRING ) : BOOLEAN ;
 
 //******************************************************
-// remove statement from statement stack                
-// and reset indentation to prior value                 
+// remove statement from statement stack
+// and reset indentation to prior value
 //******************************************************
 
 
@@ -1115,10 +1115,10 @@ function UNSTACK_STATEMENT ( const STYPES : STRING ) : BOOLEAN ;
 function CHECK_STATEMENT ( const STYPES : STRING ) : INTEGER ;
 
 //******************************************************
-// look for last statement of certain type in           
-// statement stack (for example evaluate)               
-// to resume indentation of that statement              
-// (for example for subsequent when clause)             
+// look for last statement of certain type in
+// statement stack (for example evaluate)
+// to resume indentation of that statement
+// (for example for subsequent when clause)
 //******************************************************
 
 
@@ -1164,8 +1164,8 @@ procedure FORCE_NEWLINE ( var OUTF : TEXT ; MOD_INDENT : BOOLEAN ) ;
        end (* then *) ;
 
      //****************************************************
-     // check if output fits into current line             
-     // or if additional line is needed                    
+     // check if output fits into current line
+     // or if additional line is needed
      //****************************************************
 
      CHECK_OUTPUTLINE ( 'B' , GS . STMT_TEMP , GS . INDENT , ZCNEU ,
@@ -1189,8 +1189,8 @@ procedure FORCE_NEWLINE ( var OUTF : TEXT ; MOD_INDENT : BOOLEAN ) ;
 procedure WORK_NORMAL_STMT ( var OUTF : TEXT ; var COBSTMT : STRING ) ;
 
 //***************************
-// work on normal statement  
-// check indentation etc.    
+// work on normal statement
+// check indentation etc.
 //***************************
 
 
@@ -1284,10 +1284,10 @@ procedure WORK_NORMAL_STMT ( var OUTF : TEXT ; var COBSTMT : STRING ) ;
    procedure WORK_STMT_PERFORM ;
 
    //**********************************************
-   // handle perform                               
-   // stacking inline perform statement only if    
-   // second symbol is not varying or until;       
-   // if varying or until appears later, line feed 
+   // handle perform
+   // stacking inline perform statement only if
+   // second symbol is not varying or until;
+   // if varying or until appears later, line feed
    //**********************************************
 
 
@@ -1321,7 +1321,7 @@ procedure WORK_NORMAL_STMT ( var OUTF : TEXT ; var COBSTMT : STRING ) ;
    procedure WORK_STMT_EXEC ;
 
    //**********************************************
-   // EXEC CICS                                    
+   // EXEC CICS
    //**********************************************
 
 
@@ -1342,8 +1342,7 @@ procedure WORK_NORMAL_STMT ( var OUTF : TEXT ; var COBSTMT : STRING ) ;
           end (* then *) ;
         if GS . NR_SYMB_IN_STMT > 4 then
           begin
-            if LEFT ( WORD , 1 ) <> '(' then
-              FORCE_NEWLINE ( OUTF , TRUE ) ;
+            FORCE_NEWLINE ( OUTF , TRUE ) ;
           end (* then *) ;
         ADD_TO_LINE ;
         if TRACELVL >= 1 then
@@ -1357,8 +1356,8 @@ procedure WORK_NORMAL_STMT ( var OUTF : TEXT ; var COBSTMT : STRING ) ;
    procedure WORK_STMT_IF ;
 
    //**********************************************
-   // simple method of beautifying IF conditions:  
-   // add a new line before every AND / OR         
+   // simple method of beautifying IF conditions:
+   // add a new line before every AND / OR
    //**********************************************
 
 
@@ -1373,7 +1372,7 @@ procedure WORK_NORMAL_STMT ( var OUTF : TEXT ; var COBSTMT : STRING ) ;
 
    //**********************************************
    // simple method of beautifying WHEN conditions:
-   // add a new line before every AND / OR         
+   // add a new line before every AND / OR
    //**********************************************
 
 
@@ -1387,10 +1386,10 @@ procedure WORK_NORMAL_STMT ( var OUTF : TEXT ; var COBSTMT : STRING ) ;
    procedure WORK_STMT_SYMBOL ;
 
    //*************************************
-   // work on statement symbols           
-   // normally: add symbol to line,       
-   // but when inside certain statements  
-   // do something more sophisticated     
+   // work on statement symbols
+   // normally: add symbol to line,
+   // but when inside certain statements
+   // do something more sophisticated
    //*************************************
 
 
@@ -1413,10 +1412,10 @@ procedure WORK_NORMAL_STMT ( var OUTF : TEXT ; var COBSTMT : STRING ) ;
    procedure WORK_PUNKT ;
 
    //****************************************************
-   // handle full stop                                   
-   // terminates statement                               
-   // forces new line                                    
-   // sets indent to zero                                
+   // handle full stop
+   // terminates statement
+   // forces new line
+   // sets indent to zero
    //****************************************************
 
 
@@ -1426,15 +1425,14 @@ procedure WORK_NORMAL_STMT ( var OUTF : TEXT ; var COBSTMT : STRING ) ;
         GS . STMT_STATUS := 0 ;
         GS . INDENT_ZERO := TRUE ;
         GS . STMT_LEVEL := 0 ;
-        GS . STMT_SPECIAL := ' ' ;
       end (* WORK_PUNKT *) ;
 
 
    procedure WORK_NEWSTMT ;
 
    //****************************************************
-   // new statement starts                               
-   // check indentation requirements based on keyword    
+   // new statement starts
+   // check indentation requirements based on keyword
    //****************************************************
 
 
@@ -1459,8 +1457,8 @@ procedure WORK_NORMAL_STMT ( var OUTF : TEXT ; var COBSTMT : STRING ) ;
           FORCE_NEWLINE ( OUTF , TRUE ) ;
 
         //*****************************
-        // status := inside statement  
-        // check indentation           
+        // status := inside statement
+        // check indentation
         //*****************************
 
         GS . STMT_STATUS := 1 ;
@@ -1469,35 +1467,24 @@ procedure WORK_NORMAL_STMT ( var OUTF : TEXT ; var COBSTMT : STRING ) ;
         GS . STMT_TYPE := CWTAB [ ICW ] . TAGS [ 1 ] ;
 
         //********************************
-        // replace eject by 4 line feeds  
+        // replace eject by 4 line feeds
         //********************************
 
         if WORD = 'EJECT' then
           GS . INDENT_EJECT := TRUE ;
 
         //*****************
-        // exec cics etc.  
+        // exec cics etc.
         //*****************
 
         if WORD = 'EXEC' then
-          begin
-            GS . INDENT_INCR := 5 ;
-            GS . NEW_STATEMENT := 'X' ;
-          end (* then *) ;
-
-        //***********************************************
-        // reduce indentation on end-exec                
-        //***********************************************
-
+          GS . INDENT_INCR := 5 ;
         if WORD = 'END-EXEC' then
-          begin
-            OK := UNSTACK_STATEMENT ( 'X' ) ;
-            if not OK then
-              ERRNO := 11
-          end (* then *) ;
+          if GS . INDENT > 0 then
+            GS . INDENT := GS . INDENT - 5 ;
 
         //******************************
-        // handle if                    
+        // handle if
         //******************************
 
         if WORD = 'IF' then
@@ -1507,7 +1494,7 @@ procedure WORK_NORMAL_STMT ( var OUTF : TEXT ; var COBSTMT : STRING ) ;
           end (* then *) ;
 
         //******************************
-        // handle evaluate              
+        // handle evaluate
         //******************************
 
         if WORD = 'EVALUATE' then
@@ -1517,7 +1504,7 @@ procedure WORK_NORMAL_STMT ( var OUTF : TEXT ; var COBSTMT : STRING ) ;
           end (* then *) ;
 
         //******************************
-        // handle search                
+        // handle search
         //******************************
 
         if WORD = 'SEARCH' then
@@ -1527,7 +1514,7 @@ procedure WORK_NORMAL_STMT ( var OUTF : TEXT ; var COBSTMT : STRING ) ;
           end (* then *) ;
 
         //******************************
-        // indentation of else keyword  
+        // indentation of else keyword
         //******************************
 
         if WORD = 'ELSE' then
@@ -1543,7 +1530,7 @@ procedure WORK_NORMAL_STMT ( var OUTF : TEXT ; var COBSTMT : STRING ) ;
           end (* then *) ;
 
         //******************************
-        // indentation of when keyword  
+        // indentation of when keyword
         //******************************
 
         if WORD = 'WHEN' then
@@ -1572,7 +1559,7 @@ procedure WORK_NORMAL_STMT ( var OUTF : TEXT ; var COBSTMT : STRING ) ;
           end (* then *) ;
 
         //***********************************************
-        // reduce indentation on end-if                  
+        // reduce indentation on end-if
         //***********************************************
 
         if WORD = 'END-IF' then
@@ -1583,7 +1570,7 @@ procedure WORK_NORMAL_STMT ( var OUTF : TEXT ; var COBSTMT : STRING ) ;
           end (* then *) ;
 
         //***********************************************
-        // reduce indentation on end-read                
+        // reduce indentation on end-read
         //***********************************************
 
         if WORD = 'END-READ' then
@@ -1594,7 +1581,7 @@ procedure WORK_NORMAL_STMT ( var OUTF : TEXT ; var COBSTMT : STRING ) ;
           end (* then *) ;
 
         //***********************************************
-        // reduce indentation on end-write               
+        // reduce indentation on end-write
         //***********************************************
 
         if WORD = 'END-WRITE' then
@@ -1605,7 +1592,7 @@ procedure WORK_NORMAL_STMT ( var OUTF : TEXT ; var COBSTMT : STRING ) ;
           end (* then *) ;
 
         //***********************************************
-        // reduce indentation on end-evaluate            
+        // reduce indentation on end-evaluate
         //***********************************************
 
         if WORD = 'END-EVALUATE' then
@@ -1616,7 +1603,7 @@ procedure WORK_NORMAL_STMT ( var OUTF : TEXT ; var COBSTMT : STRING ) ;
           end (* then *) ;
 
         //***********************************************
-        // reduce indentation on end-search              
+        // reduce indentation on end-search
         //***********************************************
 
         if WORD = 'END-SEARCH' then
@@ -1627,7 +1614,7 @@ procedure WORK_NORMAL_STMT ( var OUTF : TEXT ; var COBSTMT : STRING ) ;
           end (* then *) ;
 
         //***********************************************
-        // reduce indentation on end-perform             
+        // reduce indentation on end-perform
         //***********************************************
 
         if WORD = 'END-PERFORM' then
@@ -1638,13 +1625,13 @@ procedure WORK_NORMAL_STMT ( var OUTF : TEXT ; var COBSTMT : STRING ) ;
           end (* then *) ;
 
         //***********************************************
-        // stack new statement                           
+        // stack new statement
         //***********************************************
 
         STACK_STATEMENT ;
 
         //*********************
-        // set statement flag  
+        // set statement flag
         //*********************
 
         case CWTAB [ ICW ] . TAGS [ 2 ] of
@@ -1681,10 +1668,10 @@ procedure WORK_NORMAL_STMT ( var OUTF : TEXT ; var COBSTMT : STRING ) ;
        end (* then *) ;
 
      //****************************************************
-     // this loop processes all the symbols from a single  
-     // zone b source line inside the procedure division   
-     // and passes them one by one to the correct          
-     // processing routine                                 
+     // this loop processes all the symbols from a single
+     // zone b source line inside the procedure division
+     // and passes them one by one to the correct
+     // processing routine
      //****************************************************
 
      POS_WORD := 1 ;
@@ -1737,8 +1724,8 @@ procedure WORK_DATALINES ( var COBSTMT : STRING ; var PUNKT : BOOLEAN )
                          ;
 
 //************************************
-// bearbeite Zeilen unterhalb von FD  
-// nichts weiter zu tun               
+// bearbeite Zeilen unterhalb von FD
+// nichts weiter zu tun
 //************************************
 
 
@@ -1775,8 +1762,8 @@ procedure WORK_FILES ( const COBSTMT : STRING ; var IS_SELECT : BOOLEAN
                      ) ;
 
 //***********************************
-// Bearbeite Zeilen innerhalb FILES  
-// SELECT speziell                   
+// Bearbeite Zeilen innerhalb FILES
+// SELECT speziell
 //***********************************
 
 
@@ -1791,7 +1778,7 @@ procedure WORK_FILES ( const COBSTMT : STRING ; var IS_SELECT : BOOLEAN
 procedure WORK_OTHER_SECTIONS ( const COBSTMT : STRING ) ;
 
 //***********************************************************
-// Bearbeite SECTIONs ausserhalb von DATA und PROC DIVISION  
+// Bearbeite SECTIONs ausserhalb von DATA und PROC DIVISION
 //***********************************************************
 
 
@@ -1805,7 +1792,7 @@ procedure WORK_OTHER_SECTIONS ( const COBSTMT : STRING ) ;
 procedure WORK_SPECIAL ( const COBSTMT : STRING ) ;
 
 //**************************
-// Bearbeite SPECIAL-NAMES  
+// Bearbeite SPECIAL-NAMES
 //**************************
 
 
@@ -1819,7 +1806,7 @@ procedure WORK_SPECIAL ( const COBSTMT : STRING ) ;
 procedure WORK_FILE_CONTROL ( const COBSTMT : STRING ) ;
 
 //*************************
-// Bearbeite FILE-CONTROL  
+// Bearbeite FILE-CONTROL
 //*************************
 
 
@@ -1833,7 +1820,7 @@ procedure WORK_FILE_CONTROL ( const COBSTMT : STRING ) ;
 procedure WORK_PROGRAM_ID ( const COBSTMT : STRING ) ;
 
 //***********************
-// Bearbeite PROGRAM-ID  
+// Bearbeite PROGRAM-ID
 //***********************
 
 
@@ -1859,10 +1846,10 @@ procedure MODIFY_LEVEL ( ZONE : CHAR ; var COBSTMT : STRING ; XLEVEL :
                        XPOS2 : INTEGER ) ;
 
 //***************************************************************
-// modify data definition                                        
-// that is: insert blanks, so that pic and value                 
-// is always at same column position (if possible)               
-// desired column positions are constants datapos1 and datapos2  
+// modify data definition
+// that is: insert blanks, so that pic and value
+// is always at same column position (if possible)
+// desired column positions are constants datapos1 and datapos2
 //***************************************************************
 
 
@@ -1962,7 +1949,7 @@ procedure WORK_ZONEA ( var ZCNEU : CHAR ( 72 ) ;      // ergebn.zeile 1
                      var BLANK_LINES : INTEGER ) ;    // leerzeilen
 
 //******************************************
-// Bearbeite Zeile mit Zone A Content       
+// Bearbeite Zeile mit Zone A Content
 //******************************************
 
 
@@ -1979,7 +1966,7 @@ procedure WORK_ZONEA ( var ZCNEU : CHAR ( 72 ) ;      // ergebn.zeile 1
      case GS . DIV_FLAG of
 
      //*****************************************
-     // generate content in procedure division  
+     // generate content in procedure division
      //*****************************************
 
        'P' : begin
@@ -1991,8 +1978,8 @@ procedure WORK_ZONEA ( var ZCNEU : CHAR ( 72 ) ;      // ergebn.zeile 1
              end (* tag/ca *) ;
 
      //********************************************************
-     // generate content in data division                      
-     // most interesting: lines which start with level number  
+     // generate content in data division
+     // most interesting: lines which start with level number
      //********************************************************
 
        'D' : begin
@@ -2036,7 +2023,7 @@ procedure WORK_ZONEA ( var ZCNEU : CHAR ( 72 ) ;      // ergebn.zeile 1
              end (* tag/ca *) ;
 
      //*****************************************************
-     // other: certain special lines which start in area a  
+     // other: certain special lines which start in area a
      //*****************************************************
 
        otherwise
@@ -2092,8 +2079,8 @@ procedure WORK_ZONEA ( var ZCNEU : CHAR ( 72 ) ;      // ergebn.zeile 1
      end (* case *) ;
 
      //****************************************************
-     // check if output fits into current line             
-     // or if additional line is needed                    
+     // check if output fits into current line
+     // or if additional line is needed
      //****************************************************
 
      ZCNEU2 := ' ' ;
@@ -2111,7 +2098,7 @@ procedure WORK_ZONEB ( var OUTF : TEXT ;              // Ausgabedatei
                      var OUTP : BOOLEAN ) ;           // ausgeben
 
 //******************************************
-// Bearbeite Zeile mit Zone B Content       
+// Bearbeite Zeile mit Zone B Content
 //******************************************
 
 
@@ -2130,7 +2117,7 @@ procedure WORK_ZONEB ( var OUTF : TEXT ;              // Ausgabedatei
      case GS . DIV_FLAG of
 
      //*****************************************
-     // generate content in procedure division  
+     // generate content in procedure division
      //*****************************************
 
        'P' : begin
@@ -2139,8 +2126,8 @@ procedure WORK_ZONEB ( var OUTF : TEXT ;              // Ausgabedatei
              end (* tag/ca *) ;
 
      //********************************************************
-     // generate content in data division                      
-     // most interesting: lines which start with level number  
+     // generate content in data division
+     // most interesting: lines which start with level number
      //********************************************************
 
        'D' : begin
@@ -2157,8 +2144,8 @@ procedure WORK_ZONEB ( var OUTF : TEXT ;              // Ausgabedatei
              end (* tag/ca *) ;
 
      //***********************************************
-     // other: lines which begin in area b are lines  
-     // which deal with files                         
+     // other: lines which begin in area b are lines
+     // which deal with files
      //***********************************************
 
        otherwise
@@ -2172,8 +2159,8 @@ procedure WORK_ZONEB ( var OUTF : TEXT ;              // Ausgabedatei
      end (* case *) ;
 
      //****************************************************
-     // check if output fits into current line             
-     // or if additional line is needed                    
+     // check if output fits into current line
+     // or if additional line is needed
      //****************************************************
 
      CHECK_OUTPUTLINE ( 'B' , COBSTMT , GS . INDENT , ZCNEU , ZCNEU2 )
@@ -2199,7 +2186,7 @@ procedure WORK ( OUTF : TEXT ; const ZEILE : STRING ) ;
        ZC := ZEILE ;
 
      //***************************************
-     // i = position of first non-blank char  
+     // i = position of first non-blank char
      //***************************************
 
      I := 1 ;
@@ -2213,7 +2200,7 @@ procedure WORK ( OUTF : TEXT ; const ZEILE : STRING ) ;
          break ;
 
      //***********************
-     // handle process cards  
+     // handle process cards
      //***********************
 
      if ( I >= 2 ) and ( I < 60 ) then
@@ -2225,7 +2212,7 @@ procedure WORK ( OUTF : TEXT ; const ZEILE : STRING ) ;
          end (* then *) ;
 
      //***************************
-     // handle comment            
+     // handle comment
      //***************************
 
      if not DONE then
@@ -2239,7 +2226,7 @@ procedure WORK ( OUTF : TEXT ; const ZEILE : STRING ) ;
          end (* then *) ;
 
      //******************************************
-     // handle ca-vollie include cards           
+     // handle ca-vollie include cards
      //******************************************
 
      if not DONE then
@@ -2257,7 +2244,7 @@ procedure WORK ( OUTF : TEXT ; const ZEILE : STRING ) ;
          end (* then *) ;
 
      //********************************************
-     // handle cobol card with zone a content      
+     // handle cobol card with zone a content
      //********************************************
 
      if not DONE then
@@ -2272,7 +2259,7 @@ procedure WORK ( OUTF : TEXT ; const ZEILE : STRING ) ;
          end (* then *) ;
 
      //********************************************
-     // handle blank line                          
+     // handle blank line
      //********************************************
 
      if not DONE then
@@ -2300,7 +2287,7 @@ procedure WORK ( OUTF : TEXT ; const ZEILE : STRING ) ;
          end (* then *) ;
 
      //********************************************
-     // handle cobol card with zone b content      
+     // handle cobol card with zone b content
      //********************************************
 
      if not DONE then
@@ -2356,7 +2343,7 @@ begin (* HAUPTPROGRAMM *)
     begin
 
   //*************
-  // some tests  
+  // some tests
   //*************
 
       ZEILE := 'test line' ;
@@ -2365,7 +2352,7 @@ begin (* HAUPTPROGRAMM *)
     end (* then *) ;
 
   //********************************************
-  // here goes the main program                 
+  // here goes the main program
   //********************************************
 
   STATUS := INITST ;
@@ -2374,7 +2361,7 @@ begin (* HAUPTPROGRAMM *)
   ACTLEVEL := 0 ;
 
   //********************************************
-  // init status variables (in struct gs)       
+  // init status variables (in struct gs)
   //********************************************
 
   GS . ICNT_PRE := 0 ;
@@ -2406,7 +2393,7 @@ begin (* HAUPTPROGRAMM *)
   GS . THEN_FOUND := FALSE ;
 
   //********************************************
-  // open files                                 
+  // open files
   //********************************************
 
   RESET ( SOURCE ) ;
@@ -2459,7 +2446,7 @@ begin (* HAUPTPROGRAMM *)
             GS . OCNT_POST := GS . OCNT_POST + 1 ;
           end (* tag/ca *) ;
         otherwise
-          
+
       end (* case *) ;
       WRITELN ( LISTING , LINENO : 6 , ': ' , ZEILE ) ;
     end (* while *) ;

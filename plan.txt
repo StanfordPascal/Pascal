@@ -1,16 +1,35 @@
 
 2020.04:
 
-- Fehler bei SET-Vergleich mit unterschiedlichen Laengen (PCINT)
+* Fehler bei SET-Vergleich mit unterschiedlichen Laengen (PCINT)
+* Skip Symbole dokumentieren
+* Fehler $PASRDI beheben
+* Neue READ-Funktionen auch fuer Boolean, evtl. Skalar ??
+* Testen TESTREA3, 7 und 8 auf VM usw. (GET, RDI, RDR) und Korr. Fehler
+* Neue Funktion $PASRDB zum Lesen von Booleans
+* Abchecken $PASRDB auf TRUE und FALSE
+* Fehler in PASCAL1 (bei Bootstrap)
+* Fehler in PASCAL2 wg. FILADR_LOADED klaeren
+* Fehler bei RFS auf Mainframe (PASMONN) fuehrt zu Abbruch, klaeren
+* Testen PASCAL2 auf VM wg. neuer Funktion $PASRDB
+- Portablitaetsproblem: CHK auf CHAR-Subrange wird mit I-Werten gemacht
+- nochmal finaler Test der Version 2020.04 auf VM
+- Neue Funktion zum Lesen von Booleans aus Strings
+- Auslieferung auf VM - Info auf Facebook
+- Neue Funktion $PASRDX zum Lesen von Skalaren
+- Neue Funktion zum Lesen von Skalaren aus Strings
+- WRITE-Funktionen (insbesondere WRR) neu
+- WRITESTR Funktionen
+- Undefined String bei MODIFY2 (UPPER(FN))
 - Fehler bei COMPERR4 untersuchen und klaeren
 - AVLCACHE START
 - Write bei Real 0.0 korrigieren (Mainframe)
 - Write bei Real mit fuehrenden Nullen (Mainframe)
 - Write bei Skalar mit korrekter Laenge (Mainframe)
 - Write fuer Skalar mit Laenge nur, wenn Skalar in dieser Laenge eindeutig
-- Neue READ-Funktionen auch fuer Boolean, evtl. Skalar ??
 - Parameterposition bei Unterfunktionen am Statement-Ende wieder zurueck
 - WRITESTR usw. als Pascal-Funktion
+- wenn neuer Compiler eingesetzt ist, Pascal-Runtime abruesten
 - Fehler (PASCAL1-Abbruch) bei falschem IF - siehe COMPERR1
 - Fehler (PASCAL1-Abbruch) bei falschem Funktionsnamen - siehe COMPERR2
 - Fehler (PASCAL1-Abbruch) - siehe COMPERR3

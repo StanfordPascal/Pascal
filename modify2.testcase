@@ -1,0 +1,48 @@
+         MACRO
+         LEAVE
+.*
+.*----------------------------------------------------------
+.* Sp Macros - Structured Programming
+.*----------------------------------------------------------
+.* IF - THEN - ELSE - EIF
+.* LOOP (WHILE/UNTIL) - BREAK - OUT - ELOOP
+.* PROC - EPROC - LEAVE
+.*----------------------------------------------------------
+.* IF and LOOP support multiple conditions, that is:
+.* IF is as powerful as SELECT or CASE in other languages
+.* LOOPs can have multiple OUT exits
+.* PROCs allow for large programs (separate USING areas)
+.* for more information: berndoppolzer at yahoo.com
+.*----------------------------------------------------------
+.*
+.*
+         MNOTE *,'SP Macros - Macro LEAVE    - 2020.05 - Opp'
+.*
+         GBLA  &@SPTAB(1),&@SPIND        IF/LOOP-LEVEL-KENNZEICHNUNG
+         GBLA  &@LELAB                   LFD. LEAVE-NUMMER
+         GBLC  &SPPROCN                  AVPROC-MARKE
+         PUSH  PRINT
+         PRINT GEN
+         ACTR  16000
+         AIF   ('&SPPROCN' NE '').B0320
+         MNOTE 12,'FALSCHE PLAZIERUNG'
+         AGO   .MEXIT
+.*
+.B0320   ANOP
+&N       SETA  N'&SYSLIST
+&MAK     SETC  'LE'
+&I       SETA  0
+&@LELAB  SETA  &@LELAB+1
+&L       SETA  &@LELAB
+         AIF   (&@SPIND NE 0).B0330
+&@SPIND  SETA  1
+.B0330   ANOP
+         AIF   (&N GT 0 AND K'&SYSLIST(1) GT 0).B0400
+         J     &SPPROCN.Z
+         AGO   .MEXIT
+.*
+.B0400   ANOP            BEDINGUNG VORHANDEN
+         COPY  SPPARM
+.MEXIT   ANOP
+         POP   PRINT
+         MEND

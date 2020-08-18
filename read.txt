@@ -1,4 +1,98 @@
 
+State of READ rework
+--------------------
+
+functions which do not change:
+
+GET - get function
+RES - reset
+RLN - readln
+EOF - eof function
+ELN - eoln function
+RDD - read binary file
+
+still to be done:
+
+RFB - boolean (should be implemented as Pascal function)
+RFX - read scalar, does not exist yet
+$PASRSB - READSTR for boolean
+$PASRSX - READSTR for scalars
+
+new functions for READ implemented in the runtime:
+
+RFC - character
+RFS - strings of fixed length
+RFV - strings of varying length
+
+new functions for READ implemented as Pascal functions:
+
+$PASRDR - real values
+$PASRDI - integer values (size 4, 2, 1)
+
+new READSTR functions:
+
+$PASRSS - fixed strings
+$PASRSV - varying strings
+$PASRSC - characters
+$PASRSR - real values
+$PASRSI - integers of different size
+
+old (obsolete) functions for READ implemented in the runtime:
+
+RDB - boolean (should be implemented as Pascal function)
+RDR - replaced by $PASRDR
+RDH - replaced by $PASRDI
+RDY - replaced by $PASRDI
+RDI - replaced by $PASRDI
+RDC - renamed RFC
+RDS - renamed RFS
+RDV - renamed RFV
+
+======================================================================
+
+State of WRITE rework
+---------------------
+
+functions which do not change:
+
+WRD - write binary file
+WRE - check out what this CSP is used for ???
+
+functions which should stay runtime functions (CSPs):
+
+WRC - character
+WRS - write fixed string
+WRV - write varying string
+
+functions which should be rewritten as Pascal functions:
+
+$PASWRP - write pointer
+$PASWRR - write real
+$PASWRX - write scalar
+$PASWRB - write boolean
+$PASWRI - write integer
+
+new WRITESTR functions:
+
+$PASWSC - writestr character
+$PASWSS - writestr fixed string
+$PASWSV - writestr varying string
+$PASWSP - writestr pointer
+$PASWSR - writestr real
+$PASWSX - writestr scalar
+$PASWSB - writestr boolean
+$PASWSI - writestr integer
+
+old (obsolete) functions for READ implemented in the runtime:
+
+WRP - write pointer
+WRR - write real
+WRX - write scalar
+WRB - write boolean
+WRI - write integer
+
+======================================================================
+
 new Plan for READ
 -----------------
 

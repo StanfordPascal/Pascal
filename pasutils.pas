@@ -10,11 +10,6 @@ type PLATFORM = ( PLATF_UNKNOWN , PLATF_INTEL , PLATF_MAINFRAME ) ;
 
 const KLEINBUCHST : set of CHAR =
       [ 'a' .. 'i' , 'j' .. 'r' , 's' .. 'z' ] ;
-      DUMPSHOWCHARS : set of CHAR =
-      [ 'a' .. 'i' , 'j' .. 'r' , 's' .. 'z' , 'A' .. 'I' , 'J' .. 'R'
-        , 'S' .. 'Z' , '0' .. '9' , ' ' , ',' , '.' , '-' , ';' , ':' ,
-        '_' , '!' , '"' , 'õ' , '$' , '%' , '&' , '/' , '(' , ')' , '='
-        , '?' , '+' , '*' , '#' , '*' ] ;
 
 
 static PLATF : PLATFORM ;
@@ -352,6 +347,12 @@ procedure DUMPSTOR ( PVON : VOIDPTR ; PBIS : VOIDPTR ) ;
 
 
    procedure DUMPCHAR ( CH : CHAR ) ;
+
+      const DUMPSHOWCHARS : set of CHAR =
+            [ 'a' .. 'i' , 'j' .. 'r' , 's' .. 'z' , 'A' .. 'I' , 'J'
+              .. 'R' , 'S' .. 'Z' , '0' .. '9' , ' ' , ',' , '.' , '-'
+              , ';' , ':' , '_' , '!' , '"' , '$' , '%' , '&' , '/' ,
+              '(' , ')' , '=' , '?' , '+' , '*' , '#' , '*' ] ;
 
       begin (* DUMPCHAR *)
         if CH in DUMPSHOWCHARS then

@@ -1,2 +1,3 @@
 gccmodd oiscach
-gccprgd pcint oiscach
+gccmodd pcintcmp
+gccprgd pcint pcintcmp oiscach

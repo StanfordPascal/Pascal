@@ -3985,6 +3985,9 @@ RES1     DS    0H
 *****************************************************************
 *        GET AN INPUT RECORD
 *****************************************************************
+*        changed opp 15.08.2020
+*        don't skip first byte after implied reset
+*****************************************************************
 *
          DS    0H
          DC    CL4'GET'
@@ -3994,14 +3997,49 @@ GET      DS    0H
          BO    RTN
          TM    FILOPN(AE),TEXTFLAG
          BZ    GET1                jump if non-text file
-         IC    R1,FILTERM(AE)      save terminal flag
+*
+*****************************************************************
+*        GET processing for textfiles
+*        reworked 08.2020 - opp
+*****************************************************************
+*
          STM   R1,R5,SAVEGET       save regs 1 to 5
-         MVI   FILTERM(AE),C'N'    set terminal flag to N
-         BAL   R5,PAFCHK           check file status
-         BAL   R5,PAFGFE
+*
+*****************************************************************
+*        if FILE status is zero, call PAFCHK to do open etc.
+*        no subsequent PAFGFE
+*        same goes if Read Buffer has been scheduled due to
+*        preceeding EOLN processing
+*        otherwise call PAFGFE to advance the buffer pointer
+*        after that check for EOLN and schedule Read Buffer
+*        for next time
+*****************************************************************
+*        GET reads next buffer, no matter if Terminal file or not
+*****************************************************************
+*
+         CLI   FILSTA(AE),C'0'     if file not open or
+         BE    GET7
+         CLI   FILRDBS(AE),1       if Readbuf scheduled
+         BE    GET7                go to GET7 ... PAFCHK
+*
+         BAL   R5,PAFGFE           otherwise: advance one character
+         B     GET6
+*
+GET7     DS    0H
+         BAL   R5,PAFCHK           file open and buffer read
+*
+GET6     DS    0H
+         CLI   FILEOLN(AE),TRUE    check if at end of line
+         BNE   GET4
+         MVI   FILRDBS(AE),1       if so: schedule Readbuf
+GET4     DS    0H
          LM    R1,R5,SAVEGET       restore regs 1 to 5
-         STC   R1,FILTERM(AE)      restore terminal flag
          B     RTN
+*
+*****************************************************************
+*        GET processing for binary files
+*        simple
+*****************************************************************
 *
 GET1     DS    0H
          STM   R1,R5,SAVEGET

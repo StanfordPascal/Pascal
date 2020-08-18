@@ -63,7 +63,7 @@ type CHARPTR = -> CHAR ;
             SYRBRACK , SYCOMMA , SYSEMICOLON , SYARROW , SYPERIOD ,
             SYDOTDOT , SYCOLON , SYPLUS , SYMINUS , SYMULT , SYSLASH ,
             SYEQOP , SYNEOP , SYGTOP , SYLTOP , SYGEOP , SYLEOP ,
-            SYOROP , SYANDOP , SYASSIGN ) ;
+            SYOROP , SYANDOP , SYASSIGN , SYCONCAT ) ;
 
      /***********************************/
      /* Ende generierte Deklaration     */
@@ -93,13 +93,13 @@ type CHARPTR = -> CHAR ;
 
      SCANF_PTR = -> SCAN_FEHLER ;
      SCAN_FEHLER = record
-                     ERRLEVEL : CHAR ;
-                     ERRCLASS : CHAR ;
-                     NUMMER : INTEGER ;
-                     INFO : CHAR32 ;
-                     ZEILNR : INTEGER ;
-                     POSITION : INTEGER ;
-                     NAECHST : SCANF_PTR ;
+                     ERRLEVEL : CHAR ;       // error level
+                     ERRCLASS : CHAR ;       // error class
+                     NUMMER : INTEGER ;      // error number
+                     INFO : CHAR32 ;         // additional info
+                     ZEILNR : INTEGER ;      // line number of err
+                     POSITION : INTEGER ;    // position of err
+                     NAECHST : SCANF_PTR ;   // ptr to next
                    end ;
 
      /***********************************/
@@ -111,48 +111,48 @@ type CHARPTR = -> CHAR ;
 
      OPTIONS_PTR = -> COMP_OPTIONS ;
      SCAN_BLOCK = record
-                    MODUS : INTEGER ;
-                    DATEIENDE : INTEGER ;
-                    ENDOFLINE : BOOLEAN ;
-                    SLINE : SOURCELINE ;
-                    LINENR : INTEGER ;
-                    LINEPOS : INTEGER ;
-                    LINELEN : INTEGER ;
-                    LOOKAHEAD : CHAR ;
-                    SYMBOLNR : SYMB ;
-                    SYMBOL : SOURCELINE ;
-                    LSYMBOL : INTEGER ;
-                    MAXLSYMBOL : INTEGER ;
-                    UFZAHL : INTEGER ;
-                    SFZAHL : INTEGER ;
-                    FEZAHL : INTEGER ;
-                    WAZAHL : INTEGER ;
-                    INZAHL : INTEGER ;
-                    FEANFANG : SCANF_PTR ;
-                    FEAKT : SCANF_PTR ;
-                    FTTAB : SCANFT_PTR ;
-                    FTTABA : SCANFT_PTR ;
-                    OPTLINE : SOURCELINE ;
-                    POPT : OPTIONS_PTR ;
+                    MODUS : INTEGER ;        // modus of scanner
+                    DATEIENDE : INTEGER ;    // end of file indicator
+                    ENDOFLINE : BOOLEAN ;    // end of line indicator
+                    SLINE : SOURCELINE ;     // stored source line
+                    LINENR : INTEGER ;       // line number of symbol
+                    LINEPOS : INTEGER ;      // line position of symb
+                    LINELEN : INTEGER ;      // line length
+                    LOOKAHEAD : CHAR ;       // lookahead character
+                    SYMBOLNR : SYMB ;        // symbol read
+                    SYMBOL : SOURCELINE ;    // characters of symb
+                    LSYMBOL : INTEGER ;      // no of chars in symb
+                    MAXLSYMBOL : INTEGER ;   //
+                    UFZAHL : INTEGER ;       // no of undef errors
+                    SFZAHL : INTEGER ;       // no of severe errors
+                    FEZAHL : INTEGER ;       // no of errors
+                    WAZAHL : INTEGER ;       // no of warnings
+                    INZAHL : INTEGER ;       // no of informations
+                    FEANFANG : SCANF_PTR ;   // anchor to err list
+                    FEAKT : SCANF_PTR ;      // actual err elem
+                    FTTAB : SCANFT_PTR ;     // error text table
+                    FTTABA : SCANFT_PTR ;    // same for applic.
+                    OPTLINE : SOURCELINE ;   // options line
+                    POPT : OPTIONS_PTR ;     // ptr to opt struct
 
      /******************************************/
      /* felder fuer sofortige Protokollausgabe */
      /******************************************/
 
-                    PROTOUT : BOOLEAN ;
-                    TERMOUT : BOOLEAN ;
-                    FEAKT_ALT : SCANF_PTR ;
-                    LINEINFO : CHAR32 ;
-                    LINEINFO_SIZE : INTEGER ;
+                    PROTOUT : BOOLEAN ;        // switch for prot out
+                    TERMOUT : BOOLEAN ;        // switch for term out
+                    FEAKT_ALT : SCANF_PTR ;    // old feakt
+                    LINEINFO : CHAR32 ;        // line information
+                    LINEINFO_SIZE : INTEGER ;  // size of lineinfo
 
      /******************************************/
      /* felder fuer ueberschrift               */
      /******************************************/
 
-                    LINECOUNT : INTEGER ;
-                    HEADLINE : SOURCELINE ;
-                    HEADLINE_SIZE : INTEGER ;
-                    PAGENR : INTEGER ;
+                    LINECOUNT : INTEGER ;      // linecount f. heading
+                    HEADLINE : SOURCELINE ;    // header line
+                    HEADLINE_SIZE : INTEGER ;  // size of header line
+                    PAGENR : INTEGER ;         // page number
                   end ;
 
      /***********************************/
@@ -163,23 +163,23 @@ type CHARPTR = -> CHAR ;
      /***********************************/
 
      COMP_OPTIONS = record
-                      LMARGIN : INTEGER ;
-                      RMARGIN : INTEGER ;
-                      PAGESIZE : INTEGER ;
-                      LIST : BOOLEAN ;
-                      PRCODE : BOOLEAN ;
-                      GET_STAT : BOOLEAN ;
-                      SAVEREGS : BOOLEAN ;
-                      SAVEFPRS : BOOLEAN ;
-                      DEBUG : BOOLEAN ;
-                      MWARN : BOOLEAN ;
-                      DEBUG_LEV : 0 .. 9 ;
-                      NOPACKING : BOOLEAN ;
-                      NESTCOMM : BOOLEAN ;
-                      WARNING : BOOLEAN ;
-                      ASSEMBLE : BOOLEAN ;
-                      ASMVERB : BOOLEAN ;
-                      CTROPTION : BOOLEAN ;
+                      LMARGIN : INTEGER ;    // left margin
+                      RMARGIN : INTEGER ;    // right margin
+                      PAGESIZE : INTEGER ;   // pagesize of listing
+                      LIST : BOOLEAN ;       // write listing
+                      PRCODE : BOOLEAN ;     // print code
+                      GET_STAT : BOOLEAN ;   // get statistics
+                      SAVEREGS : BOOLEAN ;   // saveregs
+                      SAVEFPRS : BOOLEAN ;   // save fp regs
+                      DEBUG : BOOLEAN ;      // debug switch
+                      MWARN : BOOLEAN ;      //
+                      DEBUG_LEV : 0 .. 9 ;   // debug level
+                      NOPACKING : BOOLEAN ;  // no packing
+                      NESTCOMM : BOOLEAN ;   // nested comments
+                      WARNING : BOOLEAN ;    // show warnings
+                      ASSEMBLE : BOOLEAN ;   // show assembly
+                      ASMVERB : BOOLEAN ;    // show verbose ass.
+                      CTROPTION : BOOLEAN ;  // show counters
                     end ;
 
 
@@ -203,9 +203,9 @@ static SCANNER_INIT : INTEGER ;
 
 
 
-procedure WRITEPTR_LEN ( var F : TEXT ; CPSTART : VOIDPTR ; LEN :
-                       INTEGER ; TRIM_LEFT : BOOLEAN ; TRIM_RIGHT :
-                       BOOLEAN ) ;
+local procedure WRITEPTR_LEN ( var F : TEXT ; CPSTART : VOIDPTR ; LEN :
+                             INTEGER ; TRIM_LEFT : BOOLEAN ; TRIM_RIGHT
+                             : BOOLEAN ) ;
 
    var CP : -> CHAR ;
        I : INTEGER ;
@@ -244,27 +244,6 @@ procedure WRITEPTR_LEN ( var F : TEXT ; CPSTART : VOIDPTR ; LEN :
 
 
 
-local function TOUPPER ( C : CHAR ) : CHAR ;
-
-   begin (* TOUPPER *)
-     if C in [ 'a' .. 'i' , 'j' .. 'r' , 's' .. 'z' ] then
-       C := CHR ( ORD ( C ) - ORD ( 'a' ) + ORD ( 'A' ) ) ;
-     TOUPPER := C ;
-   end (* TOUPPER *) ;
-
-
-
-local procedure SCAN_TOUPPER ( var SCB : SCAN_BLOCK ) ;
-
-   var I : INTEGER ;
-
-   begin (* SCAN_TOUPPER *)
-     for I := 1 to SCB . LSYMBOL do
-       SCB . SYMBOL [ I ] := TOUPPER ( SCB . SYMBOL [ I ] ) ;
-   end (* SCAN_TOUPPER *) ;
-
-
-
 local procedure INIT_SCAN_CODE ;
 
    type TRANSLATE_TAB = array [ CHAR ] of INTEGER ;
@@ -279,14 +258,12 @@ local procedure INIT_SCAN_CODE ;
          /*   0x10, 0x11, 0x12, 0x13, 0xef, 0xc5, 0x08, 0xcb,  */
          /******************************************************/
 
-
            0X10 , 0X11 , 0X12 , 0X13 , 0XEF , 0X0A , 0X08 , 0XCB , 0X18
            , 0X19 , 0XDC , 0XD8 , 0X1C , 0X1D , 0X1E , 0X1F ,
 
          /******************************************************/
          /*   0xb7, 0xb8, 0xb9, 0xbb, 0xc4, 0x0a, 0x17, 0x1b,  */
          /******************************************************/
-
 
            0XB7 , 0XB8 , 0XB9 , 0XBB , 0XC4 , 0XC5 , 0X17 , 0X1B , 0XCC
            , 0XCD , 0XCF , 0XD0 , 0XD1 , 0X05 , 0X06 , 0X07 , 0XD9 ,
@@ -377,7 +354,6 @@ local procedure SCAN_FEHLER_AUSGEBEN ( var SCANOUT : TEXT ; var SCB :
        L : INTEGER ;
        I : INTEGER ;
        INFO_POS : INTEGER ;
-       CP : -> CHAR ;
 
    begin (* SCAN_FEHLER_AUSGEBEN *)
      ERRCLASS := FELAUF -> . ERRCLASS ;
@@ -678,10 +654,7 @@ procedure PASSCANL ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB
 (************************************************)
 
 
-   var PL : INTEGER ;
-       FESAVE : SCANF_PTR ;
-       ZEILE_ENTH_FEHLER : BOOLEAN ;
-       PO : OPTIONS_PTR ;
+   var PO : OPTIONS_PTR ;
 
    begin (* PASSCANL *)
      RESET ( SCANINP ) ;
@@ -1009,16 +982,22 @@ local function OPTIONS ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var
              until SCB . ENDOFLINE or ( SCANCH <> ' ' ) ;
              if not SCB . ENDOFLINE and ( SCANCH <> ' ' ) and ( SCANCH
              <> TERMCH ) then
-               PASSCANE ( SCB , 'W' , 'S' , 5 , ' ' , SCB . LINENR ,
-                          SCB . LINEPOS + 1 ) ;
+               begin
+                 WRITELN ( 'passcane aufruf 1' ) ;
+                 PASSCANE ( SCB , 'W' , 'S' , 5 , ' ' , SCB . LINENR ,
+                            SCB . LINEPOS + 1 ) ;
+               end (* then *) ;
              OPTIONS := FALSE ;
              break ;
            end (* then *) ;
          if not ( SCANCH in LOW_LETTERS + UP_LETTERS ) then
            begin
              if SCANCH <> ',' then
-               PASSCANE ( SCB , 'W' , 'S' , 3 , ' ' , SCB . LINENR ,
-                          SCB . LINEPOS + 1 ) ;
+               begin
+                 WRITELN ( 'passcane aufruf 2' ) ;
+                 PASSCANE ( SCB , 'W' , 'S' , 3 , ' ' , SCB . LINENR ,
+                            SCB . LINEPOS + 1 ) ;
+               end (* then *) ;
              PASSCANR ( SCANINP , SCANOUT , SCB , SCANCH ) ;
              SCB . LOOKAHEAD := SCANCH ;
              WRITEOPT ;
@@ -1054,12 +1033,15 @@ local function OPTIONS ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var
                        WRITEOPT ;
                      end (* then *)
                    else
-                     PASSCANE ( SCB , 'W' , 'S' , 4 , ' ' , SCB .
-                                LINENR , SCB . LINEPOS + 1 ) ;
+                     begin
+                       WRITELN ( 'passcane aufruf 3' ) ;
+                       PASSCANE ( SCB , 'W' , 'S' , 4 , ' ' , SCB .
+                                  LINENR , SCB . LINEPOS + 1 ) ;
+                     end (* else *) ;
                  end (* tag/ca *) ;
            otherwise
              begin
-
+               
              end (* otherw *)
          end (* case *) ;
        end (* while *) ;
@@ -1189,7 +1171,7 @@ local procedure COMMENT ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var
                      end (* then *) ;
                  end (* tag/ca *) ;
              otherwise
-
+               
            end (* case *) ;
          PASSCANR ( SCANINP , SCANOUT , SCB , SCANCH ) ;
          SCB . LOOKAHEAD := SCANCH ;
@@ -1322,24 +1304,25 @@ procedure PASSCAN ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB :
             93 : SCB . SYMBOLNR := SYNEOP ;
             97 : SCB . SYMBOLNR := SYGEOP ;
             99 : SCB . SYMBOLNR := SYLEOP ;
-            100 : SCB . SYMBOLNR := SYOROP ;
             101 : SCB . SYMBOLNR := SYANDOP ;
             103 : SCB . SYMBOLNR := SYASSIGN ;
-            104 : SCB . SYMBOLNR := SYLPARENT ;
-            105 : SCB . SYMBOLNR := SYMINUS ;
-            106 : SCB . SYMBOLNR := SYPERIOD ;
-            107 : SCB . SYMBOLNR := SYSLASH ;
-            108 : SCB . SYMBOLNR := INTCONST ;
-            109 : SCB . SYMBOLNR := INTCONST ;
-            110 : SCB . SYMBOLNR := SYCOLON ;
-            111 : SCB . SYMBOLNR := SYLTOP ;
-            112 : SCB . SYMBOLNR := SYGTOP ;
-            113 : SCB . SYMBOLNR := IDENT ;
-            114 : SCB . SYMBOLNR := IDENT ;
+            105 : SCB . SYMBOLNR := SYCONCAT ;
+            106 : SCB . SYMBOLNR := SYLPARENT ;
+            107 : SCB . SYMBOLNR := SYMINUS ;
+            108 : SCB . SYMBOLNR := SYPERIOD ;
+            109 : SCB . SYMBOLNR := SYSLASH ;
+            110 : SCB . SYMBOLNR := INTCONST ;
+            111 : SCB . SYMBOLNR := INTCONST ;
+            112 : SCB . SYMBOLNR := SYCOLON ;
+            113 : SCB . SYMBOLNR := SYLTOP ;
+            114 : SCB . SYMBOLNR := SYGTOP ;
             115 : SCB . SYMBOLNR := IDENT ;
             116 : SCB . SYMBOLNR := IDENT ;
-            117 : SCB . SYMBOLNR := STRINGCONST ;
-            119 : SCB . SYMBOLNR := REALCONST ;
+            117 : SCB . SYMBOLNR := IDENT ;
+            118 : SCB . SYMBOLNR := IDENT ;
+            119 : SCB . SYMBOLNR := SYOROP ;
+            120 : SCB . SYMBOLNR := STRINGCONST ;
+            122 : SCB . SYMBOLNR := REALCONST ;
           end (* case *) ;
         if FALSE then
           WRITELN ( 'zust = ' , ALTZUST , ' symb = ' , SCB . SYMBOLNR :
@@ -1406,35 +1389,36 @@ procedure PASSCAN ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB :
                   X'0D' : ZUST := 2 ;
                   ' ' : ZUST := 3 ;
                   '"' : ZUST := 9 ;
+                  '#' : ZUST := 3 ;
                   '$' : ZUST := 67 ;
                   '&' : ZUST := 101 ;
                   '''' : ZUST := 12 ;
-                  '(' : ZUST := 104 ;
+                  '(' : ZUST := 106 ;
                   ')' : ZUST := 70 ;
                   '*' : ZUST := 89 ;
                   '+' : ZUST := 87 ;
                   ',' : ZUST := 79 ;
-                  '-' : ZUST := 105 ;
-                  '.' : ZUST := 106 ;
-                  '/' : ZUST := 107 ;
-                  '0' : ZUST := 108 ;
-                  '1' : ZUST := 109 ;
-                  '2' : ZUST := 109 ;
-                  '3' : ZUST := 109 ;
-                  '4' : ZUST := 109 ;
-                  '5' : ZUST := 109 ;
-                  '6' : ZUST := 109 ;
-                  '7' : ZUST := 109 ;
-                  '8' : ZUST := 109 ;
-                  '9' : ZUST := 109 ;
-                  ':' : ZUST := 110 ;
+                  '-' : ZUST := 107 ;
+                  '.' : ZUST := 108 ;
+                  '/' : ZUST := 109 ;
+                  '0' : ZUST := 110 ;
+                  '1' : ZUST := 111 ;
+                  '2' : ZUST := 111 ;
+                  '3' : ZUST := 111 ;
+                  '4' : ZUST := 111 ;
+                  '5' : ZUST := 111 ;
+                  '6' : ZUST := 111 ;
+                  '7' : ZUST := 111 ;
+                  '8' : ZUST := 111 ;
+                  '9' : ZUST := 111 ;
+                  ':' : ZUST := 112 ;
                   ';' : ZUST := 80 ;
-                  '<' : ZUST := 111 ;
+                  '<' : ZUST := 113 ;
                   '=' : ZUST := 91 ;
-                  '>' : ZUST := 112 ;
+                  '>' : ZUST := 114 ;
                   '@' : ZUST := 82 ;
                   'A' : ZUST := 67 ;
-                  'B' : ZUST := 113 ;
+                  'B' : ZUST := 115 ;
                   'C' : ZUST := 67 ;
                   'D' : ZUST := 67 ;
                   'E' : ZUST := 67 ;
@@ -1456,7 +1440,7 @@ procedure PASSCAN ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB :
                   'U' : ZUST := 67 ;
                   'V' : ZUST := 67 ;
                   'W' : ZUST := 67 ;
-                  'X' : ZUST := 114 ;
+                  'X' : ZUST := 116 ;
                   'Y' : ZUST := 67 ;
                   'Z' : ZUST := 67 ;
                   '[' : ZUST := 71 ;
@@ -1464,7 +1448,7 @@ procedure PASSCAN ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB :
                   '^' : ZUST := 82 ;
                   '_' : ZUST := 67 ;
                   'a' : ZUST := 67 ;
-                  'b' : ZUST := 115 ;
+                  'b' : ZUST := 117 ;
                   'c' : ZUST := 67 ;
                   'd' : ZUST := 67 ;
                   'e' : ZUST := 67 ;
@@ -1486,11 +1470,11 @@ procedure PASSCAN ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB :
                   'u' : ZUST := 67 ;
                   'v' : ZUST := 67 ;
                   'w' : ZUST := 67 ;
-                  'x' : ZUST := 116 ;
+                  'x' : ZUST := 118 ;
                   'y' : ZUST := 67 ;
                   'z' : ZUST := 67 ;
                   '{' : ZUST := 8 ;
-                  '|' : ZUST := 100 ;
+                  '|' : ZUST := 119 ;
                   otherwise
                     ZUST := - 1 ;
                 end (* case *) ;
@@ -1499,6 +1483,7 @@ procedure PASSCAN ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB :
                 case CH of
                   X'0A' : ZUST := 3 ;
                   ' ' : ZUST := 3 ;
+                  '#' : ZUST := 3 ;
                   otherwise
                     ZUST := - 1 ;
                 end (* case *) ;
@@ -1515,14 +1500,14 @@ procedure PASSCAN ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB :
         case ZUST of
           12 : begin
                  case CH of
-                   '''' : ZUST := 117 ;
+                   '''' : ZUST := 120 ;
                    otherwise
                      ZUST := 13 ;
                  end (* case *) ;
                end (* tag/ca *) ;
           13 : begin
                  case CH of
-                   '''' : ZUST := 117 ;
+                   '''' : ZUST := 120 ;
                    otherwise
                      ZUST := 13 ;
                  end (* case *) ;
@@ -1951,7 +1936,7 @@ procedure PASSCAN ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB :
 
       begin (* SCAN0100 *)
         case ZUST of
-          104 : begin
+          106 : begin
                   case CH of
                     '*' : ZUST := 7 ;
                     '.' : ZUST := 71 ;
@@ -1960,14 +1945,14 @@ procedure PASSCAN ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB :
                       ZUST := - 1 ;
                   end (* case *) ;
                 end (* tag/ca *) ;
-          105 : begin
+          107 : begin
                   case CH of
                     '>' : ZUST := 82 ;
                     otherwise
                       ZUST := - 1 ;
                   end (* case *) ;
                 end (* tag/ca *) ;
-          106 : begin
+          108 : begin
                   case CH of
                     ')' : ZUST := 75 ;
                     '.' : ZUST := 85 ;
@@ -1975,7 +1960,7 @@ procedure PASSCAN ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB :
                       ZUST := - 1 ;
                   end (* case *) ;
                 end (* tag/ca *) ;
-          107 : begin
+          109 : begin
                   case CH of
                     ')' : ZUST := 75 ;
                     '*' : ZUST := 5 ;
@@ -1983,34 +1968,6 @@ procedure PASSCAN ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB :
                     otherwise
                       ZUST := - 1 ;
                   end (* case *) ;
-                end (* tag/ca *) ;
-          108 : begin
-                  if CH in ( C_ZIFFER ) then
-                    ZUST := 109
-                  else
-                    case CH of
-                      '.' : ZUST := 118 ;
-                      'B' : ZUST := 40 ;
-                      'E' : ZUST := 52 ;
-                      'X' : ZUST := 34 ;
-                      '_' : ZUST := 31 ;
-                      'b' : ZUST := 40 ;
-                      'x' : ZUST := 34 ;
-                      otherwise
-                        ZUST := - 1 ;
-                    end (* case *) ;
-                end (* tag/ca *) ;
-          109 : begin
-                  if CH in ( C_ZIFFER ) then
-                    ZUST := 109
-                  else
-                    case CH of
-                      '.' : ZUST := 118 ;
-                      'E' : ZUST := 52 ;
-                      '_' : ZUST := 31 ;
-                      otherwise
-                        ZUST := - 1 ;
-                    end (* case *) ;
                 end (* tag/ca *) ;
           otherwise
             CASE_FOUND := FALSE
@@ -2023,13 +1980,41 @@ procedure PASSCAN ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB :
       begin (* SCAN0110 *)
         case ZUST of
           110 : begin
+                  if CH in ( C_ZIFFER ) then
+                    ZUST := 111
+                  else
+                    case CH of
+                      '.' : ZUST := 121 ;
+                      'B' : ZUST := 40 ;
+                      'E' : ZUST := 52 ;
+                      'X' : ZUST := 34 ;
+                      '_' : ZUST := 31 ;
+                      'b' : ZUST := 40 ;
+                      'x' : ZUST := 34 ;
+                      otherwise
+                        ZUST := - 1 ;
+                    end (* case *) ;
+                end (* tag/ca *) ;
+          111 : begin
+                  if CH in ( C_ZIFFER ) then
+                    ZUST := 111
+                  else
+                    case CH of
+                      '.' : ZUST := 121 ;
+                      'E' : ZUST := 52 ;
+                      '_' : ZUST := 31 ;
+                      otherwise
+                        ZUST := - 1 ;
+                    end (* case *) ;
+                end (* tag/ca *) ;
+          112 : begin
                   case CH of
                     '=' : ZUST := 103 ;
                     otherwise
                       ZUST := - 1 ;
                   end (* case *) ;
                 end (* tag/ca *) ;
-          111 : begin
+          113 : begin
                   case CH of
                     '=' : ZUST := 99 ;
                     '>' : ZUST := 93 ;
@@ -2037,36 +2022,12 @@ procedure PASSCAN ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB :
                       ZUST := - 1 ;
                   end (* case *) ;
                 end (* tag/ca *) ;
-          112 : begin
+          114 : begin
                   case CH of
                     '=' : ZUST := 97 ;
                     otherwise
                       ZUST := - 1 ;
                   end (* case *) ;
-                end (* tag/ca *) ;
-          113 : begin
-                  if CH in ( C_ZIFFER + C_BUCHST + C_KLBUCHST ) then
-                    ZUST := 68
-                  else
-                    case CH of
-                      '$' : ZUST := 68 ;
-                      '''' : ZUST := 24 ;
-                      '_' : ZUST := 68 ;
-                      otherwise
-                        ZUST := - 1 ;
-                    end (* case *) ;
-                end (* tag/ca *) ;
-          114 : begin
-                  if CH in ( C_ZIFFER + C_BUCHST + C_KLBUCHST ) then
-                    ZUST := 68
-                  else
-                    case CH of
-                      '$' : ZUST := 68 ;
-                      '''' : ZUST := 17 ;
-                      '_' : ZUST := 68 ;
-                      otherwise
-                        ZUST := - 1 ;
-                    end (* case *) ;
                 end (* tag/ca *) ;
           115 : begin
                   if CH in ( C_ZIFFER + C_BUCHST + C_KLBUCHST ) then
@@ -2093,15 +2054,56 @@ procedure PASSCAN ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB :
                     end (* case *) ;
                 end (* tag/ca *) ;
           117 : begin
+                  if CH in ( C_ZIFFER + C_BUCHST + C_KLBUCHST ) then
+                    ZUST := 68
+                  else
+                    case CH of
+                      '$' : ZUST := 68 ;
+                      '''' : ZUST := 24 ;
+                      '_' : ZUST := 68 ;
+                      otherwise
+                        ZUST := - 1 ;
+                    end (* case *) ;
+                end (* tag/ca *) ;
+          118 : begin
+                  if CH in ( C_ZIFFER + C_BUCHST + C_KLBUCHST ) then
+                    ZUST := 68
+                  else
+                    case CH of
+                      '$' : ZUST := 68 ;
+                      '''' : ZUST := 17 ;
+                      '_' : ZUST := 68 ;
+                      otherwise
+                        ZUST := - 1 ;
+                    end (* case *) ;
+                end (* tag/ca *) ;
+          119 : begin
+                  case CH of
+                    '|' : ZUST := 105 ;
+                    otherwise
+                      ZUST := - 1 ;
+                  end (* case *) ;
+                end (* tag/ca *) ;
+          otherwise
+            CASE_FOUND := FALSE
+        end (* case *)
+      end (* SCAN0110 *) ;
+
+
+   procedure SCAN0120 ;
+
+      begin (* SCAN0120 *)
+        case ZUST of
+          120 : begin
                   case CH of
                     '''' : ZUST := 13 ;
                     otherwise
                       ZUST := - 1 ;
                   end (* case *) ;
                 end (* tag/ca *) ;
-          118 : begin
+          121 : begin
                   if CH in ( C_ZIFFER ) then
-                    ZUST := 119
+                    ZUST := 122
                   else
                     case CH of
                       '.' : ZUST := 47 ;
@@ -2109,9 +2111,9 @@ procedure PASSCAN ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB :
                         ZUST := - 1 ;
                     end (* case *) ;
                 end (* tag/ca *) ;
-          119 : begin
+          122 : begin
                   if CH in ( C_ZIFFER ) then
-                    ZUST := 119
+                    ZUST := 122
                   else
                     case CH of
                       'E' : ZUST := 61 ;
@@ -2122,7 +2124,7 @@ procedure PASSCAN ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB :
           otherwise
             CASE_FOUND := FALSE
         end (* case *)
-      end (* SCAN0110 *) ;
+      end (* SCAN0120 *) ;
 
 
    begin (* PASSCAN *)
@@ -2151,8 +2153,11 @@ procedure PASSCAN ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB :
        begin
          SCB . DATEIENDE := SCB . DATEIENDE + 1 ;
          if SCB . DATEIENDE > 5 then
-           PASSCANE ( SCB , 'F' , 'S' , 1 , ' ' , SCB . LINENR , SCB .
-                      LINEPOS ) ;
+           begin
+             WRITELN ( 'passcane aufruf 4' ) ;
+             PASSCANE ( SCB , 'F' , 'S' , 1 , ' ' , SCB . LINENR , SCB
+                        . LINEPOS ) ;
+           end (* then *) ;
          SCB . SYMBOLNR := SYMB_EOF ;
          SCB . LSYMBOL := 1 ;
          SCB . SYMBOL [ 1 ] := CH ;
@@ -2167,8 +2172,8 @@ procedure PASSCAN ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB :
          ALTZUST := ZUST ;
          CASE_FOUND := TRUE ;
          if ZUST in [ 2 , 5 , 7 , 8 , 9 , 11 , 22 , 29 , 47 , 70 , 71 ,
-         75 , 79 , 80 , 82 , 85 , 87 , 89 , 91 , 93 , 97 , 99 , 100 ,
-         101 , 103 ] then
+         75 , 79 , 80 , 82 , 85 , 87 , 89 , 91 , 93 , 97 , 99 , 101 ,
+         103 , 105 ] then
            ZUST := - 1
          else
            case ZUST DIV 10 of
@@ -2181,6 +2186,7 @@ procedure PASSCAN ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB :
              6 : SCAN0060 ;
              10 : SCAN0100 ;
              11 : SCAN0110 ;
+             12 : SCAN0120 ;
            end (* case *) ;
          if not CASE_FOUND then
            begin
@@ -2188,6 +2194,7 @@ procedure PASSCAN ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB :
                WRITELN ( 'zust not found line/Pos = ' , SCB . LINENR :
                          1 , '/' , SCB . LINEPOS : 1 , ' zust = ' ,
                          ZUST : 1 ) ;
+             WRITELN ( 'passcane aufruf 5' ) ;
              PASSCANE ( SCB , 'F' , 'S' , 2 , ' ' , SCB . LINENR , SCB
                         . LINEPOS ) ;
            end (* then *) ;
@@ -2204,6 +2211,7 @@ procedure PASSCAN ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB :
                end (* then *) ;
              if ( ZUST in [ 12 , 13 ] ) and SCB . ENDOFLINE then
                begin
+                 WRITELN ( 'passcane aufruf 6' ) ;
                  PASSCANE ( SCB , 'F' , 'S' , 6 , ' ' , SCB . LINENR ,
                             SCB . LINEPOS ) ;
                  ALTZUST := 117 ;
@@ -2240,7 +2248,7 @@ procedure PASSCAN ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB :
              COMMENT5 :
                COMMENT ( SCANINP , SCANOUT , SCB , 5 ) ;
              otherwise
-
+               
            end (* case *)
        end (* else *)
    end (* PASSCAN *) ;
@@ -2248,5 +2256,5 @@ procedure PASSCAN ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB :
 
 
 begin (* HAUPTPROGRAMM *)
-
+  
 end (* HAUPTPROGRAMM *) .

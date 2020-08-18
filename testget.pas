@@ -19,20 +19,23 @@ procedure TERMOUT ( var X : TEXT ) ;
 
 begin (* HAUPTPROGRAMM *)
   TERMIN ( INPUT ) ;
-  TERMOUT ( OUTPUT ) ;
-  WRITELN ( 'termin, das Zeichen ist vor GET noch undefiniert' ) ;
-  WRITELN ( 'wegen fehlendem Reset' ) ;
-  CH := INPUT -> ;
-  WRITELN ( '1. zeichen = <' , CH , '>' , ORD ( CH ) ) ;
-  READ ( CH ) ;
-  WRITELN ( 'nach read' ) ;
-  WRITELN ( '1. zeichen = <' , CH , '>' , ORD ( CH ) ) ;
-  CH := INPUT -> ;
-  WRITELN ( '2. zeichen = <' , CH , '>' , ORD ( CH ) ) ;
+
+  //****************************************************************
+  // termin does not do an implicit reset, only sets terminal flag  
+  // input -> stays undefined (x'81') before the first get call     
+  //****************************************************************
+  // after that, get should return first char entered               
+  //****************************************************************
+  // the first get, in other words, does the same as                
+  // an implicit reset (not really advancing to the second byte     
+  // of the file)                                                   
+  //****************************************************************
+
   GET ;
-  CH := INPUT -> ;
-  WRITELN ( '3. zeichen = <' , CH , '>' , ORD ( CH ) ) ;
-  GET ;
-  CH := INPUT -> ;
-  WRITELN ( '4. zeichen = <' , CH , '>' , ORD ( CH ) ) ;
+  while not EOF ( INPUT ) do
+    begin
+      CH := INPUT -> ;
+      WRITELN ( 'x. zeichen = <' , CH , '>' , ORD ( CH ) ) ;
+      GET ;
+    end (* while *) ;
 end (* HAUPTPROGRAMM *) .

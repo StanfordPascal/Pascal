@@ -6,7 +6,7 @@ set dd_dbginfo=%1.dbginfo
 set dd_prd=pascal.messages
 set dd_tracef=*stdout*
 copy %1.prr %1.prralt /y >nul
-pcint prr=pascal1a.prr inc=paslibx,passcan pas=pascal1a.pas out=pascal1a.prrlis debug=n
+pcint prr=pascal1a.prr inc=paslibx,passcana pas=pascal1a.pas out=pascal1a.prrlis debug=n
 set dd_input=
 set dd_listing=
 set dd_prr=

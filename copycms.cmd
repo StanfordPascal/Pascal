@@ -1,5 +1,22 @@
 
 rem **********************************************************
+rem +++ Version 2020.04 +++
+rem **********************************************************
+
+rem call copyrdr pasmonn.ass      pascomp pasmonn assemble
+
+    call topas pascal1a
+    call topas pascal2a
+    call topas passcana
+
+    call topas passcan
+    call topas paslibx
+    call topas pascal1
+    call topas pascal2
+
+    call copyrdr pascal.messages  pascomp pascal messages
+
+rem **********************************************************
 rem +++ Version 2020.01 +++
 rem **********************************************************
 
@@ -8,10 +25,10 @@ rem call copyrdr pasmonn.ass      pascomp pasmonn assemble
 rem call topas pascal1a
 rem call topas pascal2a
 
-    call topas passcan
-    call topas paslibx
-    call topas pascal1
-    call topas pascal2
+rem call topas passcan
+rem call topas paslibx
+rem call topas pascal1
+rem call topas pascal2
 
 rem **********************************************************
 rem +++ Version 2019.09 +++

@@ -70,6 +70,7 @@ type CHARPTR = -> CHAR ;
      /***********************************/
 
      CHAR32 = array [ 1 .. 32 ] of CHAR ;
+     CHAR64 = array [ 1 .. 64 ] of CHAR ;
      SOURCELINE = array [ 1 .. MAXLSIZE ] of CHAR ;
      SCAN_CODETAB = array [ CHAR ] of CHAR ;
      SCAN_SETCHAR = set of CHAR ;
@@ -90,16 +91,21 @@ type CHARPTR = -> CHAR ;
      /******************************************/
      /* Liste der Fehler pro Source-Zeile usw. */
      /******************************************/
+     /* muss mit Def. beim Compiler            */
+     /* uebereinstimmen                        */
+     /******************************************/
 
      SCANF_PTR = -> SCAN_FEHLER ;
      SCAN_FEHLER = record
                      ERRLEVEL : CHAR ;       // error level
                      ERRCLASS : CHAR ;       // error class
                      NUMMER : INTEGER ;      // error number
-                     INFO : CHAR32 ;         // additional info
+                     INFO : CHAR64 ;         // additional info
                      ZEILNR : INTEGER ;      // line number of err
                      POSITION : INTEGER ;    // position of err
                      NAECHST : SCANF_PTR ;   // ptr to next
+                     ZEILNR_SKIP : INTEGER ; // line number skip
+                     POS_SKIP : INTEGER ;    // position skip
                    end ;
 
      /***********************************/
@@ -118,6 +124,7 @@ type CHARPTR = -> CHAR ;
                     LINENR : INTEGER ;       // line number of symbol
                     LINEPOS : INTEGER ;      // line position of symb
                     LINELEN : INTEGER ;      // line length
+                    SKIPPING : BOOLEAN ;     // parser is skipping
                     LOOKAHEAD : CHAR ;       // lookahead character
                     SYMBOLNR : SYMB ;        // symbol read
                     SYMBOL : SOURCELINE ;    // characters of symb
@@ -350,7 +357,7 @@ local procedure SCAN_FEHLER_AUSGEBEN ( var SCANOUT : TEXT ; var SCB :
        NUMMER : INTEGER ;
        FTEXT_REC : SCAN_FTEXT ;
        FTEXT : array [ 1 .. 120 ] of CHAR ;
-       FEINFO : CHAR32 ;
+       FEINFO : CHAR64 ;
        L : INTEGER ;
        I : INTEGER ;
        INFO_POS : INTEGER ;
@@ -401,7 +408,7 @@ local procedure SCAN_FEHLER_AUSGEBEN ( var SCANOUT : TEXT ; var SCB :
                begin
                  if INFO_POS > 1 then
                    WRITE ( SCANOUT , FTEXT : INFO_POS - 1 ) ;
-                 WRITEPTR_LEN ( SCANOUT , ADDR ( FEINFO ) , 32 , TRUE ,
+                 WRITEPTR_LEN ( SCANOUT , ADDR ( FEINFO ) , 64 , TRUE ,
                                 TRUE ) ;
                  if L > INFO_POS then
                    begin
@@ -453,7 +460,7 @@ local procedure SCAN_FEHLER_AUSGEBEN ( var SCANOUT : TEXT ; var SCB :
                begin
                  if INFO_POS > 1 then
                    WRITE ( SCANOUT , FTEXT : INFO_POS - 1 ) ;
-                 WRITEPTR_LEN ( SCANOUT , ADDR ( FEINFO ) , 32 , TRUE ,
+                 WRITEPTR_LEN ( SCANOUT , ADDR ( FEINFO ) , 64 , TRUE ,
                                 TRUE ) ;
                  if L > INFO_POS then
                    begin
@@ -479,12 +486,14 @@ local procedure PROT_ZEILE_AUSG ( var SCANOUT : TEXT ; var SCB :
 
    var ZEILENNR : INTEGER ;
        PL : INTEGER ;
+       PSKIP : INTEGER ;
        FELAUF : SCANF_PTR ;
        ZEILE_ENTH_FEHLER : BOOLEAN ;
 
    begin (* PROT_ZEILE_AUSG *)
      ZEILENNR := SCB . LINENR ;
-     ZEILE_ENTH_FEHLER := SCB . FEAKT <> SCB . FEAKT_ALT ;
+     ZEILE_ENTH_FEHLER := ( SCB . FEAKT <> SCB . FEAKT_ALT ) or SCB .
+                          SKIPPING ;
      if ALLES or ZEILE_ENTH_FEHLER then
        begin
          if not ISTERM then
@@ -518,9 +527,26 @@ local procedure PROT_ZEILE_AUSG ( var SCANOUT : TEXT ; var SCB :
                  WRITE ( SCANOUT , ' ' : FELAUF -> . POSITION - PL ) ;
                  PL := FELAUF -> . POSITION ;
                end (* then *) ;
-             WRITE ( SCANOUT , '!' ) ;
+             PSKIP := FELAUF -> . POS_SKIP ;
+
+     //*******************************************************
+     // skipping area is marked with slashes - opp - 2020.04  
+     //*******************************************************
+
+             if FELAUF -> . ERRLEVEL = 'X' then
+               WRITE ( SCANOUT , '/' )
+             else
+               WRITE ( SCANOUT , '!' ) ;
              PL := PL + 1 ;
              FELAUF := FELAUF -> . NAECHST ;
+             if FELAUF <> NIL then
+               if PSKIP >= FELAUF -> . POSITION then
+                 PSKIP := FELAUF -> . POSITION - 1 ;
+             while PL < PSKIP do
+               begin
+                 WRITE ( SCANOUT , '/' ) ;
+                 PL := PL + 1
+               end (* while *) ;
            end (* while *) ;
          WRITELN ( SCANOUT ) ;
          if SCB . FEAKT_ALT = NIL then
@@ -531,6 +557,17 @@ local procedure PROT_ZEILE_AUSG ( var SCANOUT : TEXT ; var SCB :
            begin
              if FELAUF = NIL then
                break ;
+             if FELAUF -> . ERRLEVEL = 'X' then
+               begin
+
+     //**********************************************
+     // error element used to mark skipping area in  
+     // follow up lines                              
+     //**********************************************
+
+                 FELAUF := FELAUF -> . NAECHST ;
+                 continue ;
+               end (* then *) ;
              if not ISTERM then
                CHECK_HEADING ( SCANOUT , SCB ) ;
              case FELAUF -> . ERRLEVEL of
@@ -546,6 +583,7 @@ local procedure PROT_ZEILE_AUSG ( var SCANOUT : TEXT ; var SCB :
                'I' : WRITE ( SCANOUT , '    ** Inform. ' , FELAUF -> .
                              ERRCLASS , FELAUF -> . NUMMER : - 3 , ': '
                              ) ;
+               'Y' : WRITE ( SCANOUT , '    ** ' ) ;
                otherwise
                  WRITE ( SCANOUT , '    ** Level-' , FELAUF -> .
                          ERRLEVEL , ' ' , FELAUF -> . ERRCLASS , FELAUF
@@ -677,8 +715,130 @@ procedure PASSCANL ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB
 
 
 
+function PASSCANE ( var SCB : SCAN_BLOCK ; ERRLEVEL : CHAR ; ERRCLASS :
+                  CHAR ; I : INTEGER ; INFO : CHAR64 ; ZEILNR : INTEGER
+                  ; PLATZ : INTEGER ) : SCANF_PTR ;
+
+(***********************************************************)
+(*                                                         *)
+(* Fehler vom Compiler melden                              *)
+(*                                                         *)
+(* ERRLEVEL gibt die Schwere des Fehlers an                *)
+(* ERRCLASS und I (FehlerNr) identifizieren den Fehler     *)
+(* ZEILNR und PLATZ geben die Fehlerstelle im Source an    *)
+(* Mit INFO kann man zusaetzliche Info mitgeben            *)
+(* (Ausbaustufe)                                           *)
+(*                                                         *)
+(***********************************************************)
+
+
+   var PWORK : SCANF_PTR ;
+       PSAVE : SCANF_PTR ;
+
+   begin (* PASSCANE *)
+
+     /*****************************************************/
+     /*   Fehlerelement in die Fehlerkette einfuegen      */
+     /*****************************************************/
+
+     case ERRLEVEL of
+       'S' : SCB . SFZAHL := SCB . SFZAHL + 1 ;
+       'F' : SCB . FEZAHL := SCB . FEZAHL + 1 ;
+       'W' : SCB . WAZAHL := SCB . WAZAHL + 1 ;
+       'I' : SCB . INZAHL := SCB . INZAHL + 1 ;
+       'O' : ;
+       'X' : ;
+       'Y' : ;
+       otherwise
+         SCB . UFZAHL := SCB . UFZAHL + 1 ;
+     end (* case *) ;
+     if SCB . FEANFANG = NIL then
+       begin
+
+     /*****************************************************/
+     /*   Fehlerliste leer, erstes Element einfuegen      */
+     /*****************************************************/
+
+         SCB . FEANFANG := ALLOC ( SIZEOF ( SCAN_FEHLER ) ) ;
+         SCB . FEAKT := SCB . FEANFANG ;
+         PWORK := SCB . FEAKT ;
+         PSAVE := NIL ;
+       end (* then *)
+     else
+       begin
+         if ( SCB . FEAKT -> . ZEILNR < ZEILNR ) or ( ( SCB . FEAKT ->
+         . ZEILNR = ZEILNR ) and ( SCB . FEAKT -> . POSITION <= PLATZ )
+         ) then
+           begin
+
+     /*****************************************************/
+     /*   neues Element ganz hinten einfuegen             */
+     /*****************************************************/
+
+             SCB . FEAKT -> . NAECHST := ALLOC ( SIZEOF ( SCAN_FEHLER )
+                                         ) ;
+             SCB . FEAKT := SCB . FEAKT -> . NAECHST ;
+             PWORK := SCB . FEAKT ;
+             PSAVE := NIL ;
+           end (* then *)
+         else
+           begin
+             PWORK := SCB . FEANFANG ;
+             if ( PWORK -> . ZEILNR < ZEILNR ) or ( ( PWORK -> . ZEILNR
+             = ZEILNR ) and ( PWORK -> . POSITION <= PLATZ ) ) then
+               begin
+
+     /*****************************************************/
+     /*   Element irgendwo in der Mitte einfuegen         */
+     /*****************************************************/
+
+                 PWORK := SCB . FEANFANG ;
+                 while ( PWORK -> . NAECHST -> . ZEILNR < ZEILNR ) or (
+                 ( PWORK -> . NAECHST -> . ZEILNR = ZEILNR ) and (
+                 PWORK -> . NAECHST -> . POSITION <= PLATZ ) ) do
+                   PWORK := PWORK -> . NAECHST ;
+                 PSAVE := PWORK -> . NAECHST ;
+                 PWORK -> . NAECHST := ALLOC ( SIZEOF ( SCAN_FEHLER ) )
+                                       ;
+                 PWORK := PWORK -> . NAECHST ;
+               end (* then *)
+             else
+               begin
+
+     /*****************************************************/
+     /*   neues Element ganz vorne einfuegen              */
+     /*****************************************************/
+
+                 PSAVE := SCB . FEANFANG ;
+                 PWORK := ALLOC ( SIZEOF ( SCAN_FEHLER ) ) ;
+                 SCB . FEANFANG := PWORK ;
+               end (* else *)
+           end (* else *)
+       end (* else *) ;
+
+     /*****************************************************/
+     /*   Element mit Werten belegen und                  */
+     /*   Pointer als Funktionsergebnis zurueckgeben      */
+     /*****************************************************/
+
+     PWORK -> . ERRLEVEL := ERRLEVEL ;
+     PWORK -> . ERRCLASS := ERRCLASS ;
+     PWORK -> . NUMMER := I ;
+     PWORK -> . INFO := INFO ;
+     PWORK -> . ZEILNR := ZEILNR ;
+     PWORK -> . POSITION := PLATZ ;
+     PWORK -> . NAECHST := PSAVE ;
+     PWORK -> . ZEILNR_SKIP := ZEILNR ;
+     PWORK -> . POS_SKIP := PLATZ ;
+     PASSCANE := PWORK ;
+   end (* PASSCANE *) ;
+
+
+
 procedure PASSCANR ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB
                    : SCAN_BLOCK ; var CH : CHAR ) ;
+
+   var PFELEM : SCANF_PTR ;
 
    begin (* PASSCANR *)
      while TRUE do
@@ -704,6 +864,33 @@ procedure PASSCANR ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB
 
          if SCB . LINENR > 0 then
            begin
+
+     //*****************************************************
+     // if parser skips, we add error elements in error list
+     // one error element (skipping) for every empty line   
+     // skipped (cols 1 to 3) and another error element     
+     // for the last line (up to scb.linepos)               
+     //*****************************************************
+     // scanner prints slashes to document the skipping area
+     //*****************************************************
+
+             if SCB . SKIPPING then
+               if SCB . FEAKT <> NIL then
+                 if SCB . FEAKT -> . ZEILNR_SKIP = SCB . LINENR then
+                   SCB . FEAKT -> . POS_SKIP := SCB . LINEPOS + 1
+                 else
+                   begin
+                     PFELEM := PASSCANE ( SCB , 'X' , ' ' , 0 , ' ' ,
+                               SCB . LINENR , 2 ) ;
+                     PFELEM -> . ZEILNR_SKIP := SCB . LINENR ;
+                     PFELEM -> . POS_SKIP := SCB . LINELEN + 4 ;
+                   end (* else *) ;
+
+     //*****************************************************
+     // output source line and error messages and           
+     // skipping information (if needed)                    
+     //*****************************************************
+
              if SCB . PROTOUT then
                PROT_ZEILE_AUSG ( SCANOUT , SCB , TRUE , FALSE ) ;
              if SCB . TERMOUT then
@@ -743,132 +930,6 @@ procedure PASSCANR ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB
 
 
 
-procedure PASSCANE ( var SCB : SCAN_BLOCK ; ERRLEVEL : CHAR ; ERRCLASS
-                   : CHAR ; I : INTEGER ; INFO : CHAR32 ; ZEILNR :
-                   INTEGER ; PLATZ : INTEGER ) ;
-
-(***********************************************************)
-(*                                                         *)
-(* Fehler vom Compiler melden                              *)
-(*                                                         *)
-(* ERRLEVEL gibt die Schwere des Fehlers an                *)
-(* ERRCLASS und I (FehlerNr) identifizieren den Fehler     *)
-(* ZEILNR und PLATZ geben die Fehlerstelle im Source an    *)
-(* Mit INFO kann man zusaetzliche Info mitgeben            *)
-(* (Ausbaustufe)                                           *)
-(*                                                         *)
-(***********************************************************)
-
-
-   var PWORK : SCANF_PTR ;
-       PSAVE : SCANF_PTR ;
-
-   begin (* PASSCANE *)
-
-     /*****************************************************/
-     /*   Fehlerelement in die Fehlerkette einfuegen      */
-     /*****************************************************/
-
-     case ERRLEVEL of
-       'S' : SCB . SFZAHL := SCB . SFZAHL + 1 ;
-       'F' : SCB . FEZAHL := SCB . FEZAHL + 1 ;
-       'W' : SCB . WAZAHL := SCB . WAZAHL + 1 ;
-       'I' : SCB . INZAHL := SCB . INZAHL + 1 ;
-       'O' : ;
-       otherwise
-         SCB . UFZAHL := SCB . UFZAHL + 1 ;
-     end (* case *) ;
-     if SCB . FEANFANG = NIL then
-       begin
-
-     /*****************************************************/
-     /*   Fehlerliste leer, erstes Element einfuegen      */
-     /*****************************************************/
-
-         SCB . FEANFANG := ALLOC ( SIZEOF ( SCAN_FEHLER ) ) ;
-         SCB . FEAKT := SCB . FEANFANG ;
-         SCB . FEAKT -> . ERRLEVEL := ERRLEVEL ;
-         SCB . FEAKT -> . ERRCLASS := ERRCLASS ;
-         SCB . FEAKT -> . NUMMER := I ;
-         SCB . FEAKT -> . INFO := INFO ;
-         SCB . FEAKT -> . ZEILNR := ZEILNR ;
-         SCB . FEAKT -> . POSITION := PLATZ ;
-         SCB . FEAKT -> . NAECHST := NIL ;
-       end (* then *)
-     else
-       begin
-         if ( SCB . FEAKT -> . ZEILNR < ZEILNR ) or ( ( SCB . FEAKT ->
-         . ZEILNR = ZEILNR ) and ( SCB . FEAKT -> . POSITION <= PLATZ )
-         ) then
-           begin
-
-     /*****************************************************/
-     /*   neues Element ganz hinten einfuegen             */
-     /*****************************************************/
-
-             SCB . FEAKT -> . NAECHST := ALLOC ( SIZEOF ( SCAN_FEHLER )
-                                         ) ;
-             SCB . FEAKT := SCB . FEAKT -> . NAECHST ;
-             SCB . FEAKT -> . ERRLEVEL := ERRLEVEL ;
-             SCB . FEAKT -> . ERRCLASS := ERRCLASS ;
-             SCB . FEAKT -> . NUMMER := I ;
-             SCB . FEAKT -> . INFO := INFO ;
-             SCB . FEAKT -> . ZEILNR := ZEILNR ;
-             SCB . FEAKT -> . POSITION := PLATZ ;
-             SCB . FEAKT -> . NAECHST := NIL ;
-           end (* then *)
-         else
-           begin
-             PWORK := SCB . FEANFANG ;
-             if ( PWORK -> . ZEILNR < ZEILNR ) or ( ( PWORK -> . ZEILNR
-             = ZEILNR ) and ( PWORK -> . POSITION <= PLATZ ) ) then
-               begin
-
-     /*****************************************************/
-     /*   Element irgendwo in der Mitte einfuegen         */
-     /*****************************************************/
-
-                 PWORK := SCB . FEANFANG ;
-                 while ( PWORK -> . NAECHST -> . ZEILNR < ZEILNR ) or (
-                 ( PWORK -> . NAECHST -> . ZEILNR = ZEILNR ) and (
-                 PWORK -> . NAECHST -> . POSITION <= PLATZ ) ) do
-                   PWORK := PWORK -> . NAECHST ;
-                 PSAVE := PWORK -> . NAECHST ;
-                 PWORK -> . NAECHST := ALLOC ( SIZEOF ( SCAN_FEHLER ) )
-                                       ;
-                 PWORK := PWORK -> . NAECHST ;
-                 PWORK -> . ERRLEVEL := ERRLEVEL ;
-                 PWORK -> . ERRCLASS := ERRCLASS ;
-                 PWORK -> . NUMMER := I ;
-                 PWORK -> . INFO := INFO ;
-                 PWORK -> . ZEILNR := ZEILNR ;
-                 PWORK -> . POSITION := PLATZ ;
-                 PWORK -> . NAECHST := PSAVE ;
-               end (* then *)
-             else
-               begin
-
-     /*****************************************************/
-     /*   neues Element ganz vorne einfuegen              */
-     /*****************************************************/
-
-                 PSAVE := SCB . FEANFANG ;
-                 PWORK := ALLOC ( SIZEOF ( SCAN_FEHLER ) ) ;
-                 PWORK -> . ERRLEVEL := ERRLEVEL ;
-                 PWORK -> . ERRCLASS := ERRCLASS ;
-                 PWORK -> . NUMMER := I ;
-                 PWORK -> . INFO := INFO ;
-                 PWORK -> . ZEILNR := ZEILNR ;
-                 PWORK -> . POSITION := PLATZ ;
-                 PWORK -> . NAECHST := PSAVE ;
-                 SCB . FEANFANG := PWORK ;
-               end (* else *)
-           end (* else *)
-       end (* else *)
-   end (* PASSCANE *) ;
-
-
-
 local function OPTIONS ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var
                        SCB : SCAN_BLOCK ; COMMENTTYPE : INTEGER ) :
                        BOOLEAN ;
@@ -887,6 +948,7 @@ local function OPTIONS ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var
        FERTIG : BOOLEAN ;
        OPTIX : INTEGER ;
        X , Y : INTEGER ;
+       PFDUMMY : SCANF_PTR ;
 
    const LOW_LETTERS : SET_CHAR =
          [ 'a' .. 'i' , 'j' .. 'r' , 's' .. 'z' ] ;
@@ -984,8 +1046,8 @@ local function OPTIONS ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var
              <> TERMCH ) then
                begin
                  WRITELN ( 'passcane aufruf 1' ) ;
-                 PASSCANE ( SCB , 'W' , 'S' , 5 , ' ' , SCB . LINENR ,
-                            SCB . LINEPOS + 1 ) ;
+                 PFDUMMY := PASSCANE ( SCB , 'W' , 'S' , 5 , ' ' , SCB
+                            . LINENR , SCB . LINEPOS + 1 ) ;
                end (* then *) ;
              OPTIONS := FALSE ;
              break ;
@@ -995,8 +1057,8 @@ local function OPTIONS ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var
              if SCANCH <> ',' then
                begin
                  WRITELN ( 'passcane aufruf 2' ) ;
-                 PASSCANE ( SCB , 'W' , 'S' , 3 , ' ' , SCB . LINENR ,
-                            SCB . LINEPOS + 1 ) ;
+                 PFDUMMY := PASSCANE ( SCB , 'W' , 'S' , 3 , ' ' , SCB
+                            . LINENR , SCB . LINEPOS + 1 ) ;
                end (* then *) ;
              PASSCANR ( SCANINP , SCANOUT , SCB , SCANCH ) ;
              SCB . LOOKAHEAD := SCANCH ;
@@ -1035,8 +1097,9 @@ local function OPTIONS ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var
                    else
                      begin
                        WRITELN ( 'passcane aufruf 3' ) ;
-                       PASSCANE ( SCB , 'W' , 'S' , 4 , ' ' , SCB .
-                                  LINENR , SCB . LINEPOS + 1 ) ;
+                       PFDUMMY := PASSCANE ( SCB , 'W' , 'S' , 4 , ' '
+                                  , SCB . LINENR , SCB . LINEPOS + 1 )
+                                  ;
                      end (* else *) ;
                  end (* tag/ca *) ;
            otherwise
@@ -1254,6 +1317,8 @@ procedure PASSCAN ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB :
        ZUST : INTEGER ;
        CH : CHAR ;
        CASE_FOUND : BOOLEAN ;
+       PFDUMMY : SCANF_PTR ;
+       PFSKIP : SCANF_PTR ;
 
 
    procedure SCANNER2 ( ALTZUST : INTEGER ; var SCB : SCAN_BLOCK ) ;
@@ -2155,8 +2220,8 @@ procedure PASSCAN ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB :
          if SCB . DATEIENDE > 5 then
            begin
              WRITELN ( 'passcane aufruf 4' ) ;
-             PASSCANE ( SCB , 'F' , 'S' , 1 , ' ' , SCB . LINENR , SCB
-                        . LINEPOS ) ;
+             PFDUMMY := PASSCANE ( SCB , 'F' , 'S' , 1 , ' ' , SCB .
+                        LINENR , SCB . LINEPOS ) ;
            end (* then *) ;
          SCB . SYMBOLNR := SYMB_EOF ;
          SCB . LSYMBOL := 1 ;
@@ -2195,8 +2260,8 @@ procedure PASSCAN ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB :
                          1 , '/' , SCB . LINEPOS : 1 , ' zust = ' ,
                          ZUST : 1 ) ;
              WRITELN ( 'passcane aufruf 5' ) ;
-             PASSCANE ( SCB , 'F' , 'S' , 2 , ' ' , SCB . LINENR , SCB
-                        . LINEPOS ) ;
+             PFDUMMY := PASSCANE ( SCB , 'F' , 'S' , 2 , ' ' , SCB .
+                        LINENR , SCB . LINEPOS ) ;
            end (* then *) ;
          if ZUST > 0 then
            begin
@@ -2212,8 +2277,8 @@ procedure PASSCAN ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB :
              if ( ZUST in [ 12 , 13 ] ) and SCB . ENDOFLINE then
                begin
                  WRITELN ( 'passcane aufruf 6' ) ;
-                 PASSCANE ( SCB , 'F' , 'S' , 6 , ' ' , SCB . LINENR ,
-                            SCB . LINEPOS ) ;
+                 PFDUMMY := PASSCANE ( SCB , 'F' , 'S' , 6 , ' ' , SCB
+                            . LINENR , SCB . LINEPOS ) ;
                  ALTZUST := 117 ;
                  break ;
                end (* then *) ;
@@ -2250,7 +2315,19 @@ procedure PASSCAN ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB :
              otherwise
                
            end (* case *)
-       end (* else *)
+       end (* else *) ;
+     if SCB . SKIPPING then
+       if SCB . FEAKT <> NIL then
+         if SCB . FEAKT -> . ZEILNR_SKIP = SCB . LINENR then
+           SCB . FEAKT -> . POS_SKIP := SCB . LINEPOS - SCB . LSYMBOL +
+                                        1
+         else
+           begin
+             PFSKIP := PASSCANE ( SCB , 'X' , ' ' , 0 , ' ' , SCB .
+                       LINENR , 2 ) ;
+             PFSKIP -> . ZEILNR_SKIP := SCB . LINENR ;
+             PFSKIP -> . POS_SKIP := SCB . LINEPOS - SCB . LSYMBOL + 1
+           end (* else *) ;
    end (* PASSCAN *) ;
 
 

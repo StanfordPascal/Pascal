@@ -47,6 +47,8 @@ module $PASLIBX ;
 (*                                                                  *)
 (*  History:                                                        *)
 (*                                                                  *)
+(*  16.08.2020: new function $PASRDB - read boolean                 *)
+(*                                                                  *)
 (*  12.01.2020: new function $PASRDR - read reals                   *)
 (*                                                                  *)
 (*  11.01.2020: all former EXIT calls replaced by $ERROR calls      *)
@@ -210,11 +212,14 @@ local procedure DUMP ( PVON : VOIDPTR ; PBIS : VOIDPTR ) ;
 
    procedure DUMPCHAR ( CH : CHAR ) ;
 
+      const DUMPSHOWCHARS : set of CHAR =
+            [ 'a' .. 'i' , 'j' .. 'r' , 's' .. 'z' , 'A' .. 'I' , 'J'
+              .. 'R' , 'S' .. 'Z' , '0' .. '9' , ' ' , ',' , '.' , '-'
+              , ';' , ':' , '_' , '!' , '"' , '$' , '%' , '&' , '/' ,
+              '(' , ')' , '=' , '?' , '+' , '*' , '#' , '*' ] ;
+
       begin (* DUMPCHAR *)
-        if CH in [ 'a' .. 'i' , 'j' .. 'r' , 's' .. 'z' , 'A' .. 'I' ,
-        'J' .. 'R' , 'S' .. 'Z' , '0' .. '9' , ' ' , ',' , '.' , '-' ,
-        ';' , ':' , '_' , '!' , '"' , 'õ' , '$' , '%' , '&' , '/' , '('
-        , ')' , '=' , '?' , '+' , '*' , '#' , '*' ] then
+        if CH in DUMPSHOWCHARS then
           WRITE ( CH )
         else
           WRITE ( '.' )
@@ -2148,19 +2153,13 @@ function $PASMAT ( FUNCCODE : INTEGER ; I : INTEGER ; X : REAL ) : REAL
 
 
 
-(**********************************************************)
-(*$D-,A+                                                  *)
-(**********************************************************)
-(*                                                        *)
-(*  String-Handling Funktionen fuer Pascal                *)
-(*                                                        *)
-(*  11.2016 - bernd.oppolzer@yahoo.com                    *)
-(*                                                        *)
-(**********************************************************)
-(*                                                        *)
-(*  zunaechst nur MEMCPY und MEMSET                       *)
-(*                                                        *)
-(**********************************************************)
+(***************************************************************)
+(*                                                             *)
+(*  Interface to Operating System Commands                     *)
+(*                                                             *)
+(*  CMSX and WINX                                              *)
+(*                                                             *)
+(***************************************************************)
 
 
 
@@ -2296,6 +2295,40 @@ procedure WINX ( CMD : CHARPTR ; var RETCODE : INTEGER ) ;
      if FALSE then
        WRITELN ( 'test winx: retcode = ' , RETCODE ) ;
    end (* WINX *) ;
+
+
+
+
+
+(***************************************************************)
+(*$D-,A+                                                       *)
+(***************************************************************)
+(*                                                             *)
+(*  String-Handling Funktionen fuer Pascal                     *)
+(*                                                             *)
+(*  11.2016 - bernd.oppolzer@yahoo.com                         *)
+(*                                                             *)
+(***************************************************************)
+(*                                                             *)
+(*  see the table in the Pascal compiler Pass 1 (PASCAL1);     *)
+(*  this table maps the function names to the procedure        *)
+(*  entries and subfunction numbers here                       *)
+(*                                                             *)
+(*  'SUBSTR   ' , 86 , FUNC , '$PASSTR1' , 1 , 3 , 'V' , 1     *)
+(*  'DELETE   ' , 87 , FUNC , '$PASSTR1' , 2 , 3 , 'V' , 1     *)
+(*  'RTRIM    ' , 88 , FUNC , '$PASSTR1' , 3 , 1 , 'V' , 1     *)
+(*  'LTRIM    ' , 89 , FUNC , '$PASSTR1' , 4 , 1 , 'V' , 1     *)
+(*  'TRIM     ' , 90 , FUNC , '$PASSTR1' , 5 , 1 , 'V' , 1     *)
+(*  'COMPRESS ' , 91 , FUNC , '$PASSTR1' , 6 , 1 , 'V' , 1     *)
+(*  'INDEX    ' , 93 , FUNC , '$PASSTR2' , 1 , 2 , 'I' , 2     *)
+(*  'VERIFY   ' , 94 , FUNC , '$PASSTR2' , 2 , 2 , 'I' , 2     *)
+(*  'TRANSLATE' , 95 , FUNC , '$PASSTR3' , 1 , 3 , 'V' , 3     *)
+(*  'LASTINDEX' , 99 , FUNC , '$PASSTR2' , 3 , 2 , 'I' , 2     *)
+(*  'LEFT    ' , 100 , FUNC , '$PASSTR1' , 7 , 2 , 'V' , 1     *)
+(*  'RIGHT   ' , 101 , FUNC , '$PASSTR1' , 8 , 2 , 'V' , 1     *)
+(*                                                             *)
+(***************************************************************)
+
 
 
 
@@ -2975,7 +3008,7 @@ function $PASRDR ( var F : TEXT ; WIDTH : INTEGER ) : REAL ;
        LEADINGZ : BOOLEAN ;
        DIGITS : INTEGER ;
        BEFOREDP : BOOLEAN ;
-       SKIP : BOOLEAN ;
+       FORMATTED : BOOLEAN ;
        EXPO : BOOLEAN ;
        SCALEXP : REAL ;
        EXPVALI : INTEGER ;
@@ -2994,11 +3027,11 @@ function $PASRDR ( var F : TEXT ; WIDTH : INTEGER ) : REAL ;
          $PASRDR := 0.0 ;
          return
        end (* then *) ;
-     SKIP := TRUE ;
+     FORMATTED := TRUE ;
      if WIDTH < 0 then
        begin
+         FORMATTED := FALSE ;
          WIDTH := 999999999 ;
-         SKIP := FALSE
        end (* then *) ;
      if FILESTAT ( F ) = '0' then
        RESET ( F ) ;
@@ -3017,16 +3050,28 @@ function $PASRDR ( var F : TEXT ; WIDTH : INTEGER ) : REAL ;
      // skip leading blanks  
      //**********************
 
-     while ( F -> = ' ' ) and ( WIDTH > 0 ) and not EOLN ( F ) do
+     while ( F -> = ' ' ) and ( WIDTH > 0 ) do
        begin
-         GET ( F ) ;
-         WIDTH := WIDTH - 1 ;
+         if FORMATTED then
+           begin
+             GET ( F ) ;
+             WIDTH := WIDTH - 1 ;
+             if EOLN ( F ) or EOF ( F ) or ( WIDTH <= 0 ) then
+               begin
+                 $PASRDR := RETVAL ;
+                 return
+               end (* then *)
+           end (* then *)
+         else
+           begin
+             GET ( F ) ;
+             if EOF ( F ) then
+               begin
+                 $PASRDR := RETVAL ;
+                 return
+               end (* then *)
+           end (* else *)
        end (* while *) ;
-     if EOLN ( F ) or ( WIDTH <= 0 ) then
-       begin
-         $PASRDR := RETVAL ;
-         return
-       end (* then *) ;
 
      //********************************************************
      // leadingz = reading and ignoring leading zeroes         
@@ -3228,10 +3273,10 @@ function $PASRDR ( var F : TEXT ; WIDTH : INTEGER ) : REAL ;
      // if width specified, skip remaining chars  
      //*******************************************
 
-     if SKIP then
+     if FORMATTED then
        while TRUE do
          begin
-           if EOLN ( F ) or ( WIDTH <= 0 ) then
+           if EOLN ( F ) or EOF ( F ) or ( WIDTH <= 0 ) then
              break ;
            GET ( F ) ;
            WIDTH := WIDTH - 1 ;
@@ -3247,13 +3292,17 @@ function $PASRDI ( var F : TEXT ; WIDTH : INTEGER ) : INTEGER ;
 // rewritten in Pascal - portable solution in 2020          
 // supports width parameter like in Pascal/VS               
 //**********************************************************
+// WIDTH parameter added to support fixed length integer    
+// read - traditional variable length integer read specifies
+// minus one, generated by the compiler                     
+//**********************************************************
 // Bernd Oppolzer - New Stanford Pascal                     
 //**********************************************************
 
 
    var SIGN : INTEGER ;
        RETVAL : INTEGER ;
-       SKIP : BOOLEAN ;
+       FORMATTED : BOOLEAN ;
 
    begin (* $PASRDI *)
      if WIDTH = 0 then
@@ -3261,11 +3310,11 @@ function $PASRDI ( var F : TEXT ; WIDTH : INTEGER ) : INTEGER ;
          $PASRDI := 0 ;
          return
        end (* then *) ;
-     SKIP := TRUE ;
+     FORMATTED := TRUE ;
      if WIDTH < 0 then
        begin
+         FORMATTED := FALSE ;
          WIDTH := 999999999 ;
-         SKIP := FALSE
        end (* then *) ;
      if FILESTAT ( F ) = '0' then
        RESET ( F ) ;
@@ -3283,16 +3332,28 @@ function $PASRDI ( var F : TEXT ; WIDTH : INTEGER ) : INTEGER ;
      // skip leading blanks  
      //**********************
 
-     while ( F -> = ' ' ) and ( WIDTH > 0 ) and not EOLN ( F ) do
+     while ( F -> = ' ' ) and ( WIDTH > 0 ) do
        begin
-         GET ( F ) ;
-         WIDTH := WIDTH - 1 ;
+         if FORMATTED then
+           begin
+             GET ( F ) ;
+             WIDTH := WIDTH - 1 ;
+             if EOLN ( F ) or EOF ( F ) or ( WIDTH <= 0 ) then
+               begin
+                 $PASRDI := RETVAL ;
+                 return
+               end (* then *)
+           end (* then *)
+         else
+           begin
+             GET ( F ) ;
+             if EOF ( F ) then
+               begin
+                 $PASRDI := RETVAL ;
+                 return
+               end (* then *)
+           end (* else *)
        end (* while *) ;
-     if EOLN ( F ) or ( WIDTH <= 0 ) then
-       begin
-         $PASRDI := RETVAL ;
-         return
-       end (* then *) ;
      case F -> of
        '-' : begin
                SIGN := - 1 ;
@@ -3347,15 +3408,205 @@ function $PASRDI ( var F : TEXT ; WIDTH : INTEGER ) : INTEGER ;
      // if width specified, skip remaining chars  
      //*******************************************
 
-     if SKIP then
+     if FORMATTED then
        while TRUE do
          begin
-           if EOLN ( F ) or ( WIDTH <= 0 ) then
+           if EOLN ( F ) or EOF ( F ) or ( WIDTH <= 0 ) then
              break ;
            GET ( F ) ;
            WIDTH := WIDTH - 1 ;
          end (* while *) ;
    end (* $PASRDI *) ;
+
+
+
+local function TOUPPER ( CH : CHAR ) : CHAR ;
+
+(******************************************)
+(*   SETZT KLEINBUCHSTABEN IN GROSSE UM   *)
+(******************************************)
+
+
+   const KLEINBUCHST : set of CHAR =
+         [ 'a' .. 'i' , 'j' .. 'r' , 's' .. 'z' ] ;
+
+   begin (* TOUPPER *)
+     if CH in KLEINBUCHST then
+       TOUPPER := CHR ( ORD ( CH ) - ORD ( 'a' ) + ORD ( 'A' ) )
+     else
+       TOUPPER := CH
+   end (* TOUPPER *) ;
+
+
+
+function $PASRDB ( var F : TEXT ; WIDTH : INTEGER ) : BOOLEAN ;
+
+//**********************************************************
+// function to read booleans from files                     
+// rewritten in Pascal - portable solution in 2020          
+// supports width parameter like in Pascal/VS               
+//**********************************************************
+// WIDTH parameter added to support fixed length integer    
+// read - traditional variable length integer read specifies
+// minus one, generated by the compiler                     
+//**********************************************************
+// Bernd Oppolzer - New Stanford Pascal                     
+//**********************************************************
+
+
+   var RETVAL : BOOLEAN ;
+       FORMATTED : BOOLEAN ;
+       IX : INTEGER ;
+       BUFFER : CHAR ( 5 ) ;
+       WIDTHMAX : INTEGER ;
+
+   begin (* $PASRDB *)
+     if WIDTH = 0 then
+       begin
+         $PASRDB := FALSE ;
+         return
+       end (* then *) ;
+     FORMATTED := TRUE ;
+     if WIDTH < 0 then
+       begin
+         FORMATTED := FALSE ;
+         WIDTH := 999999999 ;
+       end (* then *) ;
+     if FILESTAT ( F ) = '0' then
+       RESET ( F ) ;
+     if EOLN ( F ) then
+       GET ( F ) ;
+     if EOF ( F ) then
+       begin
+         $PASRDB := FALSE ;
+         return
+       end (* then *) ;
+     RETVAL := FALSE ;
+
+     //**********************
+     // skip leading blanks  
+     //**********************
+
+     while ( F -> = ' ' ) and ( WIDTH > 0 ) do
+       begin
+         if FORMATTED then
+           begin
+             GET ( F ) ;
+             WIDTH := WIDTH - 1 ;
+             if EOLN ( F ) or EOF ( F ) or ( WIDTH <= 0 ) then
+               begin
+                 $PASRDB := RETVAL ;
+                 return
+               end (* then *)
+           end (* then *)
+         else
+           begin
+             GET ( F ) ;
+             if EOF ( F ) then
+               begin
+                 $PASRDB := RETVAL ;
+                 return
+               end (* then *)
+           end (* else *)
+       end (* while *) ;
+
+     //************************************************
+     // now check for T or F                           
+     // if formatted input (length specified)          
+     // and length > 0, the word in the area must be   
+     // any abbreviation of the words TRUE or FALSE    
+     // as it may have been produced by write (boolean)
+     // no other characters than blanks may occur      
+     // before and after this word. the input is       
+     // format free.                                   
+     //************************************************
+
+     case F -> of
+       'F' , 'f' :
+         begin
+           if FORMATTED and ( WIDTH > 1 ) then
+             begin
+               BUFFER := 'FALSE' ;
+               WIDTHMAX := WIDTH ;
+               if WIDTHMAX > 5 then
+                 WIDTHMAX := 5 ;
+               IX := 1 ;
+               repeat
+                 BUFFER [ IX ] := TOUPPER ( F -> ) ;
+                 IX := IX + 1 ;
+                 if EOLN ( F ) or EOF ( F ) then
+                   break ;
+                 GET ( F ) ;
+                 WIDTH := WIDTH - 1
+               until ( IX > WIDTHMAX ) or ( F -> = ' ' ) ;
+               if BUFFER <> 'FALSE' then
+                 $ERROR ( 1210 ) ;
+               RETVAL := FALSE ;
+             end (* then *)
+           else
+             begin
+               RETVAL := FALSE ;
+               GET ( F ) ;
+               if FORMATTED then
+                 WIDTH := WIDTH - 1 ;
+             end (* else *) ;
+         end (* tag/ca *) ;
+       'T' , 't' :
+         begin
+           if FORMATTED and ( WIDTH > 1 ) then
+             begin
+               BUFFER := 'TRUE' ;
+               WIDTHMAX := WIDTH ;
+               if WIDTHMAX > 4 then
+                 WIDTHMAX := 4 ;
+               IX := 1 ;
+               repeat
+                 BUFFER [ IX ] := TOUPPER ( F -> ) ;
+                 IX := IX + 1 ;
+                 if EOLN ( F ) or EOF ( F ) then
+                   break ;
+                 GET ( F ) ;
+                 WIDTH := WIDTH - 1
+               until ( IX > WIDTHMAX ) or ( F -> = ' ' ) ;
+               if BUFFER <> 'TRUE' then
+                 $ERROR ( 1210 ) ;
+               RETVAL := TRUE ;
+             end (* then *)
+           else
+             begin
+               RETVAL := TRUE ;
+               GET ( F ) ;
+               if FORMATTED then
+                 WIDTH := WIDTH - 1 ;
+             end (* else *) ;
+         end (* tag/ca *) ;
+       otherwise
+         $ERROR ( 1209 )
+     end (* case *) ;
+
+     //*******************************************
+     // set result                                
+     //*******************************************
+
+     $PASRDB := RETVAL ;
+     if EOLN ( F ) or ( WIDTH <= 0 ) then
+       return ;
+
+     //*******************************************
+     // if width specified, skip remaining chars  
+     //*******************************************
+
+     if FORMATTED then
+       while TRUE do
+         begin
+           if EOLN ( F ) or EOF ( F ) or ( WIDTH <= 0 ) then
+             break ;
+           if F -> <> ' ' then
+             $ERROR ( 1211 ) ;
+           GET ( F ) ;
+           WIDTH := WIDTH - 1 ;
+         end (* while *) ;
+   end (* $PASRDB *) ;
 
 
 
@@ -3500,7 +3751,7 @@ function $PASRSI ( const S : STRING ;     // source string
 
    var SIGN : INTEGER ;
        RETVAL : INTEGER ;
-       SKIP : BOOLEAN ;
+       FORMATTED : BOOLEAN ;
        F : -> CHAR ;
        RLEN : INTEGER ;
 
@@ -3510,11 +3761,11 @@ function $PASRSI ( const S : STRING ;     // source string
          $PASRSI := 0 ;
          return
        end (* then *) ;
-     SKIP := TRUE ;
+     FORMATTED := TRUE ;
      if WIDTH < 0 then
        begin
+         FORMATTED := FALSE ;
          WIDTH := 999999999 ;
-         SKIP := FALSE
        end (* then *) ;
      if RPOS <= 0 then
        RPOS := 1 ;
@@ -3608,7 +3859,7 @@ function $PASRSI ( const S : STRING ;     // source string
      // if width specified, skip remaining chars  
      //*******************************************
 
-     if SKIP then
+     if FORMATTED then
        while TRUE do
          begin
            if ( RLEN <= 0 ) or ( WIDTH <= 0 ) then
@@ -3644,7 +3895,7 @@ function $PASRSR ( const S : STRING ;     // source string
        LEADINGZ : BOOLEAN ;
        DIGITS : INTEGER ;
        BEFOREDP : BOOLEAN ;
-       SKIP : BOOLEAN ;
+       FORMATTED : BOOLEAN ;
        F : -> CHAR ;
        RLEN : INTEGER ;
        EXPO : BOOLEAN ;
@@ -3665,11 +3916,11 @@ function $PASRSR ( const S : STRING ;     // source string
          $PASRSR := 0.0 ;
          return
        end (* then *) ;
-     SKIP := TRUE ;
+     FORMATTED := TRUE ;
      if WIDTH < 0 then
        begin
+         FORMATTED := FALSE ;
          WIDTH := 999999999 ;
-         SKIP := FALSE
        end (* then *) ;
      if RPOS <= 0 then
        RPOS := 1 ;
@@ -3922,7 +4173,7 @@ function $PASRSR ( const S : STRING ;     // source string
      // if width specified, skip remaining chars  
      //*******************************************
 
-     if SKIP then
+     if FORMATTED then
        while TRUE do
          begin
            if ( RLEN <= 0 ) or ( WIDTH <= 0 ) then

@@ -3,17 +3,17 @@ program COBFORM ( SOURCE , NSOURCE , LISTING ) ;
 //***************************************************************
 //                                                               
 // Source Code Formatter for COBOL                               
-// Bernd Oppolzer - work started 02.2020                         
+// Bernd Oppolzer - 02.2020 to 05.2020                           
 //                                                               
 //***************************************************************
 // to do list:                                                   
 // - write metadata for files to new output file                 
+// - insert THEN keyword on multi-line IFs                       
 // - output remarks 1:6 depending on (external) switch - no const
 // - compute data offsets depending on (external) switch         
 // - control if level numbers are inconsistent                   
 // - control if END-IF terminates IF with missing END-EVALUATE   
 // - better formatting of level items (01, 05, 10 etc.)          
-// - insert THEN keyword on multi-line IFs                       
 //***************************************************************
 // solved problems:                                              
 // * skip line on statement starters (MOVE, NEXT SENTENCE)       
@@ -32,10 +32,6 @@ program COBFORM ( SOURCE , NSOURCE , LISTING ) ;
 // * statements INITIALIZE, INSPECT.                             
 // * correct indentation on READ statement                       
 // * correct indentation on WRITE statement                      
-// * check_outputline should do different on multi line output   
-// * better indentation on SEARCH statement                      
-// * skip lines at AND and OR inside WHEN clauses                
-// * better indentation on EXEC CICS statements                  
 //***************************************************************
 
 
@@ -45,7 +41,7 @@ const MAXLEVEL = 20 ;
       DATAPOS1 = 38 ;
       DATAPOS2 = 52 ;
       REMARKS_1_6 = TRUE ;
-      TRACELVL = 0 ;
+      TRACELVL = 1 ;
 
 
 type STATUS_TYPE = ( INITST , VORCOBOL , INCOBOL , NACHCOBOL ) ;
@@ -116,7 +112,7 @@ var SOURCE , NSOURCE , LISTING : TEXT ;
     ERRNO : INTEGER ;
 
 
-const CWANZ = 60 ;
+const CWANZ = 40 ;
       CWTAB : array [ 1 .. CWANZ ] of CWORD =
       (                                             //
         ( 'ADD            ' , 'C' , '      ' ) ,    //
@@ -134,15 +130,14 @@ const CWANZ = 60 ;
         ( 'END-IF         ' , 'C' , '      ' ) ,    //
         ( 'END-PERFORM    ' , 'C' , '      ' ) ,    //
         ( 'END-READ       ' , 'C' , '      ' ) ,    //
-        ( 'END-SEARCH     ' , 'C' , '      ' ) ,    //
         ( 'END-WRITE      ' , 'C' , '      ' ) ,    //
         ( 'EVALUATE       ' , 'C' , 'E     ' ) ,    //
-        ( 'EXEC           ' , 'C' , ' X    ' ) ,    //
+        ( 'EXEC           ' , 'C' , '      ' ) ,    //
         ( 'GO             ' , 'C' , '      ' ) ,    //
         ( 'IF             ' , 'C' , 'II    ' ) ,    //
+        ( 'INVALID        ' , 'X' , '      ' ) ,    //
         ( 'INITIALIZE     ' , 'C' , '      ' ) ,    //
         ( 'INSPECT        ' , 'C' , '      ' ) ,    //
-        ( 'INVALID        ' , 'X' , '      ' ) ,    //
         ( 'MOVE           ' , 'C' , '      ' ) ,    //
         ( 'MULTIPLY       ' , 'C' , '      ' ) ,    //
         ( 'NEXT           ' , 'C' , '  R   ' ) ,    //
@@ -150,34 +145,15 @@ const CWANZ = 60 ;
         ( 'PERFORM        ' , 'C' , 'PP    ' ) ,    //
         ( 'READ           ' , 'C' , 'XR    ' ) ,    //
         ( 'REWRITE        ' , 'C' , 'X     ' ) ,    //
-        ( 'SEARCH         ' , 'C' , ' S    ' ) ,    //
+        ( 'SEARCH         ' , 'C' , '      ' ) ,    //
         ( 'SET            ' , 'C' , '      ' ) ,    //
         ( 'START          ' , 'C' , 'X     ' ) ,    //
         ( 'STOP           ' , 'C' , '      ' ) ,    //
         ( 'SUBTRACT       ' , 'C' , '      ' ) ,    //
         ( 'UNTIL          ' , 'P' , '      ' ) ,    //
         ( 'VARYING        ' , 'P' , '      ' ) ,    //
-        ( 'WHEN           ' , 'C' , ' 1    ' ) ,    //
+        ( 'WHEN           ' , 'C' , '      ' ) ,    //
         ( 'WRITE          ' , 'C' , 'XW    ' ) ,    //
-        ( '               ' , 'C' , '      ' ) ,    //
-        ( '               ' , 'C' , '      ' ) ,    //
-        ( '               ' , 'C' , '      ' ) ,    //
-        ( '               ' , 'C' , '      ' ) ,    //
-        ( '               ' , 'C' , '      ' ) ,    //
-        ( '               ' , 'C' , '      ' ) ,    //
-        ( '               ' , 'C' , '      ' ) ,    //
-        ( '               ' , 'C' , '      ' ) ,    //
-        ( '               ' , 'C' , '      ' ) ,    //
-        ( '               ' , 'C' , '      ' ) ,    //
-        ( '               ' , 'C' , '      ' ) ,    //
-        ( '               ' , 'C' , '      ' ) ,    //
-        ( '               ' , 'C' , '      ' ) ,    //
-        ( '               ' , 'C' , '      ' ) ,    //
-        ( '               ' , 'C' , '      ' ) ,    //
-        ( '               ' , 'C' , '      ' ) ,    //
-        ( '               ' , 'C' , '      ' ) ,    //
-        ( '               ' , 'C' , '      ' ) ,    //
-        ( '               ' , 'C' , '      ' ) ,    //
         ( '               ' , 'C' , '      ' )      //
         ) ;
 
@@ -729,15 +705,6 @@ procedure CHECK_WORD_1 ( var WORD : STRING ; var COBWORD : BOOLEAN ;
        end (* then *) ;
 
      //***********************************************
-     // as long as inside EXEC CICS (special = 'X')   
-     // only END-EXEC starts a new statement          
-     //***********************************************
-
-     if SPECIAL = 'X' then
-       if WORD <> STR ( 'END-EXEC' ) then
-         return ;
-
-     //***********************************************
      // check for cobol words = statement starters    
      //***********************************************
      // the word is not a statement starter if it is  
@@ -746,19 +713,15 @@ procedure CHECK_WORD_1 ( var WORD : STRING ; var COBWORD : BOOLEAN ;
      //***********************************************
 
      for ICW_TEMP := 1 to CWANZ do
-       begin
-         if CWTAB [ ICW_TEMP ] . ID = ' ' then
-           break ;
-         if ( RTRIM ( CWTAB [ ICW_TEMP ] . ID ) = WORD ) and ( CWTAB [
-         ICW_TEMP ] . CLASS = 'C' ) then
-           if ( SPECIAL = ' ' ) or ( CWTAB [ ICW_TEMP ] . TAGS [ 3 ] <>
-           SPECIAL ) then
-             begin
-               COBWORD := TRUE ;
-               ICW := ICW_TEMP ;
-               break
-             end (* then *)
-       end (* for *)
+       if ( RTRIM ( CWTAB [ ICW_TEMP ] . ID ) = WORD ) and ( CWTAB [
+       ICW_TEMP ] . CLASS = 'C' ) then
+         if ( SPECIAL = ' ' ) or ( CWTAB [ ICW_TEMP ] . TAGS [ 3 ] <>
+         SPECIAL ) then
+           begin
+             COBWORD := TRUE ;
+             ICW := ICW_TEMP ;
+             break
+           end (* then *)
    end (* CHECK_WORD_1 *) ;
 
 
@@ -926,7 +889,7 @@ procedure DO_OUTPUT ( var OUTF : TEXT ; ZCNEU : CHAR ( 72 ) ; ZCNEU2 :
 
 
 function SUCHE_TRENNSTELLE ( const COBSTMT : STRING ;        //
-                           MAXTRENN : INTEGER ) :            //
+                           MAXTRENN ; INTEGER ) :            //
                            INTEGER ;                         //
 
    var CH : CHAR ;
@@ -1170,13 +1133,10 @@ procedure FORCE_NEWLINE ( var OUTF : TEXT ; MOD_INDENT : BOOLEAN ) ;
 
      CHECK_OUTPUTLINE ( 'B' , GS . STMT_TEMP , GS . INDENT , ZCNEU ,
                         ZCNEU2 ) ;
-     DO_OUTPUT ( OUTF , ZCNEU , ' ' , 0 , FALSE ) ;
-     if ZCNEU2 = ' ' then
-       GS . STMT_TEMP := ''
-     else
-       GS . STMT_TEMP := TRIM ( ZCNEU2 ) ;
+     DO_OUTPUT ( OUTF , ZCNEU , ZCNEU2 , 0 , FALSE ) ;
      if MOD_INDENT then
        MODIFY_INDENT ;
+     GS . STMT_TEMP := '' ;
      if TRACELVL >= 1 then
        begin
          WRITELN ( 'stmt_temp = <' , GS . STMT_TEMP , '>' ) ;
@@ -1245,23 +1205,6 @@ procedure WORK_NORMAL_STMT ( var OUTF : TEXT ; var COBSTMT : STRING ) ;
       end (* WORK_STMT_READ *) ;
 
 
-   procedure WORK_STMT_SEARCH ;
-
-      begin (* WORK_STMT_SEARCH *)
-        if WORD = 'AT' then
-          begin
-            GS . INDENT_INCR := 3 ;
-            FORCE_NEWLINE ( OUTF , TRUE ) ;
-          end (* then *)
-        else
-          if WORD = 'END' then
-            begin
-              GS . INDENT_INCR := 3 ;
-            end (* then *) ;
-        ADD_TO_LINE
-      end (* WORK_STMT_SEARCH *) ;
-
-
    procedure WORK_STMT_WRITE ;
 
       begin (* WORK_STMT_WRITE *)
@@ -1318,42 +1261,6 @@ procedure WORK_NORMAL_STMT ( var OUTF : TEXT ; var COBSTMT : STRING ) ;
       end (* WORK_STMT_PERFORM *) ;
 
 
-   procedure WORK_STMT_EXEC ;
-
-   //**********************************************
-   // EXEC CICS                                    
-   //**********************************************
-
-
-      begin (* WORK_STMT_EXEC *)
-        if TRACELVL >= 1 then
-          begin
-            WRITELN ;
-            WRITELN ( 'start work_stmt__exec' ) ;
-            WRITELN ( 'NR_SYMB_IN_STMT = ' , GS . NR_SYMB_IN_STMT ) ;
-            WRITELN ( 'word = ' , WORD ) ;
-          end (* then *) ;
-        if GS . NR_SYMB_IN_STMT = 3 then
-          begin
-            GS . INDENT_INCR := 5 ;
-            FORCE_NEWLINE ( OUTF , TRUE ) ;
-            GS . INDENT_INCR := GS . INDENT_INCR + LENGTH ( WORD ) + 1
-                                ;
-          end (* then *) ;
-        if GS . NR_SYMB_IN_STMT > 4 then
-          begin
-            if LEFT ( WORD , 1 ) <> '(' then
-              FORCE_NEWLINE ( OUTF , TRUE ) ;
-          end (* then *) ;
-        ADD_TO_LINE ;
-        if TRACELVL >= 1 then
-          begin
-            WRITELN ( 'end work_stmt__exec' ) ;
-            WRITELN ;
-          end (* then *)
-      end (* WORK_STMT_EXEC *) ;
-
-
    procedure WORK_STMT_IF ;
 
    //**********************************************
@@ -1367,21 +1274,6 @@ procedure WORK_NORMAL_STMT ( var OUTF : TEXT ; var COBSTMT : STRING ) ;
           FORCE_NEWLINE ( OUTF , FALSE ) ;
         ADD_TO_LINE
       end (* WORK_STMT_IF *) ;
-
-
-   procedure WORK_STMT_WHEN ;
-
-   //**********************************************
-   // simple method of beautifying WHEN conditions:
-   // add a new line before every AND / OR         
-   //**********************************************
-
-
-      begin (* WORK_STMT_WHEN *)
-        if ( WORD = 'AND' ) or ( WORD = 'OR' ) then
-          FORCE_NEWLINE ( OUTF , FALSE ) ;
-        ADD_TO_LINE
-      end (* WORK_STMT_WHEN *) ;
 
 
    procedure WORK_STMT_SYMBOL ;
@@ -1400,10 +1292,7 @@ procedure WORK_NORMAL_STMT ( var OUTF : TEXT ; var COBSTMT : STRING ) ;
           'I' : WORK_STMT_IF ;
           'P' : WORK_STMT_PERFORM ;
           'R' : WORK_STMT_READ ;
-          'S' : WORK_STMT_SEARCH ;
           'W' : WORK_STMT_WRITE ;
-          'X' : WORK_STMT_EXEC ;
-          '1' : WORK_STMT_WHEN ;
           otherwise
             ADD_TO_LINE
         end (* case *)
@@ -1426,7 +1315,6 @@ procedure WORK_NORMAL_STMT ( var OUTF : TEXT ; var COBSTMT : STRING ) ;
         GS . STMT_STATUS := 0 ;
         GS . INDENT_ZERO := TRUE ;
         GS . STMT_LEVEL := 0 ;
-        GS . STMT_SPECIAL := ' ' ;
       end (* WORK_PUNKT *) ;
 
 
@@ -1480,21 +1368,10 @@ procedure WORK_NORMAL_STMT ( var OUTF : TEXT ; var COBSTMT : STRING ) ;
         //*****************
 
         if WORD = 'EXEC' then
-          begin
-            GS . INDENT_INCR := 5 ;
-            GS . NEW_STATEMENT := 'X' ;
-          end (* then *) ;
-
-        //***********************************************
-        // reduce indentation on end-exec                
-        //***********************************************
-
+          GS . INDENT_INCR := 5 ;
         if WORD = 'END-EXEC' then
-          begin
-            OK := UNSTACK_STATEMENT ( 'X' ) ;
-            if not OK then
-              ERRNO := 11
-          end (* then *) ;
+          if GS . INDENT > 0 then
+            GS . INDENT := GS . INDENT - 5 ;
 
         //******************************
         // handle if                    
@@ -1648,13 +1525,10 @@ procedure WORK_NORMAL_STMT ( var OUTF : TEXT ; var COBSTMT : STRING ) ;
         //*********************
 
         case CWTAB [ ICW ] . TAGS [ 2 ] of
-          'I' : GS . STMT_SPECIAL := 'I' ;    // IF
-          'P' : GS . STMT_SPECIAL := 'P' ;    // PERFORM
-          'R' : GS . STMT_SPECIAL := 'R' ;    // READ
-          'S' : GS . STMT_SPECIAL := 'S' ;    // SEARCH
-          'W' : GS . STMT_SPECIAL := 'W' ;    // WRITE
-          'X' : GS . STMT_SPECIAL := 'X' ;    // EXEC
-          '1' : GS . STMT_SPECIAL := '1' ;    // WHEN
+          'I' : GS . STMT_SPECIAL := 'I' ;
+          'P' : GS . STMT_SPECIAL := 'P' ;
+          'R' : GS . STMT_SPECIAL := 'R' ;
+          'W' : GS . STMT_SPECIAL := 'W' ;
           otherwise
             GS . STMT_SPECIAL := ' ' ;
         end (* case *) ;

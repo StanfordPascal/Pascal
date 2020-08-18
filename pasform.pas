@@ -270,48 +270,49 @@ type WORT = array [ 1 .. 100 ] of CHAR ;
      SCAN_ERRCLASS = 'A' .. 'Z' ;
      OPTIONS_PTR = -> COMP_OPTIONS ;
      SCAN_BLOCK = record
-                    MODUS : INTEGER ;
-                    DATEIENDE : INTEGER ;
-                    ENDOFLINE : BOOLEAN ;
-                    SLINE : SOURCELINE ;
-                    LINENR : INTEGER ;
-                    LINEPOS : INTEGER ;
-                    LINELEN : INTEGER ;
-                    LOOKAHEAD : CHAR ;
-                    SYMBOLNR : SYMB ;
-                    SYMBOL : SOURCELINE ;
-                    LSYMBOL : INTEGER ;
-                    MAXLSYMBOL : INTEGER ;
-                    UFZAHL : INTEGER ;
-                    SFZAHL : INTEGER ;
-                    FEZAHL : INTEGER ;
-                    WAZAHL : INTEGER ;
-                    INZAHL : INTEGER ;
-                    FEANFANG : ANYPTR ;
-                    FEAKT : ANYPTR ;
-                    FTTAB : ANYPTR ;
-                    FTTABA : ANYPTR ;
-                    OPTLINE : SOURCELINE ;
-                    POPT : OPTIONS_PTR ;
+                    MODUS : INTEGER ;        // modus of scanner
+                    DATEIENDE : INTEGER ;    // end of file indicator
+                    ENDOFLINE : BOOLEAN ;    // end of line indicator
+                    SLINE : SOURCELINE ;     // stored source line
+                    LINENR : INTEGER ;       // line number of symbol
+                    LINEPOS : INTEGER ;      // line position of symb
+                    LINELEN : INTEGER ;      // line length
+                    SKIPPING : BOOLEAN ;     // parser is skipping
+                    LOOKAHEAD : CHAR ;       // lookahead character
+                    SYMBOLNR : SYMB ;        // symbol read
+                    SYMBOL : SOURCELINE ;    // characters of symb
+                    LSYMBOL : INTEGER ;      // no of chars in symb
+                    MAXLSYMBOL : INTEGER ;   //
+                    UFZAHL : INTEGER ;       // no of undef errors
+                    SFZAHL : INTEGER ;       // no of severe errors
+                    FEZAHL : INTEGER ;       // no of errors
+                    WAZAHL : INTEGER ;       // no of warnings
+                    INZAHL : INTEGER ;       // no of informations
+                    FEANFANG : ANYPTR ;      // anchor to err list
+                    FEAKT : ANYPTR ;         // actual err elem
+                    FTTAB : ANYPTR ;         // error text table
+                    FTTABA : ANYPTR ;        // same for applic.
+                    OPTLINE : SOURCELINE ;   // options line
+                    POPT : OPTIONS_PTR ;     // ptr to opt struct
 
-     //************************************************************
-     // felder fuer sofortige Protokollausgabe                     
-     //************************************************************
+     /******************************************/
+     /* felder fuer sofortige Protokollausgabe */
+     /******************************************/
 
-                    PROTOUT : BOOLEAN ;
-                    TERMOUT : BOOLEAN ;
-                    FEAKT_ALT : ANYPTR ;
-                    LINEINFO : CHAR32 ;
-                    LINEINFO_SIZE : INTEGER ;
+                    PROTOUT : BOOLEAN ;        // switch for prot out
+                    TERMOUT : BOOLEAN ;        // switch for term out
+                    FEAKT_ALT : ANYPTR ;       // old feakt
+                    LINEINFO : CHAR32 ;        // line information
+                    LINEINFO_SIZE : INTEGER ;  // size of lineinfo
 
-     //************************************************************
-     // felder fuer ueberschrift                                   
-     //************************************************************
+     /******************************************/
+     /* felder fuer ueberschrift               */
+     /******************************************/
 
-                    LINECOUNT : INTEGER ;
-                    HEADLINE : SOURCELINE ;
-                    HEADLINE_SIZE : INTEGER ;
-                    PAGENR : INTEGER ;
+                    LINECOUNT : INTEGER ;      // linecount f. heading
+                    HEADLINE : SOURCELINE ;    // header line
+                    HEADLINE_SIZE : INTEGER ;  // size of header line
+                    PAGENR : INTEGER ;         // page number
                   end ;
 
      //************************************************************
@@ -3150,6 +3151,7 @@ procedure INIT_SCANNER ;
      SCB . LINENR := 0 ;
      SCB . LINEPOS := 1 ;
      SCB . LINELEN := 0 ;
+     SCB . SKIPPING := FALSE ;
      SCB . FEANFANG := NIL ;
      SCB . FTTAB := NIL ;
      SCB . FTTABA := NIL ;

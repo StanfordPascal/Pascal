@@ -1,4 +1,4 @@
-program TESTREA3 ( INPUT , OUTPUT ) ;
+program TESTREA7 ( INPUT , OUTPUT ) ;
 
 //*****
 //$A+  
@@ -6,10 +6,14 @@ program TESTREA3 ( INPUT , OUTPUT ) ;
 
 
 
+type SHORT = - 1000 .. 1000 ;
+
+
 var ISTR : CHAR ( 10 ) ;
     I : INTEGER ;
-    R : REAL ;
+    I2 : INTEGER ;
     CH : CHAR ;
+    ISHORT : SHORT ;
 
 
 
@@ -35,10 +39,10 @@ begin (* HAUPTPROGRAMM *)
   TERMIN ( INPUT ) ;
   TERMOUT ( OUTPUT ) ;
   WRITELN ;
-  WRITELN ( 'testen read real mit laenge' ) ;
+  WRITELN ( 'testen read mit laenge' ) ;
   WRITELN ;
   repeat
-    if TRUE then
+    if FALSE then
       begin
         WRITELN ( 'bitte einen Buchstaben eingeben:' ) ;
         READLN ( CH ) ;
@@ -50,22 +54,31 @@ begin (* HAUPTPROGRAMM *)
         WRITELN ;
       end (* then *) ;
     WRITELN ( 'bitte eine Zahl eingeben:' ) ;
-    READLN ( R ) ;
-    WRITE ( 'R = ' , R : 15 : 7 ) ;
+    READLN ( I ) ;
+    WRITE ( 'i = ' , I : 1 ) ;
     WRITELN ;
     WRITELN ( 'bitte noch eine Zahl eingeben:' ) ;
-    READLN ( R ) ;
-    WRITE ( 'R = ' , R : 15 : 7 ) ;
+    READLN ( I ) ;
+    WRITE ( 'i = ' , I : 1 ) ;
+    WRITELN ;
+    WRITELN ( 'bitte ishort eingeben:' ) ;
+    READLN ( ISHORT ) ;
+    WRITE ( 'ishort = ' , ISHORT : 1 ) ;
     WRITELN ;
     WRITELN ( 'bitte eine Zahl eingeben als Laenge fuer READ:' ) ;
     READLN ( ISTR ) ;
     I := IVALSTR ( ADDR ( ISTR ) , 10 ) ;
     WRITELN ( 'ende mit 0' ) ;
-    WRITELN ( 'bitte Zahl eingeben, gelesen wird in Laenge ' , I : 1 )
-              ;
-    READ ( R : I ) ;
+    WRITELN ( 'bitte zweimal Zahl eingeben, gelesen wird in Laenge ' ,
+              I : 1 ) ;
+    READ ( I2 : I ) ;
+    WRITELN ( 'read mit Laenge erfolgreich, vor readln' ) ;
     READLN ;
-    WRITE ( 'R = ' , R : 15 : 7 ) ;
+    WRITE ( 'i2 = ' , I2 : 1 ) ;
     WRITELN ;
-  until R = 0.0
+    READ ( I2 : I ) ;
+    READLN ;
+    WRITE ( 'i2 = ' , I2 : 1 ) ;
+    WRITELN ;
+  until I2 = 0
 end (* HAUPTPROGRAMM *) .

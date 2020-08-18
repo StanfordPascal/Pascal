@@ -60,7 +60,7 @@
 /*  19.12.2019 ! Oppolzer    ! read new line on eoln (RDS and RDV)    */
 /*  07.01.2020 ! Oppolzer    ! New P-Code instructions RFC, RFS, RFV  */
 /*  07.01.2020 ! Oppolzer    ! to support READ with width specific.   */
-/*  .......... ! ........    ! .....................................  */
+/*  11.08.2020 ! Oppolzer    ! Korrekturen Input wg. $PASRDI          */
 /*  .......... ! ........    ! .....................................  */
 /*  .......... ! ........    ! .....................................  */
 /*  .......... ! ........    ! .....................................  */
@@ -891,6 +891,10 @@ static int store_alloc (void *vgs, int length)
 
 static void file_input (void *vgs, filecb *fcb)
 
+//**************************************************
+// Diese Funktion ist nur fuer Textfiles bestimmt
+//**************************************************
+
 {
    global_store *gs = vgs;
    char *cp;
@@ -1055,6 +1059,17 @@ static FILE *file_open (filecb *fcb, char *fmode)
       fname = fcb -> ddname;
       sprintf (envbuffer, "DD_%s", fcb -> ddname);
       fname_neu = getenv (envbuffer);
+
+      //*********************************************************
+      // experiment 18.05.2020 - copy env filename into fcb
+      //*********************************************************
+
+      if (fname_neu != NULL)
+      {
+         int x = strlen (fname_neu);
+         memset (fcb -> filename, 0x00, 257);
+         memcpy (fcb -> filename, fname_neu, x > 256 ? 256 : x);
+      }
    }
 
    if (fname_neu != NULL)
@@ -1180,6 +1195,11 @@ static void check_read (void *vgs, filecb *fcb)
             doread = 1;
          }
          break;
+
+      //**************************************************************
+      // readbuf_sched = verzoegertes Einlesen von Buffern bei
+      // Textfiles mit Terminal-Flag an
+      //**************************************************************
 
       case '3':
          if (fcb -> readbuf_sched == 'Y')
@@ -2342,6 +2362,9 @@ static void *cspf_get (void *vgs,
    // implements read on integers
    // this function reads a new console buffer by using GET
    //*******************************************************
+   // change 11.08.2020
+   // does not work - first char of buffer is missing
+   //*******************************************************
 
    global_store *gs = vgs;
    filecb *fcb;
@@ -2356,7 +2379,23 @@ static void *cspf_get (void *vgs,
 
    STOR_FCB (parm1, fcb);
 
+   fcb -> begoln = 0;
    check_read (gs, fcb);
+
+   //*******************************************************
+   // change 11.08.2020
+   // check_read does file_input, if file_input deferred
+   // because of terminal flag or at very beginning of file;
+   // if check_read already did file_input,
+   // no more action is needed. file_input will be
+   // recognized by eof or begoln being 1 at this point;
+   // that's why begoln is set to zero before
+   // because begoln will be zero during normal processing
+   // anyway
+   //*******************************************************
+
+   if (fcb -> eof || fcb -> begoln)
+      return NULL;
 
    if (fcb -> textfile)
    {
@@ -3623,7 +3662,7 @@ static void *cspf_rfv (void *vgs,
 
 /**********************************************************/
 /*                                                        */
-/*   CSP-Table / Stand 2016                               */
+/*   CSP-Table / Stand 2020                               */
 /*                                                        */
 /**********************************************************/
 

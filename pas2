@@ -1,0 +1,1 @@
+env DD_INPUT=$1.prr DD_OBJCODE=$1.xxx DD_LIST002=$1.list002 DD_DBGINFO=$1.dbginfo DD_TRACEF=pascal2.tracef pcint prr=pascal2.prr inc=paslibx pas=pascal2.pas out=pascal2.prrlis debug=n

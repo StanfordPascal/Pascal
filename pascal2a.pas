@@ -122,6 +122,29 @@ program PCODE_TRANSLATOR ( INPUT , OUTPUT , OBJCODE , LIST002 , TRACEF
 (*                                                                  *)
 (********************************************************************)
 (*                                                                  *)
+(*  Aug 2020 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*             (berndoppolzer@yahoo.com)                            *)
+(*                                                                  *)
+(*  fixed a strange error caused by the new runtime functions       *)
+(*  written in Pascal; the file register (FILADR = reg. 9)          *)
+(*  was not set correctly, because after SIO no real runtime        *)
+(*  CSP (like RDI) was called ... $PASRDI instead, which does       *)
+(*  not need FILADR = reg 9 ... but the following normal CSP        *)
+(*  like RLN (readln) expected FILADR being set.                    *)
+(*                                                                  *)
+(*  I fixed this by adding a new variable FILADR_LOADED, which      *)
+(*  does not only control the reservation of register FILADR,       *)
+(*  but the real loading.                                           *)
+(*                                                                  *)
+(********************************************************************)
+(*                                                                  *)
+(*  Apr 2020 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*             (berndoppolzer@yahoo.com)                            *)
+(*                                                                  *)
+(*  - see PASCAL1 - no changes here                                 *)
+(*                                                                  *)
+(********************************************************************)
+(*                                                                  *)
 (*  Jan 2020 - Extensions to the Compiler by Bernd Oppolzer         *)
 (*             (berndoppolzer@yahoo.com)                            *)
 (*                                                                  *)
@@ -518,9 +541,9 @@ program PCODE_TRANSLATOR ( INPUT , OUTPUT , OBJCODE , LIST002 , TRACEF
 
 
 
-const VERSION = '2020.01' ;        // Version for display message
-      VERSION2 = 0x2001 ;          // Version for load module
-      VERSION3 = 'XL2''2001''' ;   // Version for LIST002 listing
+const VERSION = '2020.04' ;        // Version for display message
+      VERSION2 = 0x2004 ;          // Version for load module
+      VERSION3 = 'XL2''2004''' ;   // Version for LIST002 listing
       MXADR = 65535 ;
       SHRTINT = 4095 ;
       HALFINT = 32700 ;
@@ -1432,19 +1455,24 @@ var GS : GLOBAL_STATE ;
     (*********************************)
 
     PROCOFFSET_OLD : INTEGER ;
-    CSPACTIVE : array [ 0 .. 15 ] of BOOLEAN ;
-    AVAIL : array [ 0 .. RGCNT ] of BOOLEAN ;
 
     (*****************************************)
-    (* AVAIL = AVAILABLE REGISTERS           *)
-    (* CSPACTIVE = REGS ARE ACTIVE FOR CSP   *)
+    (* keep track of register usage          *)
     (* r15 = csp entry                       *)
     (* r9 = filadr                           *)
     (* r8 = call stack adr                   *)
     (* r1 = proc offset = csp number         *)
+    (* AVAIL = AVAILABLE REGISTERS           *)
+    (* CSPACTIVE = REGS ARE ACTIVE FOR CSP   *)
+    (* filadr_loaded = special action        *)
+    (* needed because of new $PAS...         *)
+    (* runtime functions                     *)
     (*****************************************)
 
+    AVAIL : array [ 0 .. RGCNT ] of BOOLEAN ;
     AVAILFP : array [ 0 .. FPCNT ] of BOOLEAN ;
+    CSPACTIVE : array [ 0 .. 15 ] of BOOLEAN ;
+    FILADR_LOADED : BOOLEAN ;
 
     (*********************************)
     (* AVAIL. F.P. REGS              *)
@@ -2264,6 +2292,8 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
        DUMMYINT : INTEGER ;
        DUMMYBOOL : BOOLEAN ;
        DUMMYLABEL : PLABEL ;
+       P_IS_CHAR : BOOLEAN ;
+       Q_IS_CHAR : BOOLEAN ;
 
 
    procedure READLBL ( var LBL : PLABEL ) ;
@@ -3302,17 +3332,53 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
               end (* tag/ca *) ;
        PCHK : begin
 
-     (**************************************)
-     (* TYPE-CODE AND TWO INTEGER OPERANDS *)
-     (**************************************)
+     //**********************************************************
+     // TYPE-CODE AND TWO INTEGER OPERANDS                       
+     // change 28.08.2020:                                       
+     // to enable portable chk instructions for char subranges   
+     // the two integers may be specified as char constants      
+     // (single chars surrounded by apostrophs)                  
+     //**********************************************************
 
+                P_IS_CHAR := FALSE ;
+                Q_IS_CHAR := FALSE ;
                 SKIPBLANKS ;
                 OPNDTYPE := TYPCDE [ INPUT -> ] ;
-                READLN ( CH1 , CH , P , CH , Q ) ;
+                READ ( CH1 , CH ) ;
+                if INPUT -> = '''' then
+                  begin
+                    READ ( CH ) ;
+                    READ ( CH ) ;
+                    P := ORD ( CH ) ;
+                    P_IS_CHAR := TRUE ;
+                    READ ( CH ) ;
+                  end (* then *)
+                else
+                  READ ( P ) ;
+                READ ( CH ) ;
+                if INPUT -> = '''' then
+                  begin
+                    READ ( CH ) ;
+                    READ ( CH ) ;
+                    Q := ORD ( CH ) ;
+                    Q_IS_CHAR := TRUE ;
+                    READ ( CH ) ;
+                  end (* then *)
+                else
+                  READ ( Q ) ;
+                READLN ;
                 if ASM then
                   begin
-                    WRITE ( LIST002 , CH1 : 3 , ',' , P : 1 , ',' , Q :
-                            1 ) ;
+                    WRITE ( LIST002 , CH1 : 3 , ',' ) ;
+                    if P_IS_CHAR then
+                      WRITE ( LIST002 , '''' , CHR ( P ) , '''' )
+                    else
+                      WRITE ( LIST002 , P : 1 ) ;
+                    WRITE ( LIST002 , ',' ) ;
+                    if Q_IS_CHAR then
+                      WRITE ( LIST002 , '''' , CHR ( Q ) , '''' )
+                    else
+                      WRITE ( LIST002 , Q : 1 ) ;
                     LIST002_NEWLINE ;
                   end (* then *) ;
               end (* tag/ca *) ;
@@ -5372,6 +5438,7 @@ procedure ASMNXTINST ;
               begin
                 AVAIL [ FILADR ] := TRUE ;
                 CSPACTIVE [ FILADR ] := FALSE ;
+                FILADR_LOADED := FALSE ;
                 AVAIL [ CALLSTACKADR ] := TRUE ;
                 CSPACTIVE [ CALLSTACKADR ] := FALSE ;
                 I := CALLSTACKADR ;
@@ -6730,43 +6797,47 @@ procedure ASMNXTINST ;
 
       begin (* LOADFCBADDRESS *)
 
+        //****************************************
+        // if the file register (register 9)      
+        // has not yet been loaded, then load it  
+        //****************************************
+
+        if not FILADR_LOADED then
+          begin
+
         //**********************************
         // first save the file operand      
         // then get displacement and level  
         // from the saved structure         
         //**********************************
 
-        SAVE_FILEOPERAND ( STP ) ;
-
-        //****************************************
-        // if the file register (register 9)      
-        // has not yet been loaded, then load it  
-        //****************************************
-
-        if not CSPACTIVE [ FILADR ] then
-          if CSP in [ PRES , PREW , PGET , PPUT , PRLN , PWLN , PPAG ,
-          PSKP , PLIM , PRDB , PWRB , PRDH , PRDY , PEOL , PEOT , PEOF
-          , PELN , PRDC , PWRC , PRDI , PWRI , PRDS , PRDV , PRFC ,
-          PRFS , PRFV , PWRS , PWRV , PRDR , PWRR , PWRP , PWRX , PFDF
-          , PWRD , PWRE , PCLS ] then
-            with STK [ STP ] do
-              begin
-                if VRBL then
-                  OPC := XL
-                else
-                  OPC := XLA ;
+            SAVE_FILEOPERAND ( STP ) ;
+            if CSP in [ PRES , PREW , PGET , PPUT , PRLN , PWLN , PPAG
+            , PSKP , PLIM , PRDB , PWRB , PRDH , PRDY , PEOL , PEOT ,
+            PEOF , PELN , PRDC , PWRC , PRDI , PWRI , PRDS , PRDV ,
+            PRFC , PRFS , PRFV , PWRS , PWRV , PRDR , PWRR , PWRP ,
+            PWRX , PFDF , PWRD , PWRE , PCLS ] then
+              with STK [ STP ] do
+                begin
+                  if VRBL then
+                    OPC := XL
+                  else
+                    OPC := XLA ;
 
         //*****************************************
         // get displacement and level              
         // from the saved structure (saved above)  
         //*****************************************
 
-                Q1 := LAST_FILE . LAST_FILEOPERAND . DSPLMT ;
-                P1 := LAST_FILE . LAST_FILEOPERAND . LVL ;
-                BASE ( Q1 , P1 , B1 ) ;
-                GENRX ( OPC , FILADR , Q1 , B1 , P1 ) ;
-                CSPACTIVE [ FILADR ] := TRUE ;
-              end (* with *) ;
+                  Q1 := LAST_FILE . LAST_FILEOPERAND . DSPLMT ;
+                  P1 := LAST_FILE . LAST_FILEOPERAND . LVL ;
+                  BASE ( Q1 , P1 , B1 ) ;
+                  GENRX ( OPC , FILADR , Q1 , B1 , P1 ) ;
+                  FILADR_LOADED := TRUE ;
+                  AVAIL [ FILADR ] := FALSE ;
+                  CSPACTIVE [ FILADR ] := TRUE ;
+                end (* with *)
+          end (* then *)
       end (* LOADFCBADDRESS *) ;
 
 
@@ -6861,6 +6932,7 @@ procedure ASMNXTINST ;
           OPC : BYTE ;
           ITEST : INTEGER ;
           LBL_WORK : PLABEL ;
+          FILEOK : BOOLEAN ;
 
 
       procedure FILESETUP ( PRMCNT : RGRNG ) ;
@@ -7312,34 +7384,39 @@ procedure ASMNXTINST ;
         //***********************************************
 
                    with LAST_FILE do
-                     if LAST_PC = PCOUNTER then
-                       begin
-                         with STK [ TOP ] do
-                           if VRBL then
-                             CSPACTIVE [ FILADR ] := LAST_FILE_IS_VAR
-                                                   and (
-                                                   LAST_FILEOPERAND =
-                                                   MEMADR )
-                           else
-                             CSPACTIVE [ FILADR ] := ( not
-                                                   LAST_FILE_IS_VAR )
-                                                   and (
-                                                   LAST_FILEOPERAND =
-                                                   FPA )
-                       end (* then *)
-                     else
-                       begin
-                         CSPACTIVE [ FILADR ] := FALSE ;
-                       end (* else *) ;
+                     begin
+                       if LAST_PC = PCOUNTER then
+                         begin
+                           with STK [ TOP ] do
+                             if VRBL then
+                               FILEOK := LAST_FILE_IS_VAR and (
+                                         LAST_FILEOPERAND = MEMADR )
+                             else
+                               FILEOK := ( not LAST_FILE_IS_VAR ) and (
+                                         LAST_FILEOPERAND = FPA )
+                         end (* then *)
+                       else
+                         FILEOK := FALSE ;
+                       CSPACTIVE [ FILADR ] := FILEOK
+                     end (* with *) ;
 
-        //****************************************
-        // save the file information in any case  
-        //****************************************
+        //***********************************************
+        // if file register does not match,              
+        // FILADR_LOADED is false, of course             
+        // otherwise FILADR_LOADED retains its old value 
+        // that is, it may already contain the correct   
+        // old value                                     
+        //***********************************************
 
-                   SAVE_FILEOPERAND ( TOP ) ;
+                   if not CSPACTIVE [ FILADR ] then
+                     FILADR_LOADED := FALSE ;
                    if FALSE then
-                     WRITELN ( TRACEF , 'cspactive [9]     = ' ,
-                               CSPACTIVE [ FILADR ] ) ;
+                     begin
+                       WRITELN ( TRACEF , 'cspactive [9]     = ' ,
+                                 CSPACTIVE [ FILADR ] ) ;
+                       WRITELN ( TRACEF , 'fileadr_loaded    = ' ,
+                                 FILADR_LOADED ) ;
+                     end (* then *) ;
                    CSPACTIVE [ TRG1 ] := FALSE ;
                    TOP := TOP + 1 ;
 
@@ -7357,12 +7434,29 @@ procedure ASMNXTINST ;
                    FILECNT := FILECNT - 1 ;
                    if FILECNT = 0 then
                      AVAIL [ FILADR ] := TRUE ;
+                   if FALSE then
+                     begin
+                       WRITELN ( TRACEF ,
+                             '---------------------------------------'
+                                 ) ;
+                       WRITELN ( TRACEF , 'EIO at linecnt    = ' ,
+                                 LINECNT ) ;
+                       WRITELN ( TRACEF , 'last_file.last_pc = ' ,
+                                 LAST_FILE . LAST_PC ) ;
+                       WRITELN ( TRACEF , 'pcounter          = ' ,
+                                 PCOUNTER ) ;
+                       WRITELN ( TRACEF , 'last_fileoperand  = ' ,
+                                 LAST_FILE . LAST_FILEOPERAND . LVL : 1
+                                 , '/' , LAST_FILE . LAST_FILEOPERAND .
+                                 DSPLMT : 1 ) ;
+                     end (* then *) ;
 
         //*****************************************
         // the file register is invalid after EIO  
         //*****************************************
 
                    CSPACTIVE [ FILADR ] := FALSE ;
+                   FILADR_LOADED := FALSE ;
                    CSPACTIVE [ TRG1 ] := FALSE ;
                    LAST_FILE . LAST_PC := PCOUNTER ;
 
@@ -7370,6 +7464,13 @@ procedure ASMNXTINST ;
         (* TOP := TOP-1 IS DONE AT ENTRY TO CALLSTNDRD  *)
         (************************************************)
 
+                   if FALSE then
+                     begin
+                       WRITELN ( TRACEF , 'cspactive [9]     = ' ,
+                                 CSPACTIVE [ FILADR ] ) ;
+                       WRITELN ( TRACEF , 'fileadr_loaded    = ' ,
+                                 FILADR_LOADED ) ;
+                     end (* then *) ;
                  end (* tag/ca *) ;
           PELN , PEOF :
             begin
@@ -7532,7 +7633,7 @@ procedure ASMNXTINST ;
             end (* tag/ca *) ;
           PGET , PPUT , PRLN , PWLN , PRES , PREW , PPAG , PCLS :
             FILESETUP ( 0 ) ;
-          PRDC , PRDI , PRDR , PSKP , PLIM , PRDB , PRDH , PRDY :
+          PRDI , PRDR , PSKP , PLIM , PRDB , PRDH , PRDY :
             FILESETUP ( 1 ) ;
           PRDS , PWRC , PWRI , PWRB , PWRP , PFDF :
             FILESETUP ( 2 ) ;
@@ -7542,7 +7643,21 @@ procedure ASMNXTINST ;
             end (* tag/ca *) ;
           PWRV : FILESETUP ( 2 ) ;
           PRDV : FILESETUP ( 2 ) ;
-          PRFC : FILESETUP ( 2 ) ;
+          PRDC : FILESETUP ( 2 ) ;
+
+        //**************************************************
+        // RFC returns result at the place of the length    
+        // argument, so that the two elements of the stack  
+        // must not pe popped by the CSP RFC.               
+        // Compiler generates a STO C instruction after     
+        // the CSP RFC call. This is done to allow for      
+        // a CHK instruction after the READ of a char       
+        //**************************************************
+
+          PRFC : begin
+                   FILESETUP ( 2 ) ;
+                   TOP := TOP + 2 ;
+                 end (* tag/ca *) ;
           PRFS , PRFV :
             FILESETUP ( 3 ) ;
           otherwise
@@ -8228,7 +8343,7 @@ procedure ASMNXTINST ;
              INSTR : INTEGER ;
 
          begin (* ASE_OP *)
-           if TRUE then
+           if FALSE then
              begin
                WRITE ( TRACEF , 'DUMPSTK vor ASE - ' ) ;
                WRITELN ( TRACEF , 'LINECNT = ' , LINECNT : 1 ) ;
@@ -8331,7 +8446,7 @@ procedure ASMNXTINST ;
              INSTR : INTEGER ;
 
          begin (* ASR_OP *)
-           if TRUE then
+           if FALSE then
              begin
                WRITELN ( TRACEF , 'DUMPSTK vor ASR - p = ' , P : 1 ,
                          ' q = ' , Q : 1 ) ;
@@ -10219,6 +10334,7 @@ procedure ASMNXTINST ;
            DBLALN := FALSE ;
            LAST_CC . LAST_PC := 0 ;
            TXR_CONTENTS . VALID := FALSE ;
+           FILADR_LOADED := FALSE ;
            LAST_STR . LAST_PC := 0 ;
            LAST_MVC . LAST_PC := 0 ;
            LAST_FILE . LAST_PC := 0 ;
@@ -11715,6 +11831,7 @@ procedure ASMNXTINST ;
            CSPACTIVE [ TRG15 ] := FALSE ;
            PROCOFFSET_OLD := 0 ;
            TXR_CONTENTS . VALID := FALSE ;
+           FILADR_LOADED := FALSE ;
            LAST_CC . LAST_PC := 0 ;
            LAST_STR . LAST_PC := 0 ;
            LAST_FILE . LAST_PC := 0 ;
@@ -17463,6 +17580,7 @@ procedure SETUP ;
      CSPACTIVE [ 13 ] := FALSE ;
      CSPACTIVE [ 14 ] := FALSE ;
      CSPACTIVE [ 15 ] := FALSE ;
+     FILADR_LOADED := FALSE ;
      OLDCSP := PSIO ;
      PROCOFFSET_OLD := 0 ;
      PCOUNTER := 0 ;

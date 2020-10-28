@@ -1,20 +1,20 @@
 
-2020.04:
+2020.09:
 
-* Fehler bei SET-Vergleich mit unterschiedlichen Laengen (PCINT)
-* Skip Symbole dokumentieren
-* Fehler $PASRDI beheben
-* Neue READ-Funktionen auch fuer Boolean, evtl. Skalar ??
-* Testen TESTREA3, 7 und 8 auf VM usw. (GET, RDI, RDR) und Korr. Fehler
-* Neue Funktion $PASRDB zum Lesen von Booleans
-* Abchecken $PASRDB auf TRUE und FALSE
-* Fehler in PASCAL1 (bei Bootstrap)
-* Fehler in PASCAL2 wg. FILADR_LOADED klaeren
-* Fehler bei RFS auf Mainframe (PASMONN) fuehrt zu Abbruch, klaeren
-* Testen PASCAL2 auf VM wg. neuer Funktion $PASRDB
-- Portablitaetsproblem: CHK auf CHAR-Subrange wird mit I-Werten gemacht
-- nochmal finaler Test der Version 2020.04 auf VM
-- Neue Funktion zum Lesen von Booleans aus Strings
+* WITH geht nicht mit Record-Konstanten (sollte aber) - Fehler 103
+* Initialisierung von Variablen ermoeglichen - analog Pascal-8000 INITIALVALUES
+* PASCAL2: Klaeren, was mit CALSTK los ist
+* Fehler bei Compile von Pas8000 klaeren (Unreferenced Label)
+* Struct Const auch mehrere mit Komma
+* Initialisieren von VAR und STATIC mit Const-Identifier
+* Problem bei (.1..14.) - zum Beispiel
+* Stacken von Informationen bei MST bei PCINT (nicht korrekt!)
+* Nein: anketten von MST-Info an korrekten CUP-Befehl (PCINT-Prep-Phase)
+* Rueckbau: Stacken von Informationen bei MST bei PCINT
+- Ausgabe auf mehrere PCODE-Dateien
+- File-Pointer besser absichern (kein NEW, WRITE ermoeglichen)
+- Verhindern, dass mit WITH Struct-Konstanten geaendert werden
+- PASFORM anpassen wg. structconst und Initialisierung
 - Auslieferung auf VM - Info auf Facebook
 - Neue Funktion $PASRDX zum Lesen von Skalaren
 - Neue Funktion zum Lesen von Skalaren aus Strings
@@ -44,6 +44,28 @@
 - spaeter: klaeren was bei Windows-Textfiles mit Hex-Nullen passiert
 - spaeter: klaeren Ein-Ausgabe variante Records
   (insbesondere Mainframe und RECFM=V)
+
+=======================================================================================
+
+2020.04:
+
+* Fehler bei SET-Vergleich mit unterschiedlichen Laengen (PCINT)
+* Skip Symbole dokumentieren
+* Fehler $PASRDI beheben
+* Neue READ-Funktionen auch fuer Boolean, evtl. Skalar ??
+* Testen TESTREA3, 7 und 8 auf VM usw. (GET, RDI, RDR) und Korr. Fehler
+* Neue Funktion $PASRDB zum Lesen von Booleans
+* Abchecken $PASRDB auf TRUE und FALSE
+* Fehler in PASCAL1 (bei Bootstrap)
+* Fehler in PASCAL2 wg. FILADR_LOADED klaeren
+* Fehler bei RFS auf Mainframe (PASMONN) fuehrt zu Abbruch, klaeren
+* Testen PASCAL2 auf VM wg. neuer Funktion $PASRDB
+* Beispielprogramm fuer CHK mit CHAR-Subrange, Compiler taugt nicht mehr
+* Subrange-Check fehlt bei Character-READ (CSP RFC)
+* geaenderte CSP RFC testen auf VM (PASMONN aendern)
+* Portablitaetsproblem: CHK auf CHAR-Subrange wird mit I-Werten gemacht
+* nochmal finaler Test der Version 2020.04 auf VM
+* Neue Funktion zum Lesen von Booleans aus Strings
 
 =======================================================================================
 
@@ -594,4 +616,79 @@ irgendwann sp„ter:
 
 - konkrete Offsets abschaffen, statt dessen symbolische Adressierung
 - und symbolisches Layout der Data Section
+
+
+
+*************************************************************
+PASCAL.MEMO from first activities in the year 2011 :-)
+*************************************************************
+
+plan fuer die pascal-weiterentwicklung
+---------------------------------------
+
+* phase 1 laeuft anhand des uebertragenen text-files, aber instabil
+  ist soweit korrigiert, allerdings via load/genmod/runparm
+  spaeter mal checken, ob es auch besser geht
+
+* dann: phase 1 neukompilieren und checken, ob sie immer noch laeuft
+  phase 1 hat auch nach recompile kein problem und liefert dasselbe
+  ergebnis. man muesste jetzt gelegentlich mal die ganzen optionen usw.
+  checken
+
+* pasmonn neu uebersetzt (assemble mit global osmacro) ist identisch
+  zu pasmonn uebernommen von music/sp !!!
+
+* phase 2 sollte evtl. auch laufen anhand des uebertragenen text-files
+  phase 2 laeuft anhand des uebertragenen text-files. wenn man allerdings
+  die phase2 neu uebersetzt, laeuft die phase 2 beim versuch, die
+  phase 1 neu zu uebersetzen, in eine endlosschleife ... mit anderen
+  programmen geht es aber.
+  neu am 24.10.2011: das geht jetzt, via (clear hinter load.
+  offenbar ein initialisierungsproblem im pascal-monitor
+
+* dann sollten wir einen funktionierenden 82er-compiler haben !!
+  ja, er funktioniert soweit ganz gut.
+
+- offene punkte beim compiler:
+* date liefert datum xx.xx.1911 - erledigt
+* fehler E6 bei verschachtelten kommentaren - erledigt
+* am schluss sollen die fehler aufgelistet werden, das tut aber nicht
+
+* korrektur pasfsql, woher kommt der syntaxfehler?
+  kein syntaxfehler mehr da.
+
+- pasform so erweitern, dass die stanford-syntax verstanden wird
+  oder pformat ein bisschen abaendern (ist vielleicht einfacher)
+  also:
+  a) pformat muss erweiterte syntax akzeptieren
+  b) option, dass pformat die gartenzaeune weglaesst
+  c) option, dass pformat die kommentare in gaensefuesschen weglaesst
+  d) wortsymbole klein schreiben
+  e) Formatierung analog pasform
+  f) oder doch pasform anpassen bzw. erweitern - oder beides
+
+* compiler formatieren
+
+- optionen auschecken, z.B:
+
+- assembler erzeugen
+  tatsaechlich wird maschinencode angezeigt;
+  klaeren, wie aufwendig es ist, stattdessen ASSEMBLER anzuzeigen
+
+- debug optionen
+
+- profiler
+
+* continue fuer schleifen
+
+* break fuer schleifen
+
+* return fuer vorzeitiges verlassen von proz. und funkt.
+
+* Problem bei Phase 2: ASMOUT wird auch ausgegeben (1 Zeile),
+  wenn A-Option nicht gesetzt ist
+
+- allow shorter String constants to be assigned (padded with blanks)
+
+- allow static definitions (local to procedures and functions)
 

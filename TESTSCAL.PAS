@@ -25,7 +25,7 @@ var X : FARBE ;
 
 
 begin (* HAUPTPROGRAMM *)
-  for X := GELB to BLAU do
+  for X := ROT to GRUEN do
     begin
       WRITELN ( 'Farbe: ' , ORD ( X ) , ' ' , '<' , PRED ( X ) : 10 ,
                 '#' , X : 10 , '#' , SUCC ( X ) : 10 , '>' ) ;
@@ -33,7 +33,7 @@ begin (* HAUPTPROGRAMM *)
   WRITELN ( 'liste aller opcodes' ) ;
   for OPC := PCTS to UNDEF_OP do
     begin
-      WRITE ( OPC , ' ' ) ;
+      WRITE ( OPC : 4 , ' ' ) ;
       if ORD ( OPC ) MOD 10 = 9 then
         WRITELN
     end (* for *) ;

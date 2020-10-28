@@ -8,6 +8,7 @@ var B : BOOLEAN ;
     B1 : BOOLEAN ;
     B2 : BOOLEAN ;
     W : WIDTH ;
+    S : STRING ( 200 ) ;
 
 
 
@@ -31,6 +32,10 @@ begin (* HAUPTPROGRAMM *)
     WRITELN ( 'bitte zweimal Boolean in Laenge 6 eingeben: ' ) ;
     READLN ( B1 : 6 , B2 : 6 ) ;
     WRITELN ( '-' , B1 : 1 , '-' , B2 : 1 , '-' ) ;
+    WRITELN ( 'bitte String eingeben fuer READSTR Boolean Laenge 6' ) ;
+    READLN ( S ) ;
+    READSTR ( S , B : 6 ) ;
+    WRITELN ( '-' , B : 1 , '-' ) ;
     WRITELN ( 'bitte Eingabelaenge eingeben (0..9) ... Ende mit 0:' ) ;
     READLN ( W ) ;
     WRITELN ( 'bitte Boolean in Laenge ' , W : 1 , ' eingeben:' ) ;

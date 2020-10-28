@@ -6208,11 +6208,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
        STRING_RESULT : BOOLEAN ;
        LAST_TYPE : IDP ;
        LAST_PROC : IDP ;
-
-       //******************************
-       //     PCODE_FILEP : -> TEXT ;
-       //******************************
-
+       PCODE_FILEP : -> TEXT ;
 
 
    procedure MOD_STRCONST ( CT_RESULT : INTEGER ; var V : XCONSTANT ;
@@ -22646,11 +22642,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
 
 
    begin (* BLOCK *)
-
-     //************************************
-     //   PCODE_FILEP := ADDR ( PCODE ) ;
-     //************************************
-
+     PCODE_FILEP := ADDR ( PCODE ) ;
      if FALSE then
        DRUCKE_SYMSET ( 'START BLOCK ' , FSYS ) ;
      if FALSE then
@@ -22686,27 +22678,27 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                end (* tag/ca *) ;
              SYCONST :
                begin
-                 CONSTDECLARATION ( PCODE ) ;
+                 CONSTDECLARATION ( PCODE_FILEP -> ) ;
                  if DEC_ORDER >= 2 then
                    EXTUSED := TRUE ;
                  DEC_ORDER := 2 ;
                end (* tag/ca *) ;
              SYTYPE :
                begin
-                 TYPEDECLARATION ( PCODE , LAST_TYPE ) ;
+                 TYPEDECLARATION ( PCODE_FILEP -> , LAST_TYPE ) ;
                  if DEC_ORDER >= 3 then
                    EXTUSED := TRUE ;
                  DEC_ORDER := 3 ;
                end (* tag/ca *) ;
              SYVAR : begin
-                       VARDECLARATION ( PCODE , LAST_VAR ) ;
+                       VARDECLARATION ( PCODE_FILEP -> , LAST_VAR ) ;
                        if DEC_ORDER >= 4 then
                          EXTUSED := TRUE ;
                        DEC_ORDER := 4 ;
                      end (* tag/ca *) ;
              SYSTATIC :
                begin
-                 STATICDECLARATION ( PCODE , LAST_VAR ) ;
+                 STATICDECLARATION ( PCODE_FILEP -> , LAST_VAR ) ;
                  EXTUSED := TRUE ;
                  DEC_ORDER := 5 ;
                end (* tag/ca *) ;
@@ -22721,7 +22713,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
          begin
            CONSTLCOUNTER := 0 ;
            STATIC_VORHANDEN := TRUE ;
-           OUT_PCODE ( PCODE , MN [ PCODE_END ] ) ;
+           OUT_PCODE ( PCODE_FILEP -> , MN [ PCODE_END ] ) ;
            OLDICOUNTER := OLDICOUNTER + ICOUNTER ;
            ICOUNTER := 0 ;
          end (* then *) ;
@@ -22747,7 +22739,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
              PLOCAL := FALSE ;
            LSY := SY ;
            INSYMBOL ;
-           PROCDECLARATION ( PCODE , LSY , PLOCAL , LAST_PROC ) ;
+           PROCDECLARATION ( PCODE_FILEP -> , LSY , PLOCAL , LAST_PROC
+                             ) ;
          end (* while *) ;
        if SY <> SYBEGIN then
          begin
@@ -22788,13 +22781,13 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
 
          if OPT . PRCODE then
            begin
-             PUTIC ( PCODE ) ;
-             OUT_PCODE ( PCODE , MN [ PCODE_STP ] )
+             PUTIC ( PCODE_FILEP -> ) ;
+             OUT_PCODE ( PCODE_FILEP -> , MN [ PCODE_STP ] )
            end (* then *) ;
        end (* then *)
      else
        repeat
-         BODY ( PCODE , FSYS + [ SYCASE ] , STRING_RESULT ) ;
+         BODY ( PCODE_FILEP -> , FSYS + [ SYCASE ] , STRING_RESULT ) ;
          if SY <> FSY then
            begin
              SET_ERROR_SKIP ( 6 , FSYS + [ FSY ] )

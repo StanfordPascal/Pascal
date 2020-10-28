@@ -209,19 +209,20 @@ type WORT = array [ 1 .. 100 ] of CHAR ;
      SYMB = ( SYMB_EOF , SYMB_UNKNOWN , EOLCHAR , SEPARATOR , COMMENT1
             , COMMENT2 , COMMENT3 , COMMENT4 , COMMENT5 , STRINGCONST ,
             HEXSTRINGCONST , BINSTRINGCONST , INTCONST , INTDOTDOT ,
-            REALCONST , IDENT , SYLPARENT , SYRPARENT , SYLBRACK ,
-            SYRBRACK , SYCOMMA , SYSEMICOLON , SYARROW , SYPERIOD ,
-            SYDOTDOT , SYCOLON , SYPLUS , SYMINUS , SYMULT , SYSLASH ,
-            SYEQOP , SYNEOP , SYGTOP , SYLTOP , SYGEOP , SYLEOP ,
-            SYOROP , SYANDOP , SYASSIGN , SYAND , SYDIV , SYMOD , SYOR
-            , SYXOR , SYIN , SYNOT , SYLABEL , SYCONST , SYTYPE , SYVAR
-            , SYFUNC , SYPROG , SYPROC , SYSET , SYPACKED , SYARRAY ,
-            SYRECORD , SYFILE , SYFORWARD , SYBEGIN , SYIF , SYCASE ,
-            SYREPEAT , SYWHILE , SYFOR , SYWITH , SYGOTO , SYEND ,
-            SYELSE , SYUNTIL , SYOF , SYDO , SYTO , SYDOWNTO , SYTHEN ,
-            SYFRTRN , SYEXTRN , SYOTHERWISE , SYOTHER , SYBREAK ,
-            SYCONTINUE , SYRETURN , SYMODULE , SYLOCAL , SYSTATIC ,
-            SYSQLBEGIN , SYSQLEND , SYSQLVAR , SYOVERLAY , NOTUSED ) ;
+            INTRBRACK , REALCONST , IDENT , SYLPARENT , SYRPARENT ,
+            SYLBRACK , SYRBRACK , SYCOMMA , SYSEMICOLON , SYARROW ,
+            SYPERIOD , SYDOTDOT , SYCOLON , SYPLUS , SYMINUS , SYMULT ,
+            SYSLASH , SYEQOP , SYNEOP , SYGTOP , SYLTOP , SYGEOP ,
+            SYLEOP , SYOROP , SYANDOP , SYASSIGN , SYCONCAT , SYAND ,
+            SYDIV , SYMOD , SYOR , SYXOR , SYIN , SYNOT , SYLABEL ,
+            SYCONST , SYTYPE , SYVAR , SYFUNC , SYPROG , SYPROC , SYSET
+            , SYPACKED , SYARRAY , SYRECORD , SYFILE , SYFORWARD ,
+            SYBEGIN , SYIF , SYCASE , SYREPEAT , SYWHILE , SYFOR ,
+            SYWITH , SYGOTO , SYEND , SYELSE , SYUNTIL , SYOF , SYDO ,
+            SYTO , SYDOWNTO , SYTHEN , SYFRTRN , SYEXTRN , SYOTHERWISE
+            , SYBREAK , SYCONTINUE , SYRETURN , SYMODULE , SYLOCAL ,
+            SYSTATIC , SYSQLBEGIN , SYSQLEND , SYSQLVAR , SYOVERLAY ,
+            NOTUSED ) ;
      SYMSET = set of SYMB ;
 
      //************************************************************
@@ -268,6 +269,8 @@ type WORT = array [ 1 .. 100 ] of CHAR ;
      CHAR32 = array [ 1 .. 32 ] of CHAR ;
      SOURCELINE = array [ 1 .. MAXLSIZE ] of CHAR ;
      SCAN_ERRCLASS = 'A' .. 'Z' ;
+     SCANF_PTR = ANYPTR ;
+     SCANFT_PTR = ANYPTR ;
      OPTIONS_PTR = -> COMP_OPTIONS ;
      SCAN_BLOCK = record
                     MODUS : INTEGER ;        // modus of scanner
@@ -288,10 +291,10 @@ type WORT = array [ 1 .. 100 ] of CHAR ;
                     FEZAHL : INTEGER ;       // no of errors
                     WAZAHL : INTEGER ;       // no of warnings
                     INZAHL : INTEGER ;       // no of informations
-                    FEANFANG : ANYPTR ;      // anchor to err list
-                    FEAKT : ANYPTR ;         // actual err elem
-                    FTTAB : ANYPTR ;         // error text table
-                    FTTABA : ANYPTR ;        // same for applic.
+                    FEANFANG : SCANF_PTR ;   // anchor to err list
+                    FEAKT : SCANF_PTR ;      // actual err elem
+                    FTTAB : SCANFT_PTR ;     // error text table
+                    FTTABA : SCANFT_PTR ;    // same for applic.
                     OPTLINE : SOURCELINE ;   // options line
                     POPT : OPTIONS_PTR ;     // ptr to opt struct
 
@@ -301,7 +304,7 @@ type WORT = array [ 1 .. 100 ] of CHAR ;
 
                     PROTOUT : BOOLEAN ;        // switch for prot out
                     TERMOUT : BOOLEAN ;        // switch for term out
-                    FEAKT_ALT : ANYPTR ;       // old feakt
+                    FEAKT_ALT : SCANF_PTR ;    // old feakt
                     LINEINFO : CHAR32 ;        // line information
                     LINEINFO_SIZE : INTEGER ;  // size of lineinfo
 

@@ -10,13 +10,6 @@
 /*                                                                    */
 /**********************************************************************/
 /*                                                                    */
-/*  To do:                                                            */
-/*                                                                    */
-/*  - zusaetzliche Operanden aus Folgezeilen fehlen in Listing        */
-/*  - d.h. neue Struktur und an Befehle anketten, dann ausgeben       */
-/*                                                                    */
-/**********************************************************************/
-/*                                                                    */
 /*  Variante 01:                                                      */
 /*                                                                    */
 /*  Datum      ! Aenderer    ! was geaendert ?                        */
@@ -61,6 +54,12 @@
 /*  07.01.2020 ! Oppolzer    ! New P-Code instructions RFC, RFS, RFV  */
 /*  07.01.2020 ! Oppolzer    ! to support READ with width specific.   */
 /*  11.08.2020 ! Oppolzer    ! Korrekturen Input wg. $PASRDI          */
+/*  24.08.2020 ! Oppolzer    ! RDC same as RFC to prepare RFC change  */
+/*  25.08.2020 ! Oppolzer    ! RFC leaves result on the stack for CHK */
+/*  03.10.2020 ! Oppolzer    ! MV1 same as MOV but one adr remains    */
+/*  03.10.2020 ! Oppolzer    ! on stack - used for init of vars       */
+/*  18.10.2020 ! Oppolzer    ! Chaining MST to CUP (stacked)          */
+/*  18.10.2020 ! Oppolzer    ! doing MST work at CUP time             */
 /*  .......... ! ........    ! .....................................  */
 /*  .......... ! ........    ! .....................................  */
 /*  .......... ! ........    ! .....................................  */
@@ -2087,7 +2086,13 @@ static void *cspf_wrx (void *vgs,
    shortp = ADDRSTOR (parm4);
    charp = ADDRSTOR (parm4);
    maxval = *shortp;
-   maxval = maxval / 4 - 1;
+   if (maxval == 0)
+   {
+      maxval = *(shortp + 1) - 1;
+      shortp += 4;
+   }
+   else
+      maxval = maxval / 4 - 1;
 
    if (parm2 < 0 || parm2 > maxval)
    {
@@ -3190,11 +3195,11 @@ static void *cspf_rdi (void *vgs,
 
 
 
-static void *cspf_rdc (void *vgs,
-                       int parm1,
-                       int parm2,
-                       int parm3,
-                       int parm4)
+static void *cspf_rdc_alt (void *vgs,
+                           int parm1,
+                           int parm2,
+                           int parm3,
+                           int parm4)
 
 {
    global_store *gs = vgs;
@@ -3387,11 +3392,100 @@ static void *cspf_rfc (void *vgs,
    //*********************************************
    // read one character
    // parm1 = fcb
+   // parm2 = address of target char (is ignored here)
+   // parm3 = optional field width (defaults to -1,
+   // which means 1 in the single char case)
+   // if length is zero, no read is done
+   // and the char is set to blank
+   //*********************************************
+   // 26.08.2020: RFC leaves the result on the
+   // stack, so that CHK can be done before
+   // storing it. parm2 is ignored; the result
+   // is stored on top of the stack (replaces
+   // the length field). STO C is done after
+   // the CSP call.
+   //*********************************************
+
+   global_store *gs = vgs;
+   filecb *fcb;
+   char ch;
+   int *intp;
+   int i;
+
+#if 0
+
+   fprintf (stderr, "rfc: parm1 = %d\n", parm1);
+   fprintf (stderr, "rfc: parm2 = %d\n", parm2);
+   fprintf (stderr, "rfc: parm3 = %d\n", parm3);
+
+#endif
+
+   STOR_FCB (parm1, fcb);
+
+   check_read (gs, fcb);
+
+   if (fcb -> status != '3' || fcb -> eof)
+      runtime_error (gs, BADIO, fcb -> ddname);
+
+   intp = ADDRSTACK (gs -> sp);
+   *intp = ' ';
+
+   if (parm3 < 0)
+   {
+      parm3 = 1;
+
+      //*********************************************
+      // this coding added 12.04.2020
+      // because otherwise a sequence of single char
+      // reads would not handle eoln
+      //*********************************************
+      // error introduced in Jan 2020, when RFC
+      // replaced RDC
+      //*********************************************
+
+      if (fcb -> eoln)
+      {
+         ch = file_getch (gs, fcb);
+         (* intp) = ch;
+         return NULL;
+      }
+   }
+
+   for (i = 0; i < parm3; i ++)
+   {
+      if (fcb -> eof || fcb -> eoln)
+         break;
+
+      ch = file_getch (gs, fcb);
+
+      if (i <= 0)
+         *intp = ch;
+   }
+
+   return NULL;
+}
+
+
+
+
+static void *cspf_rdc (void *vgs,
+                       int parm1,
+                       int parm2,
+                       int parm3,
+                       int parm4)
+
+{
+   //*********************************************
+   // read one character
+   // parm1 = fcb
    // parm2 = address of target char
    // parm3 = optional field width (defaults to -1,
    // which means 1 in the single char case)
    // if length is zero, no read is done
    // and the char is set to blank
+   //*********************************************
+   // 24.08.2020: RDC is the same as RFC
+   // preparation before changing RFC semantics
    //*********************************************
 
    global_store *gs = vgs;
@@ -3747,7 +3841,7 @@ static funtab ft [] =
    { "PUT", CSP_PUT, cspf_put, 1, 0, 0, ' ' },
    { "RES", CSP_RES, cspf_res, 1, 0, 0, ' ' },
    { "REW", CSP_REW, cspf_rew, 1, 0, 0, ' ' },
-   { "RDC", CSP_RDC, cspf_rdc, 2, 1, 0, ' ' },
+   { "RDC", CSP_RDC, cspf_rdc, 3, 2, 0, ' ' },
    { "WRI", CSP_WRI, cspf_wri, 3, 2, 0, ' ' },
    { "WRE", CSP_WRE, (cspfunc *) cspf_wre, -3, 3, 0, ' ' },
    { "WRR", CSP_WRR, (cspfunc *) cspf_wrr, -1, 4, 0, ' ' },
@@ -3789,7 +3883,7 @@ static funtab ft [] =
    { "WRV", CSP_WRV, cspf_wrv, 3, 2, 0, ' ' },
    { "APN", CSP_APN, cspf_apn, 1, 0, 0, ' ' },
    { "RDV", CSP_RDV, cspf_rdv, 3, 2, 0, ' ' },
-   { "RFC", CSP_RFC, cspf_rfc, 3, 2, 0, ' ' },
+   { "RFC", CSP_RFC, cspf_rfc, 3, 0, 0, ' ' },
    { "RFS", CSP_RFS, cspf_rfs, 4, 3, 0, ' ' },
    { "RFV", CSP_RFV, cspf_rfv, 4, 3, 0, ' ' },
    {  NULL,      -1, NULL,     0, 0, 0, ' ' }
@@ -4292,6 +4386,8 @@ static void int1 (global_store *gs)
    cup_section *pcupv;
    ent_section *pent;
    sc_code *pcode_ent;
+   call_mst_element cme;
+   sc_code *pcode_mst;
 
    pcode = gs -> code0 + gs -> ip;
    opnum = gs -> ot [pcode -> op] . opnum;
@@ -4699,7 +4795,38 @@ static void int1 (global_store *gs)
 
       case XXX_CUP:
 
-         if (gs -> mst_pfparm)
+         if (pcode -> ipmst != 0)
+            pcode_mst = gs -> code0 + pcode -> ipmst;
+         else
+            pcode_mst = NULL;
+
+         if (pcode_mst != NULL && pcode_mst -> q != 0)
+         {
+            cme.mst_pfparm = 1;
+            cme.mst_addr1 = pcode_mst -> p / 10;
+            cme.mst_level = pcode_mst -> p % 10;
+            cme.mst_addr2 = pcode_mst -> q;
+
+#if 0
+
+            printf ("MST: pcode_mst -> p = %d\n", pcode_mst -> p);
+            printf ("MST: pcode_mst -> q = %d\n", pcode_mst -> q);
+            printf ("MST: cme.addr1      = %d\n", cme.mst_addr1);
+            printf ("MST: cme.level      = %d\n", cme.mst_level);
+            printf ("MST: cme.addr2      = %d\n", cme.mst_addr2);
+
+#endif
+
+         }
+         else
+         {
+            cme.mst_pfparm = 0;
+            cme.mst_addr1 = 0;
+            cme.mst_level = 0;
+            cme.mst_addr2 = 0;
+         }
+
+         if (cme.mst_pfparm)
          {
             //*************************************************
             // if procedure/function parm, the display vector
@@ -4722,10 +4849,10 @@ static void int1 (global_store *gs)
             // *PFPARM*
             //*************************************************
 
-            disp = gs -> display [gs -> mst_level];
-            addr = disp + gs -> mst_addr1;
+            disp = gs -> display [cme.mst_level];
+            addr = disp + cme.mst_addr1;
             disp = gs -> display [gs -> level];
-            addr_displaysave = disp + gs -> mst_addr2;
+            addr_displaysave = disp + cme.mst_addr2;
 
             //*************************************************
             // save actual display vector
@@ -4831,7 +4958,7 @@ static void int1 (global_store *gs)
 
          pcup -> backchain = gs -> pcups;
          pcup -> level_caller = gs -> level;
-         pcup -> is_procparm = gs -> mst_pfparm;
+         pcup -> is_procparm = cme.mst_pfparm;
          pcup -> displayaddr = addr_displaysave;
          pcup -> entry_old = gs -> entry_act;
 
@@ -5004,6 +5131,8 @@ static void int1 (global_store *gs)
          /*   leider nichtssagend (stellt sich erst beim           */
          /*   Aufruf der aktuellen Prozedur heraus).               */
          /**********************************************************/
+
+         gs -> call_mst_counter = 0;
 
          if (gs -> pcups > 0)
          {
@@ -6698,6 +6827,40 @@ static void int1 (global_store *gs)
 
          break;
 
+      case XXX_MV1:
+
+         /************************************************/
+         /*   same as MOV, but leaves one address        */
+         /*   on the stack                               */
+         /*   indirect access by addr at top of stack    */
+         /************************************************/
+
+         intp = ADDRSTACK (gs -> sp);
+         charp = ADDRSTOR (*intp);
+         (gs -> sp) -= 4;
+
+         /************************************************/
+         /*   indirect access by addr at top of stack    */
+         /************************************************/
+
+         intp = ADDRSTACK (gs -> sp);
+         charp2 = ADDRSTOR (*intp);
+
+         /************************************************/
+         /*   move bytes                                 */
+         /************************************************/
+
+         if (pcode -> q < 0)
+         {
+            memcpy (charp, charp2, - (pcode -> q));
+         }
+         else
+         {
+            memcpy (charp2, charp, pcode -> q);
+         }
+
+         break;
+
       case XXX_MPI:
 
          /************************************************/
@@ -6798,30 +6961,10 @@ static void int1 (global_store *gs)
          /*   *PFPARM*                                   */
          /************************************************/
 
-
-         if (pcode -> q != 0)
-         {
-            gs -> mst_pfparm = 1;
-            gs -> mst_addr1 = pcode -> p / 10;
-            gs -> mst_level = pcode -> p % 10;
-            gs -> mst_addr2 = pcode -> q;
-
-#if 0
-
-            printf ("MST: pcode -> p = %d\n", pcode -> p);
-            printf ("MST: pcode -> q = %d\n", pcode -> q);
-            printf ("MST: addr1      = %d\n", gs -> mst_addr1);
-            printf ("MST: level      = %d\n", gs -> mst_level);
-            printf ("MST: addr2      = %d\n", gs -> mst_addr2);
-
-#endif
-
-         }
-         else
-         {
-            gs -> mst_pfparm = 0;
-            gs -> mst_addr2 = 0;
-         }
+         // do nothing here
+         // the MST instruction is chained
+         // to the CUP instruction
+         // and the action needed is done at CUP time
 
          break;
 
@@ -8949,6 +9092,9 @@ static void int1 (global_store *gs)
          break;
 
       default:
+         fprintf (stderr,
+                  "+++ Opcode %s\n",
+                  gs -> ot [pcode -> op] . opcode);
          BREMSE ("+++ not implemented !!\n");
          break;
    }

@@ -17,6 +17,63 @@ program PASFORM ( OUTPUT , EINGABE , LISTING , AUSGABE , TRACEF ) ;
 (*   ASSIGN/CLOSE BEI TURBO/3.                                      *)
 (*                                                                  *)
 (********************************************************************)
+(*   Historie zeitlich absteigend ...                               *)
+(********************************************************************)
+(*                                                                  *)
+(*   Neue Version im August 2019                                    *)
+(*                                                                  *)
+(*   - Kommentare am Zeilenende (ohne Kasten) immer mit //          *)
+(*                                                                  *)
+(*   - durch mindestens ein Blank absetzen                          *)
+(*                                                                  *)
+(*   - wenn der Kommentar ueber Spalte 72 hinausreicht,             *)
+(*     in naechster Zeile an gleicher Position fortsetzen           *)
+(*                                                                  *)
+(*   - wenn in derselben Zeile noch etwas kommt, dann               *)
+(*     auf jeden Fall in neuer Zeile beginnen                       *)
+(*                                                                  *)
+(*   (inspiriert durch den Versuch, den P5-Source zu bearbeiten)    *)
+(*                                                                  *)
+(********************************************************************)
+(*                                                                  *)
+(*   Neue Version im November 2017                                  *)
+(*                                                                  *)
+(*   - Verwendung des Scanners PASSCAN (analog Compiler)            *)
+(*                                                                  *)
+(*   - zusaetzlich werden hier die Symbole SQLBEGIN, SQLEND,        *)
+(*     SQLVAR und OVERLAY verarbeitet                               *)
+(*                                                                  *)
+(*   - Kommentarbearbeitung (fast) wie vorher                       *)
+(*                                                                  *)
+(*   - neu: C++ Kommentare werden unterstuetzt                      *)
+(*                                                                  *)
+(*   - neu: Korrekturen bei Kommentaren ueber mehrere Zeilen        *)
+(*                                                                  *)
+(*   - Ausgabe von Protokoll auf Datei LISTING                      *)
+(*                                                                  *)
+(*   - Korrektur: Blank eingefuegt bei Symbol INTDOTDOT             *)
+(*                                                                  *)
+(*   - neu: Kommentare hinter Definitionen usw. bleiben stehen      *)
+(*     d.h.: Kommentare, denen in derselben Zeile ein anderes       *)
+(*     Symbol (ausser Separator) vorangeht, werden anders           *)
+(*     behandelt als bisher. Sie behalten idealerweise ihre         *)
+(*     Position. Wenn von der letzten Zeile her ein solcher         *)
+(*     Kommentar bereits vorhanden ist, wird versucht, den          *)
+(*     neuen Kommentar ebenfalls an dieser Position                 *)
+(*     auszurichten                                                 *)
+(*                                                                  *)
+(*   - kein Abbruch bei Fehler, idealerweise keine Endlos-          *)
+(*     schleife, sondern Diagnose wie beim Compiler und             *)
+(*     weiterarbeiten                                               *)
+(*                                                                  *)
+(********************************************************************)
+(*                                                                  *)
+(*   ANPASSUNGEN am 31.08.2016                                      *)
+(*                                                                  *)
+(*   Kommentare anders eingerueckt                                  *)
+(*   Neuzeile bei komplexen consts (Stanford-Erweiterung)           *)
+(*                                                                  *)
+(********************************************************************)
 (*                                                                  *)
 (*   ANPASSUNGEN FUER FPC AM 05.10.2013:                            *)
 (*                                                                  *)
@@ -82,52 +139,12 @@ program PASFORM ( OUTPUT , EINGABE , LISTING , AUSGABE , TRACEF ) ;
 (*   * " KOMMENTARE MIT LAENGE KLEINER VIER KOMPLETT IGNORIEREN     *)
 (*                                                                  *)
 (********************************************************************)
-(*                                                                  *)
-(*   ANPASSUNGEN am 31.08.2016                                      *)
-(*                                                                  *)
-(*   Kommentare anders eingerueckt                                  *)
-(*   Neuzeile bei komplexen consts (Stanford-Erweiterung)           *)
-(*                                                                  *)
-(********************************************************************)
-(*                                                                  *)
-(*   Neue Version im November 2017                                  *)
-(*                                                                  *)
-(*   * Verwendung des Scanners PASSCAN (analog Compiler)            *)
-(*                                                                  *)
-(*   * zusaetzlich werden hier die Symbole SQLBEGIN, SQLEND,        *)
-(*     SQLVAR und OVERLAY verarbeitet                               *)
-(*                                                                  *)
-(*   * Kommentarbearbeitung (fast) wie vorher                       *)
-(*                                                                  *)
-(*   * neu: C++ Kommentare werden unterstuetzt                      *)
-(*                                                                  *)
-(*   * neu: Korrekturen bei Kommentaren ueber mehrere Zeilen        *)
-(*                                                                  *)
-(*   * Ausgabe von Protokoll auf Datei LISTING                      *)
-(*                                                                  *)
-(*   * Korrektur: Blank eingefueht bei Symbol INTDOTDOT             *)
-(*                                                                  *)
-(*   - neu: Kommentare hinter Definitionen usw. bleiben stehen      *)
-(*     d.h.: Kommentare, denen in derselben Zeile ein anderes       *)
-(*     Symbol (ausser Separator) vorangeht, werden anders           *)
-(*     behandelt als bisher. Sie behalten idealerweise ihre         *)
-(*     Position. Wenn von der letzten Zeile her ein solcher         *)
-(*     Kommentar bereits vorhanden ist, wird versucht, den          *)
-(*     neuen Kommentar ebenfalls an dieser Position                 *)
-(*     auszurichten                                                 *)
-(*                                                                  *)
-(*   - kein Abbruch bei Fehler, idealerweise keine Endlos-          *)
-(*     schleife, sondern Diagnose wie beim Compiler und             *)
-(*     weiterarbeiten                                               *)
-(*                                                                  *)
-(********************************************************************)
 
 
 
 const VERSION = '11.2017' ;
       VERKETT2 = '|' ;
       MAXLSIZE = 120 ;
-      MAXWIDTH = 72 ;
       MAXLOUTPUT = 72 ;
       MAXLINPUT = 160 ;
       MAXEINR = 51 ;
@@ -212,27 +229,34 @@ type WORT = array [ 1 .. 100 ] of CHAR ;
      // kommentarroutinen festhaelt                                
      //************************************************************
 
-     KOMMCTL = record
-                 KOMMP : WORT ;             // teil des kommentars
-                 KOMML : INTEGER ;          // kommentarlaenge
-                 ENDOFKOMM : BOOLEAN ;      // ende kommentar
-                 ANZKOMM : INTEGER ;        // anz. kommentare
-                 ZUSTAND : INTEGER ;        // zustand fuer fsm
-                 KOMMTYPE : CHAR ;          // welcher typ
-                 NURSTERNE : BOOLEAN ;      // nur sterne ?
-                 KOMMSTATUS : INTEGER ;     // zustand bzgl. kasten
-                 EINRKASTEN : INTEGER ;     // einr waehrend kasten
-                 KOMML_AUS : INTEGER ;      // kommlaenge ausgabe
-                 UEBERLESEN : INTEGER ;     // ueberlesen ?
-                 KOMM_VOR_PROC : BOOLEAN ;  // vor prozedur ?
-                 LINENR : INTEGER ;         // zeilennr aus scb
-                 LINEPOS : INTEGER ;        // linepos scb minus 2
-                 SYMB_VOR_KOMM : BOOLEAN ;  // symb in zeile vorh.
-                 LINENR_LAST : INTEGER ;    // linenr letzt. komm
-                 LINEPOS_LAST : INTEGER ;   // linepos letzt. komm
-                 KOMML_MAX : INTEGER ;      // max. komml. in set
-                 NEUZEILE_VORM : BOOLEAN ;  // neuzeile-Vormerkung
-               end ;
+     KOMMSTATUS = record
+                    LASTSCBLINE : INTEGER ;    // to check symbols
+                    LINENR : INTEGER ;         // zeilennr aus scb
+                    LINEPOS : INTEGER ;        // linepos scb
+                    SYMB_VOR_KOMM : BOOLEAN ;  // symb in zeile vorh.
+                    KOMM_VOR_PROC : BOOLEAN ;  // vor prozedur ?
+                    UEBERLESEN : INTEGER ;     // ueberlesen ?
+                    NEUZEILE_VORM : BOOLEAN ;  // neuzeile-Vormerkung
+                    EINRRECHTS : INTEGER ;     // einrueckung rechts
+                    EINRRECHTS_SAVE : INTEGER ;
+                    RECHTSLINE : INTEGER
+                  end ;
+     KOMM_CONT = record
+                   KOMMTYPE : CHAR ;           // welcher typ
+                   FIRST_IN_LINE : BOOLEAN ;   // komm erst in zeile
+                   LAST_IN_LINE : BOOLEAN ;    // komm letzt in zeile
+                   KOMM_NLINES : INTEGER ;     // anzahl lines
+                   KOMM_WIDTH : INTEGER ;      // breite des komm.
+                   KOMM_WIDTH_BR : INTEGER ;   // breite brutto
+                   KLINE_ANKER : -> KOMMLINE ; // erste kommzeile
+                   KLINE_AKT : -> KOMMLINE ;   // aktuelle kommzeile
+                   with Y : KOMMSTATUS         // include status
+                 end ;
+     KOMMLINE = record
+                  L : STRING ( 120 ) ;       // inhalt ohne komm.z
+                  NURSTERNE : BOOLEAN ;      // nur sterne ?
+                  NEXT : -> KOMMLINE         // naechste zeilen
+                end ;
 
      //************************************************************
      // zentraler Scan-Block                                       
@@ -246,48 +270,49 @@ type WORT = array [ 1 .. 100 ] of CHAR ;
      SCAN_ERRCLASS = 'A' .. 'Z' ;
      OPTIONS_PTR = -> COMP_OPTIONS ;
      SCAN_BLOCK = record
-                    MODUS : INTEGER ;
-                    DATEIENDE : INTEGER ;
-                    ENDOFLINE : BOOLEAN ;
-                    SLINE : SOURCELINE ;
-                    LINENR : INTEGER ;
-                    LINEPOS : INTEGER ;
-                    LINELEN : INTEGER ;
-                    LOOKAHEAD : CHAR ;
-                    SYMBOLNR : SYMB ;
-                    SYMBOL : SOURCELINE ;
-                    LSYMBOL : INTEGER ;
-                    MAXLSYMBOL : INTEGER ;
-                    UFZAHL : INTEGER ;
-                    SFZAHL : INTEGER ;
-                    FEZAHL : INTEGER ;
-                    WAZAHL : INTEGER ;
-                    INZAHL : INTEGER ;
-                    FEANFANG : ANYPTR ;
-                    FEAKT : ANYPTR ;
-                    FTTAB : ANYPTR ;
-                    FTTABA : ANYPTR ;
-                    OPTLINE : SOURCELINE ;
-                    POPT : OPTIONS_PTR ;
+                    MODUS : INTEGER ;        // modus of scanner
+                    DATEIENDE : INTEGER ;    // end of file indicator
+                    ENDOFLINE : BOOLEAN ;    // end of line indicator
+                    SLINE : SOURCELINE ;     // stored source line
+                    LINENR : INTEGER ;       // line number of symbol
+                    LINEPOS : INTEGER ;      // line position of symb
+                    LINELEN : INTEGER ;      // line length
+                    SKIPPING : BOOLEAN ;     // parser is skipping
+                    LOOKAHEAD : CHAR ;       // lookahead character
+                    SYMBOLNR : SYMB ;        // symbol read
+                    SYMBOL : SOURCELINE ;    // characters of symb
+                    LSYMBOL : INTEGER ;      // no of chars in symb
+                    MAXLSYMBOL : INTEGER ;   //
+                    UFZAHL : INTEGER ;       // no of undef errors
+                    SFZAHL : INTEGER ;       // no of severe errors
+                    FEZAHL : INTEGER ;       // no of errors
+                    WAZAHL : INTEGER ;       // no of warnings
+                    INZAHL : INTEGER ;       // no of informations
+                    FEANFANG : ANYPTR ;      // anchor to err list
+                    FEAKT : ANYPTR ;         // actual err elem
+                    FTTAB : ANYPTR ;         // error text table
+                    FTTABA : ANYPTR ;        // same for applic.
+                    OPTLINE : SOURCELINE ;   // options line
+                    POPT : OPTIONS_PTR ;     // ptr to opt struct
 
-     //************************************************************
-     // felder fuer sofortige Protokollausgabe                     
-     //************************************************************
+     /******************************************/
+     /* felder fuer sofortige Protokollausgabe */
+     /******************************************/
 
-                    PROTOUT : BOOLEAN ;
-                    TERMOUT : BOOLEAN ;
-                    FEAKT_ALT : ANYPTR ;
-                    LINEINFO : CHAR32 ;
-                    LINEINFO_SIZE : INTEGER ;
+                    PROTOUT : BOOLEAN ;        // switch for prot out
+                    TERMOUT : BOOLEAN ;        // switch for term out
+                    FEAKT_ALT : ANYPTR ;       // old feakt
+                    LINEINFO : CHAR32 ;        // line information
+                    LINEINFO_SIZE : INTEGER ;  // size of lineinfo
 
-     //************************************************************
-     // felder fuer ueberschrift                                   
-     //************************************************************
+     /******************************************/
+     /* felder fuer ueberschrift               */
+     /******************************************/
 
-                    LINECOUNT : INTEGER ;
-                    HEADLINE : SOURCELINE ;
-                    HEADLINE_SIZE : INTEGER ;
-                    PAGENR : INTEGER ;
+                    LINECOUNT : INTEGER ;      // linecount f. heading
+                    HEADLINE : SOURCELINE ;    // header line
+                    HEADLINE_SIZE : INTEGER ;  // size of header line
+                    PAGENR : INTEGER ;         // page number
                   end ;
 
      //************************************************************
@@ -383,7 +408,6 @@ var EINGABE : TEXT ;
     OUTPOINTER : INTEGER ;
     INPOINTER : INTEGER ;
     NICHTLESEN : INTEGER ;
-    ENDEKASTEN : CHAR ;
     ZZAUSVOR : INTEGER ;
     INSQLSTATE : BOOLEAN ;
     SQLHOSTV : BOOLEAN ;
@@ -393,7 +417,7 @@ var EINGABE : TEXT ;
     (*  KOMMC: AUFZEICHNEN DES LAUFENDEN KOMMENTAR-STATUS  *)
     (*******************************************************)
 
-    KOMMC : KOMMCTL ;
+    KOMMC : KOMM_CONT ;
 
 
 const BLANKID : ALPHA = '            ' ;
@@ -607,20 +631,16 @@ function RESWRDSQL : BOOLEAN ;
 
 
 
-procedure NEUZEILEKOMM ( BLANKS : BOOLEAN ) ;
-
-   var EIN : INTEGER ;
+procedure NEUZEILEKOMM ( EIN : INTEGER ) ;
 
    begin (* NEUZEILEKOMM *)
-     EIN := EINRKOMM ;
      if EIN > MAXEINR then
        EIN := MAXEINR ;
      WRITELN ( AUSGABE ) ;
      ZZAUS := ZZAUS + 1 ;
-     if BLANKS then
+     if EIN > 0 then
        begin
-         if EIN > 0 then
-           WRITE ( AUSGABE , ' ' : EIN ) ;
+         WRITE ( AUSGABE , ' ' : EIN ) ;
          OUTPOINTER := EIN
        end (* then *)
      else
@@ -645,7 +665,7 @@ procedure KOMMSTERNZEILE ;
        '"' : WRITE ( AUSGABE , '"' ) ;
        '+' : WRITE ( AUSGABE , '//' ) ;
      end (* case *) ;
-     for I := 1 to KOMMC . KOMML_AUS - 4 do
+     for I := 1 to KOMMC . KOMM_WIDTH do
        WRITE ( AUSGABE , '*' ) ;
      if KOMMC . KOMMTYPE in [ '"' , '+' ] then
        WRITE ( AUSGABE , '**' ) ;
@@ -663,626 +683,586 @@ procedure KOMMSTERNZEILE ;
 
 
 
-procedure KOMMENDEKASTEN ;
-
-   begin (* KOMMENDEKASTEN *)
-     if ENDEKASTEN <> ' ' then
-       begin
-         if KOMMC . EINRKASTEN <> 0 then
-           WRITE ( AUSGABE , ' ' : KOMMC . EINRKASTEN ) ;
-         KOMMSTERNZEILE ;
-         WRITELN ( AUSGABE ) ;
-         ZZAUS := ZZAUS + 1 ;
-         ENDEKASTEN := ' '
-       end (* then *) ;
-   end (* KOMMENDEKASTEN *) ;
-
-
-
-procedure READKOMM ( var KOMMC : KOMMCTL ) ;
+procedure READKOMM ( var KOMMC : KOMM_CONT ) ;
 
    var CH : CHAR ;
        I : INTEGER ;
-       ISTART , IENDE : INTEGER ;
+       KLINE : -> KOMMLINE ;       // zeiger auf kommentarzeile
+       ENDOFKOMM : BOOLEAN ;       // kommentarende erreicht
+       ANZKOMM : INTEGER ;         // schachtelungstiefe kommentar
+       ZUSTAND : INTEGER ;         // zustand fuer endlichen automat
+       KOMMP : STRING ( 120 ) ;    // teil des kommentars
+       KOMML : INTEGER ;           // akt. Laenge kommp
 
    begin (* READKOMM *)
 
-     (************************************************)
-     (*   erste zeichen anhand von gelesenem         *)
-     (*   symbol in kommp eintragen                  *)
-     (************************************************)
-     (*   zeilennummer des kommentaranfangs merken   *)
-     (*   - fuer alle faelle                         *)
-     (************************************************)
+     //**************************************************
+     //   neu: es werden solange kommentare in die       
+     //   neue komm_cont struktur eingelesen,            
+     //   bis ein anderes Symbol kommt oder eine         
+     //   leerzeile, die den Kommentar beendet           
+     //**************************************************
+     //   hier: auch rekursive Kommentare werden         
+     //   grundsaetzlich akzeptiert (keine option!)      
+     //**************************************************
 
-     case KOMMC . KOMMTYPE of
-       ')' : begin
-               KOMMC . KOMMP [ 1 ] := '(' ;
-               KOMMC . KOMMP [ 2 ] := '*' ;
-               KOMMC . KOMML := 2 ;
-             end (* tag/ca *) ;
-       '/' : begin
-               KOMMC . KOMMP [ 1 ] := '/' ;
-               KOMMC . KOMMP [ 2 ] := '*' ;
-               KOMMC . KOMML := 2 ;
-             end (* tag/ca *) ;
-       '}' : begin
-               KOMMC . KOMMP [ 1 ] := '(' ;
-               KOMMC . KOMMP [ 2 ] := '*' ;
-               KOMMC . KOMML := 2 ;
-             end (* tag/ca *) ;
-       '"' : begin
-               KOMMC . KOMMP [ 1 ] := '"' ;
-               KOMMC . KOMML := 1 ;
-             end (* tag/ca *) ;
-       '+' : begin
-               KOMMC . KOMMP [ 1 ] := '/' ;
-               KOMMC . KOMMP [ 2 ] := '/' ;
-               KOMMC . KOMML := 2 ;
-             end (* tag/ca *) ;
-     end (* case *) ;
+     ENDOFKOMM := FALSE ;
+     ANZKOMM := 1 ;
+     ZUSTAND := 1 ;
 
-     (************************************************)
-     (*   HIER WERDEN DIE ERSTEN ZEICHEN (max. 100)  *)
-     (*   IN DEN KOMMPUFFER EINGETRAGEN              *)
-     (************************************************)
-     (*   ende, wenn kommentarende erreicht oder     *)
-     (*   mehr als 100 zeichen gelesen oder          *)
-     (*   wenn der scanner zeilenende meldet         *)
-     (************************************************)
+     //**************************************************
+     //   muss hier am Anfang weggespeichert werden,     
+     //   weil es sich am ende evtl. aendert ...         
+     //   symb_vor_komm wird beim weiterlesen am         
+     //   ende des kommentars evtl. auf true gesetzt     
+     //**************************************************
 
-     KOMMC . ENDOFKOMM := FALSE ;
-     CH := SCB . LOOKAHEAD ;
-     while not SCB . ENDOFLINE do
+     if KOMMC . KLINE_ANKER = NIL then
        begin
-         KOMMC . KOMML := KOMMC . KOMML + 1 ;
-         KOMMC . KOMMP [ KOMMC . KOMML ] := CH ;
-         case KOMMC . KOMMTYPE of
-           ')' : begin
-                   case KOMMC . ZUSTAND of
-                     1 : begin
-                           if CH = '*' then
-                             KOMMC . ZUSTAND := 2
-                           else
-                             if CH = '(' then
-                               KOMMC . ZUSTAND := 3
-                         end (* tag/ca *) ;
-                     2 : begin
-                           if CH = '*' then
-                             KOMMC . ZUSTAND := 2
-                           else
-                             if CH = ')' then
-                               begin
-                                 KOMMC . ANZKOMM := KOMMC . ANZKOMM - 1
-                                                   ;
-                                 if KOMMC . ANZKOMM <= 0 then
-                                   KOMMC . ENDOFKOMM := TRUE
-                                 else
-                                   KOMMC . ZUSTAND := 1
-                               end (* then *)
-                             else
-                               KOMMC . ZUSTAND := 1
-                         end (* tag/ca *) ;
-                     3 : begin
-                           if CH = '*' then
-                             begin
-                               KOMMC . ZUSTAND := 1 ;
-                               KOMMC . ANZKOMM := KOMMC . ANZKOMM + 1
-                             end (* then *)
-                           else
-                             KOMMC . ZUSTAND := 1
-                         end (* tag/ca *) ;
-                   end (* case *) ;
-                 end (* tag/ca *) ;
-           '/' : begin
-                   case KOMMC . ZUSTAND of
-                     1 : begin
-                           if CH = '*' then
-                             KOMMC . ZUSTAND := 2
-                           else
-                             if CH = '/' then
-                               KOMMC . ZUSTAND := 3
-                         end (* tag/ca *) ;
-                     2 : begin
-                           if CH = '*' then
-                             KOMMC . ZUSTAND := 2
-                           else
-                             if CH = '/' then
-                               begin
-                                 KOMMC . ANZKOMM := KOMMC . ANZKOMM - 1
-                                                   ;
-                                 if KOMMC . ANZKOMM <= 0 then
-                                   KOMMC . ENDOFKOMM := TRUE
-                                 else
-                                   KOMMC . ZUSTAND := 1
-                               end (* then *)
-                             else
-                               KOMMC . ZUSTAND := 1
-                         end (* tag/ca *) ;
-                     3 : begin
-                           if CH = '*' then
-                             begin
-                               KOMMC . ZUSTAND := 1 ;
-                               KOMMC . ANZKOMM := KOMMC . ANZKOMM + 1
-                             end (* then *)
-                           else
-                             KOMMC . ZUSTAND := 1
-                         end (* tag/ca *) ;
-                   end (* case *)
-                 end (* tag/ca *) ;
-           '}' : begin
-                   if CH = '}' then
-                     begin
-                       KOMMC . ANZKOMM := KOMMC . ANZKOMM - 1 ;
-                       if KOMMC . ANZKOMM <= 0 then
-                         KOMMC . ENDOFKOMM := TRUE ;
-                       KOMMC . KOMMP [ KOMMC . KOMML ] := '*' ;
-                       KOMMC . KOMML := KOMMC . KOMML + 1 ;
-                       KOMMC . KOMMP [ KOMMC . KOMML ] := ')' ;
-                     end (* then *)
-                   else
-                     if CH = '{' then
-                       KOMMC . ANZKOMM := KOMMC . ANZKOMM + 1
-                 end (* tag/ca *) ;
-           '"' : begin
-                   KOMMC . ENDOFKOMM := ( CH = '"' ) ;
-                 end (* tag/ca *) ;
-           '+' : ;
-         end (* case *) ;
-         if KOMMC . KOMML >= 98 then
-           break ;
-         if KOMMC . ENDOFKOMM then
-           break ;
-         PASSCANR ( EINGABE , LISTING , SCB , CH ) ;
-       end (* while *) ;
-
-     (************************************************)
-     (*   zeilenende ist auch kommentarende bei      *)
-     (*   c++ kommentar                              *)
-     (************************************************)
-
-     if SCB . ENDOFLINE then
-       if KOMMC . KOMMTYPE = '+' then
-         KOMMC . ENDOFKOMM := TRUE ;
-
-     (************************************************)
-     (*   schauen, ob nur sterne enthalten sind      *)
-     (*   c++ kommentar                              *)
-     (************************************************)
-
-     if KOMMC . ENDOFKOMM then
-       begin
-         if KOMMC . KOMMTYPE = '+' then
-           begin
-             ISTART := 3 ;
-             IENDE := KOMMC . KOMML ;
-           end (* then *)
-         else
-           begin
-             ISTART := 2 ;
-             IENDE := KOMMC . KOMML - 1 ;
-           end (* else *) ;
-         KOMMC . NURSTERNE := TRUE ;
-         for I := ISTART to IENDE do
-           if not ( KOMMC . KOMMP [ I ] in [ '*' , ' ' ] ) then
-             begin
-               KOMMC . NURSTERNE := FALSE ;
-               break
-             end (* then *)
+         KOMMC . FIRST_IN_LINE := not KOMMC . SYMB_VOR_KOMM ;
+         KOMMC . EINRRECHTS := KOMMC . LINEPOS - 1 ;
+         if KOMMC . EINRRECHTS < OUTPOINTER - 1 then
+           KOMMC . EINRRECHTS := OUTPOINTER - 1
        end (* then *) ;
 
-     (************************************************)
-     (*   naechstes zeichen                          *)
-     (*   lesen und nach scb.lookahead               *)
-     (************************************************)
+     //**************************************************
+     //   schleife, die solange laueft, bis keine        
+     //   kommentare mehr gefunden werden -              
+     //   oder leerzeile nach kommentar                  
+     //**************************************************
 
-     PASSCANR ( EINGABE , LISTING , SCB , CH ) ;
-     SCB . LOOKAHEAD := CH ;
+     while not ENDOFKOMM do
+       begin
+         KOMMC . LAST_IN_LINE := FALSE ;
+         KOMMP := REPEATSTR ( ' ' , 120 ) ;
+         KOMML := 0 ;
+         CH := SCB . LOOKAHEAD ;
+         while not SCB . ENDOFLINE do
+           begin
+             KOMML := KOMML + 1 ;
+             KOMMP [ KOMML ] := CH ;
+             case KOMMC . KOMMTYPE of
+               ')' : begin
+                       case ZUSTAND of
+                         1 : begin
+                               if CH = '*' then
+                                 ZUSTAND := 2
+                               else
+                                 if CH = '(' then
+                                   ZUSTAND := 3
+                             end (* tag/ca *) ;
+                         2 : begin
+                               if CH = '*' then
+                                 ZUSTAND := 2
+                               else
+                                 if CH = ')' then
+                                   begin
+                                     ANZKOMM := ANZKOMM - 1 ;
+                                     if ANZKOMM <= 0 then
+                                       ENDOFKOMM := TRUE
+                                     else
+                                       ZUSTAND := 1
+                                   end (* then *)
+                                 else
+                                   ZUSTAND := 1
+                             end (* tag/ca *) ;
+                         3 : begin
+                               if CH = '*' then
+                                 begin
+                                   ZUSTAND := 1 ;
+                                   ANZKOMM := ANZKOMM + 1
+                                 end (* then *)
+                               else
+                                 ZUSTAND := 1
+                             end (* tag/ca *) ;
+                       end (* case *) ;
+                     end (* tag/ca *) ;
+               '/' : begin
+                       case ZUSTAND of
+                         1 : begin
+                               if CH = '*' then
+                                 ZUSTAND := 2
+                               else
+                                 if CH = '/' then
+                                   ZUSTAND := 3
+                             end (* tag/ca *) ;
+                         2 : begin
+                               if CH = '*' then
+                                 ZUSTAND := 2
+                               else
+                                 if CH = '/' then
+                                   begin
+                                     ANZKOMM := ANZKOMM - 1 ;
+                                     if ANZKOMM <= 0 then
+                                       ENDOFKOMM := TRUE
+                                     else
+                                       ZUSTAND := 1
+                                   end (* then *)
+                                 else
+                                   ZUSTAND := 1
+                             end (* tag/ca *) ;
+                         3 : begin
+                               if CH = '*' then
+                                 begin
+                                   ZUSTAND := 1 ;
+                                   ANZKOMM := ANZKOMM + 1
+                                 end (* then *)
+                               else
+                                 ZUSTAND := 1
+                             end (* tag/ca *) ;
+                       end (* case *)
+                     end (* tag/ca *) ;
+               '}' : begin
+                       if CH = '}' then
+                         begin
+                           ANZKOMM := ANZKOMM - 1 ;
+                           if ANZKOMM <= 0 then
+                             ENDOFKOMM := TRUE ;
+                         end (* then *)
+                       else
+                         if CH = '{' then
+                           ANZKOMM := ANZKOMM + 1
+                     end (* tag/ca *) ;
+               '"' : begin
+                       ENDOFKOMM := ( CH = '"' ) ;
+                     end (* tag/ca *) ;
+               '+' : ;
+             end (* case *) ;
+             if KOMML >= 120 then
+               break ;
+             if ENDOFKOMM then
+               break ;
+             PASSCANR ( EINGABE , LISTING , SCB , CH ) ;
+           end (* while *) ;
 
-     (************************************************)
-     (*   traceausgaben                              *)
-     (************************************************)
+     //**************************************************
+     //   zeilenende ist auch kommentarende bei          
+     //   c++ kommentar                                  
+     //**************************************************
+
+         if SCB . ENDOFLINE then
+           if KOMMC . KOMMTYPE = '+' then
+             begin
+               ENDOFKOMM := TRUE ;
+               KOMMC . LAST_IN_LINE := TRUE
+             end (* then *) ;
+
+     //**************************************************
+     // wenn Endekommentar, dann bei Kommentar hinten    
+     // die Endezeichen wegmachen                        
+     // Achtung: letztes Zeichen wurde noch gar nicht    
+     // abgelegt                                         
+     //**************************************************
+
+         if ENDOFKOMM then
+           case KOMMC . KOMMTYPE of
+             '/' , ')' :
+               KOMML := KOMML - 2 ;
+             '}' , '"' :
+               KOMML := KOMML - 1 ;
+             '+' :
+           end (* case *) ;
+         if KOMMC . UEBERLESEN = 0 then
+           begin
+
+     //**************************************************
+     // Kommentar in Komm_Cont Struktur eintragen        
+     //**************************************************
+
+             if FALSE then
+               begin
+                 WRITELN ( TRACEF , 'before new kline' ) ;
+                 WRITELN ( TRACEF , 'komm_nlines   = ' , KOMMC .
+                           KOMM_NLINES ) ;
+                 WRITELN ( TRACEF , 'komml         = ' , KOMML ) ;
+                 WRITELN ( TRACEF , 'kommp         = ' , '<' , KOMMP ,
+                           '>' ) ;
+               end (* then *) ;
+             NEW ( KLINE ) ;
+             if KOMMC . KLINE_ANKER = NIL then
+               begin
+                 KOMMC . KLINE_ANKER := KLINE ;
+                 KOMMC . KLINE_AKT := KLINE
+               end (* then *)
+             else
+               begin
+                 KOMMC . KLINE_AKT -> . NEXT := KLINE ;
+                 KOMMC . KLINE_AKT := KLINE
+               end (* else *) ;
+             KLINE -> . NEXT := NIL ;
+             KLINE -> . L := SUBSTR ( KOMMP , 1 , KOMML ) ;
+             KOMMC . KOMM_NLINES := KOMMC . KOMM_NLINES + 1 ;
+
+     //**************************************************
+     //   schauen, ob nur sterne enthalten sind          
+     //   c++ kommentar                                  
+     //**************************************************
+
+             with KLINE -> do
+               begin
+                 NURSTERNE := TRUE ;
+                 for I := 1 to LENGTH ( L ) do
+                   if not ( L [ I ] in [ '*' , ' ' ] ) then
+                     begin
+                       NURSTERNE := FALSE ;
+                       break
+                     end (* then *)
+               end (* with *)
+           end (* then *)
+         else
+           KOMMC . UEBERLESEN := 0 ;
+
+     //**************************************************
+     //   wenn ende des kommentars nicht erreicht,       
+     //   denn zeilenende, also scan wg. neuer zeile     
+     //**************************************************
+
+         if not ENDOFKOMM then
+           begin
+             PASSCANR ( EINGABE , LISTING , SCB , CH ) ;
+             SCB . LOOKAHEAD := CH
+           end (* then *)
+       end (* while *) ;
+
+     //**************************************************
+     //   naechstes zeichen                              
+     //   lesen und nach scb.lookahead                   
+     //**************************************************
+
+     if not SCB . ENDOFLINE then
+       begin
+         repeat
+           PASSCANR ( EINGABE , LISTING , SCB , CH ) ;
+           SCB . LOOKAHEAD := CH ;
+           if not ( CH in [ ' ' , x'0a' , '#' ] ) then
+             break ;
+           if SCB . ENDOFLINE then
+             begin
+               KOMMC . LAST_IN_LINE := TRUE ;
+               PASSCANR ( EINGABE , LISTING , SCB , CH ) ;
+               SCB . LOOKAHEAD := CH ;
+               break
+             end (* then *)
+         until FALSE
+       end (* then *)
+     else
+       begin
+         PASSCANR ( EINGABE , LISTING , SCB , CH ) ;
+         SCB . LOOKAHEAD := CH
+       end (* else *) ;
+
+     //**************************************************
+     //   traceausgaben                                  
+     //**************************************************
 
      if FALSE then
        begin
          WRITELN ( TRACEF , '--------------------------------------'
                    '--------------------------------------' ) ;
-         WRITELN ( TRACEF , 'komml     = ' , KOMMC . KOMML : 4 ) ;
-         WRITELN ( TRACEF , 'endofkomm = ' , KOMMC . ENDOFKOMM ) ;
-         WRITELN ( TRACEF , 'anzkomm   = ' , KOMMC . ANZKOMM : 4 ) ;
-         WRITELN ( TRACEF , 'zustand   = ' , KOMMC . ZUSTAND : 4 ) ;
-         WRITELN ( TRACEF , 'kommtype  = ' , KOMMC . KOMMTYPE ) ;
-         WRITELN ( TRACEF , 'nursterne = ' , KOMMC . NURSTERNE ) ;
-         WRITELN ( TRACEF , 'kommp     = ' , KOMMC . KOMMP : KOMMC .
-                   KOMML ) ;
-         WRITELN ( TRACEF , 'KOMMSTATUS NACH READKOMM = ' , KOMMC .
-                   KOMMSTATUS ) ;
+         WRITELN ( TRACEF , 'kommtype      = ' , KOMMC . KOMMTYPE ) ;
+         WRITELN ( TRACEF , 'komm_nlines   = ' , KOMMC . KOMM_NLINES )
+                   ;
+         WRITELN ( TRACEF , 'komm_width    = ' , KOMMC . KOMM_WIDTH ) ;
+         WRITELN ( TRACEF , 'kline_anker   = ' , KOMMC . KLINE_ANKER )
+                   ;
+         WRITELN ( TRACEF , 'kline_akt     = ' , KOMMC . KLINE_AKT ) ;
          WRITELN ( TRACEF , 'scb.Lookahead = ' , SCB . LOOKAHEAD ) ;
+         WRITELN ( TRACEF , 'scb.endofline = ' , SCB . ENDOFLINE ) ;
+         KLINE := KOMMC . KLINE_ANKER ;
+         while KLINE <> NIL do
+           begin
+             with KLINE -> do
+               begin
+                 WRITELN ( TRACEF , 'length/kline  = ' , LENGTH ( L ) )
+                           ;
+                 WRITELN ( TRACEF , 'kline         = ' , '<' , L , '>'
+                           ) ;
+                 WRITELN ( TRACEF , 'nursterne     = ' , NURSTERNE ) ;
+               end (* with *) ;
+             KLINE := KLINE -> . NEXT ;
+           end (* while *) ;
        end (* then *)
    end (* READKOMM *) ;
 
 
 
-procedure WRITEKOMM ( var KOMMC : KOMMCTL ) ;
+procedure WRITEKOMM ( var KOMMC : KOMM_CONT ) ;
 
-   var I : INTEGER ;
-       X : INTEGER ;
-       Y : INTEGER ;
-       CH1 : CHAR ;
-       CH2 : CHAR ;
-       CH3 : CHAR ;
-       FILLCH : CHAR ;
+   var KLINE : -> KOMMLINE ;
+       EINR_LOCAL : INTEGER ;
+       BREITE : INTEGER ;
+       REST : INTEGER ;
+       ENDEKASTEN : BOOLEAN ;
+       LENKOMM : INTEGER ;
 
    begin (* WRITEKOMM *)
+
+     //************************************************************
+     // zunaechst mal die maximale breite der                      
+     // kommentare ermitteln                                       
+     //************************************************************
+
      KOMMC . NEUZEILE_VORM := FALSE ;
-     while TRUE do
+     KOMMC . KOMM_WIDTH := 0 ;
+     KLINE := KOMMC . KLINE_ANKER ;
+     while KLINE <> NIL do
        begin
-         if KOMMC . KOMML < KOMMC . KOMML_AUS then
-           begin
-             FILLCH := ' ' ;
-             for I := KOMMC . KOMML + 1 to KOMMC . KOMML_AUS do
-               KOMMC . KOMMP [ I ] := FILLCH ;
-             X := KOMMC . KOMML_AUS ;
-             case KOMMC . KOMMTYPE of
-               ')' : begin
-                       if KOMMC . ENDOFKOMM then
-                         begin
-                           KOMMC . KOMMP [ KOMMC . KOMML ] := FILLCH ;
-                           KOMMC . KOMMP [ KOMMC . KOMML - 1 ] :=
-                                                   FILLCH
-                         end (* then *) ;
-                       KOMMC . KOMMP [ X ] := ')' ;
-                       KOMMC . KOMMP [ X - 1 ] := '*' ;
-                     end (* tag/ca *) ;
-               '/' : begin
-                       if KOMMC . ENDOFKOMM then
-                         begin
-                           KOMMC . KOMMP [ KOMMC . KOMML ] := FILLCH ;
-                           KOMMC . KOMMP [ KOMMC . KOMML - 1 ] :=
-                                                   FILLCH
-                         end (* then *) ;
-                       KOMMC . KOMMP [ X ] := '/' ;
-                       KOMMC . KOMMP [ X - 1 ] := '*' ;
-                     end (* tag/ca *) ;
-               '}' : begin
-                       if KOMMC . ENDOFKOMM then
-                         begin
-                           KOMMC . KOMMP [ KOMMC . KOMML ] := FILLCH ;
-                           KOMMC . KOMMP [ KOMMC . KOMML - 1 ] :=
-                                                   FILLCH
-                         end (* then *) ;
-                       KOMMC . KOMMP [ X ] := ')' ;
-                       KOMMC . KOMMP [ X - 1 ] := '*' ;
-                     end (* tag/ca *) ;
-               '"' : begin
-                       if KOMMC . ENDOFKOMM then
-                         begin
-                           KOMMC . KOMMP [ KOMMC . KOMML ] := FILLCH
-                         end (* then *) ;
-                       KOMMC . KOMMP [ X ] := '"' ;
-                     end (* tag/ca *) ;
-               '+' : ;
-             end (* case *) ;
-           end (* then *) ;
-         if KOMMC . KOMML > KOMMC . KOMML_AUS then
-           begin
-             case KOMMC . KOMMTYPE of
-               ')' : begin
-                       X := KOMMC . KOMML_AUS - 2 ;
-                       CH1 := KOMMC . KOMMP [ X ] ;
-                       CH2 := KOMMC . KOMMP [ X + 1 ] ;
-                       CH3 := KOMMC . KOMMP [ X + 2 ] ;
-                       KOMMC . KOMMP [ X ] := ' ' ;
-                       KOMMC . KOMMP [ X + 1 ] := '*' ;
-                       KOMMC . KOMMP [ X + 2 ] := ')' ;
-                     end (* tag/ca *) ;
-               '/' : begin
-                       X := KOMMC . KOMML_AUS - 2 ;
-                       CH1 := KOMMC . KOMMP [ X ] ;
-                       CH2 := KOMMC . KOMMP [ X + 1 ] ;
-                       CH3 := KOMMC . KOMMP [ X + 2 ] ;
-                       KOMMC . KOMMP [ X ] := ' ' ;
-                       KOMMC . KOMMP [ X + 1 ] := '*' ;
-                       KOMMC . KOMMP [ X + 2 ] := '/' ;
-                     end (* tag/ca *) ;
-               '}' : begin
-                       X := KOMMC . KOMML_AUS - 2 ;
-                       CH1 := KOMMC . KOMMP [ X ] ;
-                       CH2 := KOMMC . KOMMP [ X + 1 ] ;
-                       CH3 := KOMMC . KOMMP [ X + 2 ] ;
-                       KOMMC . KOMMP [ X ] := ' ' ;
-                       KOMMC . KOMMP [ X + 1 ] := '*' ;
-                       KOMMC . KOMMP [ X + 2 ] := ')' ;
-                     end (* tag/ca *) ;
-               '"' : begin
-                       X := KOMMC . KOMML_AUS - 1 ;
-                       CH1 := KOMMC . KOMMP [ X ] ;
-                       KOMMC . KOMMP [ X ] := '"' ;
-                     end (* tag/ca *) ;
-               '+' : begin
-                       X := KOMMC . KOMML_AUS ;
-                     end (* tag/ca *) ;
-             end (* case *) ;
-           end (* then *) ;
+         BREITE := LENGTH ( KLINE -> . L ) ;
+         if KOMMC . KOMM_WIDTH < BREITE then
+           KOMMC . KOMM_WIDTH := BREITE ;
+         KLINE := KLINE -> . NEXT ;
+       end (* while *) ;
+     case KOMMC . KOMMTYPE of
+       ')' : KOMMC . KOMM_WIDTH_BR := KOMMC . KOMM_WIDTH + 4 ;
+       '/' : KOMMC . KOMM_WIDTH_BR := KOMMC . KOMM_WIDTH + 4 ;
+       '}' : KOMMC . KOMM_WIDTH_BR := KOMMC . KOMM_WIDTH + 4 ;
+       '"' : KOMMC . KOMM_WIDTH_BR := KOMMC . KOMM_WIDTH + 2 ;
+       '+' : KOMMC . KOMM_WIDTH_BR := KOMMC . KOMM_WIDTH + 2 ;
+     end (* case *) ;
 
-     /***************************************/
-     /* wg. transport von sourcen zum MVS   */
-     /* via iebgener kommentare ab spalte 1 */
-     /* nicht mit schraegstrich - stern     */
-     /***************************************/
+     //************************************************************
+     // daten zum kommentar anzeigen                               
+     //************************************************************
 
-         if KOMMC . KOMMTYPE = '/' then
-           if EINRKOMM = 0 then
-             begin
-               KOMMC . KOMMP [ 1 ] := '(' ;
-               KOMMC . KOMMP [ KOMMC . KOMML_AUS ] := ')' ;
-             end (* then *) ;
-         for I := 1 to KOMMC . KOMML_AUS do
-           WRITE ( AUSGABE , KOMMC . KOMMP [ I ] ) ;
-         if KOMMC . KOMMTYPE = '+' then
-           KOMMC . NEUZEILE_VORM := TRUE ;
-         if KOMMC . KOMML > KOMMC . KOMML_AUS then
+     if FALSE then
+       begin
+         WRITELN ( TRACEF , '--------------------------------------'
+                   '--------------------------------------' ) ;
+         WRITELN ( TRACEF , 'Status am Anfang von Writekomm -------'
+                   '--------------------------------------' ) ;
+         WRITELN ( TRACEF , 'einrkomm      = ' , EINRKOMM : 4 ) ;
+         WRITELN ( TRACEF , 'einrrechts    = ' , KOMMC . EINRRECHTS ) ;
+         WRITELN ( TRACEF , 'first.line    = ' , KOMMC . FIRST_IN_LINE
+                   ) ;
+         WRITELN ( TRACEF , 'last.line     = ' , KOMMC . LAST_IN_LINE )
+                   ;
+         WRITELN ( TRACEF , 'scb.Lookahead = ' , SCB . LOOKAHEAD ) ;
+         WRITELN ( TRACEF , 'scb.endofline = ' , SCB . ENDOFLINE ) ;
+         WRITELN ( TRACEF , 'outpointer    = ' , OUTPOINTER ) ;
+         WRITELN ( TRACEF , 'kommtype      = ' , KOMMC . KOMMTYPE ) ;
+         WRITELN ( TRACEF , 'komm_nlines   = ' , KOMMC . KOMM_NLINES )
+                   ;
+         WRITELN ( TRACEF , 'komm_width    = ' , KOMMC . KOMM_WIDTH ) ;
+         WRITELN ( TRACEF , 'komm_width_br = ' , KOMMC . KOMM_WIDTH_BR
+                   ) ;
+         WRITELN ( TRACEF , 'kline_anker   = ' , KOMMC . KLINE_ANKER )
+                   ;
+         WRITELN ( TRACEF , 'kline_akt     = ' , KOMMC . KLINE_AKT ) ;
+         WRITELN ( TRACEF , 'scb.Lookahead = ' , SCB . LOOKAHEAD ) ;
+         WRITELN ( TRACEF , 'scb.endofline = ' , SCB . ENDOFLINE ) ;
+         KLINE := KOMMC . KLINE_ANKER ;
+         while KLINE <> NIL do
            begin
-             NEUZEILEKOMM ( TRUE ) ;
-             case KOMMC . KOMMTYPE of
-               ')' : begin
-                       KOMMC . KOMMP [ 1 ] := '(' ;
-                       KOMMC . KOMMP [ 2 ] := '*' ;
-                       KOMMC . KOMMP [ 3 ] := CH1 ;
-                       KOMMC . KOMMP [ 4 ] := CH2 ;
-                       KOMMC . KOMMP [ 5 ] := CH3 ;
-                       X := 5 ;
-                     end (* tag/ca *) ;
-               '/' : begin
-                       KOMMC . KOMMP [ 1 ] := '/' ;
-                       KOMMC . KOMMP [ 2 ] := '*' ;
-                       KOMMC . KOMMP [ 3 ] := CH1 ;
-                       KOMMC . KOMMP [ 4 ] := CH2 ;
-                       KOMMC . KOMMP [ 5 ] := CH3 ;
-                       X := 5 ;
-                     end (* tag/ca *) ;
-               '}' : begin
-                       KOMMC . KOMMP [ 1 ] := '(' ;
-                       KOMMC . KOMMP [ 2 ] := '*' ;
-                       KOMMC . KOMMP [ 3 ] := CH1 ;
-                       KOMMC . KOMMP [ 4 ] := CH2 ;
-                       KOMMC . KOMMP [ 5 ] := CH3 ;
-                       X := 5 ;
-                     end (* tag/ca *) ;
-               '"' : begin
-                       KOMMC . KOMMP [ 1 ] := '"' ;
-                       KOMMC . KOMMP [ 2 ] := CH1 ;
-                       X := 2 ;
-                     end (* tag/ca *) ;
-               '+' : begin
-                       KOMMC . KOMMP [ 1 ] := '/' ;
-                       KOMMC . KOMMP [ 2 ] := '/' ;
-                       X := 2 ;
-                     end (* tag/ca *) ;
-             end (* case *) ;
-             for Y := KOMMC . KOMML_AUS + 1 to KOMMC . KOMML do
+             with KLINE -> do
                begin
-                 X := X + 1 ;
-                 KOMMC . KOMMP [ X ] := KOMMC . KOMMP [ Y ] ;
-               end (* for *) ;
-             KOMMC . KOMML := X ;
-             continue ;
+                 WRITELN ( TRACEF , 'length/kline  = ' , LENGTH ( L ) )
+                           ;
+                 WRITELN ( TRACEF , 'kline         = ' , '<' , L , '>'
+                           ) ;
+                 WRITELN ( TRACEF , 'nursterne     = ' , NURSTERNE ) ;
+               end (* with *) ;
+             KLINE := KLINE -> . NEXT ;
+           end (* while *) ;
+       end (* then *) ;
+
+     //************************************************************
+     // pruefen ob kommentar noch reinpasst in zeile               
+     //************************************************************
+
+     if not KOMMC . FIRST_IN_LINE then
+       begin
+         if OUTPOINTER + 1 + KOMMC . KOMM_WIDTH_BR > MAXLOUTPUT then
+           KOMMC . FIRST_IN_LINE := TRUE
+         else
+           begin
+             WRITE ( AUSGABE , ' ' ) ;
+             OUTPOINTER := OUTPOINTER + 1 ;
+           end (* else *)
+       end (* then *) ;
+
+     //************************************************************
+     // wenn kommentar auf neue zeile, dann evtl. kasten           
+     // sonst blanks bis einrrechts                                
+     //************************************************************
+
+     if KOMMC . FIRST_IN_LINE then
+       begin
+         KLINE := KOMMC . KLINE_ANKER ;
+         if not KLINE -> . NURSTERNE then
+           begin
+             NEUZEILEKOMM ( 0 ) ;
+             ENDEKASTEN := TRUE ;
+             NEUZEILEKOMM ( EINRKOMM ) ;
+             KOMMSTERNZEILE ;
+             NEUZEILEKOMM ( EINRKOMM ) ;
+           end (* then *)
+         else
+           begin
+             NEUZEILEKOMM ( 0 ) ;
+             ENDEKASTEN := FALSE ;
+             NEUZEILEKOMM ( EINRKOMM ) ;
+           end (* else *) ;
+       end (* then *)
+     else
+       begin
+         ENDEKASTEN := FALSE ;
+
+     //************************************************************
+     // wenn zuletzt gespeicherte einrueckung rechts               
+     // aus letzter zeile stammt, dann diese beibehalten           
+     // auch fuer spaeter                                          
+     // sonst neue einrueckung setzen und diese behalten           
+     //************************************************************
+
+         if KOMMC . LAST_IN_LINE then
+           begin
+             if KOMMC . RECHTSLINE = KOMMC . LINENR - 1 then
+               begin
+                 KOMMC . EINRRECHTS := KOMMC . EINRRECHTS_SAVE ;
+                 KOMMC . RECHTSLINE := KOMMC . LINENR
+               end (* then *)
+             else
+               begin
+                 KOMMC . EINRRECHTS_SAVE := KOMMC . EINRRECHTS ;
+                 KOMMC . RECHTSLINE := KOMMC . LINENR
+               end (* else *) ;
+             EINR_LOCAL := KOMMC . EINRRECHTS - OUTPOINTER + 1 ;
+             if EINR_LOCAL > 0 then
+               begin
+                 WRITE ( AUSGABE , ' ' : EINR_LOCAL ) ;
+                 OUTPOINTER := OUTPOINTER + EINR_LOCAL
+               end (* then *)
+           end (* then *)
+         else
+           begin
+             LENKOMM := 0 ;
+             KLINE := KOMMC . KLINE_ANKER ;
+             if KLINE <> NIL then
+               LENKOMM := LENGTH ( KLINE -> . L ) + 4 ;
+             if OUTPOINTER + 1 + LENKOMM < MAXLOUTPUT then
+               begin
+                 WRITE ( AUSGABE , ' ' ) ;
+                 OUTPOINTER := OUTPOINTER + 1
+               end (* then *)
+             else
+               begin
+                 EINR_LOCAL := KOMMC . EINRRECHTS ;
+                 NEUZEILEKOMM ( EINR_LOCAL ) ;
+               end (* else *)
+           end (* else *)
+       end (* else *) ;
+
+     //************************************************************
+     // kommentar ausgeben                                         
+     //************************************************************
+
+     KLINE := KOMMC . KLINE_ANKER ;
+     while KLINE <> NIL do
+       begin
+         with KLINE -> do
+           begin
+             OUTPOINTER := OUTPOINTER + 2 ;
+             case KOMMC . KOMMTYPE of
+               ')' : WRITE ( AUSGABE , '(*' ) ;
+               '/' : WRITE ( AUSGABE , '/*' ) ;
+               '}' : WRITE ( AUSGABE , '(*' ) ;
+               '"' : begin
+                       WRITE ( AUSGABE , '"' ) ;
+                       OUTPOINTER := OUTPOINTER - 1 ;
+                     end (* tag/ca *) ;
+               '+' : WRITE ( AUSGABE , '//' ) ;
+             end (* case *) ;
+             WRITE ( AUSGABE , L ) ;
+             OUTPOINTER := OUTPOINTER + LENGTH ( L ) ;
+             REST := KOMMC . KOMM_WIDTH - LENGTH ( L ) ;
+             if REST > 0 then
+               WRITE ( AUSGABE , ' ' : REST ) ;
+             OUTPOINTER := OUTPOINTER + 2 ;
+             case KOMMC . KOMMTYPE of
+               ')' : WRITE ( AUSGABE , '*)' ) ;
+               '/' : WRITE ( AUSGABE , '*/' ) ;
+               '}' : WRITE ( AUSGABE , '*)' ) ;
+               '"' : begin
+                       WRITE ( AUSGABE , '"' ) ;
+                       OUTPOINTER := OUTPOINTER - 1 ;
+                     end (* tag/ca *) ;
+               '+' : OUTPOINTER := OUTPOINTER - 2 ;
+             end (* case *) ;
+           end (* with *) ;
+         if KLINE -> . NEXT <> NIL then
+           begin
+             if not KOMMC . FIRST_IN_LINE then
+               EINR_LOCAL := KOMMC . EINRRECHTS
+             else
+               EINR_LOCAL := EINRKOMM ;
+             NEUZEILEKOMM ( EINR_LOCAL ) ;
            end (* then *) ;
-         if KOMMC . ENDOFKOMM then
-           break ;
-         NEUZEILEKOMM ( TRUE ) ;
-         READKOMM ( KOMMC ) ;
-       end (* while *)
+         KLINE := KLINE -> . NEXT ;
+       end (* while *) ;
+
+     //************************************************************
+     // ggf. kommentarendekasten ausgeben                          
+     //************************************************************
+
+     if ENDEKASTEN then
+       begin
+         NEUZEILEKOMM ( EINRKOMM ) ;
+         KOMMSTERNZEILE ;
+       end (* then *) ;
+
+     //************************************************************
+     // neue zeile, wenn kommentar am zeilenende war               
+     //************************************************************
+
+     if KOMMC . FIRST_IN_LINE then
+       begin
+         WRITELN ( AUSGABE ) ;
+         ZZAUS := ZZAUS + 1 ;
+         KOMMC . NEUZEILE_VORM := TRUE ;
+       end (* then *)
+     else
+       begin
+         if KOMMC . LAST_IN_LINE then
+           KOMMC . NEUZEILE_VORM := TRUE ;
+       end (* else *)
    end (* WRITEKOMM *) ;
 
 
 
-procedure KOMMENTAR ( var KOMMC : KOMMCTL ) ;
+procedure WORK_KOMMENTAR ( var KOMMC : KOMM_CONT ) ;
 
 (********************************************************************)
 (*                                                                  *)
-(*   OKTOBER 2011: KOMMENTARLOGIK NEU - ZUSTANDSGETRIEBEN           *)
-(*                                                                  *)
-(*   KOMMKASTEN: BOOLEAN - LEGT FEST, OB WIR AKTUELL KASTEN         *)
-(*   WOLLEN ODER NICHT                                              *)
-(*                                                                  *)
-(*   KOMMSTATUS: ZUSTAND DER KOMMENTARBEARBEITUNG                   *)
-(*                                                                  *)
-(*   0 = AUSSERHALB VON KOMMENTAREN                                 *)
-(*   1 = INNERHALB KOMMENTARKASTEN-BEARBEITUNG                      *)
-(*   2 = NOCH UNKLAR                                                *)
-(*                                                                  *)
-(*   EINRKOMM: POSITION, AB DER KOMMENTAR BEGINNT                   *)
-(*                                                                  *)
-(*   ZUNAECHST EINLESEN DES KOMMENTARS ODER DER ERSTEN              *)
-(*   100 ZEICHEN IN DEN BUFFER KOMMC.KOMMP                          *)
-(*   WENN SICH DANN HERAUSSTELLT, DASS ES BEREITS EIN               *)
-(*   KOMMENTARKASTEN-ANFANG IST, DESSEN LAENGE FESTHALTEN           *)
-(*   UND DEN ZUSTAND BEIBEHALTEN                                    *)
-(*                                                                  *)
-(*   WENN NICHT: KOMMENTAR ENTSPRECHEND STUECKELN;                  *)
-(*   MAXIMALE LAENGE ERGIBT SICH AUS EINRKOMM                       *)
+(*   August 2019 - KOMMENTARLOGIK komplett neu                      *)
 (*                                                                  *)
 (********************************************************************)
 
 
-   var DICHTSAVE : BOOLEAN ;
-       KOMMKASTEN : BOOLEAN ;
-       KOMMOUT : INTEGER ;
-
-   begin (* KOMMENTAR *)
-     KOMMKASTEN := FALSE ;
-     KOMMC . ENDOFKOMM := FALSE ;
-     KOMMC . ANZKOMM := 1 ;
-     KOMMC . ZUSTAND := 1 ;
-     KOMMC . NURSTERNE := FALSE ;
-     READKOMM ( KOMMC ) ;
-
-     (************************************************)
-     (*   ABKLAEREN, OB KOMMENTAR UEBERLESEN WERDEN  *)
-     (*   MUSS                                       *)
-     (************************************************)
-
-     DICHTSAVE := DICHT ;
-     if KOMMC . UEBERLESEN <> 0 then
-       DICHT := TRUE ;
-     if KOMMC . KOMMTYPE = '"' then
-       if KOMMC . KOMML <= 4 then
-         DICHT := TRUE ;
-
-     (************************************************)
-     (*   DICHT = KOMMENTAR UEBERLESEN               *)
-     (************************************************)
-
+   begin (* WORK_KOMMENTAR *)
      if DICHT then
+       return ;
+
+     //*****************************************************
+     //   wenn Kommentar vor prozedur, dann entsprechend    
+     //   viele Leerzeilen vor kommentar                    
+     //*****************************************************
+
+     if KOMMC . KOMM_VOR_PROC then
        begin
-         while not KOMMC . ENDOFKOMM do
-           READKOMM ( KOMMC )
-       end (* then *)
-     else
-       begin
-         if KOMMC . KOMM_VOR_PROC then
-           begin
-             NEUZEILEKOMM ( FALSE ) ;
-             NEUZEILEKOMM ( FALSE ) ;
-             NEUZEILEKOMM ( FALSE ) ;
-             NEUZEILEKOMM ( FALSE ) ;
-             KOMMC . KOMM_VOR_PROC := FALSE ;
-             KOMMC . SYMB_VOR_KOMM := FALSE ;
-           end (* then *) ;
-         if not KOMMC . SYMB_VOR_KOMM then
-           begin
-             KOMMC . LINENR_LAST := - 1 ;
-             KOMMC . LINEPOS_LAST := - 1 ;
-             KOMMC . KOMML_MAX := - 1 ;
-           end (* then *) ;
-         case KOMMC . KOMMSTATUS of
-           0 : begin
-                 if KOMMC . SYMB_VOR_KOMM then
-                   begin
-                     if FALSE then
-                       begin
-                         WRITELN ( TRACEF , 'symb_vor_komm' ) ;
-                         WRITELN ( TRACEF , 'komml      = ' , KOMMC .
-                                   KOMML ) ;
-                         WRITELN ( TRACEF , 'komml_aus  = ' , KOMMC .
-                                   KOMML_AUS ) ;
-                         WRITELN ( TRACEF , 'linepos    = ' , KOMMC .
-                                   LINEPOS ) ;
-                         WRITELN ( TRACEF , 'outpointer = ' ,
-                                   OUTPOINTER ) ;
-                       end (* then *) ;
-                     if KOMMC . LINENR = KOMMC . LINENR_LAST + 1 then
-                       begin
-                         KOMMOUT := KOMMC . LINEPOS_LAST ;
-                         if KOMMC . KOMML_MAX < KOMMC . KOMML then
-                           KOMMC . KOMML_MAX := KOMMC . KOMML ;
-                       end (* then *)
-                     else
-                       begin
-                         KOMMOUT := KOMMC . LINEPOS ;
-                         KOMMC . KOMML_MAX := KOMMC . KOMML ;
-                       end (* else *) ;
-                     if SY = COMMENT5 then
-                       KOMMC . KOMML_AUS := KOMMC . KOMML
-                     else
-                       KOMMC . KOMML_AUS := KOMMC . KOMML_MAX ;
-                     if OUTPOINTER < KOMMOUT then
-                       begin
-                         WRITE ( AUSGABE , ' ' : KOMMOUT - OUTPOINTER )
-                                 ;
-                         OUTPOINTER := KOMMOUT ;
-                       end (* then *) ;
-                     KOMMC . LINENR_LAST := KOMMC . LINENR ;
-                     KOMMC . LINEPOS_LAST := KOMMOUT ;
-                   end (* then *)
-                 else
-                   begin
-                     if VERARB_MODUS > 2 then
-                       begin
-                         NEUZEILEKOMM ( FALSE ) ;
-                         NEUZEILEKOMM ( TRUE ) ;
-                       end (* then *) ;
-                     if VERARB_MODUS = 2 then
-                       NEUZEILEKOMM ( TRUE ) ;
+         NEUZEILEKOMM ( 0 ) ;
+         NEUZEILEKOMM ( 0 ) ;
+         NEUZEILEKOMM ( 0 ) ;
+         NEUZEILEKOMM ( 0 ) ;
+         KOMMC . KOMM_VOR_PROC := FALSE ;
+         KOMMC . FIRST_IN_LINE := TRUE ;
+       end (* then *) ;
 
-     /*************************************************/
-     /* SCHAUEN, OB KASTEN EINGEFUEGT WERDEN MUSS     */
-     /* a) wenn nursterne, kein kasten; laenge ist    */
-     /*    dann bereits klar                          */
-     /* b) andernfalls kasten, laenge nach neuer      */
-     /*    formel; gleiches gilt auch, wenn komm.     */
-     /*    unvollstaendig                             */
-     /*************************************************/
+     //**********************************************
+     //   AUSGEBEN DES KOMMENTARS                    
+     //**********************************************
 
-                     if KOMMC . NURSTERNE then
-                       begin
-                         KOMMKASTEN := FALSE ;
-                         KOMMC . KOMML_AUS := KOMMC . KOMML ;
-                       end (* then *)
-                     else
-                       begin
-                         KOMMKASTEN := TRUE ;
-                         KOMMC . KOMML_AUS := MAXWIDTH - 2 * EINRKOMM ;
-                       end (* else *) ;
-                     if not KOMMC . ENDOFKOMM then
-                       begin
-                         KOMMKASTEN := TRUE ;
-                         KOMMC . KOMML_AUS := MAXWIDTH - 2 * EINRKOMM ;
-                       end (* then *) ;
-                     if KOMMC . KOMML > KOMMC . KOMML_AUS then
-                       KOMMC . KOMML_AUS := MAXWIDTH - EINRKOMM ;
-                     if KOMMC . KOMML > KOMMC . KOMML_AUS then
-                       KOMMKASTEN := TRUE ;
-
-     (************************************************)
-     (*   NEUER KOMMC.KOMMSTATUS ABH. VOM KASTEN     *)
-     (************************************************)
-
-                     if KOMMKASTEN then
-                       begin
-                         KOMMC . KOMMSTATUS := 1 ;
-                         KOMMC . EINRKASTEN := EINRKOMM ;
-                       end (* then *)
-                     else
-                       KOMMC . KOMMSTATUS := 2 ;
-
-     (************************************************)
-     (*   KOMMC.KOMML_AUS FESTLEGEN                  *)
-     (************************************************)
-
-                     if KOMMC . KOMML_AUS < 10 then
-                       KOMMC . KOMML_AUS := 10 ;
-                     if KOMMC . KOMML_AUS > MAXWIDTH - EINRKOMM then
-                       KOMMC . KOMML_AUS := MAXWIDTH - EINRKOMM ;
-                   end (* else *)
-               end (* tag/ca *) ;
-           1 : begin
-                 if VERARB_MODUS >= 2 then
-                   NEUZEILEKOMM ( TRUE ) ;
-               end (* tag/ca *) ;
-           2 : begin
-                 if VERARB_MODUS >= 2 then
-                   NEUZEILEKOMM ( TRUE ) ;
-               end (* tag/ca *) ;
-         end (* case *) ;
-
-     (************************************************)
-     (*   AUSGEBEN DES KOMMENTARS                    *)
-     (*   wenn kasten, vorher kasten ausgeben        *)
-     (*   und kasten nachher planen                  *)
-     (************************************************)
-
-         if KOMMKASTEN then
-           begin
-             ENDEKASTEN := 'J' ;
-             KOMMSTERNZEILE ;
-             NEUZEILEKOMM ( TRUE ) ;
-           end (* then *) ;
-         WRITEKOMM ( KOMMC ) ;
-       end (* else *) ;
-     DICHT := DICHTSAVE ;
-   end (* KOMMENTAR *) ;
+     WRITEKOMM ( KOMMC ) ;
+   end (* WORK_KOMMENTAR *) ;
 
 
 
@@ -1467,9 +1447,40 @@ procedure INSYMBOL ;
       end (* MODSTRING *) ;
 
 
+   procedure CHECK_KOMMENTARVORH ;
+
+   //****************************************************************
+   // bei neuem kommentar(teil) pruefen,                             
+   // ob evtl. seit letztem kommentar(teil)                          
+   // eine leerzeile vorhanden ist oder war -                        
+   // falls ja, diesen bestehenden kommentar abschliessen            
+   //****************************************************************
+
+
+      begin (* CHECK_KOMMENTARVORH *)
+        if SCB . LINENR - KOMMC . LINENR > 1 then
+          if KOMMC . KOMM_NLINES > 0 then
+            begin
+              WORK_KOMMENTAR ( KOMMC ) ;
+              KOMMC . KOMM_NLINES := 0 ;
+              KOMMC . KLINE_ANKER := NIL ;
+              KOMMC . KLINE_AKT := NIL ;
+            end (* then *)
+      end (* CHECK_KOMMENTARVORH *) ;
+
+
    begin (* INSYMBOL *)
      VAL . IVAL := 0 ;
      VAL . STRTYPE := ' ' ;
+
+     //************************************************************
+     // kommentarinformationen hier auf anfangszustand             
+     // ggf. mehrere kommentare zusammenfassen                     
+     //************************************************************
+
+     KOMMC . KOMM_NLINES := 0 ;
+     KOMMC . KLINE_ANKER := NIL ;
+     KOMMC . KLINE_AKT := NIL ;
 
      (**********************************************************)
      (*   schleife, z.b. wg. blanks und kommentaren            *)
@@ -1492,27 +1503,26 @@ procedure INSYMBOL ;
          SYLENGTH := SCB . LSYMBOL ;
          LINECNT := SCB . LINENR ;
          if FALSE then
-           WRITELN ( TRACEF , 'nach passcan: sy = ' , SY : 30 ,
-                     ' zeile/spalte = ' , SCB . LINENR , SCB . LINEPOS
-                     , KOMMC . LINENR ) ;
-         if SCB . LINENR <> KOMMC . LINENR then
+           WRITELN ( TRACEF , 'nach passcan: sy = ' , SY : 20 ,
+                     ' zeile/spalte = ' , SCB . LINENR : 5 , SCB .
+                     LINEPOS : 5 , KOMMC . LINENR : 5 ) ;
+
+     //************************************************************
+     // check, if still on same line                               
+     // (compare, if lastscbline is still valid)                   
+     // if not, reset switch "symb_vor_komm"                       
+     // if symbol found which is no comment,                       
+     // set switch "symb_vor_komm"                                 
+     //************************************************************
+
+         if KOMMC . LASTSCBLINE <> SCB . LINENR then
            begin
-
-     //**************************************************
-     // zeilenwechsel seit letztem Passcan-Aufruf        
-     //**************************************************
-
-             KOMMC . LINENR := SCB . LINENR ;
+             KOMMC . LASTSCBLINE := SCB . LINENR ;
              KOMMC . SYMB_VOR_KOMM := FALSE ;
            end (* then *) ;
          if not ( SY in [ SEPARATOR , COMMENT1 , COMMENT2 , COMMENT3 ,
          COMMENT4 , COMMENT5 ] ) then
            begin
-
-     //**************************************************
-     // ein "echtes" symbol wurde gefunden               
-     //**************************************************
-
              KOMMC . SYMB_VOR_KOMM := TRUE ;
            end (* then *) ;
 
@@ -1531,42 +1541,47 @@ procedure INSYMBOL ;
              continue ;
            COMMENT1 :
              begin
+               CHECK_KOMMENTARVORH ;
                KOMMC . KOMMTYPE := '/' ;
+               KOMMC . LINENR := SCB . LINENR ;
                KOMMC . LINEPOS := SCB . LINEPOS - 2 ;
-               KOMMENTAR ( KOMMC ) ;
-               KOMMC . UEBERLESEN := 0 ;
+               READKOMM ( KOMMC ) ;
                continue ;
              end (* tag/ca *) ;
            COMMENT2 :
              begin
+               CHECK_KOMMENTARVORH ;
                KOMMC . KOMMTYPE := ')' ;
+               KOMMC . LINENR := SCB . LINENR ;
                KOMMC . LINEPOS := SCB . LINEPOS - 2 ;
-               KOMMENTAR ( KOMMC ) ;
-               KOMMC . UEBERLESEN := 0 ;
+               READKOMM ( KOMMC ) ;
                continue ;
              end (* tag/ca *) ;
            COMMENT3 :
              begin
+               CHECK_KOMMENTARVORH ;
                KOMMC . KOMMTYPE := '}' ;
+               KOMMC . LINENR := SCB . LINENR ;
                KOMMC . LINEPOS := SCB . LINEPOS - 2 ;
-               KOMMENTAR ( KOMMC ) ;
-               KOMMC . UEBERLESEN := 0 ;
+               READKOMM ( KOMMC ) ;
                continue ;
              end (* tag/ca *) ;
            COMMENT4 :
              begin
+               CHECK_KOMMENTARVORH ;
                KOMMC . KOMMTYPE := '"' ;
+               KOMMC . LINENR := SCB . LINENR ;
                KOMMC . LINEPOS := SCB . LINEPOS - 2 ;
-               KOMMENTAR ( KOMMC ) ;
-               KOMMC . UEBERLESEN := 0 ;
+               READKOMM ( KOMMC ) ;
                continue ;
              end (* tag/ca *) ;
            COMMENT5 :
              begin
+               CHECK_KOMMENTARVORH ;
                KOMMC . KOMMTYPE := '+' ;
+               KOMMC . LINENR := SCB . LINENR ;
                KOMMC . LINEPOS := SCB . LINEPOS - 2 ;
-               KOMMENTAR ( KOMMC ) ;
-               KOMMC . UEBERLESEN := 0 ;
+               READKOMM ( KOMMC ) ;
                continue ;
              end (* tag/ca *) ;
 
@@ -1838,6 +1853,13 @@ procedure INSYMBOL ;
        end (* then *) ;
 
      (**********************************************************)
+     (*   hier kommentare ausgeben                             *)
+     (**********************************************************)
+
+     if KOMMC . KOMM_NLINES > 0 then
+       WORK_KOMMENTAR ( KOMMC ) ;
+
+     (**********************************************************)
      (*   unexpected eof is a fatal error                      *)
      (**********************************************************)
 
@@ -1875,21 +1897,6 @@ procedure NEUZEILE ( BLANKS : BOOLEAN ) ;
      EIN := EINR ;
      if EIN > MAXEINR then
        EIN := MAXEINR ;
-     if not DICHT then
-       begin
-         if KOMMC . KOMMSTATUS = 1 then
-           begin
-             NEUZEILEKOMM ( FALSE ) ;
-             KOMMENDEKASTEN ;
-           end (* then *)
-         else
-           if KOMMC . KOMMSTATUS = 2 then
-             begin
-               WRITELN ( AUSGABE ) ;
-               ZZAUS := ZZAUS + 1 ;
-             end (* then *) ;
-       end (* then *) ;
-     KOMMC . KOMMSTATUS := 0 ;
      WRITELN ( AUSGABE ) ;
      ZZAUS := ZZAUS + 1 ;
      if BLANKS then
@@ -1904,7 +1911,7 @@ procedure NEUZEILE ( BLANKS : BOOLEAN ) ;
 
      //************************************************************
      // neuzeile_vorm loeschen                                     
-     // von c++ kommentar getriggerte leerzeile                    
+     // von kommentar getriggerte leerzeile                        
      // soll nur geschrieben werden, wenn nicht schon              
      // eine andere leerzeile sowieso erzeugt wird                 
      //************************************************************
@@ -1947,30 +1954,9 @@ procedure OUTSYMBOL ( S : SYMB ) ;
        CH : CHAR ;
 
    begin (* OUTSYMBOL *)
-     if not DICHT then
-       if KOMMC . KOMMSTATUS > 0 then
-         begin
-           if KOMMC . KOMMSTATUS = 1 then
-             begin
-               NEUZEILEKOMM ( FALSE ) ;
-               KOMMENDEKASTEN ;
-             end (* then *)
-           else
-             if KOMMC . KOMMSTATUS = 2 then
-               begin
-                 WRITELN ( AUSGABE ) ;
-                 ZZAUS := ZZAUS + 1 ;
-               end (* then *) ;
-           if VERARB_MODUS > 2 then
-             NEUZEILE ( TRUE )
-           else
-             if not DICHT then
-               WRITE ( AUSGABE , ' ' )
-         end (* then *) ;
-     KOMMC . KOMMSTATUS := 0 ;
 
      //************************************************************
-     // letztes symbol war c++ kommentar                           
+     // neuzeile angefordert wg. KOmmentar                         
      //************************************************************
 
      if KOMMC . NEUZEILE_VORM then
@@ -3165,6 +3151,7 @@ procedure INIT_SCANNER ;
      SCB . LINENR := 0 ;
      SCB . LINEPOS := 1 ;
      SCB . LINELEN := 0 ;
+     SCB . SKIPPING := FALSE ;
      SCB . FEANFANG := NIL ;
      SCB . FTTAB := NIL ;
      SCB . FTTABA := NIL ;
@@ -3206,19 +3193,15 @@ procedure INIT_SCANNER ;
 begin (* HAUPTPROGRAMM *)
   REWRITE ( TRACEF ) ;
   VERARB_MODUS := 4 ;
-  KOMMC . KOMML := 0 ;
-  KOMMC . ENDOFKOMM := FALSE ;
-  KOMMC . ANZKOMM := 0 ;
-  KOMMC . ZUSTAND := 0 ;
+  KOMMC . LASTSCBLINE := - 1 ;
   KOMMC . KOMMTYPE := ' ' ;
-  KOMMC . NURSTERNE := FALSE ;
-  KOMMC . KOMMSTATUS := 0 ;
   KOMMC . KOMM_VOR_PROC := FALSE ;
   KOMMC . LINENR := - 1 ;
   KOMMC . LINEPOS := - 1 ;
-  KOMMC . LINENR_LAST := - 1 ;
-  KOMMC . LINEPOS_LAST := - 1 ;
-  KOMMC . KOMML_MAX := - 1 ;
+  KOMMC . KOMM_NLINES := 0 ;
+  KOMMC . KOMM_WIDTH := 0 ;
+  KOMMC . KLINE_ANKER := NIL ;
+  KOMMC . KLINE_AKT := NIL ;
   KOMMC . NEUZEILE_VORM := FALSE ;
 
   (***********************************************)
@@ -3264,7 +3247,6 @@ begin (* HAUPTPROGRAMM *)
   INC := 2 ;
   BLANKSVORHANDEN := FALSE ;
   KOMMC . UEBERLESEN := 0 ;
-  ENDEKASTEN := ' ' ;
   INSQLSTATE := FALSE ;
   SQLHOSTV := FALSE ;
   ZZAUS := 0 ;

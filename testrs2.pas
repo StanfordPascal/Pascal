@@ -15,12 +15,14 @@ var S : STRING ( 100 ) ;
     F : CHAR ( 10 ) ;
     V : STRING ( 100 ) ;
     R : REAL ;
+    B1 : BOOLEAN ;
+    B2 : BOOLEAN ;
 
 
 begin (* HAUPTPROGRAMM *)
 
   //**************
-  // first tests
+  // first tests  
   //**************
 
   WRITELN ( 'first tests' ) ;
@@ -34,7 +36,7 @@ begin (* HAUPTPROGRAMM *)
   WRITELN ( 'v           = ' , V ) ;
 
   //********************************
-  // tests from pascal/vs brochure
+  // tests from pascal/vs brochure  
   //********************************
 
   WRITELN ( 'test pascal/vs example' ) ;
@@ -48,8 +50,25 @@ begin (* HAUPTPROGRAMM *)
   WRITELN ( 's1          = ' , S1 ) ;
   WRITELN ( 'length(s1)  = ' , LENGTH ( S1 ) : 1 ) ;
 
+  //********************************
+  // tests with boolean             
+  //********************************
+
+  WRITELN ( 'test with boolean' ) ;
+  S := '36 245FALABCDETFGHIJK' ;
+  READSTR ( S , I , J : 3 , CH , B2 : 3 , CC : 5 , B1 , S1 ) ;
+  WRITELN ( 'source   s  = ' , S ) ;
+  WRITELN ( 'i           = ' , I : 1 ) ;
+  WRITELN ( 'j           = ' , J : 1 ) ;
+  WRITELN ( 'ch          = ' , CH ) ;
+  WRITELN ( 'cc          = ' , CC ) ;
+  WRITELN ( 's1          = ' , S1 ) ;
+  WRITELN ( 'length(s1)  = ' , LENGTH ( S1 ) : 1 ) ;
+  WRITELN ( 'b1          = ' , B1 ) ;
+  WRITELN ( 'b2          = ' , B2 ) ;
+
   //*************
-  // more tests
+  // more tests  
   //*************
 
   WRITELN ( 'more tests' ) ;

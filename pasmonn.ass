@@ -4167,30 +4167,14 @@ RDB6     STC   RSLT,0(R2)          STORE THE RESULT
 *
          DS    0H
          DC    CL4'RDC'
-RDC      DS    0H
+RDCOLD   DS    0H
          FILADR ,
 *
          BAL   R5,PAFCHK           CHECK FILE STATUS
          IC    R0,PFILCOMP(AD)
          STC   R0,0(R2)
-*
-*        STM   R1,R5,SAVERDI
-*        ST    R15,SAVERDI2
-*        SR    R0,R0
-*        IC    R0,PFILCOMP(AD)     GET FILE BUFFER (= CHAR)
-*        CVD   R0,DOWO
-*        UNPK  TRRDC1+21(9),DOWO+3(5)
-*        OI    TRRDC1+29,X'F0'
-*        LA    R3,TRRDC1
-*        L     R15,=A(PTRACE)
-*        BALR  R14,R15
-*        L     R15,SAVERDI2
-*        LM    R1,R5,SAVERDI
-*
          BAL   R5,PAFGFE
          B     RTN
-*
-TRRDC1   DC    CL80'TRACE: ZEICHEN RDC = XXXXXXXXX'
 *
 *
 *
@@ -4481,6 +4465,12 @@ HEX9     DS    CL9
 *        R2 = ADDR. OF CHAR
 *        R3 = field width (-1 = default)
 *****************************************************************
+*        change 27.08.2020:
+*        ignore target addr in R2
+*        return result (char) in R3, because the compiler
+*        expects it there. The compiler generates CHK instruction
+*        and then STO C to store the result into target
+*****************************************************************
 *
          DS    0H
          DC    CL4'RFC'
@@ -4495,18 +4485,58 @@ RFC      DS    0H
 RFC02    DS    0H
          BAL   R5,PAFCHK           check file status
 *
-         IC    R0,PFILCOMP(AD)     insert char from file buffer
-         STC   R0,0(R2)            store into target
+         XR    R4,R4               set R4 to zero (for temp result)
+         IC    R4,PFILCOMP(AD)     insert char from file buffer
 *
 RFC03    DS    0H
          BAL   R5,PAFGFE           get next character
          CLI   FILEOLN(AE),TRUE    if eoln leave loop
-         BE    RTN
+         BE    RFCXX
          BCT   R3,RFC03            repeat get until r3 = zero
+         B     RFCXX               and quit
+*
+RFC01    DS    0H
+         LA    R3,FILBLA           store blank into target reg
+         B     RTNR3               and quit
+*
+RFCXX    DS    0H
+         LR    R3,R4               result into register R3
+         B     RTNR3               and quit
+*
+*
+*
+*****************************************************************
+*        RDC (READ CHAR FROM FILE)
+*        same as RFC to support RFC change ... 25.08.2020
+*        R2 = ADDR. OF CHAR
+*        R3 = field width (-1 = default)
+*****************************************************************
+*
+         DS    0H
+         DC    CL4'RDC'
+RDC      DS    0H
+         FILADR ,
+*
+         LTR   R3,R3               check field width
+         BZ    RDC01               if zero read nothing
+         BP    RDC02               if positive use it as is
+         LA    R3,1                otherwise set to 1 (default)
+*
+RDC02    DS    0H
+         BAL   R5,PAFCHK           check file status
+*
+         IC    R0,PFILCOMP(AD)     insert char from file buffer
+         STC   R0,0(R2)            store into target
+*
+RDC03    DS    0H
+         BAL   R5,PAFGFE           get next character
+         CLI   FILEOLN(AE),TRUE    if eoln leave loop
+         BE    RTN
+         BCT   R3,RDC03            repeat get until r3 = zero
 *
          B     RTN                 and quit
 *
-RFC01    DS    0H
+RDC01    DS    0H
          LA    R0,FILBLA           store blank
          STC   R0,0(R2)            into target
          B     RTN                 and quit
@@ -4901,13 +4931,30 @@ WRX      DS    0H
          BM    WRXERR              branch to WRXERR
          ST    R3,PINT+4           Store R3
          LH    R2,0(R4)            Load offset of highest Scalar
+         LTR   R2,R2               if zero, new layout of meta info
+         BNZ   WRX1
+         LH    R2,2(R4)            this is max scalar value plus 1
+         BCTR  R2,0                max Scalar value
+         C     R2,PINT             compare max value with parm
+         BL    WRXERR              branch to WRXERR
+*
+         S     R2,PINT             value is ok, subtract parm
+         SLA   R2,2                multiply by 4, = offset of entry
+         LH    R3,10(R2,R4)        length of string
+         LH    R2,8(R2,R4)         offset of string
+         AR    R2,R4               address of string
+         LR    R4,R3               copy to R4
+         L     R3,PINT+4           restore R3
+         B     WRXC
+*
+WRX1     DS    0H
          SRA   R2,2                divide by 4, = max scalar plus 1
          BCTR  R2,0                max Scalar value
          C     R2,PINT             compare max value with parm
          BL    WRXERR              branch to WRXERR
 *
          S     R2,PINT             value is ok, subtract parm
-         SLA   R2,2                multply by 4, = offset of entry
+         SLA   R2,2                multiply by 4, = offset of entry
          LH    R3,2(R2,R4)         length of string
          LH    R2,0(R2,R4)         offset of string
          AR    R2,R4               address of string
@@ -5868,7 +5915,7 @@ RTN      DS    0H
          C     R13,=A(CSPSTCK1)    R13 in Pascal stack ?
          BNE   RTNEW               yes, new return
          MVI   SCHCSP,X'00'        CLEAR CSP FLAG
-         LM    R1,R15,SPUSERSA    'RSLT' REG SHOULD NOT BE RESTORED !
+         LM    R1,R15,SPUSERSA     rslt reg SHOULD NOT BE RESTORED !
          BR    14
 *
 RTNEWR2  DS    0H
@@ -5880,6 +5927,15 @@ RTNEW    DS    0H
          MVI   SCHCSP,X'00'        CLEAR CSP FLAG
          LM    R14,R15,12(R13)
          LM    R1,R12,24(R13)
+         L     R13,4(R13)          und jetzt nochmal zurueck
+         BR    14
+*
+RTNR3    DS    0H
+         L     R13,4(R13)          zunaechst nur einmal zurueck
+         MVI   SCHCSP,X'00'        CLEAR CSP FLAG
+         LM    R14,R15,12(R13)
+         LM    R1,R2,24(R13)
+         LM    R4,R12,36(R13)
          L     R13,4(R13)          und jetzt nochmal zurueck
          BR    14
 *

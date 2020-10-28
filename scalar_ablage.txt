@@ -1,0 +1,47 @@
+
+bisher:
+
+type FARBE = ( GELB , ROT , GRUEN , BLAU ) ;
+
+wird zu
+
+ LOC 9
+16 DFC H,16
+18 DFC H,4
+20 DFC H,21
+22 DFC H,5
+24 DFC H,27
+26 DFC H,3
+28 DFC H,31
+30 DFC H,4
+32 DFC M,'BLAU '
+37 DFC M,'GRUEN '
+43 DFC M,'ROT '
+47 DFC M,'GELB '
+52 DFC M,'*'
+
+dabei gibt der Offset beim ersten Element gleichzeitig
+die Anzahl der Elemente an (mal 4)
+
+jetzt brauchen wir:
+
+fuer das Schreiben Ablage wie bisher, d.h.
+Ablage anhand Index.
+
+fuer das Lesen Ablage nach Sortierung fuer bin. Suche
+
+also zwei Index-Tabellen.
+
+Vorneweg eine Tabelle bzw. Struktur mit Meta-Informationen:
+
+Offset 0: -1, um neue Ablage der Metainfos anzuzeigen
+Offset 2: Anzahl Elemente (Nummer des groessten Elements plus 1)
+Offset 4: Maximal-Laenge eines Elements (<= 20)
+Offset 6: Minimal-Laenge fuer Eindeutigkeit (im Beispiel 2)
+Offset 8: Schreib-Index-Tabelle (wie oben)
+Offset 8 + n*4: Lese-Index-Tabelle (Elemente sortiert nach Namen)
+Offset 8 + 2*n*4: die Elemente selbst (wie oben)
+
+die relativen Positionsangaben beziehen sich immer auf
+den Anfang der Meta-Struktur
+

@@ -59,11 +59,11 @@ type CHARPTR = -> CHAR ;
      SYMB = ( SYMB_EOF , SYMB_UNKNOWN , EOLCHAR , SEPARATOR , COMMENT1
             , COMMENT2 , COMMENT3 , COMMENT4 , COMMENT5 , STRINGCONST ,
             HEXSTRINGCONST , BINSTRINGCONST , INTCONST , INTDOTDOT ,
-            REALCONST , IDENT , SYLPARENT , SYRPARENT , SYLBRACK ,
-            SYRBRACK , SYCOMMA , SYSEMICOLON , SYARROW , SYPERIOD ,
-            SYDOTDOT , SYCOLON , SYPLUS , SYMINUS , SYMULT , SYSLASH ,
-            SYEQOP , SYNEOP , SYGTOP , SYLTOP , SYGEOP , SYLEOP ,
-            SYOROP , SYANDOP , SYASSIGN , SYCONCAT ) ;
+            INTRBRACK , REALCONST , IDENT , SYLPARENT , SYRPARENT ,
+            SYLBRACK , SYRBRACK , SYCOMMA , SYSEMICOLON , SYARROW ,
+            SYPERIOD , SYDOTDOT , SYCOLON , SYPLUS , SYMINUS , SYMULT ,
+            SYSLASH , SYEQOP , SYNEOP , SYGTOP , SYLTOP , SYGEOP ,
+            SYLEOP , SYOROP , SYANDOP , SYASSIGN , SYCONCAT ) ;
 
      /***********************************/
      /* Ende generierte Deklaration     */
@@ -1348,46 +1348,47 @@ procedure PASSCAN ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB :
             42 : SCB . SYMBOLNR := INTCONST ;
             44 : SCB . SYMBOLNR := INTCONST ;
             47 : SCB . SYMBOLNR := INTDOTDOT ;
-            54 : SCB . SYMBOLNR := REALCONST ;
-            56 : SCB . SYMBOLNR := REALCONST ;
+            50 : SCB . SYMBOLNR := INTRBRACK ;
             57 : SCB . SYMBOLNR := REALCONST ;
-            63 : SCB . SYMBOLNR := REALCONST ;
-            65 : SCB . SYMBOLNR := REALCONST ;
+            59 : SCB . SYMBOLNR := REALCONST ;
+            60 : SCB . SYMBOLNR := REALCONST ;
             66 : SCB . SYMBOLNR := REALCONST ;
-            67 : SCB . SYMBOLNR := IDENT ;
-            68 : SCB . SYMBOLNR := IDENT ;
-            70 : SCB . SYMBOLNR := SYRPARENT ;
-            71 : SCB . SYMBOLNR := SYLBRACK ;
-            75 : SCB . SYMBOLNR := SYRBRACK ;
-            79 : SCB . SYMBOLNR := SYCOMMA ;
-            80 : SCB . SYMBOLNR := SYSEMICOLON ;
-            82 : SCB . SYMBOLNR := SYARROW ;
-            85 : SCB . SYMBOLNR := SYDOTDOT ;
-            87 : SCB . SYMBOLNR := SYPLUS ;
-            89 : SCB . SYMBOLNR := SYMULT ;
-            91 : SCB . SYMBOLNR := SYEQOP ;
-            93 : SCB . SYMBOLNR := SYNEOP ;
-            97 : SCB . SYMBOLNR := SYGEOP ;
-            99 : SCB . SYMBOLNR := SYLEOP ;
-            101 : SCB . SYMBOLNR := SYANDOP ;
-            103 : SCB . SYMBOLNR := SYASSIGN ;
-            105 : SCB . SYMBOLNR := SYCONCAT ;
-            106 : SCB . SYMBOLNR := SYLPARENT ;
-            107 : SCB . SYMBOLNR := SYMINUS ;
-            108 : SCB . SYMBOLNR := SYPERIOD ;
-            109 : SCB . SYMBOLNR := SYSLASH ;
-            110 : SCB . SYMBOLNR := INTCONST ;
-            111 : SCB . SYMBOLNR := INTCONST ;
-            112 : SCB . SYMBOLNR := SYCOLON ;
-            113 : SCB . SYMBOLNR := SYLTOP ;
-            114 : SCB . SYMBOLNR := SYGTOP ;
-            115 : SCB . SYMBOLNR := IDENT ;
-            116 : SCB . SYMBOLNR := IDENT ;
-            117 : SCB . SYMBOLNR := IDENT ;
+            68 : SCB . SYMBOLNR := REALCONST ;
+            69 : SCB . SYMBOLNR := REALCONST ;
+            70 : SCB . SYMBOLNR := IDENT ;
+            71 : SCB . SYMBOLNR := IDENT ;
+            73 : SCB . SYMBOLNR := SYRPARENT ;
+            74 : SCB . SYMBOLNR := SYLBRACK ;
+            78 : SCB . SYMBOLNR := SYRBRACK ;
+            82 : SCB . SYMBOLNR := SYCOMMA ;
+            83 : SCB . SYMBOLNR := SYSEMICOLON ;
+            85 : SCB . SYMBOLNR := SYARROW ;
+            88 : SCB . SYMBOLNR := SYDOTDOT ;
+            90 : SCB . SYMBOLNR := SYPLUS ;
+            92 : SCB . SYMBOLNR := SYMULT ;
+            94 : SCB . SYMBOLNR := SYEQOP ;
+            96 : SCB . SYMBOLNR := SYNEOP ;
+            100 : SCB . SYMBOLNR := SYGEOP ;
+            102 : SCB . SYMBOLNR := SYLEOP ;
+            104 : SCB . SYMBOLNR := SYANDOP ;
+            106 : SCB . SYMBOLNR := SYASSIGN ;
+            108 : SCB . SYMBOLNR := SYCONCAT ;
+            109 : SCB . SYMBOLNR := SYLPARENT ;
+            110 : SCB . SYMBOLNR := SYMINUS ;
+            111 : SCB . SYMBOLNR := SYPERIOD ;
+            112 : SCB . SYMBOLNR := SYSLASH ;
+            113 : SCB . SYMBOLNR := INTCONST ;
+            114 : SCB . SYMBOLNR := INTCONST ;
+            115 : SCB . SYMBOLNR := SYCOLON ;
+            116 : SCB . SYMBOLNR := SYLTOP ;
+            117 : SCB . SYMBOLNR := SYGTOP ;
             118 : SCB . SYMBOLNR := IDENT ;
-            119 : SCB . SYMBOLNR := SYOROP ;
-            120 : SCB . SYMBOLNR := STRINGCONST ;
-            122 : SCB . SYMBOLNR := REALCONST ;
+            119 : SCB . SYMBOLNR := IDENT ;
+            120 : SCB . SYMBOLNR := IDENT ;
+            121 : SCB . SYMBOLNR := IDENT ;
+            122 : SCB . SYMBOLNR := SYOROP ;
+            123 : SCB . SYMBOLNR := STRINGCONST ;
+            125 : SCB . SYMBOLNR := REALCONST ;
           end (* case *) ;
         if FALSE then
           WRITELN ( 'zust = ' , ALTZUST , ' symb = ' , SCB . SYMBOLNR :
@@ -1455,91 +1456,91 @@ procedure PASSCAN ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB :
                   ' ' : ZUST := 3 ;
                   '"' : ZUST := 9 ;
                   '#' : ZUST := 3 ;
-                  '$' : ZUST := 67 ;
-                  '&' : ZUST := 101 ;
+                  '$' : ZUST := 70 ;
+                  '&' : ZUST := 104 ;
                   '''' : ZUST := 12 ;
-                  '(' : ZUST := 106 ;
-                  ')' : ZUST := 70 ;
-                  '*' : ZUST := 89 ;
-                  '+' : ZUST := 87 ;
-                  ',' : ZUST := 79 ;
-                  '-' : ZUST := 107 ;
-                  '.' : ZUST := 108 ;
-                  '/' : ZUST := 109 ;
-                  '0' : ZUST := 110 ;
-                  '1' : ZUST := 111 ;
-                  '2' : ZUST := 111 ;
-                  '3' : ZUST := 111 ;
-                  '4' : ZUST := 111 ;
-                  '5' : ZUST := 111 ;
-                  '6' : ZUST := 111 ;
-                  '7' : ZUST := 111 ;
-                  '8' : ZUST := 111 ;
-                  '9' : ZUST := 111 ;
-                  ':' : ZUST := 112 ;
-                  ';' : ZUST := 80 ;
-                  '<' : ZUST := 113 ;
-                  '=' : ZUST := 91 ;
-                  '>' : ZUST := 114 ;
-                  '@' : ZUST := 82 ;
-                  'A' : ZUST := 67 ;
-                  'B' : ZUST := 115 ;
-                  'C' : ZUST := 67 ;
-                  'D' : ZUST := 67 ;
-                  'E' : ZUST := 67 ;
-                  'F' : ZUST := 67 ;
-                  'G' : ZUST := 67 ;
-                  'H' : ZUST := 67 ;
-                  'I' : ZUST := 67 ;
-                  'J' : ZUST := 67 ;
-                  'K' : ZUST := 67 ;
-                  'L' : ZUST := 67 ;
-                  'M' : ZUST := 67 ;
-                  'N' : ZUST := 67 ;
-                  'O' : ZUST := 67 ;
-                  'P' : ZUST := 67 ;
-                  'Q' : ZUST := 67 ;
-                  'R' : ZUST := 67 ;
-                  'S' : ZUST := 67 ;
-                  'T' : ZUST := 67 ;
-                  'U' : ZUST := 67 ;
-                  'V' : ZUST := 67 ;
-                  'W' : ZUST := 67 ;
-                  'X' : ZUST := 116 ;
-                  'Y' : ZUST := 67 ;
-                  'Z' : ZUST := 67 ;
-                  '[' : ZUST := 71 ;
-                  ']' : ZUST := 75 ;
-                  '^' : ZUST := 82 ;
-                  '_' : ZUST := 67 ;
-                  'a' : ZUST := 67 ;
-                  'b' : ZUST := 117 ;
-                  'c' : ZUST := 67 ;
-                  'd' : ZUST := 67 ;
-                  'e' : ZUST := 67 ;
-                  'f' : ZUST := 67 ;
-                  'g' : ZUST := 67 ;
-                  'h' : ZUST := 67 ;
-                  'i' : ZUST := 67 ;
-                  'j' : ZUST := 67 ;
-                  'k' : ZUST := 67 ;
-                  'l' : ZUST := 67 ;
-                  'm' : ZUST := 67 ;
-                  'n' : ZUST := 67 ;
-                  'o' : ZUST := 67 ;
-                  'p' : ZUST := 67 ;
-                  'q' : ZUST := 67 ;
-                  'r' : ZUST := 67 ;
-                  's' : ZUST := 67 ;
-                  't' : ZUST := 67 ;
-                  'u' : ZUST := 67 ;
-                  'v' : ZUST := 67 ;
-                  'w' : ZUST := 67 ;
-                  'x' : ZUST := 118 ;
-                  'y' : ZUST := 67 ;
-                  'z' : ZUST := 67 ;
+                  '(' : ZUST := 109 ;
+                  ')' : ZUST := 73 ;
+                  '*' : ZUST := 92 ;
+                  '+' : ZUST := 90 ;
+                  ',' : ZUST := 82 ;
+                  '-' : ZUST := 110 ;
+                  '.' : ZUST := 111 ;
+                  '/' : ZUST := 112 ;
+                  '0' : ZUST := 113 ;
+                  '1' : ZUST := 114 ;
+                  '2' : ZUST := 114 ;
+                  '3' : ZUST := 114 ;
+                  '4' : ZUST := 114 ;
+                  '5' : ZUST := 114 ;
+                  '6' : ZUST := 114 ;
+                  '7' : ZUST := 114 ;
+                  '8' : ZUST := 114 ;
+                  '9' : ZUST := 114 ;
+                  ':' : ZUST := 115 ;
+                  ';' : ZUST := 83 ;
+                  '<' : ZUST := 116 ;
+                  '=' : ZUST := 94 ;
+                  '>' : ZUST := 117 ;
+                  '@' : ZUST := 85 ;
+                  'A' : ZUST := 70 ;
+                  'B' : ZUST := 118 ;
+                  'C' : ZUST := 70 ;
+                  'D' : ZUST := 70 ;
+                  'E' : ZUST := 70 ;
+                  'F' : ZUST := 70 ;
+                  'G' : ZUST := 70 ;
+                  'H' : ZUST := 70 ;
+                  'I' : ZUST := 70 ;
+                  'J' : ZUST := 70 ;
+                  'K' : ZUST := 70 ;
+                  'L' : ZUST := 70 ;
+                  'M' : ZUST := 70 ;
+                  'N' : ZUST := 70 ;
+                  'O' : ZUST := 70 ;
+                  'P' : ZUST := 70 ;
+                  'Q' : ZUST := 70 ;
+                  'R' : ZUST := 70 ;
+                  'S' : ZUST := 70 ;
+                  'T' : ZUST := 70 ;
+                  'U' : ZUST := 70 ;
+                  'V' : ZUST := 70 ;
+                  'W' : ZUST := 70 ;
+                  'X' : ZUST := 119 ;
+                  'Y' : ZUST := 70 ;
+                  'Z' : ZUST := 70 ;
+                  '[' : ZUST := 74 ;
+                  ']' : ZUST := 78 ;
+                  '^' : ZUST := 85 ;
+                  '_' : ZUST := 70 ;
+                  'a' : ZUST := 70 ;
+                  'b' : ZUST := 120 ;
+                  'c' : ZUST := 70 ;
+                  'd' : ZUST := 70 ;
+                  'e' : ZUST := 70 ;
+                  'f' : ZUST := 70 ;
+                  'g' : ZUST := 70 ;
+                  'h' : ZUST := 70 ;
+                  'i' : ZUST := 70 ;
+                  'j' : ZUST := 70 ;
+                  'k' : ZUST := 70 ;
+                  'l' : ZUST := 70 ;
+                  'm' : ZUST := 70 ;
+                  'n' : ZUST := 70 ;
+                  'o' : ZUST := 70 ;
+                  'p' : ZUST := 70 ;
+                  'q' : ZUST := 70 ;
+                  'r' : ZUST := 70 ;
+                  's' : ZUST := 70 ;
+                  't' : ZUST := 70 ;
+                  'u' : ZUST := 70 ;
+                  'v' : ZUST := 70 ;
+                  'w' : ZUST := 70 ;
+                  'x' : ZUST := 121 ;
+                  'y' : ZUST := 70 ;
+                  'z' : ZUST := 70 ;
                   '{' : ZUST := 8 ;
-                  '|' : ZUST := 119 ;
+                  '|' : ZUST := 122 ;
                   otherwise
                     ZUST := - 1 ;
                 end (* case *) ;
@@ -1565,14 +1566,14 @@ procedure PASSCAN ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB :
         case ZUST of
           12 : begin
                  case CH of
-                   '''' : ZUST := 120 ;
+                   '''' : ZUST := 123 ;
                    otherwise
                      ZUST := 13 ;
                  end (* case *) ;
                end (* tag/ca *) ;
           13 : begin
                  case CH of
-                   '''' : ZUST := 120 ;
+                   '''' : ZUST := 123 ;
                    otherwise
                      ZUST := 13 ;
                  end (* case *) ;
@@ -1877,44 +1878,38 @@ procedure PASSCAN ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB :
 
       begin (* SCAN0050 *)
         case ZUST of
-          52 : begin
+          55 : begin
                  if CH in ( C_ZIFFER ) then
-                   ZUST := 57
+                   ZUST := 60
                  else
                    case CH of
-                     '+' : ZUST := 53 ;
-                     '-' : ZUST := 55 ;
+                     '+' : ZUST := 56 ;
+                     '-' : ZUST := 58 ;
                      otherwise
                        ZUST := - 1 ;
                    end (* case *) ;
                end (* tag/ca *) ;
-          53 : begin
-                 if CH in ( C_ZIFFER ) then
-                   ZUST := 54
-                 else
-                   ZUST := - 1 ;
-               end (* tag/ca *) ;
-          54 : begin
-                 if CH in ( C_ZIFFER ) then
-                   ZUST := 54
-                 else
-                   ZUST := - 1 ;
-               end (* tag/ca *) ;
-          55 : begin
-                 if CH in ( C_ZIFFER ) then
-                   ZUST := 56
-                 else
-                   ZUST := - 1 ;
-               end (* tag/ca *) ;
           56 : begin
                  if CH in ( C_ZIFFER ) then
-                   ZUST := 56
+                   ZUST := 57
                  else
                    ZUST := - 1 ;
                end (* tag/ca *) ;
           57 : begin
                  if CH in ( C_ZIFFER ) then
                    ZUST := 57
+                 else
+                   ZUST := - 1 ;
+               end (* tag/ca *) ;
+          58 : begin
+                 if CH in ( C_ZIFFER ) then
+                   ZUST := 59
+                 else
+                   ZUST := - 1 ;
+               end (* tag/ca *) ;
+          59 : begin
+                 if CH in ( C_ZIFFER ) then
+                   ZUST := 59
                  else
                    ZUST := - 1 ;
                end (* tag/ca *) ;
@@ -1928,38 +1923,26 @@ procedure PASSCAN ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB :
 
       begin (* SCAN0060 *)
         case ZUST of
-          61 : begin
+          60 : begin
                  if CH in ( C_ZIFFER ) then
-                   ZUST := 66
-                 else
-                   case CH of
-                     '+' : ZUST := 62 ;
-                     '-' : ZUST := 64 ;
-                     otherwise
-                       ZUST := - 1 ;
-                   end (* case *) ;
-               end (* tag/ca *) ;
-          62 : begin
-                 if CH in ( C_ZIFFER ) then
-                   ZUST := 63
-                 else
-                   ZUST := - 1 ;
-               end (* tag/ca *) ;
-          63 : begin
-                 if CH in ( C_ZIFFER ) then
-                   ZUST := 63
+                   ZUST := 60
                  else
                    ZUST := - 1 ;
                end (* tag/ca *) ;
           64 : begin
                  if CH in ( C_ZIFFER ) then
-                   ZUST := 65
+                   ZUST := 69
                  else
-                   ZUST := - 1 ;
+                   case CH of
+                     '+' : ZUST := 65 ;
+                     '-' : ZUST := 67 ;
+                     otherwise
+                       ZUST := - 1 ;
+                   end (* case *) ;
                end (* tag/ca *) ;
           65 : begin
                  if CH in ( C_ZIFFER ) then
-                   ZUST := 65
+                   ZUST := 66
                  else
                    ZUST := - 1 ;
                end (* tag/ca *) ;
@@ -1970,26 +1953,22 @@ procedure PASSCAN ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB :
                    ZUST := - 1 ;
                end (* tag/ca *) ;
           67 : begin
-                 if CH in ( C_ZIFFER + C_BUCHST + C_KLBUCHST ) then
+                 if CH in ( C_ZIFFER ) then
                    ZUST := 68
                  else
-                   case CH of
-                     '$' : ZUST := 68 ;
-                     '_' : ZUST := 68 ;
-                     otherwise
-                       ZUST := - 1 ;
-                   end (* case *) ;
+                   ZUST := - 1 ;
                end (* tag/ca *) ;
           68 : begin
-                 if CH in ( C_ZIFFER + C_BUCHST + C_KLBUCHST ) then
+                 if CH in ( C_ZIFFER ) then
                    ZUST := 68
                  else
-                   case CH of
-                     '$' : ZUST := 68 ;
-                     '_' : ZUST := 68 ;
-                     otherwise
-                       ZUST := - 1 ;
-                   end (* case *) ;
+                   ZUST := - 1 ;
+               end (* tag/ca *) ;
+          69 : begin
+                 if CH in ( C_ZIFFER ) then
+                   ZUST := 69
+                 else
+                   ZUST := - 1 ;
                end (* tag/ca *) ;
           otherwise
             CASE_FOUND := FALSE
@@ -1997,39 +1976,47 @@ procedure PASSCAN ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB :
       end (* SCAN0060 *) ;
 
 
+   procedure SCAN0070 ;
+
+      begin (* SCAN0070 *)
+        case ZUST of
+          70 : begin
+                 if CH in ( C_ZIFFER + C_BUCHST + C_KLBUCHST ) then
+                   ZUST := 71
+                 else
+                   case CH of
+                     '$' : ZUST := 71 ;
+                     '_' : ZUST := 71 ;
+                     otherwise
+                       ZUST := - 1 ;
+                   end (* case *) ;
+               end (* tag/ca *) ;
+          71 : begin
+                 if CH in ( C_ZIFFER + C_BUCHST + C_KLBUCHST ) then
+                   ZUST := 71
+                 else
+                   case CH of
+                     '$' : ZUST := 71 ;
+                     '_' : ZUST := 71 ;
+                     otherwise
+                       ZUST := - 1 ;
+                   end (* case *) ;
+               end (* tag/ca *) ;
+          otherwise
+            CASE_FOUND := FALSE
+        end (* case *)
+      end (* SCAN0070 *) ;
+
+
    procedure SCAN0100 ;
 
       begin (* SCAN0100 *)
         case ZUST of
-          106 : begin
-                  case CH of
-                    '*' : ZUST := 7 ;
-                    '.' : ZUST := 71 ;
-                    '/' : ZUST := 71 ;
-                    otherwise
-                      ZUST := - 1 ;
-                  end (* case *) ;
-                end (* tag/ca *) ;
-          107 : begin
-                  case CH of
-                    '>' : ZUST := 82 ;
-                    otherwise
-                      ZUST := - 1 ;
-                  end (* case *) ;
-                end (* tag/ca *) ;
-          108 : begin
-                  case CH of
-                    ')' : ZUST := 75 ;
-                    '.' : ZUST := 85 ;
-                    otherwise
-                      ZUST := - 1 ;
-                  end (* case *) ;
-                end (* tag/ca *) ;
           109 : begin
                   case CH of
-                    ')' : ZUST := 75 ;
-                    '*' : ZUST := 5 ;
-                    '/' : ZUST := 11 ;
+                    '*' : ZUST := 7 ;
+                    '.' : ZUST := 74 ;
+                    '/' : ZUST := 74 ;
                     otherwise
                       ZUST := - 1 ;
                   end (* case *) ;
@@ -2045,13 +2032,37 @@ procedure PASSCAN ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB :
       begin (* SCAN0110 *)
         case ZUST of
           110 : begin
+                  case CH of
+                    '>' : ZUST := 85 ;
+                    otherwise
+                      ZUST := - 1 ;
+                  end (* case *) ;
+                end (* tag/ca *) ;
+          111 : begin
+                  case CH of
+                    ')' : ZUST := 78 ;
+                    '.' : ZUST := 88 ;
+                    otherwise
+                      ZUST := - 1 ;
+                  end (* case *) ;
+                end (* tag/ca *) ;
+          112 : begin
+                  case CH of
+                    ')' : ZUST := 78 ;
+                    '*' : ZUST := 5 ;
+                    '/' : ZUST := 11 ;
+                    otherwise
+                      ZUST := - 1 ;
+                  end (* case *) ;
+                end (* tag/ca *) ;
+          113 : begin
                   if CH in ( C_ZIFFER ) then
-                    ZUST := 111
+                    ZUST := 114
                   else
                     case CH of
-                      '.' : ZUST := 121 ;
+                      '.' : ZUST := 124 ;
                       'B' : ZUST := 40 ;
-                      'E' : ZUST := 52 ;
+                      'E' : ZUST := 55 ;
                       'X' : ZUST := 34 ;
                       '_' : ZUST := 31 ;
                       'b' : ZUST := 40 ;
@@ -2060,94 +2071,63 @@ procedure PASSCAN ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB :
                         ZUST := - 1 ;
                     end (* case *) ;
                 end (* tag/ca *) ;
-          111 : begin
+          114 : begin
                   if CH in ( C_ZIFFER ) then
-                    ZUST := 111
+                    ZUST := 114
                   else
                     case CH of
-                      '.' : ZUST := 121 ;
-                      'E' : ZUST := 52 ;
+                      '.' : ZUST := 124 ;
+                      'E' : ZUST := 55 ;
                       '_' : ZUST := 31 ;
                       otherwise
                         ZUST := - 1 ;
                     end (* case *) ;
                 end (* tag/ca *) ;
-          112 : begin
-                  case CH of
-                    '=' : ZUST := 103 ;
-                    otherwise
-                      ZUST := - 1 ;
-                  end (* case *) ;
-                end (* tag/ca *) ;
-          113 : begin
-                  case CH of
-                    '=' : ZUST := 99 ;
-                    '>' : ZUST := 93 ;
-                    otherwise
-                      ZUST := - 1 ;
-                  end (* case *) ;
-                end (* tag/ca *) ;
-          114 : begin
-                  case CH of
-                    '=' : ZUST := 97 ;
-                    otherwise
-                      ZUST := - 1 ;
-                  end (* case *) ;
-                end (* tag/ca *) ;
           115 : begin
-                  if CH in ( C_ZIFFER + C_BUCHST + C_KLBUCHST ) then
-                    ZUST := 68
-                  else
-                    case CH of
-                      '$' : ZUST := 68 ;
-                      '''' : ZUST := 24 ;
-                      '_' : ZUST := 68 ;
-                      otherwise
-                        ZUST := - 1 ;
-                    end (* case *) ;
+                  case CH of
+                    '=' : ZUST := 106 ;
+                    otherwise
+                      ZUST := - 1 ;
+                  end (* case *) ;
                 end (* tag/ca *) ;
           116 : begin
-                  if CH in ( C_ZIFFER + C_BUCHST + C_KLBUCHST ) then
-                    ZUST := 68
-                  else
-                    case CH of
-                      '$' : ZUST := 68 ;
-                      '''' : ZUST := 17 ;
-                      '_' : ZUST := 68 ;
-                      otherwise
-                        ZUST := - 1 ;
-                    end (* case *) ;
+                  case CH of
+                    '=' : ZUST := 102 ;
+                    '>' : ZUST := 96 ;
+                    otherwise
+                      ZUST := - 1 ;
+                  end (* case *) ;
                 end (* tag/ca *) ;
           117 : begin
-                  if CH in ( C_ZIFFER + C_BUCHST + C_KLBUCHST ) then
-                    ZUST := 68
-                  else
-                    case CH of
-                      '$' : ZUST := 68 ;
-                      '''' : ZUST := 24 ;
-                      '_' : ZUST := 68 ;
-                      otherwise
-                        ZUST := - 1 ;
-                    end (* case *) ;
+                  case CH of
+                    '=' : ZUST := 100 ;
+                    otherwise
+                      ZUST := - 1 ;
+                  end (* case *) ;
                 end (* tag/ca *) ;
           118 : begin
                   if CH in ( C_ZIFFER + C_BUCHST + C_KLBUCHST ) then
-                    ZUST := 68
+                    ZUST := 71
                   else
                     case CH of
-                      '$' : ZUST := 68 ;
-                      '''' : ZUST := 17 ;
-                      '_' : ZUST := 68 ;
+                      '$' : ZUST := 71 ;
+                      '''' : ZUST := 24 ;
+                      '_' : ZUST := 71 ;
                       otherwise
                         ZUST := - 1 ;
                     end (* case *) ;
                 end (* tag/ca *) ;
           119 : begin
-                  case CH of
-                    '|' : ZUST := 105 ;
-                    otherwise
-                      ZUST := - 1 ;
-                  end (* case *) ;
+                  if CH in ( C_ZIFFER + C_BUCHST + C_KLBUCHST ) then
+                    ZUST := 71
+                  else
+                    case CH of
+                      '$' : ZUST := 71 ;
+                      '''' : ZUST := 17 ;
+                      '_' : ZUST := 71 ;
+                      otherwise
+                        ZUST := - 1 ;
+                    end (* case *) ;
                 end (* tag/ca *) ;
           otherwise
             CASE_FOUND := FALSE
@@ -2160,28 +2140,60 @@ procedure PASSCAN ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB :
       begin (* SCAN0120 *)
         case ZUST of
           120 : begin
+                  if CH in ( C_ZIFFER + C_BUCHST + C_KLBUCHST ) then
+                    ZUST := 71
+                  else
+                    case CH of
+                      '$' : ZUST := 71 ;
+                      '''' : ZUST := 24 ;
+                      '_' : ZUST := 71 ;
+                      otherwise
+                        ZUST := - 1 ;
+                    end (* case *) ;
+                end (* tag/ca *) ;
+          121 : begin
+                  if CH in ( C_ZIFFER + C_BUCHST + C_KLBUCHST ) then
+                    ZUST := 71
+                  else
+                    case CH of
+                      '$' : ZUST := 71 ;
+                      '''' : ZUST := 17 ;
+                      '_' : ZUST := 71 ;
+                      otherwise
+                        ZUST := - 1 ;
+                    end (* case *) ;
+                end (* tag/ca *) ;
+          122 : begin
+                  case CH of
+                    '|' : ZUST := 108 ;
+                    otherwise
+                      ZUST := - 1 ;
+                  end (* case *) ;
+                end (* tag/ca *) ;
+          123 : begin
                   case CH of
                     '''' : ZUST := 13 ;
                     otherwise
                       ZUST := - 1 ;
                   end (* case *) ;
                 end (* tag/ca *) ;
-          121 : begin
+          124 : begin
                   if CH in ( C_ZIFFER ) then
-                    ZUST := 122
+                    ZUST := 125
                   else
                     case CH of
+                      ')' : ZUST := 50 ;
                       '.' : ZUST := 47 ;
                       otherwise
                         ZUST := - 1 ;
                     end (* case *) ;
                 end (* tag/ca *) ;
-          122 : begin
+          125 : begin
                   if CH in ( C_ZIFFER ) then
-                    ZUST := 122
+                    ZUST := 125
                   else
                     case CH of
-                      'E' : ZUST := 61 ;
+                      'E' : ZUST := 64 ;
                       otherwise
                         ZUST := - 1 ;
                     end (* case *) ;
@@ -2236,9 +2248,9 @@ procedure PASSCAN ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB :
        begin
          ALTZUST := ZUST ;
          CASE_FOUND := TRUE ;
-         if ZUST in [ 2 , 5 , 7 , 8 , 9 , 11 , 22 , 29 , 47 , 70 , 71 ,
-         75 , 79 , 80 , 82 , 85 , 87 , 89 , 91 , 93 , 97 , 99 , 101 ,
-         103 , 105 ] then
+         if ZUST in [ 2 , 5 , 7 , 8 , 9 , 11 , 22 , 29 , 47 , 50 , 73 ,
+         74 , 78 , 82 , 83 , 85 , 88 , 90 , 92 , 94 , 96 , 100 , 102 ,
+         104 , 106 , 108 ] then
            ZUST := - 1
          else
            case ZUST DIV 10 of
@@ -2249,6 +2261,7 @@ procedure PASSCAN ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB :
              4 : SCAN0040 ;
              5 : SCAN0050 ;
              6 : SCAN0060 ;
+             7 : SCAN0070 ;
              10 : SCAN0100 ;
              11 : SCAN0110 ;
              12 : SCAN0120 ;

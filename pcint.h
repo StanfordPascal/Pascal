@@ -139,6 +139,8 @@
 #define FTNFUNCNDEF     19
 #define UNDEFPOINTER    20
 #define ERROR_CALL      21
+#define MINNESTCALL     22
+#define MAXNESTCALL     23
 
 static const char *runtime_errmsg [] =
 
@@ -164,6 +166,8 @@ static const char *runtime_errmsg [] =
    "FTNFUNCNDEF",
    "UNDEFPOINTER",
    "$ERROR_CALL",
+   "MINNESTCALL",
+   "MAXNESTCALL",
    NULL
 };
 
@@ -250,6 +254,7 @@ typedef struct
    int  x;        /* bei CUP: Addr neues Display */
                   /* bei ENT: Speicherbedarf     */
                   /* auch bei anderen Befehlen   */
+   int  ipmst;    /* bei CUP: zeigt auf zug. MST */
    char *plabel;  /* Label                       */
    char *poper;   /* weitere Operanden           */
    void *psect;   /* Verweis auf Section         */
@@ -312,6 +317,16 @@ typedef struct cup_sect
    int entry_old;                 // old entry point
 }
 cup_section;
+
+
+typedef struct
+{
+   int mst_pfparm;                /* 1 if called proc is proc parm  */
+   int mst_addr1;                 /* temp stor for MST information  */
+   int mst_level;                 /* temp stor for MST information  */
+   int mst_addr2;                 /* temp stor for MST information  */
+}
+call_mst_element;
 
 
 typedef struct
@@ -405,10 +420,6 @@ typedef struct
                                   /* - must be this way due to      */
                                   /*   implementation of proc parms */
    int level;                     /* Display fuer 256 Levels        */
-   int mst_pfparm;                /* 1 if called proc if proc parm  */
-   int mst_addr1;                 /* temp stor for MST information  */
-   int mst_level;                 /* temp stor for MST information  */
-   int mst_addr2;                 /* temp stor for MST information  */
    int pcups;                     /* Pointer auf CUP-Savearea       */
    int entry_act;                 /* address of actual entry        */
    int stepanz;                   /* Stepanzahl Debugger            */
@@ -418,6 +429,8 @@ typedef struct
    int xbg_xen_count;             /* Anzahl belegte XBG/XEN         */
    int xbg_xen_tag [10];          /* XBG/XEN-Tags                   */
    int xbg_xen_codeptr [10];      /* XBG/XEN-Codepointer            */
+   int call_mst_counter;          /* counter for CALL-MST elements  */
+   int mst_pointer [16];          /* pointer to MST instruction     */
 }                                 /**********************************/
 global_store;
 
@@ -535,53 +548,54 @@ static const filecb nullfcb_bin =
 #define XXX_MPR    54
 #define XXX_MSE    55
 #define XXX_MST    56
-#define XXX_MZE    57
-#define XXX_NEQ    58
-#define XXX_NEW    59
-#define XXX_NGI    60
-#define XXX_NGR    61
-#define XXX_NOT    62
-#define XXX_ODD    63
-#define XXX_ORD    64
-#define XXX_PAK    65
-#define XXX_POP    66
-#define XXX_RET    67
-#define XXX_RND    68
-#define XXX_RST    69
-#define XXX_SAV    70
-#define XXX_SBA    71
-#define XXX_SBI    72
-#define XXX_SBR    73
-#define XXX_SCL    74
-#define XXX_SLD    75
-#define XXX_SMV    76
-#define XXX_SQI    77
-#define XXX_SQR    78
-#define XXX_STO    79
-#define XXX_STP    80
-#define XXX_STR    81
-#define XXX_TRC    82
-#define XXX_UJP    83
-#define XXX_UNI    84
-#define XXX_UXJ    85
-#define XXX_VC1    86
-#define XXX_VC2    87
-#define XXX_VCC    88
-#define XXX_VIX    89
-#define XXX_VLD    90
-#define XXX_VLM    91
-#define XXX_VMV    92
-#define XXX_VPO    93
-#define XXX_VPU    94
-#define XXX_VRP    95
-#define XXX_VSM    96
-#define XXX_VST    97
-#define XXX_XBG    98
-#define XXX_XEN    99
-#define XXX_XJP   100
-#define XXX_XLB   101
-#define XXX_XOR   102
-#define XXX_XPO   103
+#define XXX_MV1    57
+#define XXX_MZE    58
+#define XXX_NEQ    59
+#define XXX_NEW    60
+#define XXX_NGI    61
+#define XXX_NGR    62
+#define XXX_NOT    63
+#define XXX_ODD    64
+#define XXX_ORD    65
+#define XXX_PAK    66
+#define XXX_POP    67
+#define XXX_RET    68
+#define XXX_RND    69
+#define XXX_RST    70
+#define XXX_SAV    71
+#define XXX_SBA    72
+#define XXX_SBI    73
+#define XXX_SBR    74
+#define XXX_SCL    75
+#define XXX_SLD    76
+#define XXX_SMV    77
+#define XXX_SQI    78
+#define XXX_SQR    79
+#define XXX_STO    80
+#define XXX_STP    81
+#define XXX_STR    82
+#define XXX_TRC    83
+#define XXX_UJP    84
+#define XXX_UNI    85
+#define XXX_UXJ    86
+#define XXX_VC1    87
+#define XXX_VC2    88
+#define XXX_VCC    89
+#define XXX_VIX    90
+#define XXX_VLD    91
+#define XXX_VLM    92
+#define XXX_VMV    93
+#define XXX_VPO    94
+#define XXX_VPU    95
+#define XXX_VRP    96
+#define XXX_VSM    97
+#define XXX_VST    98
+#define XXX_XBG    99
+#define XXX_XEN   100
+#define XXX_XJP   101
+#define XXX_XLB   102
+#define XXX_XOR   103
+#define XXX_XPO   104
 
 
 
@@ -626,7 +640,7 @@ static opctab ot [] =
    { "ASE", XXX_ASE, 0, 'A' },    /* neu McGill: Add to Set */
    { "ASR", XXX_ASR, 0, 'G' },    /* neu 2019: Add Set Range */
    { "BGN", XXX_BGN, 0, '3' },
-   { "CHK", XXX_CHK, 0, 'S' },
+   { "CHK", XXX_CHK, 0, 'Z' },
    { "CHR", XXX_CHR, 0, ' ' },
    { "CRD", XXX_CRD, 0, ' ' },    /* nicht in Stanford-Papier */
    { "CSP", XXX_CSP, 0, 'Y' },
@@ -673,7 +687,8 @@ static opctab ot [] =
    { "MPI", XXX_MPI, 0, ' ' },
    { "MPR", XXX_MPR, 0, ' ' },
    { "MSE", XXX_MSE, 0, 'A' },    /* neu 2017: Memset Instrukt.*/
-   { "MST", XXX_MST, 0, 'B' },
+   { "MST", XXX_MST, 0, '5' },
+   { "MV1", XXX_MV1, 0, 'A' },    /* neu 2020: MOV Push 1 Adr */
    { "MZE", XXX_MZE, 0, 'A' },    /* neu 2017: Mem Zero fest.L.*/
    { "NEQ", XXX_NEQ, 0, 'V' },
    { "NEW", XXX_NEW, 0, 'B' },
@@ -703,7 +718,6 @@ static opctab ot [] =
    { "UJP", XXX_UJP, 0, 'J' },
    { "UNI", XXX_UNI, 0, ' ' },
    { "UXJ", XXX_UXJ, 0, 'J' },    /* neu McGill: Long Jump */
-
    { "VC1", XXX_VC1, 0, ' ' },    /* varchar convert 1 */
    { "VC2", XXX_VC2, 0, 'A' },    /* varchar convert 2 */
    { "VCC", XXX_VCC, 0, ' ' },    /* varchar concat */

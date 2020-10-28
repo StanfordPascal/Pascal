@@ -86,6 +86,15 @@ program PCODE_TRANSLATOR ( INPUT , OUTPUT , OBJCODE , LIST002 , TRACEF
 (*  619- BAD OPERANDS FOR PACK/UNPACK PROCEDURE.                    *)
 (*  620- no implementation for P-Code in proc ASMNXTINST            *)
 (*                                                                  *)
+(*  new errors from 2016 and later (Bernd Oppolzer):                *)
+(*                                                                  *)
+(*  701- top of stack is not 1 at beginning of statement            *)
+(*  75x- registers are not available (different variants)           *)
+(*  750- no single register available                               *)
+(*  751- no register pair available (for string operations)         *)
+(*  752- no floating point register available                       *)
+(*       etc. etc.                                                  *)
+(*                                                                  *)
 (*  THIS PROGRAM SHOULD NOT BE COMPILED WITH THE 'D+' OPTION.       *)
 (*                                                                  *)
 (*                                                                  *)
@@ -119,6 +128,17 @@ program PCODE_TRANSLATOR ( INPUT , OUTPUT , OBJCODE , LIST002 , TRACEF
 (********************************************************************)
 (*                                                                  *)
 (*  History records - newest first                                  *)
+(*                                                                  *)
+(********************************************************************)
+(*                                                                  *)
+(*  Oct 2020 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*             (berndoppolzer@yahoo.com)                            *)
+(*                                                                  *)
+(*  New P-Code instruction MV1 to allow easier initialization       *)
+(*  of a series of variables at block entry. MV1 is the same        *)
+(*  as MOV, but leaves one of the addresses on the stack            *)
+(*  (the source address in this case), this allows for the          *)
+(*  source address being incremented for the following moves.       *)
 (*                                                                  *)
 (********************************************************************)
 (*                                                                  *)
@@ -541,9 +561,9 @@ program PCODE_TRANSLATOR ( INPUT , OUTPUT , OBJCODE , LIST002 , TRACEF
 
 
 
-const VERSION = '2020.04' ;        // Version for display message
-      VERSION2 = 0x2004 ;          // Version for load module
-      VERSION3 = 'XL2''2004''' ;   // Version for LIST002 listing
+const VERSION = '2020.09' ;        // Version for display message
+      VERSION2 = 0x2009 ;          // Version for load module
+      VERSION3 = 'XL2''2009''' ;   // Version for LIST002 listing
       MXADR = 65535 ;
       SHRTINT = 4095 ;
       HALFINT = 32700 ;
@@ -789,7 +809,7 @@ const VERSION = '2020.04' ;        // Version for display message
 
       PRCCNT = 200 ;
       LBLCNT = 500 ;
-      MAXCALDPTH = 4 ;
+      MAX_CALL_DEPTH = 9 ;
 
       (****************************************************)
       (* MAX NESTING OF FUNCTION CALLS IN A STMT.         *)
@@ -958,7 +978,7 @@ type OPTYPE = ( PCTS , PCTI , PLOD , PSTR , PLDA , PLOC , PSTO , PLDC ,
               PXLB , PCST , PDFC , PPAK , PADA , PSBA , PXOR , PMFI ,
               PMCP , PMSE , PDBG , PMZE , PVC1 , PVC2 , PVCC , PVLD ,
               PVST , PVMV , PVSM , PVLM , PVPU , PVPO , PVIX , PVRP ,
-              PMCC , PMCV , PASR , PXBG , PXEN , UNDEF_OP ) ;
+              PMCC , PMCV , PASR , PXBG , PXEN , PMV1 , UNDEF_OP ) ;
      CSPTYPE = ( PCTR , PN01 , PN02 , PN03 , PN04 , PN05 , PN06 , PN07
                , PN08 , PN09 , PPAG , PGET , PPUT , PRES , PREW , PRDC
                , PWRI , PWRE , PWRR , PWRC , PWRS , PWRX , PRDB , PWRB
@@ -1267,7 +1287,7 @@ var GS : GLOBAL_STATE ;
     (* TOP OF EXPRESSION STACK                 *)
     (*******************************************)
 
-    CALDPTH : 0 .. MAXCALDPTH ;
+    CALL_DEPTH : 0 .. MAX_CALL_DEPTH ;
 
     (*******************************************)
     (* PROC. CALL NESTING                      *)
@@ -1698,10 +1718,10 @@ var GS : GLOBAL_STATE ;
                                         LNK : ADRRNG_EXT ;
                                         VPOS : ICRNG
                                       end ;
-    CALSTK : array [ 1 .. MAXCALDPTH ] of record
-                                            PFLEV : INTEGER ;
-                                            DISPSAV : ADRRNG
-                                          end ;
+    CALL_MST_STACK : array [ 1 .. MAX_CALL_DEPTH ] of record
+                                                   PFLEV : INTEGER ;
+                                                   DISPSAV : ADRRNG
+                                                   end ;
 
     (*******************************************************)
     (* PROGRAM HEADER/DATE/TIME                            *)
@@ -1789,7 +1809,7 @@ const HEXTAB : array [ 0 .. 15 ] of CHAR = '0123456789abcdef' ;
         'XLB' , 'CST' , 'DFC' , 'PAK' , 'ADA' , 'SBA' , 'XOR' , 'MFI' ,
         'MCP' , 'MSE' , 'DBG' , 'MZE' , 'VC1' , 'VC2' , 'VCC' , 'VLD' ,
         'VST' , 'VMV' , 'VSM' , 'VLM' , 'VPU' , 'VPO' , 'VIX' , 'VRP' ,
-        'MCC' , 'MCV' , 'ASR' , 'XBG' , 'XEN' , '-?-' ) ;
+        'MCC' , 'MCV' , 'ASR' , 'XBG' , 'XEN' , 'MV1' , '-?-' ) ;
       CSPTBL : array [ CSPTYPE ] of BETA =
       ( 'N00' , 'N01' , 'N02' , 'N03' , 'N04' , 'N05' , 'N06' , 'N07' ,
         'N08' , 'N09' , 'PAG' , 'GET' , 'PUT' , 'RES' , 'REW' , 'RDC' ,
@@ -2292,6 +2312,8 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
        DUMMYINT : INTEGER ;
        DUMMYBOOL : BOOLEAN ;
        DUMMYLABEL : PLABEL ;
+       P_IS_CHAR : BOOLEAN ;
+       Q_IS_CHAR : BOOLEAN ;
 
 
    procedure READLBL ( var LBL : PLABEL ) ;
@@ -3223,7 +3245,7 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
                   LIST002_NEWLINE ;
               end (* tag/ca *) ;
        PDEF : READ_DEF ;
-       PCTI , PIXA , PASE , PMOV , PMFI , PMZE , PMSE , PDBG :
+       PCTI , PIXA , PASE , PMOV , PMV1 , PMFI , PMZE , PMSE , PDBG :
          begin
 
      (*******************)
@@ -3330,17 +3352,53 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
               end (* tag/ca *) ;
        PCHK : begin
 
-     (**************************************)
-     (* TYPE-CODE AND TWO INTEGER OPERANDS *)
-     (**************************************)
+     //**********************************************************
+     // TYPE-CODE AND TWO INTEGER OPERANDS                       
+     // change 28.08.2020:                                       
+     // to enable portable chk instructions for char subranges   
+     // the two integers may be specified as char constants      
+     // (single chars surrounded by apostrophs)                  
+     //**********************************************************
 
+                P_IS_CHAR := FALSE ;
+                Q_IS_CHAR := FALSE ;
                 SKIPBLANKS ;
                 OPNDTYPE := TYPCDE [ INPUT -> ] ;
-                READLN ( CH1 , CH , P , CH , Q ) ;
+                READ ( CH1 , CH ) ;
+                if INPUT -> = '''' then
+                  begin
+                    READ ( CH ) ;
+                    READ ( CH ) ;
+                    P := ORD ( CH ) ;
+                    P_IS_CHAR := TRUE ;
+                    READ ( CH ) ;
+                  end (* then *)
+                else
+                  READ ( P ) ;
+                READ ( CH ) ;
+                if INPUT -> = '''' then
+                  begin
+                    READ ( CH ) ;
+                    READ ( CH ) ;
+                    Q := ORD ( CH ) ;
+                    Q_IS_CHAR := TRUE ;
+                    READ ( CH ) ;
+                  end (* then *)
+                else
+                  READ ( Q ) ;
+                READLN ;
                 if ASM then
                   begin
-                    WRITE ( LIST002 , CH1 : 3 , ',' , P : 1 , ',' , Q :
-                            1 ) ;
+                    WRITE ( LIST002 , CH1 : 3 , ',' ) ;
+                    if P_IS_CHAR then
+                      WRITE ( LIST002 , '''' , CHR ( P ) , '''' )
+                    else
+                      WRITE ( LIST002 , P : 1 ) ;
+                    WRITE ( LIST002 , ',' ) ;
+                    if Q_IS_CHAR then
+                      WRITE ( LIST002 , '''' , CHR ( Q ) , '''' )
+                    else
+                      WRITE ( LIST002 , Q : 1 ) ;
                     LIST002_NEWLINE ;
                   end (* then *) ;
               end (* tag/ca *) ;
@@ -3674,21 +3732,6 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
          end (* otherw *) ;
      end (* case *)
    end (* READNXTINST *) ;
-
-
-
-procedure TXT2LBL ( var LBL : PLABEL ; X : ALFA ) ;
-
-   begin (* TXT2LBL *)
-     LBL . NAM := X ;
-     LBL . LEN := 8 ;
-     while LBL . NAM [ LBL . LEN ] = ' ' do
-       begin
-         LBL . LEN := LBL . LEN - 1 ;
-         if LBL . LEN = 0 then
-           break ;
-       end (* while *)
-   end (* TXT2LBL *) ;
 
 
 
@@ -4523,6 +4566,19 @@ procedure ASMNXTINST ;
       begin (* GENRX_2 *)
         if R = TRG14 then
           TXR_CONTENTS . VALID := FALSE ;
+        if FALSE then
+          begin
+            WRITELN ( TRACEF ,
+                      '---------------------------------------' ) ;
+            WRITELN ( TRACEF , 'genrx_2 at linecnt = ' , LINECNT : 1 )
+                      ;
+            WRITELN ( TRACEF , 'op  = ' , XTBLN [ OP ] ) ;
+            WRITELN ( TRACEF , 'r   = ' , R ) ;
+            WRITELN ( TRACEF , 'd   = ' , D ) ;
+            WRITELN ( TRACEF , 'x   = ' , X ) ;
+            WRITELN ( TRACEF , 'b   = ' , B ) ;
+            WRITELN ( TRACEF , 'opt = ' , OPTION ) ;
+          end (* then *) ;
         if ( D < 0 ) or ( D > SHRTINT ) then
           begin
 
@@ -5661,7 +5717,6 @@ procedure ASMNXTINST ;
       var P : LVLRNG ;
           Q : ADRRNG_EXT ;
           B : RGRNG ;
-          LBL_WORK : PLABEL ;
 
 
       procedure FINDMDRG ;
@@ -5730,15 +5785,6 @@ procedure ASMNXTINST ;
                           end (* case *) ;
                           VPA := RGS ;
                           RGADR := NXTRG ;
-                        end (* then *) ;
-                      if FALSE then
-                        begin
-                          if PROCNAME <> '        ' then
-                            begin
-                              TXT2LBL ( LBL_WORK , PROCNAME ) ;
-                              WRITELN ( 'LA V-Konst ' , PROCNAME ) ;
-                              GENRXLAB ( XL , RGADR , LBL_WORK , - 3 )
-                            end (* then *)
                         end (* then *) ;
                       P := FPA . LVL ;
                       Q := FPA . DSPLMT ;
@@ -6520,7 +6566,7 @@ procedure ASMNXTINST ;
           end (* then *)
         else
           SAVEFPRS := FALSE ;
-        with CALSTK [ CALDPTH ] do
+        with CALL_MST_STACK [ CALL_DEPTH ] do
           if DISPSAV > 0 then
 
         (********************************)
@@ -6669,11 +6715,14 @@ procedure ASMNXTINST ;
         (*******************)
 
           begin
-            GENSS ( XMVC , DISPAREA , DISPLAY , GBR , CALSTK [ CALDPTH
-                    ] . DISPSAV , DSREG ) ;
+            GENSS ( XMVC , DISPAREA , DISPLAY , GBR , CALL_MST_STACK [
+                    CALL_DEPTH ] . DISPSAV , DSREG ) ;
             AVAIL [ DSREG ] := TRUE ;
           end (* then *) ;
-        CALDPTH := CALDPTH - 1 ;
+        CALL_DEPTH := CALL_DEPTH - 1 ;
+        if FALSE then
+          WRITELN ( TRACEF , 'call_depth -- ' , CALL_DEPTH ,
+                    ' linecnt = ' , LINECNT : 1 ) ;
 
         //******************************************************
         // on return: different call seq. depending on extlang  
@@ -6894,6 +6943,7 @@ procedure ASMNXTINST ;
           OPC : BYTE ;
           ITEST : INTEGER ;
           LBL_WORK : PLABEL ;
+          FILEOK : BOOLEAN ;
 
 
       procedure FILESETUP ( PRMCNT : RGRNG ) ;
@@ -7345,25 +7395,21 @@ procedure ASMNXTINST ;
         //***********************************************
 
                    with LAST_FILE do
-                     if LAST_PC = PCOUNTER then
-                       begin
-                         with STK [ TOP ] do
-                           if VRBL then
-                             CSPACTIVE [ FILADR ] := LAST_FILE_IS_VAR
-                                                   and (
-                                                   LAST_FILEOPERAND =
-                                                   MEMADR )
-                           else
-                             CSPACTIVE [ FILADR ] := ( not
-                                                   LAST_FILE_IS_VAR )
-                                                   and (
-                                                   LAST_FILEOPERAND =
-                                                   FPA )
-                       end (* then *)
-                     else
-                       begin
-                         CSPACTIVE [ FILADR ] := FALSE ;
-                       end (* else *) ;
+                     begin
+                       if LAST_PC = PCOUNTER then
+                         begin
+                           with STK [ TOP ] do
+                             if VRBL then
+                               FILEOK := LAST_FILE_IS_VAR and (
+                                         LAST_FILEOPERAND = MEMADR )
+                             else
+                               FILEOK := ( not LAST_FILE_IS_VAR ) and (
+                                         LAST_FILEOPERAND = FPA )
+                         end (* then *)
+                       else
+                         FILEOK := FALSE ;
+                       CSPACTIVE [ FILADR ] := FILEOK
+                     end (* with *) ;
 
         //***********************************************
         // if file register does not match,              
@@ -7399,12 +7445,29 @@ procedure ASMNXTINST ;
                    FILECNT := FILECNT - 1 ;
                    if FILECNT = 0 then
                      AVAIL [ FILADR ] := TRUE ;
+                   if FALSE then
+                     begin
+                       WRITELN ( TRACEF ,
+                             '---------------------------------------'
+                                 ) ;
+                       WRITELN ( TRACEF , 'EIO at linecnt    = ' ,
+                                 LINECNT ) ;
+                       WRITELN ( TRACEF , 'last_file.last_pc = ' ,
+                                 LAST_FILE . LAST_PC ) ;
+                       WRITELN ( TRACEF , 'pcounter          = ' ,
+                                 PCOUNTER ) ;
+                       WRITELN ( TRACEF , 'last_fileoperand  = ' ,
+                                 LAST_FILE . LAST_FILEOPERAND . LVL : 1
+                                 , '/' , LAST_FILE . LAST_FILEOPERAND .
+                                 DSPLMT : 1 ) ;
+                     end (* then *) ;
 
         //*****************************************
         // the file register is invalid after EIO  
         //*****************************************
 
                    CSPACTIVE [ FILADR ] := FALSE ;
+                   FILADR_LOADED := FALSE ;
                    CSPACTIVE [ TRG1 ] := FALSE ;
                    LAST_FILE . LAST_PC := PCOUNTER ;
 
@@ -7412,6 +7475,13 @@ procedure ASMNXTINST ;
         (* TOP := TOP-1 IS DONE AT ENTRY TO CALLSTNDRD  *)
         (************************************************)
 
+                   if FALSE then
+                     begin
+                       WRITELN ( TRACEF , 'cspactive [9]     = ' ,
+                                 CSPACTIVE [ FILADR ] ) ;
+                       WRITELN ( TRACEF , 'fileadr_loaded    = ' ,
+                                 FILADR_LOADED ) ;
+                     end (* then *) ;
                  end (* tag/ca *) ;
           PELN , PEOF :
             begin
@@ -7574,7 +7644,7 @@ procedure ASMNXTINST ;
             end (* tag/ca *) ;
           PGET , PPUT , PRLN , PWLN , PRES , PREW , PPAG , PCLS :
             FILESETUP ( 0 ) ;
-          PRDC , PRDI , PRDR , PSKP , PLIM , PRDB , PRDH , PRDY :
+          PRDI , PRDR , PSKP , PLIM , PRDB , PRDH , PRDY :
             FILESETUP ( 1 ) ;
           PRDS , PWRC , PWRI , PWRB , PWRP , PFDF :
             FILESETUP ( 2 ) ;
@@ -7584,7 +7654,21 @@ procedure ASMNXTINST ;
             end (* tag/ca *) ;
           PWRV : FILESETUP ( 2 ) ;
           PRDV : FILESETUP ( 2 ) ;
-          PRFC : FILESETUP ( 2 ) ;
+          PRDC : FILESETUP ( 2 ) ;
+
+        //**************************************************
+        // RFC returns result at the place of the length    
+        // argument, so that the two elements of the stack  
+        // must not pe popped by the CSP RFC.               
+        // Compiler generates a STO C instruction after     
+        // the CSP RFC call. This is done to allow for      
+        // a CHK instruction after the READ of a char       
+        //**************************************************
+
+          PRFC : begin
+                   FILESETUP ( 2 ) ;
+                   TOP := TOP + 2 ;
+                 end (* tag/ca *) ;
           PRFS , PRFV :
             FILESETUP ( 3 ) ;
           otherwise
@@ -10270,7 +10354,7 @@ procedure ASMNXTINST ;
            PRCTBL [ 1 ] . LNK := 0 ;
            NXTPRC := 1 ;
            NXTEP := PRCCNT ;
-           CALDPTH := 0 ;
+           CALL_DEPTH := 0 ;
            PCOUNTER := 0 ;
            MINLBL := LBLMAP ( PIAKT -> . SEGSZE . NAM ) ;
            LASTPC := 0 ;
@@ -12170,17 +12254,23 @@ procedure ASMNXTINST ;
                    TOP := TOP - 1 ;
                    FREEREG ( STK [ TOP ] ) ;
                  end (* tag/ca *) ;
-          PMST : if CALDPTH < MAXCALDPTH then
+          PMST : if CALL_DEPTH < MAX_CALL_DEPTH then
                    begin
-                     CALDPTH := CALDPTH + 1 ;
-                     with CALSTK [ CALDPTH ] do
+                     CALL_DEPTH := CALL_DEPTH + 1 ;
+                     if FALSE then
+                       WRITELN ( TRACEF , 'call_depth ++ ' , CALL_DEPTH
+                                 , ' linecnt = ' , LINECNT : 1 ) ;
+                     with CALL_MST_STACK [ CALL_DEPTH ] do
                        begin
                          PFLEV := P ;
                          DISPSAV := Q
                        end (* with *) ;
                    end (* then *)
                  else
-                   ERROR ( 759 ) ;
+                   begin
+                     WRITELN ( 'call_depth = ' , CALL_DEPTH ) ;
+                     ERROR ( 759 ) ;
+                   end (* else *) ;
           PCUP : begin
                    CALLSUB ;
                    if OPNDTYPE <> PROC then
@@ -12638,15 +12728,52 @@ procedure ASMNXTINST ;
                          FPA . DSPLMT := 0 ;
                      DTYPE := BOOL
                    end (* with *) ;
-          PINC , PDEC :
-            with STK [ TOP - 1 ] do
-              begin
-                if PCODE = PDEC then
-                  Q := - Q ;
-                if not DRCT then
-                  LOAD ( STK [ TOP - 1 ] ) ;
-                FPA . DSPLMT := FPA . DSPLMT + Q ;
-              end (* with *) ;
+          PINC : with STK [ TOP - 1 ] do
+                   begin
+                     if PROCNAME <> ' ' then
+                       begin
+                         if FALSE then
+                           begin
+                             WRITELN ( TRACEF ,
+                             '---------------------------------------'
+                                       ) ;
+                             WRITELN ( TRACEF , 'INC at linecnt = ' ,
+                                       LINECNT : 1 ) ;
+                             WRITELN ( TRACEF , 'procname       =   ' ,
+                                       PROCNAME ) ;
+                             WRITELN ( TRACEF , 'q              =   ' ,
+                                       Q ) ;
+                             DUMPSTKELEM ( STK [ TOP - 1 ] ) ;
+                           end (* then *) ;
+                         if not DRCT then
+                           begin
+                             LOAD ( STK [ TOP - 1 ] ) ;
+                           end (* then *) ;
+                         GENRXLIT ( XA , RGADR , Q , 0 ) ;
+
+        //*****************************************
+        // procname cannot be deleted here         
+        // because procedure filesetup does some   
+        // register mangling when procname is set  
+        //*****************************************
+
+                       end (* then *)
+                     else
+                       begin
+                         if not DRCT then
+                           begin
+                             LOAD ( STK [ TOP - 1 ] ) ;
+                           end (* then *) ;
+                         FPA . DSPLMT := FPA . DSPLMT + Q ;
+                       end (* else *)
+                   end (* with *) ;
+          PDEC : with STK [ TOP - 1 ] do
+                   begin
+                     Q := - Q ;
+                     if not DRCT then
+                       LOAD ( STK [ TOP - 1 ] ) ;
+                     FPA . DSPLMT := FPA . DSPLMT + Q ;
+                   end (* with *) ;
           PCHR : with STK [ TOP - 1 ] do
                    if DTYPE > CHRC then
                      begin
@@ -17166,11 +17293,6 @@ procedure ASMNXTINST ;
                             LOAD ( STK [ TOP - 1 ] ) ;
                         if not DRCT then
                           LOAD ( STK [ TOP - 1 ] ) ;
-                        if FALSE then
-                          if PROCNAME <> '        ' then
-                            begin
-                              LOAD ( STK [ TOP - 1 ] ) ;
-                            end (* then *)
                       end (* with *) ;
                     STK [ TOP - 1 ] . FPA . DSPLMT := STK [ TOP - 1 ] .
                                                    FPA . DSPLMT + FPA .
@@ -17269,6 +17391,22 @@ procedure ASMNXTINST ;
                     SOPERATION ( STK [ TOP + 1 ] , STK [ TOP ] , PCODE
                                  , Q ) ;
                   end (* else *) ;
+              end (* tag/ca *) ;
+       PMV1 : begin
+                PCODE := PMOV ;
+                TOP := TOP - 2 ;
+                if Q > 0 then
+                  begin  // FORWARD MOVE
+                    SOPERATION ( STK [ TOP ] , STK [ TOP + 1 ] , PCODE
+                                 , Q )
+                  end (* then *)
+                else
+                  begin  // BACKWARD MOVE
+                    Q := ABS ( Q ) ;
+                    SOPERATION ( STK [ TOP + 1 ] , STK [ TOP ] , PCODE
+                                 , Q ) ;
+                  end (* else *) ;
+                TOP := TOP + 1 ;
               end (* tag/ca *) ;
        PDBG : ;
        PMFI : begin

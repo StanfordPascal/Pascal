@@ -1110,6 +1110,33 @@ static void load (void *vgs,
       /**********************************************************/
 
       case 'U':
+
+         if (gs -> call_mst_counter < 1)
+         {
+            fprintf (stderr, "counter incorrect in MST/CUP nesting\n");
+            pcode -> ipmst = 0;
+         }
+         else
+         {
+            sc_code *pcode_mst;
+
+            pcode -> ipmst =
+               gs -> mst_pointer [gs -> call_mst_counter - 1];
+
+            pcode_mst = gs -> code0 + pcode -> ipmst;
+
+#if 0
+
+            fprintf (stderr, "cup: %d %d unstacked %d %d\n",
+                     pcode_mst -> p, pcode_mst -> q,
+                     gs -> call_mst_counter,
+                     gs -> code_used - 1);
+
+#endif
+
+            gs -> call_mst_counter --;
+         }
+
          cp = poper;
          do
          {
@@ -1244,6 +1271,56 @@ static void load (void *vgs,
             break;
          }
 
+         break;
+
+      /**********************************************************/
+      /*   Z = Typ, zwei Integers (fuer CHK)                    */
+      /*   Integers koennen auch Chars sein, wenn sie mit       */
+      /*   Hochkomma maskiert sind                              */
+      /**********************************************************/
+
+      case 'Z':
+         cp = poper;
+         do
+         {
+            while (*cp == ' ' && *cp != 0x00)
+               cp ++;
+            if (*cp == 0x00)
+               break;
+            pcode -> t = *cp;
+            cp ++;
+            while (*cp == ',' && *cp != 0x00)
+               cp ++;
+            if (*cp == 0x00)
+               break;
+            if (*cp == '\'')
+            {
+               cp ++;
+               pcode -> p = *cp;
+               cp ++;
+            }
+            else
+            {
+               pcode -> p = atoi (cp);
+            }
+            while (*cp != ',' && *cp != 0x00)
+               cp ++;
+            while (*cp == ',' && *cp != 0x00)
+               cp ++;
+            if (*cp == 0x00)
+               break;
+            if (*cp == '\'')
+            {
+               cp ++;
+               pcode -> q = *cp;
+               cp ++;
+            }
+            else
+            {
+               pcode -> q = atoi (cp);
+            }
+         }
+         while (0);
          break;
 
       /**********************************************************/
@@ -1619,6 +1696,51 @@ static void load (void *vgs,
          pent -> numb2 = atoi (cp);
 
          strcpy (pent -> sourcename, gs -> sourcename);
+
+         break;
+
+      /**********************************************************/
+      /*   5 = Level und Adresse bei MST                        */
+      /*   MST Info ausserdem stacken fuer CUP                  */
+      /**********************************************************/
+
+      case '5':
+         cp = poper;
+         do
+         {
+            while (*cp == ' ' && *cp != 0x00)
+               cp ++;
+            if (*cp == 0x00)
+               break;
+            pcode -> p = atoi (cp);
+            while (*cp != ',' && *cp != 0x00)
+               cp ++;
+            while (*cp == ',' && *cp != 0x00)
+               cp ++;
+            if (*cp == 0x00)
+               break;
+            pcode -> q = atoi (cp);
+         }
+         while (0);
+
+         gs -> call_mst_counter ++;
+         if (gs -> call_mst_counter > 16)
+         {
+            fprintf (stderr, "counter too large in MST/CUP nesting\n");
+            gs -> call_mst_counter = 16;
+         }
+
+         gs -> mst_pointer [gs -> call_mst_counter - 1] =
+            gs -> code_used - 1;
+
+#if 0
+
+         fprintf (stderr, "mst: %d %d stacked %d %d\n",
+                  pcode -> p, pcode -> q,
+                  gs -> call_mst_counter,
+                  gs -> code_used - 1);
+
+#endif
 
          break;
 
@@ -2558,6 +2680,7 @@ void listing (global_store *gs)
    char header [100];
    cst_section *pcst;
    ent_section *pent;
+   char outmst [100];
 
    fprintf (gs -> outfile, "PCODE-Assembler-Listing\n\n");
 
@@ -2591,8 +2714,20 @@ void listing (global_store *gs)
                   "Label    Opc Operands\n\n");
       }
 
+      *outmst = 0x00;
+
+      if (pcode -> ipmst != 0)
+      {
+         sc_code *pcode_mst = gs -> code0 + pcode -> ipmst;
+
+         sprintf (outmst, " MST at %06d %d %d",
+                 pcode_mst - gs -> code0,
+                 pcode_mst -> p,
+                 pcode_mst -> q);
+      }
+
       fprintf (gs -> outfile,
-               "%06d: %03d %c%c %4d %9d %9d  %-8s %-3s %s\n",
+               "%06d: %03d %c%c %4d %9d %9d  %-8s %-3s %s %s\n",
                pcode - gs -> code0,
                pcode -> op,
                pcode -> t,
@@ -2602,7 +2737,8 @@ void listing (global_store *gs)
                pcode -> x,
                (plabel != NULL ? plabel : ""),
                gs -> ot [pcode -> op] . opcode,
-               (poper != NULL ? poper : ""));
+               (poper != NULL ? poper : ""),
+               outmst);
 
       /**********************************************************/
       /*   Pascal-Source-Zeilen anhaengen, sofern vorhanden     */

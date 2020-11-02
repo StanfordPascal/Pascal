@@ -9995,7 +9995,7 @@ int main (int argc, char **argv)
    int parmposition;
    char *parmfehlerpos;
 
-   static char *parmkeywords [] = { "prr=",
+   static char *parmkeywords [] = { "pcode=",
                                     "inc=",
                                     "pas=",
                                     "out=",
@@ -10055,7 +10055,7 @@ int main (int argc, char **argv)
       fprintf (stdout, "Die Reihenfolge der Parameter ist beliebig;\n");
       fprintf (stdout, "die einzelnen Parameter und ihre Bedeutung:\n");
       fprintf (stdout, "\n");
-      fprintf (stdout, "prr=      PCODE-Eingabedatei\n");
+      fprintf (stdout, "pcode=    PCODE-Eingabedatei\n");
       fprintf (stdout, "inc=      Weitere PCODE-Dateien (Module)\n");
       fprintf (stdout, "pas=      Pascal-Source (falls vorhanden)\n");
       fprintf (stdout, "out=      Name der Ausgabedatei\n");
@@ -10187,6 +10187,20 @@ int main (int argc, char **argv)
       return 20;
    }
 
+   //**************************************************
+   //   store inpfilename in global store
+   //   without extension
+   //   used for include statements
+   //**************************************************
+
+   strcpy (gs.inpfilename, inpfilename);
+
+   cp = gs.inpfilename;
+   cp += strlen (cp);
+   while (*cp != '.' && cp > gs.inpfilename)
+      cp --;
+   *cp = 0x00;
+
    if (gs.sch_listing == 'J')
    {
       outfile = fopen (outfilename, "w");
@@ -10280,7 +10294,7 @@ int main (int argc, char **argv)
       }
 
       strcpy (incfilename, cp);
-      strcat (incfilename, ".prr");
+      strcat (incfilename, ".pcode");
 
       strcpy (incfilepasname, cp);
       strcat (incfilepasname, ".pas");

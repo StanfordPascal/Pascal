@@ -1266,7 +1266,9 @@ static void load (void *vgs,
 
          if (pft -> fucode == NULL)
          {
-            fprintf (stderr, "standard function %-3.3s not found in funtab\n",
+            fprintf (stderr,
+                     "standard function %-3.3s "
+                     "not found in funtab\n",
                      poper);
             break;
          }
@@ -1875,10 +1877,14 @@ void translate (global_store *gs, FILE *f, char *fname)
 
    char *x;
    char *cp;
+   char *cp2;
    char *pcode;
    char *poper;
 
    char *zeile = gs -> inpzeile;
+
+   FILE *f_save = NULL;
+   char inc_filename [100];
 
    gs -> entry_act = -1;
 
@@ -1886,7 +1892,64 @@ void translate (global_store *gs, FILE *f, char *fname)
    {
       x = fgets (zeile, 255, f);
       if (x == NULL)
+      {
+         if (f_save != NULL)
+         {
+            fclose (f);
+            f = f_save;
+            f_save = NULL;
+            gs -> inpfile = f;
+            continue;
+         }
+
          break;
+      }
+
+      if (memcmp (zeile, "%INCLUDE", 8) == 0)
+      {
+         if (f_save != NULL)
+         {
+            fprintf (stderr, "nested %%INCLUDE files not allowed\n");
+            break;
+         }
+
+         strcpy (inc_filename, gs -> inpfilename);
+         strcat (inc_filename, ".");
+         cp = inc_filename;
+         cp += strlen (cp);
+         cp2 = zeile + 9;
+
+         if (strlen (cp2) <= 8)
+         {
+            strcpy (cp, cp2);
+         }
+         else
+         {
+            memcpy (cp, cp2, 8);
+            cp [8] = 0x00;
+         }
+
+         cp += strlen (cp) - 1;
+
+         while (*cp == ' ' || *cp == '\n' || *cp == 0x0d)
+         {
+            *cp = 0x00;
+            cp --;
+         }
+
+         f_save = f;
+         f = fopen (inc_filename, "r");
+         if (f == NULL)
+         {
+            fprintf (stderr,
+                     "%%INCLUDE file %s not found\n",
+                     inc_filename);
+            break;
+         }
+
+         gs -> inpfile = f;
+         continue;
+      }
 
       lineno ++;
 

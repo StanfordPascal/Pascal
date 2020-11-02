@@ -58,6 +58,96 @@ program PASCALCOMPILER ( INPUT , OUTPUT , PCODE , LISTING , LISTDEF ,
 (*                                                                  *)
 (********************************************************************)
 (*                                                                  *)
+(*  Aug 2020 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*             (berndoppolzer@yahoo.com)                            *)
+(*                                                                  *)
+(*  The CHK instruction was not portable so far, because the        *)
+(*  limits were always coded as integers, even if CHK was used      *)
+(*  to CHK for a subrange of chars, like in 'A' .. 'Z'              *)
+(*                                                                  *)
+(*  This had to be fixed, because otherwise P-Code files cannot     *)
+(*  be transferred across platforms                                 *)
+(*                                                                  *)
+(*  Now, if the limits of a char subrange are coded as char         *)
+(*  constants (and not, for example, as hex constants), the         *)
+(*  limits on the CHK instruction are written as char constants,    *)
+(*  too, which should make the P-Code files portable.               *)
+(*                                                                  *)
+(*  Changes to PASCAL2 to tolerate the modificated coding of        *)
+(*  the check instruction.                                          *)
+(*                                                                  *)
+(********************************************************************)
+(*                                                                  *)
+(*  Aug 2020 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*             (berndoppolzer@yahoo.com)                            *)
+(*                                                                  *)
+(*  More rework of READ runtime functions:                          *)
+(*                                                                  *)
+(*  READ of reals is implemented as Pascal function $PASRDR         *)
+(*                                                                  *)
+(*  READ of booleans implemented as Pascal function $PASRDB         *)
+(*                                                                  *)
+(*  READSTR now works for types integer, real, single char          *)
+(*  and varying and fixed size character strings.                   *)
+(*                                                                  *)
+(*  see PASLIBX.PAS:                                                *)
+(*                                                                  *)
+(*  function $PASRDI ( var F : TEXT ; ...                           *)
+(*  function $PASRDR ( var F : TEXT ; ...                           *)
+(*  function $PASRDB ( var F : TEXT ; ...                           *)
+(*  function $PASRSI ( const S : STRING ; ...                       *)
+(*  function $PASRSR ( const S : STRING ; ...                       *)
+(*  function $PASRSC ( const S : STRING ; ...                       *)
+(*  procedure $PASRSV ( const S : STRING ; ...                      *)
+(*  procedure $PASRSS ( const S : STRING ; ...                      *)
+(*                                                                  *)
+(*  READSTR for booleans and READ for scalar types (enums)          *)
+(*  will follow soon                                                *)
+(*                                                                  *)
+(********************************************************************)
+(*                                                                  *)
+(*  Aug 2020 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*             (berndoppolzer@yahoo.com)                            *)
+(*                                                                  *)
+(*  I fixed some errors in PASCAL2 related to code generation,      *)
+(*  see there.                                                      *)
+(*                                                                  *)
+(*  I had to do some rework in the way the GET standard proc        *)
+(*  works, because it is heavily used in the new runtime procs      *)
+(*  $PASRDI and $PASRDR (read integer and read reals, written       *)
+(*  in Pascal). GET now works better, too; no surprises any         *)
+(*  more. See the document which covers all the rework done to      *)
+(*  the READ and WRITE procedures including formatted read          *)
+(*  (with length specified) and READSTR and WRITESTR, as            *)
+(*  known from Pascal/VS                                            *)
+(*                                                                  *)
+(*  This involved not only changes to PCINT, but also changes       *)
+(*  to the Pascal monitor on the mainframe (PASMONN ASSEMBLE).      *)
+(*                                                                  *)
+(********************************************************************)
+(*                                                                  *)
+(*  Apr 2020 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*             (berndoppolzer@yahoo.com)                            *)
+(*                                                                  *)
+(*  - New Version, although the rework on READ and WRITE is not     *)
+(*    yet completed. READSTR already works for some types,          *)
+(*    much the same way as defined by Pascal/VS. WRITESTR           *)
+(*    is still missing.                                             *)
+(*                                                                  *)
+(*  - The new version is needed because of some errors which        *)
+(*    have to be repaired fast (thanks to George Smith):            *)
+(*                                                                  *)
+(*    a) READ of single char no more reads next lines               *)
+(*       without READLN ... but it should (repaired 12.04.)         *)
+(*                                                                  *)
+(*    b) set comparisons of sets with different (internal) size     *)
+(*       are not handled at all by PCINT ... for example            *)
+(*       comparisons of set variables and set constants,            *)
+(*       when the base type of the set is an integer subrange       *)
+(*       (will be repaired in mid April 2020)                       *)
+(*                                                                  *)
+(********************************************************************)
+(*                                                                  *)
 (*  Jan 2020 - Extensions to the Compiler by Bernd Oppolzer         *)
 (*             (berndoppolzer@yahoo.com)                            *)
 (*                                                                  *)
@@ -1141,7 +1231,7 @@ program PASCALCOMPILER ( INPUT , OUTPUT , PCODE , LISTING , LISTDEF ,
 
 
 
-const VERSION = '2020.01' ;
+const VERSION = '2020.04' ;
       MAXLSIZE = 120 ;
       MAXERRNO = 999 ;
 
@@ -1818,6 +1908,36 @@ type ALPHA = array [ 1 .. IDLNGTH ] of CHAR ;
                  RETURNUSED : BOOLEAN ;
                end ;
 
+     /******************************************/
+     /* Subtypen fuer Scanner-Typen            */
+     /******************************************/
+
+     CHAR32 = array [ 1 .. 32 ] of CHAR ;
+     CHAR64 = array [ 1 .. 64 ] of CHAR ;
+     SOURCELINE = array [ 1 .. MAXLSIZE ] of CHAR ;
+     SCAN_ERRCLASS = 'A' .. 'Z' ;
+     OPTIONS_PTR = -> COMP_OPTIONS ;
+
+     /******************************************/
+     /* Liste der Fehler pro Source-Zeile usw. */
+     /******************************************/
+     /* muss mit Def. beim Compiler            */
+     /* uebereinstimmen                        */
+     /******************************************/
+
+     SCANF_PTR = -> SCAN_FEHLER ;
+     SCAN_FEHLER = record
+                     ERRLEVEL : CHAR ;       // error level
+                     ERRCLASS : CHAR ;       // error class
+                     NUMMER : INTEGER ;      // error number
+                     INFO : CHAR64 ;         // additional info
+                     ZEILNR : INTEGER ;      // line number of err
+                     POSITION : INTEGER ;    // position of err
+                     NAECHST : SCANF_PTR ;   // ptr to next
+                     ZEILNR_SKIP : INTEGER ; // line number skip
+                     POS_SKIP : INTEGER ;    // position skip
+                   end ;
+
      /***********************************/
      /* zentraler Scan-Block            */
      /***********************************/
@@ -1825,10 +1945,6 @@ type ALPHA = array [ 1 .. IDLNGTH ] of CHAR ;
      /* uebereinstimmen                 */
      /***********************************/
 
-     CHAR32 = array [ 1 .. 32 ] of CHAR ;
-     SOURCELINE = array [ 1 .. MAXLSIZE ] of CHAR ;
-     SCAN_ERRCLASS = 'A' .. 'Z' ;
-     OPTIONS_PTR = -> COMP_OPTIONS ;
      SCAN_BLOCK = record
                     MODUS : INTEGER ;        // modus of scanner
                     DATEIENDE : INTEGER ;    // end of file indicator
@@ -1837,6 +1953,7 @@ type ALPHA = array [ 1 .. IDLNGTH ] of CHAR ;
                     LINENR : INTEGER ;       // line number of symbol
                     LINEPOS : INTEGER ;      // line position of symb
                     LINELEN : INTEGER ;      // line length
+                    SKIPPING : BOOLEAN ;     // parser is skipping
                     LOOKAHEAD : CHAR ;       // lookahead character
                     SYMBOLNR : SYMB ;        // symbol read
                     SYMBOL : SOURCELINE ;    // characters of symb
@@ -1847,8 +1964,8 @@ type ALPHA = array [ 1 .. IDLNGTH ] of CHAR ;
                     FEZAHL : INTEGER ;       // no of errors
                     WAZAHL : INTEGER ;       // no of warnings
                     INZAHL : INTEGER ;       // no of informations
-                    FEANFANG : ANYPTR ;      // anchor to err list
-                    FEAKT : ANYPTR ;         // actual err elem
+                    FEANFANG : SCANF_PTR ;   // anchor to err list
+                    FEAKT : SCANF_PTR ;      // actual err elem
                     FTTAB : ANYPTR ;         // error text table
                     FTTABA : ANYPTR ;        // same for applic.
                     OPTLINE : SOURCELINE ;   // options line
@@ -1860,7 +1977,7 @@ type ALPHA = array [ 1 .. IDLNGTH ] of CHAR ;
 
                     PROTOUT : BOOLEAN ;        // switch for prot out
                     TERMOUT : BOOLEAN ;        // switch for term out
-                    FEAKT_ALT : ANYPTR ;       // old feakt
+                    FEAKT_ALT : SCANF_PTR ;    // old feakt
                     LINEINFO : CHAR32 ;        // line information
                     LINEINFO_SIZE : INTEGER ;  // size of lineinfo
 
@@ -2325,6 +2442,103 @@ const BLANKID : ALPHA = '            ' ;
         , SYMODULE , SYSTATIC , SYFORWARD , SYPROG , SYFRTRN , SYEXTRN
         , SYFUNC , SYCONTINUE , SYPROC , SYOTHERWISE , NOTUSED ,
         NOTUSED , NOTUSED , NOTUSED , NOTUSED ) ;
+
+      (*********************************************************)
+      (*   Symbols as Text                                     *)
+      (*********************************************************)
+
+      SYMB_CHAR : array [ SYMB ] of STRING ( 15 ) = //
+      ( 'SYMB_EOF' ,                                //
+        'SYMB_UNKNOWN' ,                            //
+        'EOLCHAR' ,                                 //
+        'SEPARATOR' ,                               //
+        'COMMENT1' ,                                //
+        'COMMENT2' ,                                //
+        'COMMENT3' ,                                //
+        'COMMENT4' ,                                //
+        'COMMENT5' ,                                //
+        'STRINGCONST' ,                             //
+        'HEXSTRINGCONST' ,                          //
+        'BINSTRINGCONST' ,                          //
+        'INTCONST' ,                                //
+        'INTDOTDOT' ,                               //
+        'REALCONST' ,                               //
+        'IDENT' ,                                   //
+        'LPARENT' ,                                 //
+        'RPARENT' ,                                 //
+        'LBRACK' ,                                  //
+        'RBRACK' ,                                  //
+        'COMMA' ,                                   //
+        'SEMICOLON' ,                               //
+        'ARROW' ,                                   //
+        'PERIOD' ,                                  //
+        'DOTDOT' ,                                  //
+        'COLON' ,                                   //
+        'PLUS' ,                                    //
+        'MINUS' ,                                   //
+        'MULT' ,                                    //
+        'SLASH' ,                                   //
+        'EQOP' ,                                    //
+        'NEOP' ,                                    //
+        'GTOP' ,                                    //
+        'LTOP' ,                                    //
+        'GEOP' ,                                    //
+        'LEOP' ,                                    //
+        'OROP' ,                                    //
+        'ANDOP' ,                                   //
+        'ASSIGN' ,                                  //
+        'CONCAT' ,                                  //
+        'AND' ,                                     //
+        'DIV' ,                                     //
+        'MOD' ,                                     //
+        'OR' ,                                      //
+        'XOR' ,                                     //
+        'IN' ,                                      //
+        'NOT' ,                                     //
+        'LABEL' ,                                   //
+        'CONST' ,                                   //
+        'TYPE' ,                                    //
+        'VAR' ,                                     //
+        'FUNCTION' ,                                //
+        'PROGRAM' ,                                 //
+        'PROCEDURE' ,                               //
+        'SET' ,                                     //
+        'PACKED' ,                                  //
+        'ARRAY' ,                                   //
+        'RECORD' ,                                  //
+        'FILE' ,                                    //
+        'FORWARD' ,                                 //
+        'BEGIN' ,                                   //
+        'IF' ,                                      //
+        'CASE' ,                                    //
+        'REPEAT' ,                                  //
+        'WHILE' ,                                   //
+        'FOR' ,                                     //
+        'WITH' ,                                    //
+        'GOTO' ,                                    //
+        'END' ,                                     //
+        'ELSE' ,                                    //
+        'UNTIL' ,                                   //
+        'OF' ,                                      //
+        'DO' ,                                      //
+        'TO' ,                                      //
+        'DOWNTO' ,                                  //
+        'THEN' ,                                    //
+        'FORTRAN' ,                                 //
+        'EXTERNAL' ,                                //
+        'OTHERWISE' ,                               //
+        'BREAK' ,                                   //
+        'CONTINUE' ,                                //
+        'RETURN' ,                                  //
+        'MODULE' ,                                  //
+        'LOCAL' ,                                   //
+        'STATIC' ,                                  //
+        'NOTUSED' ) ;                               //
+
+      (*********************************************************)
+      (*   names of P-Code instructions                        *)
+      (*********************************************************)
+
       MN : array [ 0 .. OPMAX ] of array [ 1 .. 4 ] of CHAR =
       ( ' ABI' , ' ABR' , ' ADI' , ' ADR' , ' AND' , ' DIF' , ' DVI' ,
         ' DVR' , ' SBR' , ' FLO' , ' FLT' , ' INN' , ' INT' , ' IOR' ,
@@ -2371,9 +2585,9 @@ procedure PASSCANS ( var SCANOUT : TEXT ; var SCB : SCAN_BLOCK ) ;
 
 
 
-procedure PASSCANE ( var SCB : SCAN_BLOCK ; ERRLEVEL : CHAR ; ERRCLASS
-                   : CHAR ; I : INTEGER ; INFO : CHAR32 ; ZEILNR :
-                   INTEGER ; PLATZ : INTEGER ) ;
+function PASSCANE ( var SCB : SCAN_BLOCK ; ERRLEVEL : CHAR ; ERRCLASS :
+                  CHAR ; I : INTEGER ; INFO : CHAR64 ; ZEILNR : INTEGER
+                  ; PLATZ : INTEGER ) : SCANF_PTR ;
 
    EXTERNAL ;
 
@@ -2523,9 +2737,9 @@ procedure INSYMBOL ;
 
 
 
-procedure SET_ERROR_POS ( ERRTYPE : CHAR ; FERRNR : ERRCODE ; ERRINFO :
-                        CHAR32 ; LINENR : INTEGER ; LINEPOS : INTEGER )
-                        ;
+function SET_ERROR_POS_FUNC ( ERRTYPE : CHAR ; FERRNR : ERRCODE ;
+                            ERRINFO : CHAR64 ; LINENR : INTEGER ;
+                            LINEPOS : INTEGER ) : SCANF_PTR ;
 
 (*****************************************************)
 (*  error-Prozedur                                   *)
@@ -2534,16 +2748,37 @@ procedure SET_ERROR_POS ( ERRTYPE : CHAR ; FERRNR : ERRCODE ; ERRINFO :
 
 
    var PASSCAN_ERRTYPE : CHAR ;
+       PFRET : SCANF_PTR ;
 
-   begin (* SET_ERROR_POS *)
+   begin (* SET_ERROR_POS_FUNC *)
      PASSCAN_ERRTYPE := ERRTYPE ;
      if PASSCAN_ERRTYPE = 'E' then
        PASSCAN_ERRTYPE := 'F' ;
-     PASSCANE ( SCB , PASSCAN_ERRTYPE , 'P' , FERRNR , ERRINFO , LINENR
-                , LINEPOS ) ;
+     PFRET := PASSCANE ( SCB , PASSCAN_ERRTYPE , 'P' , FERRNR , ERRINFO
+              , LINENR , LINEPOS ) ;
      ERRLN := LINENR ;
      if ( ERRTYPE <> 'W' ) or OPT . WARNING then
        ERRLOG := ERRLOG + [ FERRNR ] ;
+     SET_ERROR_POS_FUNC := PFRET ;
+   end (* SET_ERROR_POS_FUNC *) ;
+
+
+
+procedure SET_ERROR_POS ( ERRTYPE : CHAR ; FERRNR : ERRCODE ; ERRINFO :
+                        CHAR64 ; LINENR : INTEGER ; LINEPOS : INTEGER )
+                        ;
+
+(*****************************************************)
+(*  error-Prozedur                                   *)
+(*  positionsangaben ueber parameter                 *)
+(*****************************************************)
+
+
+   var PFDUMMY : SCANF_PTR ;
+
+   begin (* SET_ERROR_POS *)
+     PFDUMMY := SET_ERROR_POS_FUNC ( ERRTYPE , FERRNR , ERRINFO ,
+                LINENR , LINEPOS ) ;
    end (* SET_ERROR_POS *) ;
 
 
@@ -2556,6 +2791,8 @@ procedure SET_ERROR ( FERRNR : ERRCODE ) ;
 (*****************************************************)
 
 
+   var PFDUMMY : SCANF_PTR ;
+
    begin (* SET_ERROR *)
 
      (************************************************)
@@ -2563,33 +2800,10 @@ procedure SET_ERROR ( FERRNR : ERRCODE ) ;
      (*  nachher immer auf 'E'                       *)
      (************************************************)
 
-     SET_ERROR_POS ( ERRKIND , FERRNR , ' ' , SCB . LINENR , SCB .
-                     LINEPOS ) ;
+     PFDUMMY := SET_ERROR_POS_FUNC ( ERRKIND , FERRNR , ' ' , SCB .
+                LINENR , SCB . LINEPOS ) ;
      ERRKIND := 'E' ;
    end (* SET_ERROR *) ;
-
-
-
-procedure SET_ERROR_SKIP ( FERRNR : ERRCODE ; FSYS : SYMSET ) ;
-
-(*****************************************************)
-(*  set error and skip until next correct symbol     *)
-(*****************************************************)
-
-
-   begin (* SET_ERROR_SKIP *)
-
-     (************************************************)
-     (*  errkind wird ggf. vorher auf 'W' gesetzt    *)
-     (*  nachher immer auf 'E'                       *)
-     (************************************************)
-
-     SET_ERROR_POS ( ERRKIND , FERRNR , ' ' , SCB . LINENR , SCB .
-                     LINEPOS ) ;
-     ERRKIND := 'E' ;
-     while not ( SY in FSYS ) do
-       INSYMBOL ;
-   end (* SET_ERROR_SKIP *) ;
 
 
 
@@ -2600,10 +2814,64 @@ procedure SKIP_SYMBOL ( FSYS : SYMSET ) ;
 (*****************************************************)
 
 
+   var PFDUMMY : SCANF_PTR ;
+       S : SYMB ;
+       X : STRING ( 64 ) ;
+       SKIPINFO : CHAR64 ;
+       SSTR : STRING ( 20 ) ;
+
    begin (* SKIP_SYMBOL *)
-     while not ( SY in FSYS ) do
-       INSYMBOL ;
+     if not ( SY in FSYS ) then
+       begin
+         X := '' ;
+         for S := SYMB_EOF to NOTUSED do
+           if S in FSYS then
+             begin
+               SSTR := SYMB_CHAR [ S ] ;
+               if LENGTH ( X ) + LENGTH ( SSTR ) + 1 >= 60 then
+                 begin
+                   X := X || ',...' ;
+                   break
+                 end (* then *)
+               else
+                 X := X || ',' || SSTR ;
+             end (* then *) ;
+         SKIPINFO := SUBSTR ( X , 2 ) ;
+         PFDUMMY := SET_ERROR_POS_FUNC ( 'Y' , 299 , SKIPINFO , SCB .
+                    LINENR , SCB . LINEPOS ) ;
+         SCB . SKIPPING := TRUE ;
+         while not ( SY in FSYS ) do
+           INSYMBOL ;
+         SCB . SKIPPING := FALSE ;
+       end (* then *) ;
    end (* SKIP_SYMBOL *) ;
+
+
+
+procedure SET_ERROR_SKIP ( FERRNR : ERRCODE ; FSYS : SYMSET ) ;
+
+(*****************************************************)
+(*  set error and skip until next correct symbol     *)
+(*****************************************************)
+
+
+   var PFDUMMY : SCANF_PTR ;
+
+   begin (* SET_ERROR_SKIP *)
+
+     (************************************************)
+     (*  errkind wird ggf. vorher auf 'W' gesetzt    *)
+     (*  nachher immer auf 'E'                       *)
+     (************************************************)
+     (*  errkind wird ggf. vorher auf 'W' gesetzt    *)
+     (*  nachher immer auf 'E'                       *)
+     (************************************************)
+
+     PFDUMMY := SET_ERROR_POS_FUNC ( ERRKIND , FERRNR , ' ' , SCB .
+                LINENR , SCB . LINEPOS ) ;
+     ERRKIND := 'E' ;
+     SKIP_SYMBOL ( FSYS ) ;
+   end (* SET_ERROR_SKIP *) ;
 
 
 
@@ -3552,7 +3820,7 @@ procedure ENTERID ( FCP : IDP ) ;
    var K : BKT_RNG ;
        NAM : ALPHA ;
        LCP : IDP ;
-       ERRINFO : CHAR32 ;
+       ERRINFO : CHAR64 ;
        SHOW : BOOLEAN ;
        K2 : BKT_RNG ;
 
@@ -3892,22 +4160,52 @@ function GETIDLEN ( X : ALPHA ) : INTEGER ;
 
 
 
-procedure GETBOUNDS ( FSP : TTP ; var FMIN , FMAX : INTEGER ) ;
+procedure GETBOUNDS_EXTENDED ( FSP : TTP ; var FMIN , FMAX : INTEGER ;
+                             var MINTYP , MAXTYP : CHAR ) ;
 
-(******************************************************)
-(* GET INTERNAL BOUNDS OF SUBRANGE OR SCALAR TYPE     *)
-(* ASSUME (FSP <> NIL) AND (FSP@.FORM <= SUBRANGE)    *)
-(* AND (FSP <> ptype_int)                             *)
-(* AND NOT COMPTYPES (ptype_real, FSP)                *)
-(******************************************************)
+//****************************************************
+// GET INTERNAL BOUNDS OF SUBRANGE OR SCALAR TYPE     
+// ASSUME (FSP <> NIL) AND (FSP@.FORM <= SUBRANGE)    
+// AND (FSP <> ptype_int)                             
+// AND NOT COMPTYPES (ptype_real, FSP)                
+// mintyp and maxtyp is I in the normal case          
+// unless the type fsp is a subrange of char          
+// and the subrange limits have been specified as     
+// char constants; in this case mintyp and maxtyp     
+// are returned as C                                  
+//****************************************************
 
 
-   begin (* GETBOUNDS *)
+   var RTYP : TTP ;
+
+   begin (* GETBOUNDS_EXTENDED *)
+     MINTYP := 'I' ;
+     MAXTYP := 'I' ;
      with FSP -> do
        if FORM = SUBRANGE then
          begin
            FMIN := MIN . IVAL ;
-           FMAX := MAX . IVAL
+           FMAX := MAX . IVAL ;
+           if FALSE then
+             begin
+               WRITELN ( TRACEF ) ;
+               WRITELN ( TRACEF , 'in getbounds_extended, ' , 'loc = '
+                         , LINECNT ) ;
+               WRITELN ( TRACEF , 'fmin     = ' , FMIN ) ;
+               WRITELN ( TRACEF , 'fmax     = ' , FMAX ) ;
+               WRITELN ( TRACEF , 'min.str  = ' , MIN . STRTYPE ) ;
+               WRITELN ( TRACEF , 'max.str  = ' , MAX . STRTYPE ) ;
+             end (* then *) ;
+           RTYP := RANGETYPE ;
+           if RTYP -> . FORM = SCALAR then
+             if RTYP -> . SCALKIND = STANDARD then
+               if RTYP -> . WHATSTANDARD = 'C' then
+                 begin
+                   if MIN . STRTYPE <> 'X' then
+                     MINTYP := 'C' ;
+                   if MAX . STRTYPE <> 'X' then
+                     MAXTYP := 'C'
+                 end (* then *)
          end (* then *)
        else
          begin
@@ -3920,6 +4218,24 @@ procedure GETBOUNDS ( FSP : TTP ; var FMIN , FMAX : INTEGER ) ;
              else
                FMAX := 0
          end (* else *)
+   end (* GETBOUNDS_EXTENDED *) ;
+
+
+
+procedure GETBOUNDS ( FSP : TTP ; var FMIN , FMAX : INTEGER ) ;
+
+(******************************************************)
+(* GET INTERNAL BOUNDS OF SUBRANGE OR SCALAR TYPE     *)
+(* ASSUME (FSP <> NIL) AND (FSP@.FORM <= SUBRANGE)    *)
+(* AND (FSP <> ptype_int)                             *)
+(* AND NOT COMPTYPES (ptype_real, FSP)                *)
+(******************************************************)
+
+
+   var MINTYP , MAXTYP : CHAR ;
+
+   begin (* GETBOUNDS *)
+     GETBOUNDS_EXTENDED ( FSP , FMIN , FMAX , MINTYP , MAXTYP ) ;
    end (* GETBOUNDS *) ;
 
 
@@ -4881,7 +5197,7 @@ procedure PROC_TO_STATNAME ( PROCNAME : EXTNAMTP ; EXTRN : BOOLEAN ;
 procedure SEARCH_UNREFERENCED ( BLOCK_ID : IDP ; LAST_VAR : IDP ;
                               LAST_TYPE : IDP ; LAST_PROC : IDP ) ;
 
-   var ERRINFO : CHAR32 ;
+   var ERRINFO : CHAR64 ;
 
    begin (* SEARCH_UNREFERENCED *)
      if FALSE then
@@ -6255,7 +6571,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
    //******************************************************
 
 
-      var ERRINFO : CHAR32 ;
+      var ERRINFO : CHAR64 ;
           PARAMCOUNT : ADDRRANGE ;
           PARAM1 : ADDRRANGE ;
           PARAM2 : ADDRRANGE ;
@@ -6267,6 +6583,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
           PMAX : ADDRRANGE ;
           PDEF : ADDRRANGE ;
           IDP_KONST : IDP ;
+          PFDUMMY : SCANF_PTR ;
 
       begin (* TYPE_WITH_PARMS *)
         if FALSE then
@@ -6400,8 +6717,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
             if not OK then
               begin
                 ERRINFO := IDX ;
-                SET_ERROR_POS ( 'E' , 330 , ERRINFO , SCB . LINENR ,
-                                SCB . LINEPOS ) ;
+                PFDUMMY := SET_ERROR_POS_FUNC ( 'E' , 330 , ERRINFO ,
+                           SCB . LINENR , SCB . LINEPOS ) ;
                 SKIP_SYMBOL ( FSYS ) ;
                 if SY = SYRPARENT then
                   INSYMBOL ;
@@ -9013,7 +9330,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
       var LCP , LCP1 , LCP2 : IDP ;
           LSP : TTP ;
           LSIZE : ADDRRANGE ;
-          ERRINFO : CHAR32 ;
+          ERRINFO : CHAR64 ;
 
       begin (* TYPEDECLARATION *)
         if SY <> IDENT then
@@ -9100,7 +9417,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
           LSP : TTP ;
           LSIZE : ADDRRANGE ;
           LFPTR : FRECPTR ;
-          ERRINFO : CHAR32 ;
+          ERRINFO : CHAR64 ;
           DONE : BOOLEAN ;
 
       begin (* VARDECLARATION *)
@@ -9242,7 +9559,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
           LSIZE : ADDRRANGE ;
           LVALU_DUMMY : XCONSTANT ;
           ELSIZE : INTEGER ;
-          ERRINFO : CHAR32 ;
+          ERRINFO : CHAR64 ;
           DONE : BOOLEAN ;
 
       begin (* STATICDECLARATION *)
@@ -9451,7 +9768,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
           OLD_COUNT : HASH_COUNT ;
           INTERN : BOOLEAN ;
           CHECKID : ALPHA ;
-          ERRINFO : CHAR32 ;
+          ERRINFO : CHAR64 ;
           LIST_OF_VARS : IDP ;
 
 
@@ -10260,7 +10577,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
           LRETURN : LABELRNG ;
           CSTEXTNAME : EXTNAMTP ;
           XCSP : CSPTYPE ;
-          ERRINFO : CHAR32 ;
+          ERRINFO : CHAR64 ;
           DONE : BOOLEAN ;
 
 
@@ -10477,6 +10794,31 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
          end (* GEN3 *) ;
 
 
+      procedure GEN3_CHK ( FP0 , FPMIN , FPMAX : INTEGER ; MINTYP ,
+                         MAXTYP : CHAR ) ;
+
+         begin (* GEN3_CHK *)
+           if OPT . PRCODE then
+             begin
+               PUTIC ;
+               WRITE ( PCODE , MN [ PCODE_CHK ] : 4 ) ;
+               WRITE ( PCODE , CHR ( FP0 ) : 2 ) ;
+               WRITE ( PCODE , ',' ) ;
+               if MINTYP = 'C' then
+                 WRITE ( PCODE , '''' , CHR ( FPMIN ) , '''' )
+               else
+                 WRITE ( PCODE , FPMIN : 1 ) ;
+               WRITE ( PCODE , ',' ) ;
+               if MAXTYP = 'C' then
+                 WRITE ( PCODE , '''' , CHR ( FPMAX ) , '''' )
+               else
+                 WRITE ( PCODE , FPMAX : 1 ) ;
+               WRITELN ( PCODE ) ;
+             end (* then *) ;
+           ICOUNTER := ICOUNTER + 1
+         end (* GEN3_CHK *) ;
+
+
       procedure CHECK_CTLS ( MODE : INTEGER ) ;
 
          begin (* CHECK_CTLS *)
@@ -10607,8 +10949,6 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
 
       procedure LOADADDRESS ;
 
-         var GEN_RUNTIME_ERROR : CHAR ( 2 ) ;
-
          begin (* LOADADDRESS *)
            with GATTR do
              if TYPTR <> NIL then
@@ -10644,7 +10984,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                            end (* case *) ;
                    EXPR : begin
                             if FALSE then
-                              GEN_RUNTIME_ERROR := 'OK' || ' ' ;
+                              $ERROR ( 1999 ) ;
                             SET_ERROR ( 418 )
                           end (* tag/ca *) ;
                  end (* case *) ;
@@ -10761,6 +11101,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
 
 
          var LMIN , LMAX : INTEGER ;
+             RTYP : TTP ;
+             MINTYP , MAXTYP : CHAR ;
 
          begin (* CHKBNDS *)
            if FALSE then
@@ -10773,26 +11115,111 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
            //************************************************
 
            if FSP <> NIL then
-             if FSP <> PTYPE_BOOL then
-               if FSP <> PTYPE_INT then
-                 if not IS_STDTYPE ( FSP , 'R' ) then
-                   begin
-                     if FSP -> . FORM = POINTER then
+             case FSP -> . FORM of
+               SCALAR :
+                 if FSP <> PTYPE_BOOL then
+                   if FSP <> PTYPE_INT then
+                     if not IS_STDTYPE ( FSP , 'R' ) then
                        begin
-                         if not ( CALLNR in [ 3 , 6 ] ) then
-                           if FALSE then
-                             GEN3 ( PCODE_CHK , ORD ( 'A' ) , - 1 ,
-                                    CALLNR )
-                       end (* then *)
-                     else
-                       if FSP -> . FORM < POINTER then
-                         begin
-                           GETBOUNDS ( FSP , LMIN , LMAX ) ;
-                           GEN3 ( PCODE_CHK , ORD ( 'I' ) , LMIN , LMAX
-                                  ) ;
-                         end (* then *)
-                   end (* then *)
+                         GETBOUNDS ( FSP , LMIN , LMAX ) ;
+                         GEN3 ( PCODE_CHK , ORD ( 'I' ) , LMIN , LMAX )
+                                ;
+                       end (* then *) ;
+               POINTER :
+                 begin
+                   if not ( CALLNR in [ 3 , 6 ] ) then
+                     if FALSE then
+                       GEN3 ( PCODE_CHK , ORD ( 'A' ) , - 1 , CALLNR )
+                 end (* tag/ca *) ;
+               SUBRANGE :
+                 begin
+
+           //************************************************
+           // take care of subrange of char                  
+           // limits should probably be specified            
+           // as char constants for compatibility            
+           // across platforms                               
+           //************************************************
+
+                   GETBOUNDS_EXTENDED ( FSP , LMIN , LMAX , MINTYP ,
+                                        MAXTYP ) ;
+                   if FALSE then
+                     begin
+                       WRITELN ( TRACEF ) ;
+                       WRITELN ( TRACEF , 'in chkbnds, loc = ' ,
+                                 LINECNT ) ;
+                       WRITELN ( TRACEF , 'fsp.form = ' , FSP -> . FORM
+                                 : 10 ) ;
+                       RTYP := FSP -> . RANGETYPE ;
+                       WRITELN ( TRACEF , 'fsp.rtyp = ' , RTYP ) ;
+                       WRITELN ( TRACEF , 'rtyp.form = ' , RTYP -> .
+                                 FORM : 10 ) ;
+                       WRITELN ( TRACEF , 'whatstand = ' , RTYP -> .
+                                 WHATSTANDARD ) ;
+                       WRITELN ( TRACEF , 'callnr   = ' , CALLNR ) ;
+                       WRITELN ( TRACEF , 'lmin     = ' , LMIN ) ;
+                       WRITELN ( TRACEF , 'lmax     = ' , LMAX ) ;
+                       WRITELN ( TRACEF , 'mintyp   = ' , MINTYP ) ;
+                       WRITELN ( TRACEF , 'maxtyp   = ' , MAXTYP ) ;
+                     end (* then *) ;
+                   GEN3_CHK ( ORD ( 'I' ) , LMIN , LMAX , MINTYP ,
+                              MAXTYP ) ;
+                 end (* tag/ca *)
+             end (* case *)
          end (* CHKBNDS *) ;
+
+
+      procedure CHKBNDS_EXTENDED ( CALLNR : INTEGER ;     // where ?
+                                 ASSIGN : BOOLEAN ;       // not used
+                                 FSP : TTP ;              // type
+                                 COMP_TIME : BOOLEAN ;    // compile
+                                 CHECK_CONST : INTEGER ;  // constant
+                                 DEBUG : BOOLEAN ) ;      // debug opt
+
+      //************************************************
+      // this new proc checks bounds at compile time    
+      // already, if possible (constants in assignments)
+      // if not, it generates CHK instructions by       
+      // calling the CHKBNDS procedure, as before       
+      //************************************************
+
+
+         var LMIN , LMAX : INTEGER ;
+
+         begin (* CHKBNDS_EXTENDED *)
+           if COMP_TIME then
+             begin
+               if FSP <> NIL then
+                 case FSP -> . FORM of
+                   SCALAR :
+                     if FSP <> PTYPE_BOOL then
+                       if FSP <> PTYPE_INT then
+                         if not IS_STDTYPE ( FSP , 'R' ) then
+                           begin
+                             GETBOUNDS ( FSP , LMIN , LMAX ) ;
+                             if ( CHECK_CONST < LMIN ) or ( CHECK_CONST
+                             > LMAX ) then
+                               SET_ERROR ( 242 )
+                           end (* then *) ;
+                   POINTER :
+                     begin
+                       if not ( CALLNR in [ 3 , 6 ] ) then
+                         if CHECK_CONST = - 1 then
+                           SET_ERROR ( 241 )
+                     end (* tag/ca *) ;
+                   SUBRANGE :
+                     begin
+                       GETBOUNDS ( FSP , LMIN , LMAX ) ;
+                       if ( CHECK_CONST < LMIN ) or ( CHECK_CONST >
+                       LMAX ) then
+                         SET_ERROR ( 240 )
+                     end (* tag/ca *)
+                 end (* case *)
+             end (* then *)
+           else
+             if DEBUG then
+               CHKBNDS ( CALLNR , ASSIGN , FSP )
+         end (* CHKBNDS_EXTENDED *) ;
 
 
       procedure PUTLABEL ( LABNAME : INTEGER ) ;
@@ -11452,6 +11879,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                    STRINGSIZE_LEFT : 1 .. MAXSTRL ;
                    STRINGSIZE_RIGHT : 1 .. MAXSTRL ;
                    LLC2 : ADDRRANGE ;
+                   PARM_IS_CONST : BOOLEAN ;
+                   CONST_FOR_CHKBNDS : INTEGER ;
 
                begin (* WORK_PARAM_BYVALUE *)
 
@@ -11499,9 +11928,17 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                  repeat
                    if PARMTYPE -> . FORM < POWER then
                      begin
+                       PARM_IS_CONST := FALSE ;
+                       if GATTR . KIND = CST then
+                         begin
+                           PARM_IS_CONST := TRUE ;
+                           CONST_FOR_CHKBNDS := GATTR . CVAL . IVAL ;
+                         end (* then *) ;
                        LOAD ;
-                       if OPT . DEBUG then
-                         CHKBNDS ( 3 , TRUE , PARMTYPE ) ;
+                       CHKBNDS_EXTENDED ( 3 , TRUE , PARMTYPE ,
+                                          PARM_IS_CONST ,
+                                          CONST_FOR_CHKBNDS , OPT .
+                                          DEBUG ) ;
                        if COMPTYPES ( PTYPE_REAL , PARMTYPE ) = 1 then
                          if ( GATTR . TYPTR = PTYPE_INT ) then
                            begin
@@ -12363,6 +12800,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                          COLON_OK := FALSE ;
                          GEN_LENGTH := FALSE ;
                          PASREAD_NAME := ' ' ;
+                         STORE_TYPE := ' ' ;
+                         CHKTYPE := NIL ;
                          repeat
 
                  //*****************************
@@ -12394,62 +12833,82 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                                break ;
                              end (* then *) ;
 
-                 //********************************************
-                 // character array                            
-                 // check for colon and length later           
-                 //********************************************
+                 //**************************************************
+                 // character array                                  
+                 // new and old variant                              
+                 // check for colon and length later                 
+                 //**************************************************
 
                            COLON_OK := TRUE ;
                            if IS_CARRAY ( GATTR . TYPTR ) then
-                             begin
-                               LOADADDRESS ;
-                               GEN2 ( PCODE_LDC , 1 , GATTR . TYPTR ->
-                                      . SIZE ) ;
-                               GEN_LENGTH := TRUE ;
-                               XCSP := PRFS ;
-                               break ;
-                             end (* then *) ;
+                             if TRUE then
+                               begin
+                                 LOADADDRESS ;
+                                 GEN2 ( PCODE_LDC , 1 , GATTR . TYPTR
+                                        -> . SIZE ) ;
+                                 GEN_LENGTH := TRUE ;
+                                 XCSP := PRFS ;
+                                 break ;
+                               end (* then *)
+                             else
+                               begin
+                                 LOADADDRESS ;
+                                 GEN2 ( PCODE_LDC , 1 , GATTR . TYPTR
+                                        -> . SIZE ) ;
+                                 GEN_LENGTH := FALSE ;
+                                 XCSP := PRDS ;
+                                 break ;
+                               end (* else *) ;
 
-                 //********************************************
-                 // variable length string                     
-                 // check for colon and length later           
-                 //********************************************
+                 //**************************************************
+                 // variable length string                           
+                 // check for colon and length later                 
+                 //**************************************************
 
                            if GATTR . TYPTR -> . FORM = CSTRING then
                              begin
                                LOADADDRESS ;
                                GEN2 ( PCODE_LDC , 1 , GATTR . TYPTR ->
                                       . SIZE - 4 ) ;
-                               COLON_OK := TRUE ;
                                GEN_LENGTH := TRUE ;
                                XCSP := PRFV ;
                                break ;
                              end (* then *) ;
 
-                 //****************************
-                 // single character           
-                 //****************************
+                 //**************************************************
+                 // single character                                 
+                 // new and old variant                              
+                 //**************************************************
 
                            if GATTR . TYPTR = PTYPE_CHAR then
-                             begin
-                               LOADADDRESS ;
-                               GEN_LENGTH := TRUE ;
-                               XCSP := PRFC ;
-                               break ;
-                             end (* then *) ;
+                             if TRUE then
+                               begin
+                                 CHKTYPE := GATTR . BTYPE ;
+                                 LOADADDRESS ;
+                                 GEN_LENGTH := TRUE ;
+                                 XCSP := PRFC ;
+                                 STORE_TYPE := 'C' ;
+                                 break ;
+                               end (* then *)
+                             else
+                               begin
+                                 LOADADDRESS ;
+                                 GEN_LENGTH := FALSE ;
+                                 XCSP := PRDC ;
+                                 break ;
+                               end (* else *) ;
 
-                 //****************************
-                 // real                       
-                 //****************************
+                 //**************************************************
+                 // real - new variant only                          
+                 //**************************************************
 
                            if IS_STDTYPE ( GATTR . TYPTR , 'R' ) then
                              begin
-                               CHKTYPE := GATTR . TYPTR ;
+                               CHKTYPE := NIL ;
 
-                 //************************************
-                 // sample coding like in the integer  
-                 // case                               
-                 //************************************
+                 //*****************************************
+                 // sample coding like in the integer case  
+                 //*****************************************
 
                                PREPLIBRARYFUNC ( 0 , LCCALLER , LCPARM
                                                  , LCWORK ) ;
@@ -12481,13 +12940,15 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
 
                  //**************************************************
                  // integer different lengths                        
+                 // new and old variant                              
                  // integer is the first read variant which has been 
                  // implemented in Pascal (see PASLIBX)              
                  //**************************************************
 
                            if GATTR . TYPTR = PTYPE_INT then
-                             begin
-                               CHKTYPE := GATTR . BTYPE ;
+                             if TRUE then
+                               begin
+                                 CHKTYPE := GATTR . BTYPE ;
 
                  //************************************
                  // sample coding:                     
@@ -12502,9 +12963,72 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                  //                         indirect   
                  //************************************
 
+                                 PREPLIBRARYFUNC ( 0 , LCCALLER ,
+                                                   LCPARM , LCWORK ) ;
+                                 PASREAD_NAME := '$PASRDI' ;
+
+                 //******************************
+                 // store FCB address into parm  
+                 //******************************
+
+                                 if ACCESS_FILE = 'D' then
+                                   GEN2 ( PCODE_LDA , VLEVEL_FILE ,
+                                          DISPL_FILE )
+                                 else
+                                   GEN3 ( PCODE_LOD , ORD ( 'A' ) ,
+                                          VLEVEL_FILE , DISPL_FILE ) ;
+                                 GEN3 ( PCODE_STR , ORD ( 'I' ) , LEVEL
+                                        , LCPARM ) ;
+                                 LCPARM := LCPARM + INTSIZE ;
+
+                 //**********************
+                 // load target address  
+                 //**********************
+
+                                 LOADADDRESS ;
+                                 GEN_LENGTH := TRUE ;
+                                 if GATTR . BTYPE -> . SIZE = INTSIZE
+                                 then
+                                   STORE_TYPE := 'I'
+                                 else
+                                   if GATTR . BTYPE -> . SIZE =
+                                   HINTSIZE then
+                                     STORE_TYPE := 'H'
+                                   else
+                                     STORE_TYPE := 'C' ;
+                                 break
+                               end (* then *)
+                             else
+                               begin
+                                 LOADADDRESS ;
+                                 GEN_LENGTH := FALSE ;
+                                 if GATTR . BTYPE -> . SIZE = INTSIZE
+                                 then
+                                   XCSP := PRDI
+                                 else
+                                   if GATTR . BTYPE -> . SIZE =
+                                   HINTSIZE then
+                                     XCSP := PRDH
+                                   else
+                                     XCSP := PRDY ;
+                                 break
+                               end (* else *) ;
+
+                 //**************************************************
+                 // boolean - new variant only                       
+                 //**************************************************
+
+                           if GATTR . TYPTR = PTYPE_BOOL then
+                             begin
+                               CHKTYPE := GATTR . TYPTR ;
+
+                 //*****************************************
+                 // sample coding like in the integer case  
+                 //*****************************************
+
                                PREPLIBRARYFUNC ( 0 , LCCALLER , LCPARM
                                                  , LCWORK ) ;
-                               PASREAD_NAME := '$PASRDI' ;
+                               PASREAD_NAME := '$PASRDB' ;
 
                  //******************************
                  // store FCB address into parm  
@@ -12526,34 +13050,18 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
 
                                LOADADDRESS ;
                                GEN_LENGTH := TRUE ;
-                               if GATTR . BTYPE -> . SIZE = INTSIZE
-                               then
-                                 STORE_TYPE := 'I'
-                               else
-                                 if GATTR . BTYPE -> . SIZE = HINTSIZE
-                                 then
-                                   STORE_TYPE := 'H'
-                                 else
-                                   STORE_TYPE := 'C' ;
+                               STORE_TYPE := 'B' ;
                                break
                              end (* then *) ;
 
-                 //****************************
-                 // boolean                    
-                 //****************************
+                 //**************************************************
+                 // other types (not implemented)                    
+                 //**************************************************
 
-                           if GATTR . TYPTR = PTYPE_BOOL then
-                             begin
-                               LOADADDRESS ;
-                               XCSP := PRDB
-                             end (* then *)
-                           else
-                             begin
-                               SET_ERROR ( 116 ) ;
-                               LOADADDRESS ;
-                               GEN_LENGTH := TRUE ;
-                               XCSP := PRFC
-                             end (* else *) ;
+                           SET_ERROR ( 116 ) ;
+                           LOADADDRESS ;
+                           GEN_LENGTH := TRUE ;
+                           XCSP := PRDC
                          until TRUE ;
 
                  //***************************************
@@ -12597,18 +13105,18 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                          else
                            begin
 
-                 //**********************************
-                 // store length information         
-                 // call read function (Pascal)      
-                 // store result indirect            
-                 //**********************************
+                 //**********************************************
+                 // store length information                     
+                 // call read function (Pascal)                  
+                 // store result indirect                        
+                 //**********************************************
 
                              GEN3 ( PCODE_STR , ORD ( 'I' ) , LEVEL ,
                                     LCPARM ) ;
                              LCPARM := LCPARM + INTSIZE ;
-                             if STORE_TYPE = 'R' then
+                             if STORE_TYPE in [ 'B' , 'R' ] then
                                begin
-                                 CALLLIBFUNC_PARMS ( 'R' , 2 ,
+                                 CALLLIBFUNC_PARMS ( STORE_TYPE , 2 ,
                                                    PASREAD_NAME ,
                                                    LCCALLER ) ;
                                end (* then *)
@@ -12617,11 +13125,29 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                                  CALLLIBFUNC_PARMS ( 'I' , 2 ,
                                                    PASREAD_NAME ,
                                                    LCCALLER ) ;
-                                 if OPT . DEBUG then
-                                   CHKBNDS ( 6 , TRUE , CHKTYPE ) ;
                                end (* else *) ;
-                             GEN1 ( PCODE_STO , ORD ( STORE_TYPE ) )
                            end (* else *) ;
+
+                 //**********************************************
+                 // if store_type not blank then                 
+                 // generate store instruction after csp call    
+                 // if chktype is not nil then                   
+                 // generate chk instruction before store        
+                 //**********************************************
+
+                         if STORE_TYPE <> ' ' then
+                           begin
+                             if CHKTYPE <> NIL then
+                               if OPT . DEBUG then
+                                 CHKBNDS ( 6 , TRUE , CHKTYPE ) ;
+                             GEN1 ( PCODE_STO , ORD ( STORE_TYPE ) ) ;
+                           end (* then *) ;
+
+                 //**********************************************
+                 // if comma then another argument               
+                 // else done                                    
+                 //**********************************************
+
                          if SY = SYCOMMA then
                            INSYMBOL
                          else
@@ -15609,6 +16135,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                          COLON_OK := FALSE ;
                          GEN_LENGTH := FALSE ;
                          PASREAD_NAME := ' ' ;
+                         CHKTYPE := NIL ;
                          repeat
 
                  //*****************************
@@ -15626,7 +16153,6 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                            COLON_OK := TRUE ;
                            if IS_CARRAY ( GATTR . TYPTR ) then
                              begin
-                               CHKTYPE := GATTR . TYPTR ;
                                PASREAD_NAME := '$PASRSS' ;
                                LOADADDRESS ;
                                LCPARM := LCPARM3 + INTSIZE ;
@@ -15649,7 +16175,6 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
 
                            if GATTR . TYPTR -> . FORM = CSTRING then
                              begin
-                               CHKTYPE := GATTR . TYPTR ;
                                PASREAD_NAME := '$PASRSV' ;
                                LOADADDRESS ;
                                GEN1 ( PCODE_VSM , GATTR . TYPTR -> .
@@ -15668,7 +16193,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
 
                            if GATTR . TYPTR = PTYPE_CHAR then
                              begin
-                               CHKTYPE := GATTR . TYPTR ;
+                               CHKTYPE := GATTR . BTYPE ;
                                PASREAD_NAME := '$PASRSC' ;
                                LOADADDRESS ;
                                GEN_LENGTH := TRUE ;
@@ -15682,7 +16207,6 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
 
                            if IS_STDTYPE ( GATTR . TYPTR , 'R' ) then
                              begin
-                               CHKTYPE := GATTR . TYPTR ;
                                PASREAD_NAME := '$PASRSR' ;
                                LOADADDRESS ;
                                GEN_LENGTH := TRUE ;
@@ -15698,7 +16222,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
 
                            if GATTR . TYPTR = PTYPE_INT then
                              begin
-                               CHKTYPE := GATTR . TYPTR ;
+                               CHKTYPE := GATTR . BTYPE ;
                                PASREAD_NAME := '$PASRSI' ;
                                LOADADDRESS ;
                                GEN_LENGTH := TRUE ;
@@ -15726,9 +16250,10 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                            else
                              begin
                                SET_ERROR ( 116 ) ;
+                               PASREAD_NAME := '$PASRSC' ;
                                LOADADDRESS ;
                                GEN_LENGTH := TRUE ;
-                               XCSP := PRFC
+                               STORE_TYPE := 'C' ;
                              end (* else *) ;
                          until TRUE ;
 
@@ -15799,11 +16324,14 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                                    CALLLIBFUNC_PARMS ( 'I' , 2 ,
                                                    PASREAD_NAME ,
                                                    LCCALLER ) ;
-                                   if OPT . DEBUG then
-                                     CHKBNDS ( 6 , TRUE , CHKTYPE ) ;
                                  end (* else *) ;
                          if not ( STORE_TYPE in [ 'S' , 'V' ] ) then
-                           GEN1 ( PCODE_STO , ORD ( STORE_TYPE ) ) ;
+                           begin
+                             if CHKTYPE <> NIL then
+                               if OPT . DEBUG then
+                                 CHKBNDS ( 6 , TRUE , CHKTYPE ) ;
+                             GEN1 ( PCODE_STO , ORD ( STORE_TYPE ) ) ;
+                           end (* then *) ;
                          if SY = SYCOMMA then
                            INSYMBOL
                          else
@@ -18989,8 +19517,11 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                 STRINGSIZE_RIGHT : 1 .. MAXSTRL ;
                 TYPE_ERROR : INTEGER ;
                 IS_FUNCRES : BOOLEAN ;
+                RIGHT_SIDE_CONST : BOOLEAN ;
+                CONST_FOR_CHKBNDS : INTEGER ;
 
             begin (* ASSIGNMENT *)
+              RIGHT_SIDE_CONST := FALSE ;
               if CTLS . WATCH1 then
                 SET_ERROR ( 403 ) ;
               CTLS . WATCH1 := TRUE ;
@@ -19106,20 +19637,31 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
               (* load source of assignment                     *)
               (*************************************************)
 
+                  RIGHT_SIDE_CONST := FALSE ;
                   if GATTR . TYPTR <> NIL then
-                    if GATTR . TYPTR -> . FORM < POWER then
-                      LOAD
-                    else
-                      if GATTR . TYPTR -> . FORM = POWER then
-                        FORCETEMPSET
+                    begin
+                      if GATTR . TYPTR -> . FORM < POWER then
+                        begin
+                          if GATTR . KIND = CST then
+                            begin
+                              RIGHT_SIDE_CONST := TRUE ;
+                              CONST_FOR_CHKBNDS := GATTR . CVAL . IVAL
+                                                   ;
+                            end (* then *) ;
+                          LOAD
+                        end (* then *)
                       else
-                        if GATTR . TYPTR -> . FORM = CSTRING then
-                          begin
-                            if GATTR . KIND <> EXPR then
-                              LOADADDRESS
-                          end (* then *)
+                        if GATTR . TYPTR -> . FORM = POWER then
+                          FORCETEMPSET
                         else
-                          LOADADDRESS ;
+                          if GATTR . TYPTR -> . FORM = CSTRING then
+                            begin
+                              if GATTR . KIND <> EXPR then
+                                LOADADDRESS
+                            end (* then *)
+                          else
+                            LOADADDRESS ;
+                    end (* then *) ;
 
               (********************************)
               (* if both sides are ok         *)
@@ -19180,8 +19722,16 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                               WRITELN ( TRACEF , 'gattr.typtr.size = '
                                         , GATTR . TYPTR -> . SIZE ) ;
                             end (* then *) ;
-                          if OPT . DEBUG then
-                            CHKBNDS ( 6 , TRUE , LATTR . BTYPE ) ;
+
+              //******************************************
+              // check constant value at compile time     
+              // or generate CHK instruction              
+              //******************************************
+
+                          CHKBNDS_EXTENDED ( 6 , TRUE , LATTR . BTYPE ,
+                                             RIGHT_SIDE_CONST ,
+                                             CONST_FOR_CHKBNDS , OPT .
+                                             DEBUG ) ;
 
               //******************************************
               // assignment depending on target type class
@@ -21602,11 +22152,23 @@ procedure ENTSTDNAMES ;
            ( 'EOT      ' , 29 , FUNC ) , ( 'MESSAGE  ' , 35 , PROC ) ,
            ( 'SKIP     ' , 36 , PROC ) , ( 'LINELIMIT' , 37 , PROC ) ,
            ( 'CARD     ' , 38 , FUNC ) , ( 'EXPO     ' , 39 , FUNC ) ,
-           ( 'ADDR     ' , 40 , FUNC ) , ( 'PTRADD   ' , 41 , FUNC ) ,
-           ( 'PTRDIFF  ' , 42 , FUNC ) , ( 'SIZEOF   ' , 43 , FUNC ) ,
-           ( 'PTR2INT  ' , 44 , FUNC ) , ( 'PTRCAST  ' , 45 , FUNC ) ,
-           ( 'CLOSE    ' , 46 , PROC ) , ( 'FLOOR    ' , 47 , FUNC ) ,
-           ( 'MEMSET   ' , 75 , PROC ) , ( 'MEMCPY   ' , 76 , PROC ) ,
+
+         //****************************************************
+         // new functions added since 2016                     
+         // ADDR and PTRADD return ANYPTR results              
+         // ANYPTR is compatible to every pointer type         
+         //****************************************************
+
+           ( 'ADDR        ' , 40 , FUNC ) ,    // address of object
+           ( 'PTRADD      ' , 41 , FUNC ) ,    // adds integer to ptr
+           ( 'PTRDIFF     ' , 42 , FUNC ) ,    // diff of 2 ptrs
+           ( 'SIZEOF      ' , 43 , FUNC ) ,    // size of obj in bytes
+           ( 'PTR2INT     ' , 44 , FUNC ) ,    // converts ptr to int
+           ( 'PTRCAST     ' , 45 , FUNC ) ,    // same as ptradd 0
+           ( 'CLOSE       ' , 46 , PROC ) ,    // close a file
+           ( 'FLOOR       ' , 47 , FUNC ) ,    // floor function
+           ( 'MEMSET      ' , 75 , PROC ) ,    // like memset in C
+           ( 'MEMCPY      ' , 76 , PROC ) ,    // like memcpy in C
 
          //****************************************************
          // new functions since compiler release 2018.01       
@@ -21621,7 +22183,7 @@ procedure ENTSTDNAMES ;
            ( 'STRRESULTP  ' , 84 , FUNC ) ,    // ptr to str result
            ( 'REPEATSTR   ' , 85 , FUNC ) ,    // repeat str n times
            ( 'RESULTP     ' , 92 , FUNC ) ,    // ptr to result
-           ( 'MEMCMP      ' , 96 , FUNC ) ,    // like C memcmp
+           ( 'MEMCMP      ' , 96 , FUNC ) ,    // like memcmp in C
            ( 'APPEND      ' , 97 , PROC ) ,    // open file for append
            ( '$ERROR      ' , 102 , PROC ) ,   // show runtime error
            ( 'READSTR     ' , 103 , PROC ) ,   // from Pascal/VS
@@ -22262,6 +22824,11 @@ procedure ENTSTDNAMES ;
 
 procedure INITSCALARS ;
 
+//*****
+//$A+  
+//*****
+
+
    var ERRNO : INTEGER ;
        INPLINE : SOURCELINE ;
        ERRMSG : SOURCELINE ;
@@ -22301,6 +22868,7 @@ procedure INITSCALARS ;
      SCB . LINENR := 0 ;
      SCB . LINEPOS := 1 ;
      SCB . LINELEN := 0 ;
+     SCB . SKIPPING := FALSE ;
      SCB . FEANFANG := NIL ;
      SCB . FTTAB := NIL ;
      SCB . FTTABA := NIL ;

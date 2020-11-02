@@ -331,6 +331,7 @@ call_mst_element;
 
 typedef struct
 {                                 /**********************************/
+   char inpfilename [65];         /* Name of inpfile w/o Extension  */
    FILE *inpfile;                 /* Eingabedatei fuer PRR          */
    char inpzeile [256];           /* Eingabebuffer fuer PRR         */
    FILE *outfile;                 /* Ausgabedatei fuer Listing      */

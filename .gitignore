@@ -2,11 +2,14 @@
 # files to be ignored by git - Stanford Pascal
 #--------------------------------------------------------------------
 
-# all prr files (P-Code)
-# but the compiler related prr files are needed, so that the compiler runs
+# all pcode files (P-Code)
+# but the compiler related pcode files are needed, so that the compiler runs
 
-*.prr*
-!pas*.prr
+*.pcode*
+!pas*.pcode
+!pas*.pcode1
+!pas*.pcode2
+!pas*.pcode3
 
 # all files which are created during Pascal- or C-compiles
 # obvious exception: pcint.exe
@@ -17,6 +20,7 @@
 *.bak
 *.map
 *.tmp
+*.obj
 *.exe
 *.xxx
 !pcint.exe
@@ -49,3 +53,4 @@ alt/
 error/
 rest/
 compsave/
+resolved/

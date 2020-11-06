@@ -211,27 +211,89 @@ rem **********************************************************
 rem +++ Version 2019.09 +++
 rem **********************************************************
 
-    call copymvs pascal.messages compiler.messages
+rem call copymvs pascal.messages compiler.messages
 
-    call copymvs pascal1.pas   compiler.pas
-    call copymvs pascal1a.pas  compiler.pas
-    call copymvs pascal1b.pas  compiler.pas
-    call copymvs pascal2.pas   compiler.pas
-    call copymvs pascal2a.pas  compiler.pas
-    call copymvs pascal2b.pas  compiler.pas
-    call copymvs pasform.pas   compiler.pas
-    call copymvs pasforma.pas  compiler.pas
-    call copymvs paslibx.pas   compiler.pas
-    call copymvs passcan.pas   compiler.pas
-    call copymvs pasutils.pas  compiler.pas
+rem call copymvs pascal1.pas   compiler.pas
+rem call copymvs pascal1a.pas  compiler.pas
+rem call copymvs pascal1b.pas  compiler.pas
+rem call copymvs pascal2.pas   compiler.pas
+rem call copymvs pascal2a.pas  compiler.pas
+rem call copymvs pascal2b.pas  compiler.pas
+rem call copymvs pasform.pas   compiler.pas
+rem call copymvs pasforma.pas  compiler.pas
+rem call copymvs paslibx.pas   compiler.pas
+rem call copymvs passcan.pas   compiler.pas
+rem call copymvs pasutils.pas  compiler.pas
 
-    call copymvs avltree.pas   testpgm.pas
-    call copymvs copyteil.pas  testpgm.pas
-    call copymvs showhex.pas   testpgm.pas
-    call copymvs testerr4.pas  testpgm.pas
+rem call copymvs avltree.pas   testpgm.pas
+rem call copymvs copyteil.pas  testpgm.pas
+rem call copymvs showhex.pas   testpgm.pas
+rem call copymvs testerr4.pas  testpgm.pas
+rem call copymvs testrea2.pas  testpgm.pas
+rem call copymvs testread.pas  testpgm.pas
+rem call copymvs xcompn.pas    testpgm.pas
+
+rem call copymvs pasmonn.ass   runtime.asm
+
+rem **********************************************************
+rem +++ Version 2020.11 +++
+rem **********************************************************
+
+rem call copymvs pascal.messages compiler.messages
+rem
+rem call copymvs pascal1.pas   compiler.pas
+rem call copymvs pascal1a.pas  compiler.pas
+rem call copymvs pascal1b.pas  compiler.pas
+rem call copymvs pascal2.pas   compiler.pas
+rem call copymvs pascal2a.pas  compiler.pas
+rem call copymvs pascal2b.pas  compiler.pas
+rem call copymvs pasform.pas   compiler.pas
+rem call copymvs pasforma.pas  compiler.pas
+rem call copymvs paslibx.pas   compiler.pas
+rem call copymvs paslibxa.pas  compiler.pas
+rem call copymvs passcan.pas   compiler.pas
+rem call copymvs passcana.pas  compiler.pas
+rem call copymvs pasutils.pas  compiler.pas
+rem
+rem call copymvs pasmonn.ass   runtime.asm
+rem call copymvs pasmonna.ass  runtime.asm
+
     call copymvs testrea2.pas  testpgm.pas
+    call copymvs testcopy.pas  testpgm.pas
+    call copymvs testcpy2.pas  testpgm.pas
+    call copymvs testcpy3.pas  testpgm.pas
+    call copymvs testrdd.pas   testpgm.pas
+    call copymvs testrds.pas   testpgm.pas
+    call copymvs testrdv.pas   testpgm.pas
+    call copymvs testpp.pas    testpgm.pas
     call copymvs testread.pas  testpgm.pas
-    call copymvs xcompn.pas    testpgm.pas
-
-    call copymvs pasmonn.ass   runtime.asm
+    call copymvs testrea6.pas  testpgm.pas
+    call copymvs testrdc2.pas  testpgm.pas
+    call copymvs testrdi2.pas  testpgm.pas
+    call copymvs testrdr.pas   testpgm.pas
+    call copymvs testrdi.pas   testpgm.pas
+    call copymvs testhel.pas   testpgm.pas
+    call copymvs testspa.pas   testpgm.pas
+    call copymvs testrs1.pas   testpgm.pas
+    call copymvs testerr.pas   testpgm.pas
+    call copymvs testwrb.pas   testpgm.pas
+    call copymvs testavl.pas   testpgm.pas
+    call copymvs testspl.pas   testpgm.pas
+    call copymvs test2.pas     testpgm.pas
+    call copymvs testrdc3.pas  testpgm.pas
+    call copymvs testset7.pas  testpgm.pas
+    call copymvs testskip.pas  testpgm.pas
+    call copymvs testrea8.pas  testpgm.pas
+    call copymvs testrea3.pas  testpgm.pas
+    call copymvs testget.pas   testpgm.pas
+    call copymvs testrea7.pas  testpgm.pas
+    call copymvs testrdc.pas   testpgm.pas
+    call copymvs testchk2.pas  testpgm.pas
+    call copymvs testrdb.pas   testpgm.pas
+    call copymvs testrs2.pas   testpgm.pas
+    call copymvs teststa2.pas  testpgm.pas
+    call copymvs testscal.pas  testpgm.pas
+    call copymvs testfp2.pas   testpgm.pas
+    call copymvs testfilp.pas  testpgm.pas
+    call copymvs teststa3.pas  testpgm.pas
 

@@ -3734,6 +3734,175 @@ procedure $PASRSV ( const S : STRING ;     // source string
 
 
 
+function $PASRSB ( const S : STRING ;     // source string
+                 var RPOS : INTEGER ;     // reading position
+                 WIDTH : INTEGER )        // optional width
+                 : BOOLEAN ;              // result type
+
+//**********************************************************
+// this function implements READSTR for booleans            
+// s = the source string                                    
+// rpos = the reading position (counts from 1) - is updated 
+// width = the optional width (default -1)                  
+//**********************************************************
+// Bernd Oppolzer - New Stanford Pascal                     
+//**********************************************************
+
+
+   var RETVAL : BOOLEAN ;
+       FORMATTED : BOOLEAN ;
+       F : -> CHAR ;
+       RLEN : INTEGER ;
+       IX : INTEGER ;
+       BUFFER : CHAR ( 5 ) ;
+       WIDTHMAX : INTEGER ;
+
+   begin (* $PASRSB *)
+     if WIDTH = 0 then
+       begin
+         $PASRSB := FALSE ;
+         return
+       end (* then *) ;
+     FORMATTED := TRUE ;
+     if WIDTH < 0 then
+       begin
+         FORMATTED := FALSE ;
+         WIDTH := 999999999 ;
+       end (* then *) ;
+     if RPOS <= 0 then
+       RPOS := 1 ;
+     if RPOS > LENGTH ( S ) then
+       begin
+         $PASRSB := FALSE ;
+         return
+       end (* then *) ;
+     F := ADDR ( S [ RPOS ] ) ;
+     RLEN := LENGTH ( S ) - RPOS + 1 ;
+     RETVAL := FALSE ;
+
+     //**********************
+     // skip leading blanks  
+     //**********************
+
+     while ( F -> = ' ' ) and ( WIDTH > 0 ) and ( RLEN > 0 ) do
+       begin
+         F := PTRADD ( F , 1 ) ;
+         RLEN := RLEN - 1 ;
+         WIDTH := WIDTH - 1 ;
+       end (* while *) ;
+     if ( RLEN <= 0 ) or ( WIDTH <= 0 ) then
+       begin
+         RPOS := PTRDIFF ( F , ADDR ( S [ 1 ] ) ) + 1 ;
+         $PASRSB := RETVAL ;
+         return
+       end (* then *) ;
+
+     //************************************************
+     // now check for T or F                           
+     // if formatted input (length specified)          
+     // and length > 0, the word in the area must be   
+     // any abbreviation of the words TRUE or FALSE    
+     // as it may have been produced by write (boolean)
+     // no other characters than blanks may occur      
+     // before and after this word. the input is       
+     // format free.                                   
+     //************************************************
+
+     case F -> of
+       'F' , 'f' :
+         begin
+           if FORMATTED and ( WIDTH > 1 ) then
+             begin
+               BUFFER := 'FALSE' ;
+               WIDTHMAX := WIDTH ;
+               if WIDTHMAX > 5 then
+                 WIDTHMAX := 5 ;
+               IX := 1 ;
+               repeat
+                 BUFFER [ IX ] := TOUPPER ( F -> ) ;
+                 IX := IX + 1 ;
+                 if ( WIDTH > 0 ) and ( RLEN > 0 ) then
+                   begin
+                     F := PTRADD ( F , 1 ) ;
+                     RLEN := RLEN - 1 ;
+                     WIDTH := WIDTH - 1 ;
+                   end (* then *) ;
+               until ( IX > WIDTHMAX ) or ( F -> = ' ' ) or ( WIDTH <=
+               0 ) or ( RLEN <= 0 ) ;
+               if BUFFER <> 'FALSE' then
+                 $ERROR ( 1210 ) ;
+               RETVAL := FALSE ;
+             end (* then *)
+           else
+             begin
+               RETVAL := FALSE ;
+               F := PTRADD ( F , 1 ) ;
+               if FORMATTED then
+                 WIDTH := WIDTH - 1 ;
+             end (* else *) ;
+         end (* tag/ca *) ;
+       'T' , 't' :
+         begin
+           if FORMATTED and ( WIDTH > 1 ) then
+             begin
+               BUFFER := 'TRUE' ;
+               WIDTHMAX := WIDTH ;
+               if WIDTHMAX > 4 then
+                 WIDTHMAX := 4 ;
+               IX := 1 ;
+               repeat
+                 BUFFER [ IX ] := TOUPPER ( F -> ) ;
+                 IX := IX + 1 ;
+                 if ( WIDTH > 0 ) and ( RLEN > 0 ) then
+                   begin
+                     F := PTRADD ( F , 1 ) ;
+                     RLEN := RLEN - 1 ;
+                     WIDTH := WIDTH - 1 ;
+                   end (* then *) ;
+               until ( IX > WIDTHMAX ) or ( F -> = ' ' ) or ( WIDTH <=
+               0 ) or ( RLEN <= 0 ) ;
+               if BUFFER <> 'TRUE' then
+                 $ERROR ( 1210 ) ;
+               RETVAL := TRUE ;
+             end (* then *)
+           else
+             begin
+               RETVAL := TRUE ;
+               F := PTRADD ( F , 1 ) ;
+               if FORMATTED then
+                 WIDTH := WIDTH - 1 ;
+             end (* else *) ;
+         end (* tag/ca *) ;
+       otherwise
+         $ERROR ( 1209 )
+     end (* case *) ;
+
+     //*******************************************
+     // compose final result                      
+     //*******************************************
+
+     $PASRSB := RETVAL ;
+
+     //*******************************************
+     // if width specified, skip remaining chars  
+     //*******************************************
+
+     if FORMATTED then
+       while TRUE do
+         begin
+           if ( RLEN <= 0 ) or ( WIDTH <= 0 ) then
+             break ;
+           if F -> <> ' ' then
+             $ERROR ( 1211 ) ;
+           F := PTRADD ( F , 1 ) ;
+           RLEN := RLEN - 1 ;
+           WIDTH := WIDTH - 1 ;
+         end (* while *) ;
+     RPOS := PTRDIFF ( F , ADDR ( S [ 1 ] ) ) + 1 ;
+   end (* $PASRSB *) ;
+
+
+
 function $PASRSI ( const S : STRING ;     // source string
                  var RPOS : INTEGER ;     // reading position
                  WIDTH : INTEGER )        // optional width
@@ -4459,6 +4628,68 @@ procedure $PASWRR ( var F : TEXT ; WIDTH : INTEGER ; SCALE : INTEGER ;
      else
        $ERROR ( 1208 )
    end (* $PASWRR *) ;
+
+
+
+procedure $PASWRX ( var F : TEXT ; V : INTEGER ; WIDTH : INTEGER ;
+                  PMETA : ANYPTR ) ;
+
+//**********************************************************
+// write scalars to files                                   
+// rewritten in Pascal - portable solution in 2020          
+//**********************************************************
+// Bernd Oppolzer - New Stanford Pascal                     
+//**********************************************************
+
+
+   type SHORT = 0 .. 32000 ;
+        PSHORT = -> SHORT ;
+
+   var PS : PSHORT ;
+       LEFTX : BOOLEAN ;
+       ELEMCOUNT : SHORT ;
+       MAXIDLEN : SHORT ;
+       MINIDLEN : SHORT ;
+       LEN : SHORT ;
+       SCAL_OFFS : SHORT ;
+       CP : -> CHAR ;
+       BUFFER : CHAR ( 20 ) ;
+
+   begin (* $PASWRX *)
+     if WIDTH = 0 then
+       return ;
+     LEFTX := FALSE ;
+     if WIDTH < 0 then
+       begin
+         LEFTX := TRUE ;
+         WIDTH := - WIDTH
+       end (* then *) ;
+     PS := PMETA ;
+     if PS -> <> 0 then
+       $ERROR ( 1220 ) ;
+     PS := PTRADD ( PS , 2 ) ;
+     ELEMCOUNT := PS -> ;
+     PS := PTRADD ( PS , 2 ) ;
+     MAXIDLEN := PS -> ;
+     PS := PTRADD ( PS , 2 ) ;
+     MINIDLEN := PS -> ;
+     PS := PTRADD ( PS , 2 ) ;
+     if WIDTH < MINIDLEN then
+       $ERROR ( 1221 ) ;
+     if ( V < 0 ) or ( V >= ELEMCOUNT ) then
+       $ERROR ( 1222 ) ;
+     PS := PTRADD ( PS , ( ELEMCOUNT - 1 - V ) * 4 ) ;
+     SCAL_OFFS := PS -> ;
+     PS := PTRADD ( PS , 2 ) ;
+     LEN := PS -> ;
+     BUFFER := ' ' ;
+     CP := PTRADD ( PMETA , SCAL_OFFS ) ;
+     MEMCPY ( ADDR ( BUFFER ) , CP , LEN ) ;
+     if not LEFTX then
+       WRITE ( F , SUBSTR ( BUFFER , 1 , LEN ) : WIDTH )
+     else
+       WRITE ( F , SUBSTR ( BUFFER , 1 , LEN ) : - WIDTH )
+   end (* $PASWRX *) ;
 
 
 

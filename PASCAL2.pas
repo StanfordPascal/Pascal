@@ -576,9 +576,9 @@ program PCODE_TRANSLATOR ( PCODE , PCODE1 , PCODE2 , PCODE3 , OUTPUT ,
 
 
 
-const VERSION = '2020.11' ;        // Version for display message
-      VERSION2 = 0x2011 ;          // Version for load module
-      VERSION3 = 'XL2''2011''' ;   // Version for LIST002 listing
+const VERSION = '2020.12' ;        // Version for display message
+      VERSION2 = 0x2012 ;          // Version for load module
+      VERSION3 = 'XL2''2012''' ;   // Version for LIST002 listing
       MXADR = 65535 ;
       SHRTINT = 4095 ;
       HALFINT = 32700 ;

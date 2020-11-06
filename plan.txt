@@ -1,18 +1,8 @@
 
-2020.11:
+2020.12:
 
-* Ausgabe auf mehrere PCODE-Dateien
-* Umstellen PCINT auf mehrere PCODE-Dateien
-* Umstellen PASCAL2 auf mehrere PCODE-Dateien
-* Testen PASCAL2 usw. auf VM
-* PCINT: nach %INCLUDE auch 0x0d ueberlesen
-* COMPERRB: LEFT and String Condition (nur auf Mainframe)
-* File-Pointer besser absichern (kein NEW, WRITE, EOF usw. ermoeglichen)
-* WRITE Skalar mit Default-Laenge bringt Runtime-Fehler 1221 (?)
-* Verhindern, dass mit WITH Struct-Konstanten geaendert werden
-* PASFORM anpassen wg. structconst und Initialisierung
-* Auslieferung auf VM - Info auf Facebook
-- Auslieferung auf MVS - Info auf Facebook
+* Fehler bei Nullstring-Konstanten
+- COMPERRC: Compiler bricht ab bei Syntaxfehler
 - Neue Funktion $PASRDX zum Lesen von Skalaren
 - Neue Funktion zum Lesen von Skalaren aus Strings
 - WRITE-Funktionen (insbesondere WRR) neu
@@ -41,6 +31,23 @@
 - spaeter: klaeren was bei Windows-Textfiles mit Hex-Nullen passiert
 - spaeter: klaeren Ein-Ausgabe variante Records
   (insbesondere Mainframe und RECFM=V)
+
+=======================================================================================
+
+2020.11:
+
+* Ausgabe auf mehrere PCODE-Dateien
+* Umstellen PCINT auf mehrere PCODE-Dateien
+* Umstellen PASCAL2 auf mehrere PCODE-Dateien
+* Testen PASCAL2 usw. auf VM
+* PCINT: nach %INCLUDE auch 0x0d ueberlesen
+* COMPERRB: LEFT and String Condition (nur auf Mainframe)
+* File-Pointer besser absichern (kein NEW, WRITE, EOF usw. ermoeglichen)
+* WRITE Skalar mit Default-Laenge bringt Runtime-Fehler 1221 (?)
+* Verhindern, dass mit WITH Struct-Konstanten geaendert werden
+* PASFORM anpassen wg. structconst und Initialisierung
+* Auslieferung auf VM - Info auf Facebook
+- Auslieferung auf MVS - Info auf Facebook
 
 =======================================================================================
 

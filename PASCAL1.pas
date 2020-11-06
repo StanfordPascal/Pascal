@@ -1285,7 +1285,7 @@ program PASCALCOMPILER ( INPUT , OUTPUT , PCODE , PCODE1 , PCODE2 ,
 
 
 
-const VERSION = '2020.11' ;
+const VERSION = '2020.12' ;
       MAXLSIZE = 120 ;
       MAXERRNO = 999 ;
 
@@ -5790,6 +5790,11 @@ procedure GEN_STRCONST ( var PCODEP : TEXT ; VALX : XCONSTANT ) ;
        OUTPOS : INTEGER ;
 
    begin (* GEN_STRCONST *)
+     if VALX . CONSTCLASS = NULLSTR then
+       begin
+         WRITE ( PCODEP , '0,''''' ) ;
+         return ;
+       end (* then *) ;
      with VALX , VALX . SVAL -> do
        begin
          WRITE ( PCODEP , LENGTH : 1 , ',' ) ;
@@ -6081,14 +6086,27 @@ procedure WRITEDFC ( var PCODEP : TEXT ; CTR : ADDRRANGE ; ELSP1 : TTP
              WRITELN ( PCODEP , ' H,' , ELSP1 -> . SIZE - 4 : 1 ) ;
              INCR_IC ;
              WRITE ( PCODEP , CTR + 2 : 1 , MN [ PCODE_DFC ] ) ;
-             WRITELN ( PCODEP , ' H,' , LVALU . SVAL -> . LENGTH : 1 )
-                       ;
-             INCR_IC ;
-             WRITE ( PCODEP , CTR + 4 : 1 , MN [ PCODE_DFC ] ) ;
-             WRITE ( PCODEP , ' M,' ) ;
-             GEN_STRCONST ( PCODEP , LVALU ) ;
-             WRITELN ( PCODEP ) ;
-             INCR_IC ;
+             if LVALU . CONSTCLASS = NULLSTR then
+               begin
+                 WRITELN ( PCODEP , ' H,0' ) ;
+                 INCR_IC ;
+                 WRITE ( PCODEP , CTR + 4 : 1 , MN [ PCODE_DFC ] ) ;
+                 WRITE ( PCODEP , ' M,' ) ;
+                 GEN_STRCONST ( PCODEP , LVALU ) ;
+                 WRITELN ( PCODEP ) ;
+                 INCR_IC ;
+               end (* then *)
+             else
+               begin
+                 WRITELN ( PCODEP , ' H,' , LVALU . SVAL -> . LENGTH :
+                           1 ) ;
+                 INCR_IC ;
+                 WRITE ( PCODEP , CTR + 4 : 1 , MN [ PCODE_DFC ] ) ;
+                 WRITE ( PCODEP , ' M,' ) ;
+                 GEN_STRCONST ( PCODEP , LVALU ) ;
+                 WRITELN ( PCODEP ) ;
+                 INCR_IC ;
+               end (* else *) ;
              return ;
            end (* then *)
        end (* else *)
@@ -6306,6 +6324,17 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                     SSTR := ' ' ;
                     SSTR [ 1 ] := CH ;
                     LENGTH := SIZE_NEU ;
+                  end (* with *)
+              end (* tag/ca *) ;
+          4 : begin
+                CH := CHR ( V . IVAL ) ;
+                NEW ( V . SVAL ) ;
+                with V . SVAL -> do
+                  begin
+                    TAG := 'S' ;
+                    SSTR := ' ' ;
+                    SSTR [ 1 ] := CH ;
+                    LENGTH := 1 ;
                   end (* with *)
               end (* tag/ca *) ;
         end (* case *) ;
@@ -6635,15 +6664,23 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                       else
                         LSP := PTYPE_CHAR ;
                       if FALSE then
-                        begin
-                          WRITELN ( 'line of code    = ' , LINECNT ) ;
-                          WRITELN ( 'fvalu.constclass = ' , FVALU .
-                                    CONSTCLASS ) ;
-                          WRITELN ( 'fvalu.ival       = ' , FVALU .
-                                    IVAL ) ;
-                          WRITELN ( 'fvalu.sval       = ' , FVALU .
-                                    SVAL ) ;
-                        end (* then *) ;
+                        with FVALU do
+                          begin
+                            WRITELN ( 'line of code    = ' , LINECNT )
+                                      ;
+                            WRITELN ( 'fvalu.constclass = ' ,
+                                      CONSTCLASS ) ;
+                            if CONSTCLASS = XINT then
+                              WRITELN ( 'fvalu.ival       = ' , IVAL )
+                                        ;
+                            if CONSTCLASS in [ NULLSTR , STRG ] then
+                              begin
+                                WRITELN ( 'fvalu.sval       = ' , SVAL
+                                          ) ;
+                                WRITELN ( 'fvalu.sval.len   = ' , SVAL
+                                          -> . LENGTH ) ;
+                              end (* then *) ;
+                          end (* with *) ;
                       break ;
                     end (* tag/ca *) ;
 
@@ -9725,18 +9762,23 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
           begin
             CONSTANT ( FSYS , FSP , FVALU ) ;
             CT_RESULT := COMPTYPES ( LSP , FSP ) ;
-            if CT_RESULT in [ 1 , 2 , 3 , 5 ] then
+            if CT_RESULT in [ 1 , 2 , 3 , 4 , 5 ] then
               begin
                 if LSP <> NIL then
                   begin
                     FSP := LSP ;
-                    if CT_RESULT in [ 2 , 3 ] then
+                    if CT_RESULT in [ 2 , 3 , 4 ] then
                       MOD_STRCONST ( CT_RESULT , FVALU , DUMMY_TYP ,
-                                     LSP -> . SIZE ) ;
+                                     LSP -> . SIZE )
                   end (* then *) ;
               end (* then *)
             else
               begin
+                if FALSE then
+                  begin
+                    WRITELN ( 'line of code    = ' , LINECNT ) ;
+                    WRITELN ( 'ct_result       = ' , CT_RESULT ) ;
+                  end (* then *) ;
                 if not LSP -> . ERRORFLAG then
                   SET_ERROR ( 81 ) ;
                 FSP := NIL

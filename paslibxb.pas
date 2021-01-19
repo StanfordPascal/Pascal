@@ -4658,12 +4658,11 @@ procedure $PASWRX ( var F : TEXT ; V : INTEGER ; WIDTH : INTEGER ;
    begin (* $PASWRX *)
      if WIDTH = 0 then
        return ;
-     LEFTX := FALSE ;
-     if WIDTH < 0 then
-       begin
-         LEFTX := TRUE ;
-         WIDTH := - WIDTH
-       end (* then *) ;
+
+     //**********************************
+     // access metadata for scalar type  
+     //**********************************
+
      PS := PMETA ;
      if PS -> <> 0 then
        $ERROR ( 1220 ) ;
@@ -4674,10 +4673,38 @@ procedure $PASWRX ( var F : TEXT ; V : INTEGER ; WIDTH : INTEGER ;
      PS := PTRADD ( PS , 2 ) ;
      MINIDLEN := PS -> ;
      PS := PTRADD ( PS , 2 ) ;
+
+     //**************
+     // check width  
+     //**************
+
+     LEFTX := FALSE ;
+     if WIDTH < 0 then
+       begin
+         LEFTX := TRUE ;
+         WIDTH := - WIDTH ;
+         if WIDTH = 1 then
+           WIDTH := MAXIDLEN
+       end (* then *) ;
+
+     //************************************
+     // error if width too small for type  
+     //************************************
+
      if WIDTH < MINIDLEN then
        $ERROR ( 1221 ) ;
+
+     //*******************************
+     // error if scalar out of range  
+     //*******************************
+
      if ( V < 0 ) or ( V >= ELEMCOUNT ) then
        $ERROR ( 1222 ) ;
+
+     //*********************************
+     // access string for scalar value  
+     //*********************************
+
      PS := PTRADD ( PS , ( ELEMCOUNT - 1 - V ) * 4 ) ;
      SCAL_OFFS := PS -> ;
      PS := PTRADD ( PS , 2 ) ;

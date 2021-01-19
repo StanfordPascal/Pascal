@@ -1,0 +1,6 @@
+
+c:\work\pascal\work>pcint pcode=test0005.pcode inc=paslibx,pasutils, pas=test0005.pas out=test0005.pcodelis sconst=3000000        
+
+PCINT (Build 1.0 Nov 17 2020 18:26:15)
+
+  5.000000000000E+00           6  1.562500000000E+04

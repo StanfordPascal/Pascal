@@ -1,0 +1,34 @@
+
+c:\work\pascal\work>pcint pcode=comperrd.pcode inc=paslibx,pasutils, pas=comperrd.pas out=comperrd.pcodelis sconst=3000000        
+
+PCINT (Build 1.0 Nov 17 2020 18:26:15)
+
+test concat: <Hugo>
+test concat: <xHugox>
+test concat: <Hugo>
+test concat: <Bernd Hugo Oppolzer>
+FALSE                     one char variable left - false expected
+ TRUE                     one char variable right - true expected
+ TRUE                         empty constant left - true expected
+FALSE                       empty constant right - false expected
+ TRUE                      one char constant left - true expected
+FALSE                    one char constant right - false expected
+ TRUE                         empty constant left - true expected
+FALSE                       empty constant right - false expected
+ TRUE                      one char constant left - true expected
+FALSE                    one char constant right - false expected
+ TRUE                      one char variable left - true expected
+FALSE                    one char variable right - false expected
+ TRUE                 constants long before short - true expected
+ TRUE                 constants short before long - true expected
+ TRUE                      x24 and short constant - true expected
+ TRUE                 x24 and concat of constants - true expected
+ TRUE                 x24 and concat of constants - true expected
+ TRUE                       x24 and long constant - true expected
+ TRUE                                 x40 and x24 - true expected
+ TRUE                                 x24 and x40 - true expected
+ TRUE                                 s40 and s24 - true expected
+ TRUE                                 s24 and s40 - true expected
+ TRUE                  s40 and s24 - true is ok (trailing blanks)
+ TRUE                  s24 and s40 - true is ok (trailing blanks)
+FALSE                           v1000 and v1000a - false expected

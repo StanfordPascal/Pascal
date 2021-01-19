@@ -60,6 +60,7 @@
 /*  03.10.2020 ! Oppolzer    ! on stack - used for init of vars       */
 /*  18.10.2020 ! Oppolzer    ! Chaining MST to CUP (stacked)          */
 /*  18.10.2020 ! Oppolzer    ! doing MST work at CUP time             */
+/*  13.11.2020 ! Oppolzer    ! implementing SQI and SQR (missing!)    */
 /*  .......... ! ........    ! .....................................  */
 /*  .......... ! ........    ! .....................................  */
 /*  .......... ! ........    ! .....................................  */
@@ -970,7 +971,6 @@ static char file_getch (void *vgs, filecb *fcb)
    global_store *gs = vgs;
    char ch;
    char *charp;
-   int *intp;
 
    charp = ADDRSTOR (fcb -> pfilvar);
    ch = *charp;
@@ -1059,6 +1059,19 @@ static FILE *file_open (filecb *fcb, char *fmode)
       sprintf (envbuffer, "DD_%s", fcb -> ddname);
       fname_neu = getenv (envbuffer);
 
+      //*************************************************************
+      // correction 19.01.2021 - relevant for some UNIX like systems
+      // if the environ variable is the empty string, handle it as s
+      // if there were no environment variable
+      // error reported by David Roberts on OSX - thanks !!
+      //*************************************************************
+
+      if (fname_neu != NULL)
+      {
+         if (*fname_neu == 0x00)
+            fname_neu = NULL;
+      }
+
       //*********************************************************
       // experiment 18.05.2020 - copy env filename into fcb
       //*********************************************************
@@ -1066,6 +1079,12 @@ static FILE *file_open (filecb *fcb, char *fmode)
       if (fname_neu != NULL)
       {
          int x = strlen (fname_neu);
+
+#if 0
+         printf ("Test: fname = <%s>, fname_neu = <%s>\n",
+                 fname, fname_neu);
+#endif
+
          memset (fcb -> filename, 0x00, 257);
          memcpy (fcb -> filename, fname_neu, x > 256 ? 256 : x);
       }
@@ -1261,6 +1280,8 @@ static void check_write_mode (void *vgs, filecb *fcb, int append)
                fcb -> fhandle = file_open (fcb, "a");
             else
                fcb -> fhandle = file_open (fcb, "w");
+            if (fcb -> fhandle == NULL)
+               runtime_error (gs, FILENOTFOUND, fcb -> ddname);
             fcb -> pfilvar = fcb -> pstore + 8;
             fcb -> status = '4';
          }
@@ -1270,6 +1291,8 @@ static void check_write_mode (void *vgs, filecb *fcb, int append)
                fcb -> fhandle = file_open (fcb, "ab");
             else
                fcb -> fhandle = file_open (fcb, "wb");
+            if (fcb -> fhandle == NULL)
+               runtime_error (gs, FILENOTFOUND, fcb -> ddname);
             fcb -> pfilvar = fcb -> pstore + 8;
             fcb -> status = '4';
          }
@@ -1289,6 +1312,8 @@ static void check_write_mode (void *vgs, filecb *fcb, int append)
                fcb -> fhandle = file_open (fcb, "a");
             else
                fcb -> fhandle = file_open (fcb, "w");
+            if (fcb -> fhandle == NULL)
+               runtime_error (gs, FILENOTFOUND, fcb -> ddname);
             fcb -> pfilvar = fcb -> pstore + 8;
             fcb -> status = '4';
          }
@@ -1298,6 +1323,8 @@ static void check_write_mode (void *vgs, filecb *fcb, int append)
                fcb -> fhandle = file_open (fcb, "ab");
             else
                fcb -> fhandle = file_open (fcb, "wb");
+            if (fcb -> fhandle == NULL)
+               runtime_error (gs, FILENOTFOUND, fcb -> ddname);
             fcb -> pfilvar = fcb -> pstore + 8;
             fcb -> status = '4';
          }
@@ -1954,9 +1981,14 @@ static void *cspf_wrv (void *vgs,
 
 #if 0
 
-   fprintf (stderr, "wrv: parm1 = %d\n", parm1);
-   fprintf (stderr, "wrv: parm2 = %d\n", parm2);
-   fprintf (stderr, "wrv: parm3 = %d\n", parm3);
+   fprintf (stderr, "wrv: parm1  = %d\n", parm1);
+   fprintf (stderr, "wrv: parm2  = %d\n", parm2);
+   fprintf (stderr, "wrv: parm3  = %d\n", parm3);
+   fprintf (stderr, "stackpoint. = %d\n", gs -> sp);
+   fprintf (stderr, "stack_alloc = %d\n", gs -> stack_alloc);
+   fprintf (stderr, "stack_used  = %d\n", gs -> stack_used);
+   fprintf (stderr, "store_alloc = %d\n", gs -> store_alloc);
+   fprintf (stderr, "store_used  = %d\n", gs -> store_used);
 
 #endif
 
@@ -2096,7 +2128,7 @@ static void *cspf_wrx (void *vgs,
 
    if (parm2 < 0 || parm2 > maxval)
    {
-      sprintf (buf, "WRX:%04hd", parm2);
+      sprintf (buf, "WRX:%04d", parm2);
       len = strlen (buf);
    }
    else
@@ -2438,7 +2470,6 @@ static void *cspf_put (void *vgs,
    global_store *gs = vgs;
    filecb *fcb;
    char *charp;
-   int x;
 
 #if 0
 
@@ -3017,7 +3048,6 @@ static void *cspf_rdy (void *vgs,
    char ch;
    char chnext;
    int wert;
-   short *shortp;
    char *charp;
 
 #if 0
@@ -3906,14 +3936,14 @@ static funtab ft [] =
             }                                 \
          }
 
-#define  BREMSE2(x,y)                         \
+#define  BREMSE_V(x)                          \
                                               \
          {                                    \
-            fprintf (stderr, (x), (y));       \
+            fprintf (stderr, (x));            \
             if (gs -> stepanz > 1)            \
             {                                 \
                gs -> stepanz = 0;             \
-               incr_ip = 0;                   \
+               *incr_ip = 0;                  \
             }                                 \
          }
 
@@ -3925,10 +3955,6 @@ static char *cup_special (global_store *gs,
 
 {
    int addr;
-   int disp;
-   double dwert;
-   char *stackp;
-   double *doublep;
    int first;
    int second;
    char *cmd;
@@ -4030,6 +4056,7 @@ static int alloc_string (global_store *gs, int newsize)
 
 #define FTN_DSIN             0
 #define FTN_DSQRT            1
+#define FTN_DEXP             2
 
 
 
@@ -4104,6 +4131,31 @@ static void int_ftn (global_store *gs,
 
          break;
 
+      case FTN_DEXP:
+
+         disp = gs -> display [gs -> level];
+         addr = disp + pcode -> x;
+         intp = ADDRSTOR (addr);
+
+         // printf ("int_ftn: *intp = %d\n", *intp);
+         doublep = ADDRSTOR (*intp);
+         // printf ("int_ftn: double arg = %10.2f\n", *doublep);
+         dres = exp (*doublep);
+         // printf ("int_ftn: double res = %10.2f\n", dres);
+
+         //****************************************************
+         //* LOD real result onto stack
+         //****************************************************
+
+         (gs -> sp) += 4;
+         stackp = ADDRSTACK (gs -> sp);
+         doublep = (double *) stackp;
+         *doublep = dres;
+         (gs -> sp) += 4;
+         STACKTYPE (gs -> sp) = 'R';
+
+         break;
+
       default:
 
          runtime_error (gs, FTNFUNCNDEF, funcname);
@@ -4142,6 +4194,12 @@ static char *check_fortran (global_store *gs,
    if (memcmp (funcname, "DSIN    ", 8) == 0)
    {
       int_ftn (gs, FTN_DSIN, funcname);
+      return NULL;
+   }
+
+   if (memcmp (funcname, "DEXP    ", 8) == 0)
+   {
+      int_ftn (gs, FTN_DEXP, funcname);
       return NULL;
    }
 
@@ -4274,6 +4332,432 @@ static int compare_set (char what,
 
 
 
+static int compare_char_links (char wlinks,
+                               char *wrechts,
+                               int lrechts)
+
+{
+   int x;
+   char buffer [256];
+
+#if 0
+   printf ("start compare_char_links\n");
+   printf ("wlinks = %c\n", wlinks);
+   printf ("lrechts = %d wrechts = %-*.*s\n",
+            lrechts, lrechts, lrechts, wrechts);
+#endif
+
+   if (lrechts == 1)
+   {
+      x = wlinks - *wrechts;
+   }
+   else if (lrechts == 0)
+   {
+      x = wlinks - ' ';
+   }
+   else
+   {
+      memcpy (buffer, blankbuf, lrechts);
+      *buffer = wlinks;
+      x = memcmp (buffer, wrechts, lrechts);
+   }
+
+#if 0
+   printf ("end compare_char_links, x = %d\n", x);
+#endif
+
+   return x;
+}
+
+
+
+
+static int compare_char_rechts (char *wlinks,
+                                char wrechts,
+                                int llinks)
+
+{
+   int x;
+   char buffer [256];
+
+#if 0
+   printf ("start compare_char_rechts\n");
+   printf ("llinks = %d wlinks = %-*.*s\n",
+            llinks, llinks, llinks, wlinks);
+   printf ("wrechts = %c\n", wrechts);
+#endif
+
+   if (llinks == 1)
+   {
+      x = *wlinks - wrechts;
+   }
+   else if (llinks == 0)
+   {
+      x = ' ' - wrechts;
+   }
+   else
+   {
+      memcpy (buffer, blankbuf, llinks);
+      *buffer = wrechts;
+      x = memcmp (wlinks, buffer, llinks);
+   }
+
+#if 0
+   printf ("end compare_char_links, x = %d\n", x);
+#endif
+
+   return x;
+}
+
+
+
+
+static int compare_char_array (char *wlinks,
+                               char *wrechts,
+                               int llinks,
+                               int lrechts)
+
+/**********************************************************/
+/*                                                        */
+/*   compare char arrays                                  */
+/*                                                        */
+/*   lengths may differ (2020.12)                         */
+/*                                                        */
+/*   the shorter char array is padded with blanks         */
+/*   to the length of the longer one and then             */
+/*   compared. The length of the shorter operand          */
+/*   may be zero                                          */
+/*                                                        */
+/**********************************************************/
+
+{
+   int x;
+   char buffer [256];
+
+#if 0
+   printf ("start compare_char_array\n");
+   printf ("llinks = %d wlinks = %-*.*s\n",
+            llinks, llinks, llinks, wlinks);
+   printf ("lrechts = %d wrechts = %-*.*s\n",
+            lrechts, lrechts, lrechts, wrechts);
+#endif
+
+#if 0
+   x = memcmp (wlinks, wrechts, llinks);
+#endif
+
+#if 1
+   if (lrechts == llinks)
+   {
+      x = memcmp (wlinks, wrechts, lrechts);
+   }
+   else if (lrechts < llinks)
+   {
+      if (lrechts == 0)
+         x = memcmp (wlinks, blankbuf, llinks);
+      else
+      {
+         memcpy (buffer, blankbuf, llinks);
+         memcpy (buffer, wrechts, lrechts);
+         x = memcmp (wlinks, buffer, llinks);
+      }
+   }
+   else if (llinks < lrechts)
+   {
+      if (llinks == 0)
+         x = memcmp (blankbuf, wrechts, lrechts);
+      else
+      {
+         memcpy (buffer, blankbuf, lrechts);
+         memcpy (buffer, wlinks, llinks);
+         x = memcmp (buffer, wrechts, lrechts);
+      }
+   }
+#endif
+
+#if 0
+   printf ("end compare_char_array, x = %d\n", x);
+#endif
+
+   return x;
+}
+
+
+
+
+
+static int do_comparison (global_store *gs,
+                          sc_code *pcode,
+                          int *incr_ip)
+
+/**********************************************************/
+/*                                                        */
+/*   Interpretieren eines einzelnen Befehls               */
+/*                                                        */
+/**********************************************************/
+
+{
+   int res;
+   int wertl;
+   int wertr;
+   int lenl;
+   int lenr;
+   char charl;
+   char charr;
+   double dwert1;
+   double dwert2;
+   int addr;
+   unsigned char *setp1;
+   unsigned char *setp2;
+   int len1;
+   int len2;
+   int wert1;
+   int wert2;
+   int straddr1;
+   int straddr2;
+   int slen;
+   int slen1;
+   int slen2;
+   int slenmax;
+   int kuerzer;
+   char *stackp;
+   char *storep1;
+   char *storep2;
+   short *shortp;
+   int offs;
+
+   switch (pcode -> t)
+   {
+      case 'M':
+
+         /************************************************/
+         /*   get 2 values from top of stack             */
+         /************************************************/
+
+         wertr = STACK_I (gs -> sp);
+         (gs -> sp) -= 4;
+         wertl = STACK_I (gs -> sp);
+
+         lenl = pcode -> q;
+         lenr = pcode -> p;
+
+         res = compare_char_array (ADDRSTOR (wertl),
+                                   ADDRSTOR (wertr),
+                                   lenl, lenr);
+         break;
+
+      case '1':
+
+         BREMSE_V ("+++ comparison: value 1 deprecated !!\n");
+
+         /************************************************/
+         /*   get 2 values from top of stack             */
+         /*   right: char array - left: char             */
+         /************************************************/
+
+         wertr = STACK_I (gs -> sp);
+         (gs -> sp) -= 4;
+         charl = STACK_C (gs -> sp);
+
+         lenr = pcode -> q;
+
+         res = compare_char_links (charl,
+                                   ADDRSTOR (wertr),
+                                   lenr);
+         break;
+
+      case '2':
+
+         BREMSE_V ("+++ comparison: value 2 deprecated !!\n");
+
+         /************************************************/
+         /*   get 2 values from top of stack             */
+         /*   left: char array - right: char             */
+         /************************************************/
+
+         charr = STACK_C (gs -> sp);
+         (gs -> sp) -= 4;
+         wertl = STACK_I (gs -> sp);
+
+         lenl = pcode -> q;
+
+         res = compare_char_rechts (ADDRSTOR (wertl),
+                                    charr,
+                                    lenl);
+         break;
+
+      case 'R':
+
+         /************************************************/
+         /*   get 2 real values from top of stack        */
+         /************************************************/
+
+         dwert1 = STACK_R ((gs -> sp) - 4);
+
+         STACKTYPE (gs -> sp) = ' ';
+         (gs -> sp) -= 8;
+
+         dwert2 = STACK_R ((gs -> sp) - 4);
+
+         STACKTYPE (gs -> sp) = ' ';
+         (gs -> sp) -= 4;
+
+         STACKTYPE (gs -> sp) = 'B';
+
+         if (dwert2 == dwert1)
+            res = 0;
+         else if (dwert2 > dwert1)
+            res = 1;
+         else
+            res = -1;
+         break;
+
+      case 'S':
+
+         /************************************************/
+         /*   compare 2 set values                       */
+         /************************************************/
+
+         addr = STACK_I (gs -> sp);
+         setp1 = ADDRSTOR (SET_ADDR (addr));
+         len1 = SET_LEN (addr);
+
+         STACKTYPE (gs -> sp) = ' ';
+         (gs -> sp) -= 4;
+
+         addr = STACK_I (gs -> sp);
+         setp2 = ADDRSTOR (SET_ADDR (addr));
+         len2 = SET_LEN (addr);
+
+         STACKTYPE (gs -> sp) = 'B';
+
+         res = compare_set ('E', setp2, setp1, len2, len1);
+         break;
+
+      case 'V':
+
+         /************************************************/
+         /*   compare 2 strings                          */
+         /************************************************/
+
+         /************************************************/
+         /*   get string addr from top of stack          */
+         /************************************************/
+
+         straddr2 = STACK_I (gs -> sp);
+
+         /************************************************/
+         /*   get length values from SP - 1              */
+         /************************************************/
+
+         (gs -> sp) -= 4;
+
+         stackp = ADDRSTACK (gs -> sp);
+         shortp = (short *) stackp;
+
+         if (shortp [0] != -1)
+            runtime_error (gs, UNDEFSTRING, NULL);
+
+         /************************************************/
+         /*   check lengths and move to target           */
+         /************************************************/
+
+         slen2 = shortp [1];
+
+         (gs -> sp) -= 4;
+
+         /************************************************/
+         /*   get string addr from SP - 2                */
+         /************************************************/
+
+         straddr1 = STACK_I (gs -> sp);
+
+         /************************************************/
+         /*   get length values from SP - 3              */
+         /************************************************/
+
+         (gs -> sp) -= 4;
+
+         stackp = ADDRSTACK (gs -> sp);
+         shortp = (short *) stackp;
+
+         if (shortp [0] != -1)
+            runtime_error (gs, UNDEFSTRING, NULL);
+
+         /************************************************/
+         /*   check lengths and move to target           */
+         /************************************************/
+
+         slen1 = shortp [1];
+
+         storep1 = ADDRSTOR (straddr1);
+         storep2 = ADDRSTOR (straddr2);
+
+         slen = slen1;
+         slenmax = slen1;
+         if (slen2 < slen)
+         {
+            kuerzer = 2;
+            slen = slen2;
+         }
+         else
+         {
+            kuerzer = 1;
+            slenmax = slen2;
+         }
+
+         res = 0;
+         if (slen > 0)
+            res = memcmp (storep1, storep2, slen);
+
+         if (res == 0)
+         {
+            offs = slen;
+            slen = slenmax - slen;
+            if (kuerzer == 1)
+            {
+               res = 0;
+               if (slen > 0)
+                  res = memcmp (blankbuf, storep2 + offs,
+                                slen);
+            }
+            else
+            {
+               if (slen > 0)
+                  res = memcmp (storep1 + offs, blankbuf,
+                                slen);
+            }
+         }
+         break;
+
+      case 'B':
+      case 'C':
+      case 'I':
+      case 'A':
+
+         /************************************************/
+         /*   get 2 values from top of stack             */
+         /************************************************/
+
+         wert1 = STACK_I (gs -> sp);
+         (gs -> sp) -= 4;
+         wert2 = STACK_I (gs -> sp);
+
+         res = wert2 - wert1;
+         break;
+
+      default:
+         BREMSE_V ("+++ comparison: value of T not supported !!\n");
+         break;
+   }
+
+   return res;
+}
+
+
+
+
+
 static void int1 (global_store *gs)
 
 /**********************************************************/
@@ -4330,13 +4814,10 @@ static void int1 (global_store *gs)
    int slen1;
    int slen2;
    int maxlen;
-   int slenmax;
-   int offs;
-   int kuerzer;
    int copy_string;
    int addr_displaysave;
 
-   unsigned char setbuffer [SETLENMAX];
+   unsigned char worksetbuf [SETLENMAX];
 
    funtab *pft;
    int parm1;
@@ -4344,7 +4825,6 @@ static void int1 (global_store *gs)
    int parm3;
    int parm4;
    double parmd;
-   double *parmdp;
    void *pres;
    int *pint;
    cspfunc *cfunc;
@@ -4363,7 +4843,6 @@ static void int1 (global_store *gs)
 
    int label1;
    int label2;
-   int backs;
 
    char *errmsg;
    char errbuffer [64];
@@ -4383,7 +4862,6 @@ static void int1 (global_store *gs)
 
    int newcups;
    cup_section *pcup;
-   cup_section *pcupv;
    ent_section *pent;
    sc_code *pcode_ent;
    call_mst_element cme;
@@ -5202,182 +5680,13 @@ static void int1 (global_store *gs)
 
          break;
 
-      case XXX_EQU:
+      case XXX_EQU:   /* comparison */
 
          /************************************************/
          /*   compare values                             */
          /************************************************/
 
-         if (pcode -> t == 'M')
-         {
-            /************************************************/
-            /*   get 2 values from top of stack             */
-            /************************************************/
-
-            wert1 = STACK_I (gs -> sp);
-            (gs -> sp) -= 4;
-            wert2 = STACK_I (gs -> sp);
-
-            res = memcmp (ADDRSTOR (wert2),
-                          ADDRSTOR (wert1),
-                          pcode -> q);
-         }
-         else if (pcode -> t == 'R')
-         {
-            /************************************************/
-            /*   get 2 real values from top of stack        */
-            /************************************************/
-
-            dwert1 = STACK_R ((gs -> sp) - 4);
-
-            STACKTYPE (gs -> sp) = ' ';
-            (gs -> sp) -= 8;
-
-            dwert2 = STACK_R ((gs -> sp) - 4);
-
-            STACKTYPE (gs -> sp) = ' ';
-            (gs -> sp) -= 4;
-
-            STACKTYPE (gs -> sp) = 'B';
-
-            if (dwert2 == dwert1)
-               res = 0;
-            else
-               res = 1;
-         }
-         else if (pcode -> t == 'S')
-         {
-            /************************************************/
-            /*   compare 2 set values                       */
-            /************************************************/
-
-            addr = STACK_I (gs -> sp);
-            setp1 = ADDRSTOR (SET_ADDR (addr));
-            len1 = SET_LEN (addr);
-
-            STACKTYPE (gs -> sp) = ' ';
-            (gs -> sp) -= 4;
-
-            addr = STACK_I (gs -> sp);
-            setp2 = ADDRSTOR (SET_ADDR (addr));
-            len2 = SET_LEN (addr);
-
-            STACKTYPE (gs -> sp) = 'B';
-
-            res = compare_set ('E', setp2, setp1, len2, len1);
-         }
-         else if (pcode -> t == 'V')
-         {
-            /************************************************/
-            /*   compare 2 strings                          */
-            /************************************************/
-
-            /************************************************/
-            /*   get string addr from top of stack          */
-            /************************************************/
-
-            straddr2 = STACK_I (gs -> sp);
-
-            /************************************************/
-            /*   get length values from SP - 1              */
-            /************************************************/
-
-            (gs -> sp) -= 4;
-
-            stackp = ADDRSTACK (gs -> sp);
-            shortp = (short *) stackp;
-
-            if (shortp [0] != -1)
-               runtime_error (gs, UNDEFSTRING, NULL);
-
-            /************************************************/
-            /*   check lengths and move to target           */
-            /************************************************/
-
-            slen2 = shortp [1];
-
-            (gs -> sp) -= 4;
-
-            /************************************************/
-            /*   get string addr from SP - 2                */
-            /************************************************/
-
-            straddr1 = STACK_I (gs -> sp);
-
-            /************************************************/
-            /*   get length values from SP - 3              */
-            /************************************************/
-
-            (gs -> sp) -= 4;
-
-            stackp = ADDRSTACK (gs -> sp);
-            shortp = (short *) stackp;
-
-            if (shortp [0] != -1)
-               runtime_error (gs, UNDEFSTRING, NULL);
-
-            /************************************************/
-            /*   check lengths and move to target           */
-            /************************************************/
-
-            slen1 = shortp [1];
-
-            storep1 = ADDRSTOR (straddr1);
-            storep2 = ADDRSTOR (straddr2);
-
-            slen = slen1;
-            slenmax = slen1;
-            if (slen2 < slen)
-            {
-               kuerzer = 2;
-               slen = slen2;
-            }
-            else
-            {
-               kuerzer = 1;
-               slenmax = slen2;
-            }
-
-            res = 0;
-            if (slen > 0)
-               res = memcmp (storep1, storep2, slen);
-
-            if (res == 0)
-            {
-               offs = slen;
-               slen = slenmax - slen;
-               if (kuerzer == 1)
-               {
-                  res = 0;
-                  if (slen > 0)
-                     res = memcmp (blankbuf, storep2 + offs,
-                                   slen);
-               }
-               else
-               {
-                  if (slen > 0)
-                     res = memcmp (storep1 + offs, blankbuf,
-                                   slen);
-               }
-            }
-         }
-         else if (pcode -> t == 'B' ||
-                  pcode -> t == 'C' ||
-                  pcode -> t == 'I' ||
-                  pcode -> t == 'A')
-         {
-            /************************************************/
-            /*   get 2 values from top of stack             */
-            /************************************************/
-
-            wert1 = STACK_I (gs -> sp);
-            (gs -> sp) -= 4;
-            wert2 = STACK_I (gs -> sp);
-
-            res = wert2 - wert1;
-         }
-         else
-            BREMSE ("+++ value of T not supported (1) !!\n");
+         res = do_comparison (gs, pcode, &incr_ip);
 
          /************************************************/
          /*   boolean value replaces stack position      */
@@ -5491,182 +5800,13 @@ static void int1 (global_store *gs)
 
          break;
 
-      case XXX_GEQ:
+      case XXX_GEQ:   /* comparison */
 
          /************************************************/
          /*   compare values                             */
          /************************************************/
 
-         if (pcode -> t == 'M')
-         {
-            /************************************************/
-            /*   get 2 values from top of stack             */
-            /************************************************/
-
-            wert1 = STACK_I (gs -> sp);
-            (gs -> sp) -= 4;
-            wert2 = STACK_I (gs -> sp);
-
-            res = memcmp (ADDRSTOR (wert2),
-                          ADDRSTOR (wert1),
-                          pcode -> q);
-         }
-         else if (pcode -> t == 'R')
-         {
-            /************************************************/
-            /*   get 2 real values from top of stack        */
-            /************************************************/
-
-            dwert1 = STACK_R ((gs -> sp) - 4);
-
-            STACKTYPE (gs -> sp) = ' ';
-            (gs -> sp) -= 8;
-
-            dwert2 = STACK_R ((gs -> sp) - 4);
-
-            STACKTYPE (gs -> sp) = ' ';
-            (gs -> sp) -= 4;
-
-            STACKTYPE (gs -> sp) = 'B';
-
-            if (dwert2 >= dwert1)
-               res = 1;
-            else
-               res = -1;
-         }
-         else if (pcode -> t == 'S')
-         {
-            /************************************************/
-            /*   compare 2 set values                       */
-            /************************************************/
-
-            addr = STACK_I (gs -> sp);
-            setp1 = ADDRSTOR (SET_ADDR (addr));
-            len1 = SET_LEN (addr);
-
-            STACKTYPE (gs -> sp) = ' ';
-            (gs -> sp) -= 4;
-
-            addr = STACK_I (gs -> sp);
-            setp2 = ADDRSTOR (SET_ADDR (addr));
-            len2 = SET_LEN (addr);
-
-            STACKTYPE (gs -> sp) = 'B';
-
-            res = compare_set ('G', setp2, setp1, len2, len1);
-         }
-         else if (pcode -> t == 'V')
-         {
-            /************************************************/
-            /*   compare 2 strings                          */
-            /************************************************/
-
-            /************************************************/
-            /*   get string addr from top of stack          */
-            /************************************************/
-
-            straddr2 = STACK_I (gs -> sp);
-
-            /************************************************/
-            /*   get length values from SP - 1              */
-            /************************************************/
-
-            (gs -> sp) -= 4;
-
-            stackp = ADDRSTACK (gs -> sp);
-            shortp = (short *) stackp;
-
-            if (shortp [0] != -1)
-               runtime_error (gs, UNDEFSTRING, NULL);
-
-            /************************************************/
-            /*   check lengths and move to target           */
-            /************************************************/
-
-            slen2 = shortp [1];
-
-            (gs -> sp) -= 4;
-
-            /************************************************/
-            /*   get string addr from SP - 2                */
-            /************************************************/
-
-            straddr1 = STACK_I (gs -> sp);
-
-            /************************************************/
-            /*   get length values from SP - 3              */
-            /************************************************/
-
-            (gs -> sp) -= 4;
-
-            stackp = ADDRSTACK (gs -> sp);
-            shortp = (short *) stackp;
-
-            if (shortp [0] != -1)
-               runtime_error (gs, UNDEFSTRING, NULL);
-
-            /************************************************/
-            /*   check lengths and move to target           */
-            /************************************************/
-
-            slen1 = shortp [1];
-
-            storep1 = ADDRSTOR (straddr1);
-            storep2 = ADDRSTOR (straddr2);
-
-            slen = slen1;
-            slenmax = slen1;
-            if (slen2 < slen)
-            {
-               kuerzer = 2;
-               slen = slen2;
-            }
-            else
-            {
-               kuerzer = 1;
-               slenmax = slen2;
-            }
-
-            res = 0;
-            if (slen > 0)
-               res = memcmp (storep1, storep2, slen);
-
-            if (res == 0)
-            {
-               offs = slen;
-               slen = slenmax - slen;
-               if (kuerzer == 1)
-               {
-                  res = 0;
-                  if (slen > 0)
-                     res = memcmp (blankbuf, storep2 + offs,
-                                   slen);
-               }
-               else
-               {
-                  if (slen > 0)
-                     res = memcmp (storep1 + offs, blankbuf,
-                                   slen);
-               }
-            }
-         }
-         else if (pcode -> t == 'B' ||
-                  pcode -> t == 'C' ||
-                  pcode -> t == 'I' ||
-                  pcode -> t == 'A')
-         {
-            /************************************************/
-            /*   get 2 values from top of stack             */
-            /************************************************/
-
-            wert1 = STACK_I (gs -> sp);
-            (gs -> sp) -= 4;
-            wert2 = STACK_I (gs -> sp);
-
-            res = wert2 - wert1;
-         }
-         else
-            BREMSE ("+++ value of T not supported (2) !!\n");
+         res = do_comparison (gs, pcode, &incr_ip);
 
          /************************************************/
          /*   boolean value replaces stack position      */
@@ -5678,161 +5818,13 @@ static void int1 (global_store *gs)
 
          break;
 
-      case XXX_GRT:
+      case XXX_GRT:   /* comparison */
 
          /************************************************/
          /*   compare values                             */
          /************************************************/
 
-         if (pcode -> t == 'M')
-         {
-            /************************************************/
-            /*   get 2 values from top of stack             */
-            /************************************************/
-
-            wert1 = STACK_I (gs -> sp);
-            (gs -> sp) -= 4;
-            wert2 = STACK_I (gs -> sp);
-
-            res = memcmp (ADDRSTOR (wert2),
-                          ADDRSTOR (wert1),
-                          pcode -> q);
-         }
-         else if (pcode -> t == 'R')
-         {
-            /************************************************/
-            /*   get 2 real values from top of stack        */
-            /************************************************/
-
-            dwert1 = STACK_R ((gs -> sp) - 4);
-
-            STACKTYPE (gs -> sp) = ' ';
-            (gs -> sp) -= 8;
-
-            dwert2 = STACK_R ((gs -> sp) - 4);
-
-            STACKTYPE (gs -> sp) = ' ';
-            (gs -> sp) -= 4;
-
-            STACKTYPE (gs -> sp) = 'B';
-
-            if (dwert2 > dwert1)
-               res = 1;
-            else
-               res = -1;
-         }
-         else if (pcode -> t == 'V')
-         {
-            /************************************************/
-            /*   compare 2 strings                          */
-            /************************************************/
-
-            /************************************************/
-            /*   get string addr from top of stack          */
-            /************************************************/
-
-            straddr2 = STACK_I (gs -> sp);
-
-            /************************************************/
-            /*   get length values from SP - 1              */
-            /************************************************/
-
-            (gs -> sp) -= 4;
-
-            stackp = ADDRSTACK (gs -> sp);
-            shortp = (short *) stackp;
-
-            if (shortp [0] != -1)
-               runtime_error (gs, UNDEFSTRING, NULL);
-
-            /************************************************/
-            /*   check lengths and move to target           */
-            /************************************************/
-
-            slen2 = shortp [1];
-
-            (gs -> sp) -= 4;
-
-            /************************************************/
-            /*   get string addr from SP - 2                */
-            /************************************************/
-
-            straddr1 = STACK_I (gs -> sp);
-
-            /************************************************/
-            /*   get length values from SP - 3              */
-            /************************************************/
-
-            (gs -> sp) -= 4;
-
-            stackp = ADDRSTACK (gs -> sp);
-            shortp = (short *) stackp;
-
-            if (shortp [0] != -1)
-               runtime_error (gs, UNDEFSTRING, NULL);
-
-            /************************************************/
-            /*   check lengths and move to target           */
-            /************************************************/
-
-            slen1 = shortp [1];
-
-            storep1 = ADDRSTOR (straddr1);
-            storep2 = ADDRSTOR (straddr2);
-
-            slen = slen1;
-            slenmax = slen1;
-            if (slen2 < slen)
-            {
-               kuerzer = 2;
-               slen = slen2;
-            }
-            else
-            {
-               kuerzer = 1;
-               slenmax = slen2;
-            }
-
-            res = 0;
-            if (slen > 0)
-               res = memcmp (storep1, storep2, slen);
-
-            if (res == 0)
-            {
-               offs = slen;
-               slen = slenmax - slen;
-               if (kuerzer == 1)
-               {
-                  res = 0;
-                  if (slen > 0)
-                     res = memcmp (blankbuf, storep2 + offs,
-                                   slen);
-               }
-               else
-               {
-                  if (slen > 0)
-                     res = memcmp (storep1 + offs, blankbuf,
-                                   slen);
-               }
-            }
-         }
-         else if (pcode -> t == 'B' ||
-                  pcode -> t == 'C' ||
-                  pcode -> t == 'I' ||
-                  pcode -> t == 'A')
-         {
-            /************************************************/
-            /*   get 2 values from top of stack             */
-            /************************************************/
-
-            wert1 = STACK_I (gs -> sp);
-            (gs -> sp) -= 4;
-            wert2 = STACK_I (gs -> sp);
-
-            res = wert2 - wert1;
-         }
-         else
-            BREMSE ("+++ value of T not supported (3) !!\n");
+         res = do_comparison (gs, pcode, &incr_ip);
 
          /************************************************/
          /*   boolean value replaces stack position      */
@@ -6200,185 +6192,13 @@ static void int1 (global_store *gs)
 
          break;
 
-      case XXX_LEQ:
+      case XXX_LEQ:   /* comparison */
 
          /************************************************/
          /*   compare values                             */
          /************************************************/
 
-         if (pcode -> t == 'M')
-         {
-            /************************************************/
-            /*   get 2 values from top of stack             */
-            /************************************************/
-
-            wert1 = STACK_I (gs -> sp);
-            (gs -> sp) -= 4;
-            wert2 = STACK_I (gs -> sp);
-
-            res = memcmp (ADDRSTOR (wert2),
-                          ADDRSTOR (wert1),
-                          pcode -> q);
-         }
-         else if (pcode -> t == 'R')
-         {
-            /************************************************/
-            /*   get 2 real values from top of stack        */
-            /************************************************/
-
-            dwert1 = STACK_R ((gs -> sp) - 4);
-
-            STACKTYPE (gs -> sp) = ' ';
-            (gs -> sp) -= 8;
-
-            dwert2 = STACK_R ((gs -> sp) - 4);
-
-            STACKTYPE (gs -> sp) = ' ';
-            (gs -> sp) -= 4;
-
-            STACKTYPE (gs -> sp) = 'B';
-
-            if (dwert2 <= dwert1)
-               res = -1;
-            else
-               res = 1;
-         }
-         else if (pcode -> t == 'S')
-         {
-            /************************************************/
-            /*   compare 2 set values                       */
-            /************************************************/
-
-            addr = STACK_I (gs -> sp);
-            setp1 = ADDRSTOR (SET_ADDR (addr));
-            len1 = SET_LEN (addr);
-
-            STACKTYPE (gs -> sp) = ' ';
-            (gs -> sp) -= 4;
-
-            addr = STACK_I (gs -> sp);
-            setp2 = ADDRSTOR (SET_ADDR (addr));
-            len2 = SET_LEN (addr);
-
-            STACKTYPE (gs -> sp) = 'B';
-
-            res = compare_set ('L', setp2, setp1, len2, len1);
-         }
-         else if (pcode -> t == 'V')
-         {
-            /************************************************/
-            /*   compare 2 strings                          */
-            /************************************************/
-
-            /************************************************/
-            /*   get string addr from top of stack          */
-            /************************************************/
-
-            straddr2 = STACK_I (gs -> sp);
-
-            /************************************************/
-            /*   get length values from SP - 1              */
-            /************************************************/
-
-            (gs -> sp) -= 4;
-
-            stackp = ADDRSTACK (gs -> sp);
-            shortp = (short *) stackp;
-
-            if (shortp [0] != -1)
-               runtime_error (gs, UNDEFSTRING, NULL);
-
-            /************************************************/
-            /*   check lengths and move to target           */
-            /************************************************/
-
-            slen2 = shortp [1];
-
-            (gs -> sp) -= 4;
-
-            /************************************************/
-            /*   get string addr from SP - 2                */
-            /************************************************/
-
-            straddr1 = STACK_I (gs -> sp);
-
-            /************************************************/
-            /*   get length values from SP - 3              */
-            /************************************************/
-
-            (gs -> sp) -= 4;
-
-            stackp = ADDRSTACK (gs -> sp);
-            shortp = (short *) stackp;
-
-            if (shortp [0] != -1)
-               runtime_error (gs, UNDEFSTRING, NULL);
-
-            /************************************************/
-            /*   check lengths and move to target           */
-            /************************************************/
-
-            slen1 = shortp [1];
-
-            storep1 = ADDRSTOR (straddr1);
-            storep2 = ADDRSTOR (straddr2);
-
-            slen = slen1;
-            slenmax = slen1;
-            if (slen2 < slen)
-            {
-               kuerzer = 2;
-               slen = slen2;
-            }
-            else
-            {
-               kuerzer = 1;
-               slenmax = slen2;
-            }
-
-            res = 0;
-            if (slen > 0)
-               res = memcmp (storep1, storep2, slen);
-
-            if (res == 0)
-            {
-               offs = slen;
-               slen = slenmax - slen;
-               if (kuerzer == 1)
-               {
-                  res = 0;
-                  if (slen > 0)
-                     res = memcmp (blankbuf, storep2 + offs,
-                                   slen);
-               }
-               else
-               {
-                  if (slen > 0)
-                     res = memcmp (storep1 + offs, blankbuf,
-                                   slen);
-               }
-            }
-         }
-         else if (pcode -> t == 'B' ||
-                  pcode -> t == 'C' ||
-                  pcode -> t == 'I' ||
-                  pcode -> t == 'A')
-         {
-            /************************************************/
-            /*   get 2 values from top of stack             */
-            /************************************************/
-
-            wert1 = STACK_I (gs -> sp);
-            (gs -> sp) -= 4;
-            wert2 = STACK_I (gs -> sp);
-
-            res = wert2 - wert1;
-         }
-         else
-         {
-            // printf ("value of t = %c\n", pcode -> t);
-            BREMSE ("+++ value of T not supported (4) !!\n");
-         }
+         res = do_comparison (gs, pcode, &incr_ip);
 
          /************************************************/
          /*   boolean value replaces stack position      */
@@ -6390,161 +6210,13 @@ static void int1 (global_store *gs)
 
          break;
 
-      case XXX_LES:
+      case XXX_LES:   /* comparison */
 
          /************************************************/
          /*   compare values                             */
          /************************************************/
 
-         if (pcode -> t == 'M')
-         {
-            /************************************************/
-            /*   get 2 values from top of stack             */
-            /************************************************/
-
-            wert1 = STACK_I (gs -> sp);
-            (gs -> sp) -= 4;
-            wert2 = STACK_I (gs -> sp);
-
-            res = memcmp (ADDRSTOR (wert2),
-                          ADDRSTOR (wert1),
-                          pcode -> q);
-         }
-         else if (pcode -> t == 'R')
-         {
-            /************************************************/
-            /*   get 2 real values from top of stack        */
-            /************************************************/
-
-            dwert1 = STACK_R ((gs -> sp) - 4);
-
-            STACKTYPE (gs -> sp) = ' ';
-            (gs -> sp) -= 8;
-
-            dwert2 = STACK_R ((gs -> sp) - 4);
-
-            STACKTYPE (gs -> sp) = ' ';
-            (gs -> sp) -= 4;
-
-            STACKTYPE (gs -> sp) = 'B';
-
-            if (dwert2 < dwert1)
-               res = -1;
-            else
-               res = 1;
-         }
-         else if (pcode -> t == 'V')
-         {
-            /************************************************/
-            /*   compare 2 strings                          */
-            /************************************************/
-
-            /************************************************/
-            /*   get string addr from top of stack          */
-            /************************************************/
-
-            straddr2 = STACK_I (gs -> sp);
-
-            /************************************************/
-            /*   get length values from SP - 1              */
-            /************************************************/
-
-            (gs -> sp) -= 4;
-
-            stackp = ADDRSTACK (gs -> sp);
-            shortp = (short *) stackp;
-
-            if (shortp [0] != -1)
-               runtime_error (gs, UNDEFSTRING, NULL);
-
-            /************************************************/
-            /*   check lengths and move to target           */
-            /************************************************/
-
-            slen2 = shortp [1];
-
-            (gs -> sp) -= 4;
-
-            /************************************************/
-            /*   get string addr from SP - 2                */
-            /************************************************/
-
-            straddr1 = STACK_I (gs -> sp);
-
-            /************************************************/
-            /*   get length values from SP - 3              */
-            /************************************************/
-
-            (gs -> sp) -= 4;
-
-            stackp = ADDRSTACK (gs -> sp);
-            shortp = (short *) stackp;
-
-            if (shortp [0] != -1)
-               runtime_error (gs, UNDEFSTRING, NULL);
-
-            /************************************************/
-            /*   check lengths and move to target           */
-            /************************************************/
-
-            slen1 = shortp [1];
-
-            storep1 = ADDRSTOR (straddr1);
-            storep2 = ADDRSTOR (straddr2);
-
-            slen = slen1;
-            slenmax = slen1;
-            if (slen2 < slen)
-            {
-               kuerzer = 2;
-               slen = slen2;
-            }
-            else
-            {
-               kuerzer = 1;
-               slenmax = slen2;
-            }
-
-            res = 0;
-            if (slen > 0)
-               res = memcmp (storep1, storep2, slen);
-
-            if (res == 0)
-            {
-               offs = slen;
-               slen = slenmax - slen;
-               if (kuerzer == 1)
-               {
-                  res = 0;
-                  if (slen > 0)
-                     res = memcmp (blankbuf, storep2 + offs,
-                                   slen);
-               }
-               else
-               {
-                  if (slen > 0)
-                     res = memcmp (storep1 + offs, blankbuf,
-                                   slen);
-               }
-            }
-         }
-         else if (pcode -> t == 'B' ||
-                  pcode -> t == 'C' ||
-                  pcode -> t == 'I' ||
-                  pcode -> t == 'A')
-         {
-            /************************************************/
-            /*   get 2 values from top of stack             */
-            /************************************************/
-
-            wert1 = STACK_I (gs -> sp);
-            (gs -> sp) -= 4;
-            wert2 = STACK_I (gs -> sp);
-
-            res = wert2 - wert1;
-         }
-         else
-            BREMSE ("+++ value of T not supported (5) !!\n");
+         res = do_comparison (gs, pcode, &incr_ip);
 
          /************************************************/
          /*   boolean value replaces stack position      */
@@ -6983,182 +6655,13 @@ static void int1 (global_store *gs)
 
          break;
 
-      case XXX_NEQ:
+      case XXX_NEQ:   /* comparison */
 
          /************************************************/
          /*   compare values                             */
          /************************************************/
 
-         if (pcode -> t == 'M')
-         {
-            /************************************************/
-            /*   get 2 values from top of stack             */
-            /************************************************/
-
-            wert1 = STACK_I (gs -> sp);
-            (gs -> sp) -= 4;
-            wert2 = STACK_I (gs -> sp);
-
-            res = memcmp (ADDRSTOR (wert2),
-                          ADDRSTOR (wert1),
-                          pcode -> q);
-         }
-         else if (pcode -> t == 'S')
-         {
-            /************************************************/
-            /*   compare 2 set values                       */
-            /************************************************/
-
-            addr = STACK_I (gs -> sp);
-            setp1 = ADDRSTOR (SET_ADDR (addr));
-            len1 = SET_LEN (addr);
-
-            STACKTYPE (gs -> sp) = ' ';
-            (gs -> sp) -= 4;
-
-            addr = STACK_I (gs -> sp);
-            setp2 = ADDRSTOR (SET_ADDR (addr));
-            len2 = SET_LEN (addr);
-
-            STACKTYPE (gs -> sp) = 'B';
-
-            res = compare_set ('N', setp2, setp1, len2, len1);
-         }
-         else if (pcode -> t == 'R')
-         {
-            /************************************************/
-            /*   get 2 real values from top of stack        */
-            /************************************************/
-
-            dwert1 = STACK_R ((gs -> sp) - 4);
-
-            STACKTYPE (gs -> sp) = ' ';
-            (gs -> sp) -= 8;
-
-            dwert2 = STACK_R ((gs -> sp) - 4);
-
-            STACKTYPE (gs -> sp) = ' ';
-            (gs -> sp) -= 4;
-
-            STACKTYPE (gs -> sp) = 'B';
-
-            if (dwert2 != dwert1)
-               res = 1;
-            else
-               res = 0;
-         }
-         else if (pcode -> t == 'V')
-         {
-            /************************************************/
-            /*   compare 2 strings                          */
-            /************************************************/
-
-            /************************************************/
-            /*   get string addr from top of stack          */
-            /************************************************/
-
-            straddr2 = STACK_I (gs -> sp);
-
-            /************************************************/
-            /*   get length values from SP - 1              */
-            /************************************************/
-
-            (gs -> sp) -= 4;
-
-            stackp = ADDRSTACK (gs -> sp);
-            shortp = (short *) stackp;
-
-            if (shortp [0] != -1)
-               runtime_error (gs, UNDEFSTRING, NULL);
-
-            /************************************************/
-            /*   check lengths and move to target           */
-            /************************************************/
-
-            slen2 = shortp [1];
-
-            (gs -> sp) -= 4;
-
-            /************************************************/
-            /*   get string addr from SP - 2                */
-            /************************************************/
-
-            straddr1 = STACK_I (gs -> sp);
-
-            /************************************************/
-            /*   get length values from SP - 3              */
-            /************************************************/
-
-            (gs -> sp) -= 4;
-
-            stackp = ADDRSTACK (gs -> sp);
-            shortp = (short *) stackp;
-
-            if (shortp [0] != -1)
-               runtime_error (gs, UNDEFSTRING, NULL);
-
-            /************************************************/
-            /*   check lengths and move to target           */
-            /************************************************/
-
-            slen1 = shortp [1];
-
-            storep1 = ADDRSTOR (straddr1);
-            storep2 = ADDRSTOR (straddr2);
-
-            slen = slen1;
-            slenmax = slen1;
-            if (slen2 < slen)
-            {
-               kuerzer = 2;
-               slen = slen2;
-            }
-            else
-            {
-               kuerzer = 1;
-               slenmax = slen2;
-            }
-
-            res = 0;
-            if (slen > 0)
-               res = memcmp (storep1, storep2, slen);
-
-            if (res == 0)
-            {
-               offs = slen;
-               slen = slenmax - slen;
-               if (kuerzer == 1)
-               {
-                  res = 0;
-                  if (slen > 0)
-                     res = memcmp (blankbuf, storep2 + offs,
-                                   slen);
-               }
-               else
-               {
-                  if (slen > 0)
-                     res = memcmp (storep1 + offs, blankbuf,
-                                   slen);
-               }
-            }
-         }
-         else if (pcode -> t == 'B' ||
-                  pcode -> t == 'C' ||
-                  pcode -> t == 'I' ||
-                  pcode -> t == 'A')
-         {
-            /************************************************/
-            /*   get 2 values from top of stack             */
-            /************************************************/
-
-            wert1 = STACK_I (gs -> sp);
-            (gs -> sp) -= 4;
-            wert2 = STACK_I (gs -> sp);
-
-            res = wert2 - wert1;
-         }
-         else
-            BREMSE ("+++ value of T not supported (6) !!\n");
+         res = do_comparison (gs, pcode, &incr_ip);
 
          /************************************************/
          /*   boolean value replaces stack position      */
@@ -7693,8 +7196,8 @@ static void int1 (global_store *gs)
             // wg. moeglicher Ueberlappungen
             //*************************************
 
-            memcpy (setbuffer, charp, len);
-            memcpy (charp2, setbuffer, len);
+            memcpy (worksetbuf, charp, len);
+            memcpy (charp2, worksetbuf, len);
          }
 
 #if 0
@@ -7709,11 +7212,27 @@ static void int1 (global_store *gs)
          break;
 
       case XXX_SQI:
-         BREMSE ("+++ not implemented !!\n");
+
+         /************************************************/
+         /*   absolute value                             */
+         /************************************************/
+
+         intp = ADDRSTACK (gs -> sp);
+         *intp = *intp * *intp;
+
          break;
 
       case XXX_SQR:
-         BREMSE ("+++ not implemented !!\n");
+
+         /************************************************/
+         /*   absolute value                             */
+         /*   with doubles, the SP always points         */
+         /*   to the middle of the 8 byte double         */
+         /************************************************/
+
+         doublep = ADDRSTACK ((gs -> sp) - 4);
+         *doublep = *doublep * *doublep;
+
          break;
 
       case XXX_STO:
@@ -8037,6 +7556,7 @@ static void int1 (global_store *gs)
             shortp = (short *) stackp;
             shortp [0] = -1;
             shortp [1] = slen;
+            STACKTYPE (gs -> sp) = ' ';
 
             /************************************************/
             /*   alloc string of length slen                */
@@ -8050,6 +7570,7 @@ static void int1 (global_store *gs)
             (gs -> sp) += 4;
             stackp += 4;
             intp = (int *) stackp;
+            STACKTYPE (gs -> sp) = ' ';
 
             *intp = newstr;
 
@@ -8068,8 +7589,23 @@ static void int1 (global_store *gs)
             /*   stack - that is: leave TOP of stack        */
             /*   untouched ...                              */
             /************************************************/
+            /*   change 2020.12: compiler generates         */
+            /*   LDC N before VC2 0 (load NIL address)      */
+            /*   so VC2 0 works the same as the other       */
+            /*   VC2 variants with length > 0               */
+            /************************************************/
+            /*   for a smooth transition from older         */
+            /*   compiler variants, the stack pointer       */
+            /*   is incremented as before, if the           */
+            /*   value on the stack is not NIL              */
+            /************************************************/
 
-            (gs -> sp) += 4;
+            stackp = ADDRSTACK (gs -> sp);
+            intp = (int *) stackp;
+            if (*intp != -1)
+            {
+               (gs -> sp) += 4;
+            }
 
             /************************************************/
             /*   build empty string                         */
@@ -8080,6 +7616,7 @@ static void int1 (global_store *gs)
             shortp = (short *) stackp;
             shortp [0] = -1;
             shortp [1] = 0;
+            STACKTYPE (gs -> sp) = ' ';
 
             /************************************************/
             /*   string of length zero                      */
@@ -8088,6 +7625,7 @@ static void int1 (global_store *gs)
             (gs -> sp) += 4;
             stackp += 4;
             intp = (int *) stackp;
+            STACKTYPE (gs -> sp) = ' ';
 
             *intp = -1;   // nil
          }
@@ -9091,6 +8629,34 @@ static void int1 (global_store *gs)
 
          break;
 
+      case XXX_XPO:
+
+         /************************************************/
+         /*   holt Exponent aus Gleitkommazahl           */
+         /*   Ergebnis = Integer                         */
+         /************************************************/
+
+         // dump_stack (stdout, NULL,
+         //             gs -> stack0,
+         //             gs -> sp - 4,
+         //             gs -> sp + 4,
+         //             0);
+
+         STACKTYPE (gs -> sp) = ' ';
+
+         cpu1 = (unsigned char *) ADDRSTACK ((gs -> sp) + 3);
+         cpu2 = (unsigned char *) ADDRSTACK ((gs -> sp) + 2);
+
+         (gs -> sp) -= 4;
+         STACKTYPE (gs -> sp) = ' ';
+
+         intp = ADDRSTACK (gs -> sp);
+         wert1 = *cpu2 >> 4;
+         wert1 += (*cpu1 & 0x7f) * 16;
+         *intp = wert1 - 0x3ff;
+
+         break;
+
       default:
          fprintf (stderr,
                   "+++ Opcode %s\n",
@@ -9103,7 +8669,14 @@ static void int1 (global_store *gs)
       (gs -> ip) ++;
 
    if (gs -> sp < 16)
-      runtime_error (gs, STACKNEG, NULL);
+      runtime_error (gs, EXPSTACKNEG, NULL);
+
+   if (gs -> stack_used < gs -> sp)
+   {
+      gs -> stack_used = gs -> sp;
+      if (gs -> stack_alloc < gs -> sp)
+         runtime_error (gs, EXPSTACKSPACE, NULL);
+   }
 }
 
 
@@ -9149,7 +8722,7 @@ static void show (FILE *f, global_store *gs, int nur_pascal)
                   0);
 
       fprintf (f, "%06d: %03d %c %5d %9d  %-8s %-3s %s\n",
-              pcode - gs -> code0,
+              (int) (pcode - gs -> code0),
               pcode -> op,
               pcode -> t,
               pcode -> p,
@@ -9317,7 +8890,6 @@ static void interpreter (global_store *gs)
    int *intp;
 
    int is_ret;
-   int is_break;
    int callno;
 
    char mode = 'P';   // Assembler (P-Code) oder Pascal

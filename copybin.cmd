@@ -1,5 +1,6 @@
 copy /y ppbin.cmd        \bin\pp.cmd
 copy /y prunbin.cmd      \bin\prun.cmd
+copy /y prundbin.cmd     \bin\prund.cmd
 copy /y pasfbin.cmd      \bin\pasf.cmd
 copy /y pascal1.pcode    \bin
 copy /y pascal1.pcode1   \bin

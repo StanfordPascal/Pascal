@@ -122,7 +122,7 @@
 #define BADIO           2
 #define FILENOTFOUND    3
 #define RANGEERR        4
-#define STACKNEG        5
+#define EXPSTACKNEG     5
 #define STACKCOLL       6
 #define BADBRANCH       7
 #define BADLBRANCH      8
@@ -141,6 +141,7 @@
 #define ERROR_CALL      21
 #define MINNESTCALL     22
 #define MAXNESTCALL     23
+#define EXPSTACKSPACE   24
 
 static const char *runtime_errmsg [] =
 
@@ -149,7 +150,7 @@ static const char *runtime_errmsg [] =
    "BADIO",
    "FILENOTFOUND",
    "RANGEERR",
-   "STACKNEG",
+   "EXPSTACKNEG",
    "STACKCOLL",
    "BADBRANCH",
    "BADLBRANCH",
@@ -168,6 +169,7 @@ static const char *runtime_errmsg [] =
    "$ERROR_CALL",
    "MINNESTCALL",
    "MAXNESTCALL",
+   "EXPSTACKSPACE",
    NULL
 };
 

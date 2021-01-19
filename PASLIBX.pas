@@ -72,6 +72,14 @@ module $PASLIBX ;
 
 const HANCSIZE = 65536 ;
       TRLEVEL = 0 ;
+      BUCHST : set of CHAR =
+      [ 'A' .. 'I' , 'J' .. 'R' , 'S' .. 'Z' , 'a' .. 'i' , 'j' .. 'r'
+        , 's' .. 'z' ] ;
+      KLEINBUCHST : set of CHAR =
+      [ 'a' .. 'i' , 'j' .. 'r' , 's' .. 'z' ] ;
+      IDCHARS : set of CHAR =
+      [ 'A' .. 'I' , 'J' .. 'R' , 'S' .. 'Z' , 'a' .. 'i' , 'j' .. 'r'
+        , 's' .. 'z' , '0' .. '9' , '_' , '$' ] ;
 
 
 type CHARPTR = -> CHAR ;
@@ -2990,6 +2998,22 @@ function FILESTAT ( var X : ANYFILE ) : CHAR ;
 
 
 
+local function TOUPPER ( CH : CHAR ) : CHAR ;
+
+(******************************************)
+(*   SETZT KLEINBUCHSTABEN IN GROSSE UM   *)
+(******************************************)
+
+
+   begin (* TOUPPER *)
+     if CH in KLEINBUCHST then
+       TOUPPER := CHR ( ORD ( CH ) - ORD ( 'a' ) + ORD ( 'A' ) )
+     else
+       TOUPPER := CH
+   end (* TOUPPER *) ;
+
+
+
 function $PASRDR ( var F : TEXT ; WIDTH : INTEGER ) : REAL ;
 
 //**********************************************************
@@ -3057,10 +3081,7 @@ function $PASRDR ( var F : TEXT ; WIDTH : INTEGER ) : REAL ;
              GET ( F ) ;
              WIDTH := WIDTH - 1 ;
              if EOLN ( F ) or EOF ( F ) or ( WIDTH <= 0 ) then
-               begin
-                 $PASRDR := RETVAL ;
-                 return
-               end (* then *)
+               $ERROR ( 1204 ) ;
            end (* then *)
          else
            begin
@@ -3339,10 +3360,7 @@ function $PASRDI ( var F : TEXT ; WIDTH : INTEGER ) : INTEGER ;
              GET ( F ) ;
              WIDTH := WIDTH - 1 ;
              if EOLN ( F ) or EOF ( F ) or ( WIDTH <= 0 ) then
-               begin
-                 $PASRDI := RETVAL ;
-                 return
-               end (* then *)
+               $ERROR ( 1203 ) ;
            end (* then *)
          else
            begin
@@ -3420,25 +3438,6 @@ function $PASRDI ( var F : TEXT ; WIDTH : INTEGER ) : INTEGER ;
 
 
 
-local function TOUPPER ( CH : CHAR ) : CHAR ;
-
-(******************************************)
-(*   SETZT KLEINBUCHSTABEN IN GROSSE UM   *)
-(******************************************)
-
-
-   const KLEINBUCHST : set of CHAR =
-         [ 'a' .. 'i' , 'j' .. 'r' , 's' .. 'z' ] ;
-
-   begin (* TOUPPER *)
-     if CH in KLEINBUCHST then
-       TOUPPER := CHR ( ORD ( CH ) - ORD ( 'a' ) + ORD ( 'A' ) )
-     else
-       TOUPPER := CH
-   end (* TOUPPER *) ;
-
-
-
 function $PASRDB ( var F : TEXT ; WIDTH : INTEGER ) : BOOLEAN ;
 
 //**********************************************************
@@ -3494,10 +3493,7 @@ function $PASRDB ( var F : TEXT ; WIDTH : INTEGER ) : BOOLEAN ;
              GET ( F ) ;
              WIDTH := WIDTH - 1 ;
              if EOLN ( F ) or EOF ( F ) or ( WIDTH <= 0 ) then
-               begin
-                 $PASRDB := RETVAL ;
-                 return
-               end (* then *)
+               $ERROR ( 1209 )
            end (* then *)
          else
            begin
@@ -3538,7 +3534,7 @@ function $PASRDB ( var F : TEXT ; WIDTH : INTEGER ) : BOOLEAN ;
                    break ;
                  GET ( F ) ;
                  WIDTH := WIDTH - 1
-               until ( IX > WIDTHMAX ) or ( F -> = ' ' ) ;
+               until ( IX > WIDTHMAX ) or ( not ( F -> in BUCHST ) ) ;
                if BUFFER <> 'FALSE' then
                  $ERROR ( 1210 ) ;
                RETVAL := FALSE ;
@@ -3567,7 +3563,7 @@ function $PASRDB ( var F : TEXT ; WIDTH : INTEGER ) : BOOLEAN ;
                    break ;
                  GET ( F ) ;
                  WIDTH := WIDTH - 1
-               until ( IX > WIDTHMAX ) or ( F -> = ' ' ) ;
+               until ( IX > WIDTHMAX ) or ( not ( F -> in BUCHST ) ) ;
                if BUFFER <> 'TRUE' then
                  $ERROR ( 1210 ) ;
                RETVAL := TRUE ;
@@ -3607,6 +3603,165 @@ function $PASRDB ( var F : TEXT ; WIDTH : INTEGER ) : BOOLEAN ;
            WIDTH := WIDTH - 1 ;
          end (* while *) ;
    end (* $PASRDB *) ;
+
+
+
+function $PASRDX ( var F : TEXT ; PMETA : ANYPTR ; WIDTH : INTEGER ) :
+                 INTEGER ;
+
+//**********************************************************
+// function to scalar values from files                     
+// this does not exist in Standard Pascal                   
+//**********************************************************
+// WIDTH parameter added to support fixed length integer    
+// minus one means: no length specified                     
+//**********************************************************
+// a runtime error is generated if the length is too small  
+// with respect to the minimum which is required for the    
+// scalar type (minimum unique length).                     
+//**********************************************************
+// Bernd Oppolzer - New Stanford Pascal                     
+//**********************************************************
+
+
+   type SHORT = 0 .. 32000 ;
+        PSHORT = -> SHORT ;
+
+   var PS : PSHORT ;
+       RETVAL : INTEGER ;
+       FORMATTED : BOOLEAN ;
+       BUFFER : CHAR ( 20 ) ;
+       IX : INTEGER ;
+       WIDTHMAX : INTEGER ;
+       ELEMCOUNT : SHORT ;
+       MAXIDLEN : SHORT ;
+       MINIDLEN : SHORT ;
+
+   begin (* $PASRDX *)
+     if WIDTH = 0 then
+       begin
+         $PASRDX := 0 ;
+         return
+       end (* then *) ;
+
+     //**********************************
+     // access metadata for scalar type  
+     //**********************************
+
+     PS := PMETA ;
+     if PS -> <> 0 then
+       $ERROR ( 1220 ) ;
+     PS := PTRADD ( PS , 2 ) ;
+     ELEMCOUNT := PS -> ;
+     PS := PTRADD ( PS , 2 ) ;
+     MAXIDLEN := PS -> ;
+     PS := PTRADD ( PS , 2 ) ;
+     MINIDLEN := PS -> ;
+     PS := PTRADD ( PS , 2 ) ;
+
+     //**********************************
+     // check width                      
+     //**********************************
+
+     FORMATTED := TRUE ;
+     if WIDTH < 0 then
+       begin
+         FORMATTED := FALSE ;
+         WIDTH := 999999999 ;
+       end (* then *) ;
+     if FILESTAT ( F ) = '0' then
+       RESET ( F ) ;
+     if EOLN ( F ) then
+       GET ( F ) ;
+     if EOF ( F ) then
+       begin
+         $PASRDX := 0 ;
+         return
+       end (* then *) ;
+     RETVAL := 0 ;
+
+     //**********************
+     // skip leading blanks  
+     //**********************
+
+     while ( F -> = ' ' ) and ( WIDTH > 0 ) do
+       begin
+         if FORMATTED then
+           begin
+             GET ( F ) ;
+             WIDTH := WIDTH - 1 ;
+             if EOLN ( F ) or EOF ( F ) or ( WIDTH <= 0 ) then
+               $ERROR ( 1212 )
+           end (* then *)
+         else
+           begin
+             GET ( F ) ;
+             if EOF ( F ) then
+               begin
+                 $PASRDX := RETVAL ;
+                 return
+               end (* then *)
+           end (* else *)
+       end (* while *) ;
+
+     //************************************************
+     // now read the id of the scalar value            
+     // at most MAXIDLEN chars are read                
+     //************************************************
+
+     if not ( F -> in IDCHARS ) then
+       $ERROR ( 1212 ) ;
+     BUFFER := ' ' ;
+     WIDTHMAX := WIDTH ;
+     if WIDTHMAX > 20 then
+       WIDTHMAX := 20 ;
+     if WIDTHMAX > MAXIDLEN then
+       WIDTHMAX := MAXIDLEN ;
+     IX := 1 ;
+     repeat
+       BUFFER [ IX ] := TOUPPER ( F -> ) ;
+       IX := IX + 1 ;
+       if EOLN ( F ) or EOF ( F ) then
+         break ;
+       GET ( F ) ;
+       WIDTH := WIDTH - 1
+     until ( IX > WIDTHMAX ) or ( not ( F -> in IDCHARS ) ) ;
+     IX := IX - 1 ;
+     if IX < MINIDLEN then
+       $ERROR ( 1214 ) ;
+
+     //*******************************************
+     // now the string in BUFFER is the scalar    
+     // identifier (maybe) and has a length       
+     // between MINIDLEN and MAXIDLEN;            
+     // do a binary search in the PMETA table     
+     // to find the value of the scalar           
+     //*******************************************
+
+
+     //*******************************************
+     // set result                                
+     //*******************************************
+
+     $PASRDX := RETVAL ;
+     if EOLN ( F ) or ( WIDTH <= 0 ) then
+       return ;
+
+     //*******************************************
+     // if width specified, skip remaining chars  
+     //*******************************************
+
+     if FORMATTED then
+       while TRUE do
+         begin
+           if EOLN ( F ) or EOF ( F ) or ( WIDTH <= 0 ) then
+             break ;
+           if F -> <> ' ' then
+             $ERROR ( 1213 ) ;
+           GET ( F ) ;
+           WIDTH := WIDTH - 1 ;
+         end (* while *) ;
+   end (* $PASRDX *) ;
 
 
 

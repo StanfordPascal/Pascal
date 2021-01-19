@@ -1198,6 +1198,9 @@ static void load (void *vgs,
 
       /**********************************************************/
       /*   V = Vergleich, also Typ und bei M noch Anzahl        */
+      /*   2020.12: bei M zwei Anzahlen (links, rechts)         */
+      /*   wenn nur eine Anzahl vorhanden ist, dann             */
+      /*   p = q setzen                                         */
       /**********************************************************/
 
       case 'V':
@@ -1215,6 +1218,13 @@ static void load (void *vgs,
             if (*cp == 0x00)
                break;
             pcode -> q = atoi (cp);
+            pcode -> p = pcode -> q;
+            while (*cp != ',' && *cp != 0x00)
+               cp ++;
+            if (*cp == 0x00)
+               break;
+            cp ++;
+            pcode -> p = atoi (cp);
          }
          while (0);
          break;
@@ -2218,11 +2228,14 @@ void translate2 (global_store *gs)
             if (pent == NULL)
             {
                if (memcmp (plabel, "DSIN    ", 8) == 0 ||
+                   memcmp (plabel, "DEXP    ", 8) == 0 ||
                    memcmp (plabel, "DSQRT   ", 8) == 0)
                {
+#if 0
                   fprintf (stderr, "%s: section label %s not found; "
                            "FTN lib function assumed\n",
                            err_opcode, plabel);
+#endif
                }
                else if (memcmp (plabel, "*PFPARM*", 8) != 0)
                {
@@ -2412,7 +2425,7 @@ void translate2 (global_store *gs)
    memset (gs -> store0, INIT_PATTERN, pegel);
 
    gs -> stack_alloc = 4096;
-   gs -> stack_used = 4096;
+   gs -> stack_used = 0;
    gs -> stack0 = malloc (4096);
    gs -> stacktype = malloc (4096);
 
@@ -2513,7 +2526,6 @@ static void dumparea (FILE *outfile,
                              "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                              "abcdefghijklmnopqrstuvwxyz"
                              " !\"$%&/()=?+*#\'-_.:,;<>\\"
-                             "·ÑîÅéôö"
                              "{[]}~^";
 
    if (header != NULL)
@@ -2538,8 +2550,8 @@ static void dumparea (FILE *outfile,
 
    for (cp = cpstart; cp < cpstop; cp += 16)
    {
-      fprintf (outfile, "%08d ", cp - origin);
-      fprintf (outfile, "%08x: ", cp - origin);
+      fprintf (outfile, "%08d ", (int) (cp - origin));
+      fprintf (outfile, "%08x: ", (int) (cp - origin));
       for (i = 0; i < 16; i++)
       {
          if ((i & 0x3) == 0)
@@ -2784,14 +2796,14 @@ void listing (global_store *gs)
          sc_code *pcode_mst = gs -> code0 + pcode -> ipmst;
 
          sprintf (outmst, " MST at %06d %d %d",
-                 pcode_mst - gs -> code0,
+                 (int) (pcode_mst - gs -> code0),
                  pcode_mst -> p,
                  pcode_mst -> q);
       }
 
       fprintf (gs -> outfile,
                "%06d: %03d %c%c %4d %9d %9d  %-8s %-3s %s %s\n",
-               pcode - gs -> code0,
+               (int) (pcode - gs -> code0),
                pcode -> op,
                pcode -> t,
                pcode -> t2,

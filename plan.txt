@@ -2,8 +2,38 @@
 2020.12:
 
 * Fehler bei Nullstring-Konstanten
-- COMPERRC: Compiler bricht ab bei Syntaxfehler
+* Fehler: counter incorrect ... bei TESTRS2
+* COMPERRC: Compiler bricht ab bei Syntaxfehler
+* SQR implementieren (!)
+* Kleines e bei real-Konstanten zulassen
+* EXPO implementieren (!)
+* Fehler PCINT: Stackpointer ueberschreitet allokierte Grenzen
+* Prozeduren von OS/2 holen wg. J:/BIN Verzeichnis
+* Fehler beim Laden von leerem String, siehe WRITE-Beispiel
+* Problem auch bei Vergleichen, siehe Vergleich mit Laenge 0
+* Was passiert bei VC2 0 ??? Wie sieht danach der Stack aus ?
+* VC2 0 aendern - vorher wird NIL-Adresse geladen (analog VC2 ungleich Null)
+* Fehler bei COMPERRD mit Vergleichen von Char-Arrays unterschiedlicher Laenge
+* Fehler bei COMPERRD: Compare mit Strings bringt Unterschied bei Trailing Blank
+* Fehler bei LEID010: kein Fehler trotz Groessendifferenz Zeile 462
+* PASCAL2 anpassen wg. VC2 und neues Format Vergleichsbefehle
+* a) Einlesen Vergleiche anpassen, tolerant fuer alt und neu
+* b) laeuft der alte Compiler noch?
+* c) VC2 alt und neu tolerieren
+* d) laeuft der neue Compiler usw.?
+* e) implementieren neue Varianten Vergleiche
+- Unterschiede COMPERRD Host zu PC abklaeren
+- Vergleiche Typ M muessen auch mit Laenge > 256 funktionieren !! (PCINT)
+- Compiler-Fehler COMPERRE
+- Probleme bei Konstanten usw. CHAR (1000)
+- Probleme bei STATIC xxx CHAR (1000)
+- Test Compiler auf VM
+- Klaeren, ob ASSEMBLER-Call nach Einfuegen von Scratch-Area noch geht
+- Uebergabe von Char Array an CONST STRING bringt keinen Fehler, geht aber nicht
+- DCOS und DLOG in PCINT aufnehmen
 - Neue Funktion $PASRDX zum Lesen von Skalaren
+- New Stanford Pascal Sprachbeschreibung erstellen
+- Fehler bei CONST-Parameter mit Struktur
 - Neue Funktion zum Lesen von Skalaren aus Strings
 - WRITE-Funktionen (insbesondere WRR) neu
 - WRITESTR Funktionen
@@ -20,7 +50,6 @@
 - Fehler (PASCAL1-Abbruch) bei falschem IF - siehe COMPERR1
 - Fehler (PASCAL1-Abbruch) bei falschem Funktionsnamen - siehe COMPERR2
 - Fehler (PASCAL1-Abbruch) - siehe COMPERR3
-- Fehler bei CONST-Parameter mit Struktur
 - Tabs in Pascal-Source akzeptieren
 - Aufruf von externen GCC-Funktionen
 - PASCAL1N angleichen an PASCAL1, PASCAL1N mit WITH-Erweiterung
@@ -47,7 +76,7 @@
 * Verhindern, dass mit WITH Struct-Konstanten geaendert werden
 * PASFORM anpassen wg. structconst und Initialisierung
 * Auslieferung auf VM - Info auf Facebook
-- Auslieferung auf MVS - Info auf Facebook
+* Auslieferung auf MVS - Info auf Facebook
 
 =======================================================================================
 

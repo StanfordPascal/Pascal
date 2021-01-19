@@ -1,5 +1,6 @@
-program PASCALCOMPILER ( INPUT , OUTPUT , PCODE , LISTING , LISTDEF ,
-                         DBGINFO , TRACEF ) ;
+program PASCALCOMPILER ( INPUT , OUTPUT , PCODE , PCODE1 , PCODE2 ,
+                         PCODE3 , LISTING , LISTDEF , DBGINFO , TRACEF
+                         ) ;
 
 (********************************************************************)
 (*$D+,N+,A-                                                         *)
@@ -55,6 +56,22 @@ program PASCALCOMPILER ( INPUT , OUTPUT , PCODE , LISTING , LISTDEF ,
 (********************************************************************)
 (*                                                                  *)
 (*  History records - newest first                                  *)
+(*                                                                  *)
+(********************************************************************)
+(*                                                                  *)
+(*  Nov 2020 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*             (berndoppolzer@yahoo.com)                            *)
+(*                                                                  *)
+(*  - PCODE output in different parts using %INCLUDE directive      *)
+(*    because file size (maximum number of lines) is limited        *)
+(*    on the VM/CMS platform. Now PCODE output of a single          *)
+(*    compile unit may be about 200.000 instructions                *)
+(*                                                                  *)
+(*  - Support pointers to files                                     *)
+(*                                                                  *)
+(*  - Correct errors with WITH statement;                           *)
+(*    with WITH it was possible to change the values of             *)
+(*    structured constants, this is now a syntax error 217          *)
 (*                                                                  *)
 (********************************************************************)
 (*                                                                  *)
@@ -1268,7 +1285,7 @@ program PASCALCOMPILER ( INPUT , OUTPUT , PCODE , LISTING , LISTDEF ,
 
 
 
-const VERSION = '2020.09' ;
+const VERSION = '2020.11' ;
       MAXLSIZE = 120 ;
       MAXERRNO = 999 ;
 
@@ -2139,7 +2156,20 @@ type ALPHA = array [ 1 .. IDLENGTH ] of CHAR ;
 var MXINT2 : INTEGER ;
     MXINT10 : INTEGER ;
     MXINT16 : INTEGER ;
+
+    /*********************************************/
+    /* output is distributed to pcode files      */
+    /* pcode, pcode1, pcode2 and pcode3          */
+    /* because of cms file limit (64 k lines)    */
+    /* pcode_fileno holds actual file number     */
+    /*********************************************/
+
+    PCODE_FILENO : 0 .. 3 ;
+    PCODE_FILEP : -> TEXT ;
     PCODE : TEXT ;
+    PCODE1 : TEXT ;
+    PCODE2 : TEXT ;
+    PCODE3 : TEXT ;
     TRACEF : TEXT ;
     LISTING : TEXT ;
     LISTDEF : TEXT ;
@@ -2331,10 +2361,12 @@ var MXINT2 : INTEGER ;
                                          BLCK :
                                            ( FLABEL : LBP ) ;
                                          CREC :
-                                           ( CLEV : LEVRANGE ;
+                                           ( IS_KONST : BOOLEAN ;
+                                             CLEV : LEVRANGE ;
                                              CDSPL : ADDRRANGE ) ;
                                          VREC :
-                                           ( VDSPL : ADDRRANGE )
+                                           ( IS_KONSTV : BOOLEAN ;
+                                             VDSPL : ADDRRANGE )
                                      end ;
 
     (******************************************)
@@ -6208,11 +6240,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
        STRING_RESULT : BOOLEAN ;
        LAST_TYPE : IDP ;
        LAST_PROC : IDP ;
-
-       //******************************
-       //     PCODE_FILEP : -> TEXT ;
-       //******************************
-
+       CHG_PCODE : BOOLEAN ;
 
 
    procedure MOD_STRCONST ( CT_RESULT : INTEGER ; var V : XCONSTANT ;
@@ -12203,7 +12231,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
 
 
          procedure SELECTOR ( FSYS : SYMSET ; FCP : IDP ; GEN : BOOLEAN
-                            ; var IS_FUNCRES : BOOLEAN ) ;
+                            ; var IS_FUNCRES : BOOLEAN ; var IS_KONSTP
+                            : BOOLEAN ) ;
 
             var LATTR : ATTR ;
                 LCP : IDP ;
@@ -12213,36 +12242,46 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
 
             begin (* SELECTOR *)
               IS_FUNCRES := FALSE ;
+              IS_KONSTP := FALSE ;
               FACT_ERR := ( FCP -> . IDTYPE = NIL ) ;
 
-              /*************************************/
-              /* if there were previous errors     */
-              /* (for example "identifier not      */
-              /* found") fcp->.idtype is nil.      */
-              /* to prevent more errors, the       */
-              /* nil pointer in fcp->.idtype is    */
-              /* promoted to gattr.typtr           */
-              /*************************************/
-              /* opp - 10.2017                     */
-              /*************************************/
+              //***********************************
+              // if there were previous errors     
+              // (for example "identifier not      
+              // found") fcp->.idtype is nil.      
+              // to prevent more errors, the       
+              // nil pointer in fcp->.idtype is    
+              // promoted to gattr.typtr           
+              //***********************************
+              // opp - 10.2017                     
+              //***********************************
 
               with FCP -> , GATTR do
                 begin
                   TYPTR := IDTYPE ;
                   BTYPE := TYPTR ;
                   KIND := VARBL ;
+                  if FALSE then
+                    if KLASS = FIELD then
+                      begin
+                        WRITELN ( TRACEF ) ;
+                        WRITELN ( TRACEF , 'loc linecnt      = ' ,
+                                  LINECNT ) ;
+                        WRITELN ( TRACEF , 'selector klass = ' , KLASS
+                                  ) ;
+                      end (* then *) ;
                   case KLASS of
 
-              (****************************************************)
-              (*   Erweiterung am 26.10.2016:                     *)
-              (*   fuer den zugriff auf statische variablen       *)
-              (*   - erkennbar an stklass = xstatic -             *)
-              (*   wurde die logik aus dem zweig                  *)
-              (*   fuer strukturierte Konstanten uebernommen;     *)
-              (*   die ID des Owners kommt aus VOWNER;            *)
-              (*   die VARS-Struktur wurde entsprechend           *)
-              (*   erweitert                                      *)
-              (****************************************************)
+              //************************************************
+              // Erweiterung am 26.10.2016:                     
+              // fuer den zugriff auf statische variablen       
+              // - erkennbar an stklass = xstatic -             
+              // wurde die logik aus dem zweig                  
+              // fuer strukturierte Konstanten uebernommen;     
+              // die ID des Owners kommt aus VOWNER;            
+              // die VARS-Struktur wurde entsprechend           
+              // erweitert                                      
+              //************************************************
 
                     VARS : if STKLASS = XAUTO then
                              begin
@@ -12278,35 +12317,48 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                     FIELD : with DISPLAY [ DISX ] do
                               begin
                                 if FALSE then
-                                  begin
-                                    WRITELN ( TRACEF ) ;
-                                    WRITELN ( TRACEF ,
-                                              'loc linecnt      = ' ,
-                                              LINECNT ) ;
-                                    WRITELN ( TRACEF ,
-                                             'selector field occur = '
-                                              , OCCUR ) ;
-                                    WRITELN ( TRACEF ,
-                                              'selector field crec = '
-                                              , CREC ) ;
-                                    WRITELN ( TRACEF ,
-                                         'selector field with_copy = '
-                                              , WITH_COPY ) ;
-                                    WRITELN ( TRACEF ,
-                                        'selector field ptr_offset = '
-                                              , POINTER_OFFSET ) ;
-                                    WRITELN ( TRACEF ,
-                                             'selector field vdspl = '
-                                              , VDSPL ) ;
-                                  end (* then *) ;
+                                  WRITELN ( TRACEF ,
+                                            'selector field occur = ' ,
+                                            OCCUR ) ;
                                 if OCCUR = CREC then
                                   begin
+                                    if IS_KONST then
+                                      IS_KONSTP := TRUE ;
+                                    if FALSE then
+                                      begin
+                                        WRITELN ( TRACEF ,
+                                          'selector field is_konst = '
+                                                  , IS_KONST ) ;
+                                        WRITELN ( TRACEF ,
+                                              'selector field clev = '
+                                                  , CLEV ) ;
+                                        WRITELN ( TRACEF ,
+                                             'selector field cdspl = '
+                                                  , CDSPL ) ;
+                                      end (* then *) ;
                                     ACCESS := DRCT ;
                                     VLEVEL := CLEV ;
                                     DPLMT := CDSPL + FIELDADDR
                                   end (* then *)
                                 else
                                   begin
+                                    if IS_KONSTV then
+                                      IS_KONSTP := TRUE ;
+                                    if FALSE then
+                                      begin
+                                        WRITELN ( TRACEF ,
+                                         'selector field is_konstv = '
+                                                  , IS_KONSTV ) ;
+                                        WRITELN ( TRACEF ,
+                                         'selector field with_copy = '
+                                                  , WITH_COPY ) ;
+                                        WRITELN ( TRACEF ,
+                                        'selector field ptr_offset = '
+                                                  , POINTER_OFFSET ) ;
+                                        WRITELN ( TRACEF ,
+                                             'selector field vdspl = '
+                                                  , VDSPL ) ;
+                                      end (* then *) ;
                                     if GEN then
                                       GEN3 ( PCODE_LOD , ORD ( 'A' ) ,
                                              LEVEL , VDSPL ) ;
@@ -12335,6 +12387,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
               //******************************************
 
                     KONST : begin
+                              IS_KONSTP := TRUE ;
                               if SIMPLEC then
                                 SET_ERROR ( 432 )
                               else
@@ -13305,6 +13358,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
 
                var LCP : IDP ;
                    DUMMYB : BOOLEAN ;
+                   DUMMYB2 : BOOLEAN ;
 
                begin (* VARIABLE *)
                  if SY = IDENT then
@@ -13318,7 +13372,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                      SET_ERROR ( 2 ) ;
                      LCP := UVARPTR
                    end (* else *) ;
-                 SELECTOR ( FSYS , LCP , GEN , DUMMYB ) ;
+                 SELECTOR ( FSYS , LCP , GEN , DUMMYB , DUMMYB2 ) ;
                end (* VARIABLE *) ;
 
 
@@ -13397,49 +13451,68 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
 
             procedure FILESETUP ( DFILE : IDP ; GENSIO : BOOLEAN ) ;
 
-            (***************************************************)
-            (* TO SET UP FILE ADDRESS PARAMETER                *)
-            (* for other functions like eoln and eof           *)
-            (* file parameter is optional, but if parameter    *)
-            (* is present, it must be a file parameter         *)
-            (***************************************************)
+            //*********************************************************
+            // filesetup is called to set up a file address            
+            // parameter, that is: first parameter of an i/O function  
+            // file parameters are optional for some functions         
+            // like eoln and eof etc.                                  
+            // dfile = default file (input or output)                  
+            // depending on the actual I/O function                    
+            // dfile = nil on close call                               
+            // gensio = if sio should be generated                     
+            //---------------------------------------------------------
+            // changed 2020.11 to support file pointers as first       
+            // parameter                                               
+            //*********************************************************
 
 
                var LCP : IDP ;
-                   SAVED : BOOLEAN ;
+                   USE_DEFAULT : BOOLEAN ;
+                   IS_FILE : BOOLEAN ;
                    DUMMYB : BOOLEAN ;
+                   DUMMYB2 : BOOLEAN ;
 
                begin (* FILESETUP *)
-                 SAVED := TRUE ;
+                 USE_DEFAULT := TRUE ;
+
+                 //**********************************
+                 // matchpar = there is a parameter  
+                 //**********************************
+
                  if MATCHPAR then
-
-                 (*************************************)
-                 (* OTHERWISE THERE ARE NO PARAMETERS *)
-                 (*************************************)
-
                    if SY = IDENT then
                      begin
                        SID_RC := SEARCHID ( SYID , TRUE , TRUE , [ VARS
                                  , FIELD , FUNC , KONST ] , LCP ) ;
                        if LCP -> . IDTYPE <> NIL then
                          with LCP -> . IDTYPE -> do
-                           if FORM = FILES then
-                             SAVED := FALSE ;
+                           begin
+                             IS_FILE := FALSE ;
+                             if FORM = FILES then
+                               IS_FILE := TRUE
+                             else
+                               if FORM = POINTER then
+                                 if ELTYPE <> NIL then
+                                   if ELTYPE -> . FORM = FILES then
+                                     IS_FILE := TRUE ;
+                             if IS_FILE then
+                               USE_DEFAULT := FALSE ;
+                           end (* with *) ;
                        INSYMBOL ;
                      end (* then *) ;
-                 if SAVED then
+                 if USE_DEFAULT then
                    begin
                      if DFILE = NIL then
                        SET_ERROR ( 185 ) ;
                      LCP := DFILE ;
                    end (* then *) ;
                  SELECTOR ( FSYS + [ SYRPARENT ] , LCP , TRUE , DUMMYB
-                            ) ;
+                            , DUMMYB2 ) ;
                  with GATTR do
                    if COMPTYPES ( TYPTR , PTYPE_TEXT ) <> 1 then
                      if TYPTR <> NIL then
                        if TYPTR -> . FORM <> FILES then
-                         SET_ERROR ( 116 )
+                         SET_ERROR ( 215 )
                        else
                          begin
                            RWFILE := TYPTR -> . FILTYPE ;
@@ -13447,11 +13520,11 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                            46 , 70 ] ) then
                              SET_ERROR ( 116 ) ;
 
-                 (**********************************************)
-                 (*   NON-TEXT FILES PERMITTED ONLY FOR:       *)
-                 (*   GET, PUT, RESET, READ, WRITE,            *)
-                 (*   REWRITE, EOF, SKIP, LINELIMIT            *)
-                 (**********************************************)
+                 //********************************************
+                 //   NON-TEXT FILES PERMITTED ONLY FOR:       
+                 //   GET, PUT, RESET, READ, WRITE,            
+                 //   REWRITE, EOF, SKIP, LINELIMIT            
+                 //********************************************
 
                          end (* else *) ;
                  LOADADDRESS ;
@@ -13464,42 +13537,68 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                               var VLEVEL_RET : LEVRANGE ; var DISPL_RET
                               : ADDRRANGE ) ;
 
-            (***************************************************)
-            (* TO SET UP FILE ADDRESS PARAMETER FOR READ/WRITE *)
-            (***************************************************)
+            //*********************************************************
+            // rwsetup is called to set up a file address              
+            // parameter, that is: first parameter of an i/O function  
+            // file parameters are optional for some functions         
+            // like eoln and eof etc.                                  
+            // dfile = default file (input or output)                  
+            // depending on the actual I/O function                    
+            // dfile = nil on close call                               
+            // gensio = if sio should be generated                     
+            //---------------------------------------------------------
+            // much like filesetup, but called for read/write funcs    
+            // no lda is generated, but the parameters for lda         
+            // are returned instead                                    
+            //---------------------------------------------------------
+            // changed 2020.11 to support file pointers as first       
+            // parameter                                               
+            //*********************************************************
 
 
                var LCP : IDP ;
-                   SAVED : BOOLEAN ;
+                   USE_DEFAULT : BOOLEAN ;
+                   IS_FILE : BOOLEAN ;
                    TEMPID : ALPHA ;
                    TEMPSY : SYMB ;
                    DUMMYB : BOOLEAN ;
+                   DUMMYB2 : BOOLEAN ;
                    OK : BOOLEAN ;
 
                begin (* RWSETUP *)
-                 SAVED := TRUE ;
+                 USE_DEFAULT := TRUE ;
                  RWFILE := NIL ;
+
+                 //**********************************
+                 // matchpar = there is a parameter  
+                 //**********************************
+
                  if MATCHPAR then
-
-                 (*************************************)
-                 (* OTHERWISE THERE ARE NO PARAMETERS *)
-                 (*************************************)
-
                    if SY = IDENT then
                      begin
                        SID_RC := SEARCHID ( SYID , TRUE , TRUE , [ VARS
                                  , FIELD , FUNC , KONST ] , LCP ) ;
                        if LCP -> . IDTYPE <> NIL then
                          with LCP -> . IDTYPE -> do
-                           if FORM = FILES then
-                             SAVED := FALSE ;
+                           begin
+                             IS_FILE := FALSE ;
+                             if FORM = FILES then
+                               IS_FILE := TRUE
+                             else
+                               if FORM = POINTER then
+                                 if ELTYPE <> NIL then
+                                   if ELTYPE -> . FORM = FILES then
+                                     IS_FILE := TRUE ;
+                             if IS_FILE then
+                               USE_DEFAULT := FALSE ;
+                           end (* with *) ;
                      end (* then *) ;
-                 if SAVED then
+                 if USE_DEFAULT then
                    begin
 
-                 (*************************)
-                 (* USE IMPLIED FILE NAME *)
-                 (*************************)
+                 //***********************
+                 // USE IMPLIED FILE NAME 
+                 //***********************
 
                      TEMPSY := SY ;
                      TEMPID := SYID ;
@@ -13511,13 +13610,13 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                  else
                    INSYMBOL ;
                  SELECTOR ( FSYS + [ SYCOMMA , SYRPARENT ] , LCP , TRUE
-                            , DUMMYB ) ;
+                            , DUMMYB , DUMMYB2 ) ;
                  with GATTR do
                    begin
                      if COMPTYPES ( TYPTR , PTYPE_TEXT ) <> 1 then
                        if TYPTR <> NIL then
                          if TYPTR -> . FORM <> FILES then
-                           SET_ERROR ( 116 )
+                           SET_ERROR ( 215 )
                          else
                            begin
                              RWFILE := TYPTR -> . FILTYPE ;
@@ -13561,7 +13660,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                          DISPL_RET := LCP -> . VADDR ;
                        end (* else *) ;
                    end (* with *) ;
-                 if SAVED then
+                 if USE_DEFAULT then
                    begin
                      SYID := TEMPID ;
                      SY := TEMPSY
@@ -14228,7 +14327,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                     (* erroneous parameter *)
                     (***********************)
 
-                    SET_ERROR ( 116 ) ;
+                    SET_ERROR ( 216 ) ;
                     XCSP := PWRI ;
                   end (* WRITE2 *) ;
 
@@ -19391,6 +19490,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                      procedure FACTOR_IDENT ;
 
                         var DUMMYB : BOOLEAN ;
+                            DUMMYB2 : BOOLEAN ;
 
                         begin (* FACTOR_IDENT *)
                           SID_RC := SEARCHID ( SYID , FALSE , FALSE , [
@@ -19461,8 +19561,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                               FACT_KONST
                             else
                               begin
-                                SELECTOR ( FSYS , LCP , TRUE , DUMMYB )
-                                           ;
+                                SELECTOR ( FSYS , LCP , TRUE , DUMMYB ,
+                                           DUMMYB2 ) ;
                               end (* else *)
                         end (* FACTOR_IDENT *) ;
 
@@ -20499,6 +20599,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                 STRINGSIZE_RIGHT : 1 .. MAXSTRL ;
                 TYPE_ERROR : INTEGER ;
                 IS_FUNCRES : BOOLEAN ;
+                IS_CONST : BOOLEAN ;
                 RIGHT_SIDE_CONST : BOOLEAN ;
                 CONST_FOR_CHKBNDS : INTEGER ;
 
@@ -20509,7 +20610,14 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
               CTLS . WATCH1 := TRUE ;
               LLC := LCOUNTER ;
               SELECTOR ( FSYS + [ SYASSIGN ] , FCP , TRUE , IS_FUNCRES
-                         ) ;
+                         , IS_CONST ) ;
+              if IS_CONST then
+                begin
+                  SET_ERROR ( 217 ) ;
+                  SKIP_SYMBOL ( FSYS ) ;
+                  RESOLVE_CTLS ( 1 ) ;
+                  return ;
+                end (* then *) ;
               VAR_MOD := VAR_MOD + 1 ;
 
               //*************************************************
@@ -21771,6 +21879,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                 OLD_LEV : - 1 .. DISPLIMIT ;
                 REC_STR : TTP ;
                 DUMMYB : BOOLEAN ;
+                IS_KONST : BOOLEAN ;
 
             begin (* WITHSTATEMENT *)
               LLC := LCOUNTER ;
@@ -21798,13 +21907,32 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                 SET_ERROR ( 430 ) ;
               CTLS . WATCH1 := TRUE ;
               SELECTOR ( FSYS + [ SYCOMMA , SYDO ] , LCP , TRUE ,
-                         DUMMYB ) ;
+                         DUMMYB , IS_KONST ) ;
+              if FALSE then
+                begin
+                  WRITELN ( TRACEF ) ;
+                  WRITELN ( TRACEF , 'with - loc linecnt = ' , LINECNT
+                            ) ;
+                  WRITELN ( TRACEF , 'gattr.access     = ' , GATTR .
+                            ACCESS ) ;
+                  WRITELN ( TRACEF , 'lcp ->.klass     = ' , LCP -> .
+                            KLASS ) ;
+                  WRITELN ( TRACEF , 'konst (sel.)     = ' , IS_KONST )
+                            ;
+                end (* then *) ;
               RESOLVE_CTLS ( 1 ) ;
               REC_STR := GATTR . TYPTR ;
               if GATTR . TYPTR <> NIL then
                 if GATTR . TYPTR -> . FORM = RECORDS then
                   if TOP < DISPLIMIT then
                     begin
+
+              //*****************************************
+              // new entry in display for with variable  
+              // new in 2020.11: set is_konst flag       
+              // if variable is constant                 
+              //*****************************************
+
                       TOP := TOP + 1 ;
                       with DISPLAY [ TOP ] do
                         begin
@@ -21813,6 +21941,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                           if GATTR . ACCESS = DRCT then
                             begin
                               OCCUR := CREC ;
+                              IS_KONST := LCP -> . KLASS = KONST ;
                               CLEV := GATTR . VLEVEL ;
                               CDSPL := GATTR . DPLMT
                             end (* then *)
@@ -21823,6 +21952,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                               GEN3 ( PCODE_STR , ORD ( 'A' ) , LEVEL ,
                                      LCOUNTER ) ;
                               OCCUR := VREC ;
+                              IS_KONSTV := LCP -> . KLASS = KONST ;
                               VDSPL := LCOUNTER ;
                               LCOUNTER := LCOUNTER + PTRSIZE ;
                               if LCOUNTER > LCMAX then
@@ -22646,11 +22776,6 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
 
 
    begin (* BLOCK *)
-
-     //************************************
-     //   PCODE_FILEP := ADDR ( PCODE ) ;
-     //************************************
-
      if FALSE then
        DRUCKE_SYMSET ( 'START BLOCK ' , FSYS ) ;
      if FALSE then
@@ -22686,27 +22811,27 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                end (* tag/ca *) ;
              SYCONST :
                begin
-                 CONSTDECLARATION ( PCODE ) ;
+                 CONSTDECLARATION ( PCODE_FILEP -> ) ;
                  if DEC_ORDER >= 2 then
                    EXTUSED := TRUE ;
                  DEC_ORDER := 2 ;
                end (* tag/ca *) ;
              SYTYPE :
                begin
-                 TYPEDECLARATION ( PCODE , LAST_TYPE ) ;
+                 TYPEDECLARATION ( PCODE_FILEP -> , LAST_TYPE ) ;
                  if DEC_ORDER >= 3 then
                    EXTUSED := TRUE ;
                  DEC_ORDER := 3 ;
                end (* tag/ca *) ;
              SYVAR : begin
-                       VARDECLARATION ( PCODE , LAST_VAR ) ;
+                       VARDECLARATION ( PCODE_FILEP -> , LAST_VAR ) ;
                        if DEC_ORDER >= 4 then
                          EXTUSED := TRUE ;
                        DEC_ORDER := 4 ;
                      end (* tag/ca *) ;
              SYSTATIC :
                begin
-                 STATICDECLARATION ( PCODE , LAST_VAR ) ;
+                 STATICDECLARATION ( PCODE_FILEP -> , LAST_VAR ) ;
                  EXTUSED := TRUE ;
                  DEC_ORDER := 5 ;
                end (* tag/ca *) ;
@@ -22721,7 +22846,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
          begin
            CONSTLCOUNTER := 0 ;
            STATIC_VORHANDEN := TRUE ;
-           OUT_PCODE ( PCODE , MN [ PCODE_END ] ) ;
+           OUT_PCODE ( PCODE_FILEP -> , MN [ PCODE_END ] ) ;
            OLDICOUNTER := OLDICOUNTER + ICOUNTER ;
            ICOUNTER := 0 ;
          end (* then *) ;
@@ -22736,6 +22861,45 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
 
        while SY in [ SYPROC , SYFUNC , SYLOCAL ] do
          begin
+
+     //*****************************************
+     // here: adjust pcode_file pointer passed  
+     // to block in case of line limit reached  
+     //*****************************************
+
+           case PCODE_FILENO of
+             0 : CHG_PCODE := OLDICOUNTER >= 50000 ;
+             1 : CHG_PCODE := OLDICOUNTER >= 100000 ;
+             2 : CHG_PCODE := OLDICOUNTER >= 150000 ;
+             otherwise
+               if OLDICOUNTER >= 200000 then
+                 SET_ERROR ( 394 )
+           end (* case *) ;
+           if CHG_PCODE then
+             case PCODE_FILENO of
+               0 : begin
+                     WRITELN ( PCODE , '%INCLUDE pcode1' ) ;
+                     PCODE_FILEP := ADDR ( PCODE1 ) ;
+                     PCODE_FILENO := 1 ;
+                   end (* tag/ca *) ;
+               1 : begin
+                     WRITELN ( PCODE , '%INCLUDE pcode2' ) ;
+                     PCODE_FILEP := ADDR ( PCODE2 ) ;
+                     PCODE_FILENO := 2 ;
+                   end (* tag/ca *) ;
+               2 : begin
+                     WRITELN ( PCODE , '%INCLUDE pcode3' ) ;
+                     PCODE_FILEP := ADDR ( PCODE3 ) ;
+                     PCODE_FILENO := 3 ;
+                   end (* tag/ca *) ;
+               otherwise
+                 
+             end (* case *) ;
+
+     //*****************************************
+     // pcode_file pointer is set as needed     
+     //*****************************************
+
            if SY = SYLOCAL then
              begin
                INSYMBOL ;
@@ -22747,7 +22911,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
              PLOCAL := FALSE ;
            LSY := SY ;
            INSYMBOL ;
-           PROCDECLARATION ( PCODE , LSY , PLOCAL , LAST_PROC ) ;
+           PROCDECLARATION ( PCODE_FILEP -> , LSY , PLOCAL , LAST_PROC
+                             ) ;
          end (* while *) ;
        if SY <> SYBEGIN then
          begin
@@ -22758,6 +22923,22 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
        INSYMBOL
      else
        SET_ERROR ( 17 ) ;
+
+     //*****************************************
+     // reset pcode_file pointer to pcode       
+     // when main program starts                
+     //*****************************************
+
+     if LEVEL <= 1 then
+       begin
+         PCODE_FILEP := ADDR ( PCODE ) ;
+         PCODE_FILENO := 0 ;
+       end (* then *) ;
+
+     //*****************************************
+     // checking for unresolved forwards        
+     //*****************************************
+
      while FWRDPRCL <> NIL do
        begin
          WRITELN ( '**** MISSING FORWARD DECLARED PROCEDURE:' : 50 ,
@@ -22766,9 +22947,9 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
          FWRDPRCL := FWRDPRCL -> . NXTFWRD
        end (* while *) ;
 
-     (***************************************)
-     (* force empty main program for module *)
-     (***************************************)
+     //*****************************************
+     // force empty main program for module     
+     //*****************************************
 
      if ( FPROCP = MAINPROG ) and ( FPROCP -> . EXTNAME = '#PASMAIN' )
      then
@@ -22781,20 +22962,15 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
              SET_ERROR ( 196 ) ;
              SY := SYPERIOD
            end (* then *) ;
-
-     (********)
-     (*STP   *)
-     (********)
-
          if OPT . PRCODE then
            begin
-             PUTIC ( PCODE ) ;
-             OUT_PCODE ( PCODE , MN [ PCODE_STP ] )
+             PUTIC ( PCODE_FILEP -> ) ;
+             OUT_PCODE ( PCODE_FILEP -> , MN [ PCODE_STP ] )
            end (* then *) ;
        end (* then *)
      else
        repeat
-         BODY ( PCODE , FSYS + [ SYCASE ] , STRING_RESULT ) ;
+         BODY ( PCODE_FILEP -> , FSYS + [ SYCASE ] , STRING_RESULT ) ;
          if SY <> FSY then
            begin
              SET_ERROR_SKIP ( 6 , FSYS + [ FSY ] )
@@ -23965,11 +24141,6 @@ procedure ENTSTDNAMES ;
 
 procedure INITSCALARS ;
 
-//*****
-//$A+  
-//*****
-
-
    var ERRNO : INTEGER ;
        INPLINE : SOURCELINE ;
        ERRMSG : SOURCELINE ;
@@ -23977,6 +24148,8 @@ procedure INITSCALARS ;
        CTEMP : array [ 1 .. 16 ] of CHAR ;
 
    begin (* INITSCALARS *)
+     PCODE_FILENO := 0 ;
+     PCODE_FILEP := ADDR ( PCODE ) ;
 
      (****************************************)
      (* default values for compiler options  *)

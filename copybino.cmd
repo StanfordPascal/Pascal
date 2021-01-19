@@ -1,0 +1,15 @@
+copy ppbino.cmd       j:\bin\pp.cmd
+copy prunbino.cmd     j:\bin\prun.cmd
+copy prudbino.cmd     j:\bin\prund.cmd
+copy pasfbino.cmd     j:\bin\pasf.cmd
+copy pascal1.pcode    j:\bin
+copy pascal1.pcode1   j:\bin
+copy pasform.pcode    j:\bin
+copy passcan.pcode    j:\bin
+copy paslibx.pcode    j:\bin
+copy pasutils.pcode   j:\bin
+copy passcan.pas      j:\bin
+copy paslibx.pas      j:\bin
+copy pasutils.pas     j:\bin
+copy pascal.messages  j:\bin
+copy pcint.exe        j:\bin

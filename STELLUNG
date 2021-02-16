@@ -1,0 +1,16 @@
+* Stz 30.01.2021
+* Matt in zwei Zuegen
+* Kurt Friedrich Laib, 1980
+*---------------------------------------------------------
+* Loesung: Db8
+* 1. Zug:  La1-b2 Db8xb2 - Matt
+* 2. Zug:  La1-c3 Db8xd6 - Matt
+* 3. Zug:  Kd4-e5 Db8-h8 - Matt
+* 4. Zug:  Kd4-c3 Db8-b4 - Matt
+* 5. Zug:  Bd6-d5 Sf4-e2 - Matt
+* 6. Zug:  Be6-e5 Db8-b4 - Matt
+*---------------------------------------------------------
+* selber herausgefunden und mit CHESS1 / M1 verifiziert
+
+Kf3 Dc8 Ld3 Sa6 Sf4 Bc2 g6 - Kd4 La1 Bd6 e6
+

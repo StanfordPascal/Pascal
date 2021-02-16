@@ -1,51 +1,38 @@
-program COMPERRD ( OUTPUT ) ;
+program COMPERRE ( OUTPUT ) ;
 
 //*****
-//$A+
+//$A+  
 //*****
 
 
 
-var X24 : CHAR ( 24 ) ;
-    X40 : CHAR ( 40 ) ;
+var TEST : STRING ( 10 ) ;
     B : BOOLEAN ;
-    S24 : STRING ( 24 ) ;
-    S40 : STRING ( 40 ) ;
+    C : CHAR ( 6 ) := 'BERND' ;
+    C3 : CHAR ( 3 ) := 'ABC' ;
+    C1 : CHAR := 'X' ;
 
 
 begin (* HAUPTPROGRAMM *)
-  X24 := 'Bernd' ;
-  X40 := X24 ;
-  S24 := 'Bernd' ;
-  S40 := 'Bernd' ;
-  B := '' < 'A    '
-  WRITELN ( B , ' empty constant left - true expected' ) ;
-  B := 'A    ' < '';
-  WRITELN ( B , ' empty constant right - false expected' ) ;
-  B := 'Bernd   ' = 'Bernd' ;
-  WRITELN ( B , ' constants long before short - true expected' ) ;
-  B := 'Bernd' = 'Bernd   ' ;
-  WRITELN ( B , ' constants short before long - true expected' ) ;
-  B := X24 = 'Bernd  ' ;
-  WRITELN ( B , ' x24 and short constant - true expected' ) ;
-  B := STR ( X24 ) = 'Be' || 'rnd ' ;
-  WRITELN ( B , ' x24 and concat of constants - true expected' ) ;
-  B := 'Be' || 'rnd ' = X24 ;
-  WRITELN ( B , ' x24 and concat of constants - true expected' ) ;
-  B := X24 = 'Bernd                                 ' ;
-  WRITELN ( B , ' x24 and long constant - true expected' ) ;
-  B := X40 = X24 ;
-  WRITELN ( B , ' x40 and x24 - true expected' ) ;
-  B := X24 = X40 ;
-  WRITELN ( B , ' x24 and x40 - true expected' ) ;
-  B := S40 = S24 ;
-  WRITELN ( B , ' s40 and s24 - true expected' ) ;
-  B := S24 = S40 ;
-  WRITELN ( B , ' s24 and s40 - true expected' ) ;
-  S24 := 'Bernd' ;
-  S40 := 'Bernd ' ;
-  B := S40 = S24 ;
-  WRITELN ( B , ' s40 and s24 - false expected' ) ;
-  B := S24 = S40 ;
-  WRITELN ( B , ' s24 and s40 - false expected' ) ;
+  TEST := 'W' ;
+  B := ( TEST = 'W' ) ;
+  WRITELN ( B , ' should be true' ) ;
+  B := ( TEST = 'W' ) or ( TEST = 'S' ) ;
+  WRITELN ( B , ' should be true' ) ;
+  B := ( TEST = 'W' ) or ( TEST = 'S' ) or ( TEST = '' ) ;
+  WRITELN ( B , ' should be true' ) ;
+  B := ( TEST = '' ) ;
+  WRITELN ( B , ' should be false' ) ;
+  B := ( TEST = C ) ;
+  WRITELN ( B , ' should be false' ) ;
+  B := ( 'B' = C ) ;
+  WRITELN ( B , ' should be false' ) ;
+  B := ( C1 = C ) ;
+  WRITELN ( B , ' should be false' ) ;
+  B := ( C = 'B' ) ;
+  WRITELN ( B , ' should be false' ) ;
+  B := ( C = C3 ) ;
+  WRITELN ( B , ' should be false' ) ;
+  B := ( C = C1 ) ;
+  WRITELN ( B , ' should be false' ) ;
 end (* HAUPTPROGRAMM *) .

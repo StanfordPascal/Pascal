@@ -59,6 +59,16 @@ program PASCALCOMPILER ( INPUT , OUTPUT , PCODE , PCODE1 , PCODE2 ,
 (*                                                                  *)
 (********************************************************************)
 (*                                                                  *)
+(*  Feb 2021 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*             (berndoppolzer@yahoo.com)                            *)
+(*                                                                  *)
+(*  - POP unused stack element using STR 0,x,y                      *)
+(*    x and y parameters don't matter                               *)
+(*    (this was needed following FREE procedure which returned      *)
+(*    value and left stack element during PCINT processing)         *)
+(*                                                                  *)
+(********************************************************************)
+(*                                                                  *)
 (*  Jan 2021 - Extensions to the Compiler by Bernd Oppolzer         *)
 (*             (berndoppolzer@yahoo.com)                            *)
 (*                                                                  *)
@@ -6475,10 +6485,10 @@ procedure GEN3_NEU ( var PCODEP : TEXT ; FOP : OPRANGE ; FP1 , FP2 ,
              begin
                WRITE ( PCODEP , CHR ( FP1 ) ) ;
                case CHR ( FP1 ) of
-                 'M' : WRITE ( PCODEP , ',' , FP2 : 1 , ',' , FP3 : 1 )
-                               ;
-                 '1' : WRITE ( PCODEP , ',' , FP3 : 1 ) ;
-                 '2' : WRITE ( PCODEP , ',' , FP2 : 1 ) ;
+                 'M' , '1' , '2' :
+                   WRITE ( PCODEP , ',' , FP2 : 1 , ',' , FP3 : 1 ) ;
+                 otherwise
+                   
                end (* case *) ;
                WRITELN ( PCODEP ) ;
                INCR_IC ;
@@ -12299,10 +12309,9 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                    begin
                      WRITE ( PCODEP , CHR ( FP1 ) ) ;
                      case CHR ( FP1 ) of
-                       'M' : WRITE ( PCODEP , ',' , FP2 : 1 , ',' , FP3
-                                     : 1 ) ;
-                       '1' : WRITE ( PCODEP , ',' , FP3 : 1 ) ;
-                       '2' : WRITE ( PCODEP , ',' , FP2 : 1 ) ;
+                       'M' , '1' , '2' :
+                         WRITE ( PCODEP , ',' , FP2 : 1 , ',' , FP3 : 1
+                                 ) ;
                      end (* case *) ;
                      WRITELN ( PCODEP ) ;
                      INCR_IC ;
@@ -18203,6 +18212,16 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                  GEN3 ( PCODE_STR , ORD ( 'A' ) , LEVEL , LCPARM ) ;
                  LCPARM := LCPARM + PTRSIZE ;
                  CALLLIBRARYFUNC ( FCP , LCCALLER ) ;
+
+                 (******************************************)
+                 (* libraryfunc returns a result (nil)     *)
+                 (* which is not needed. To keep stack     *)
+                 (* in sync, one stack element must be     *)
+                 (* popped. no need to generate code       *)
+                 (* in stage 2.                            *)
+                 (******************************************)
+
+                 GEN3 ( PCODE_STR , ORD ( '0' ) , 0 , 0 ) ;
                end (* FREE1 *) ;
 
 
@@ -18223,6 +18242,16 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                  GEN3 ( PCODE_STR , ORD ( 'A' ) , LEVEL , LCPARM ) ;
                  LCPARM := LCPARM + PTRSIZE ;
                  CALLLIBRARYFUNC ( FCP , LCCALLER ) ;
+
+                 (******************************************)
+                 (* libraryfunc returns a result (nil)     *)
+                 (* which is not needed. To keep stack     *)
+                 (* in sync, one stack element must be     *)
+                 (* popped. no need to generate code       *)
+                 (* in stage 2.                            *)
+                 (******************************************)
+
+                 GEN3 ( PCODE_STR , ORD ( '0' ) , 0 , 0 ) ;
                end (* DISPOSE1 *) ;
 
 
@@ -18243,6 +18272,16 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                  GEN3 ( PCODE_STR , ORD ( 'A' ) , LEVEL , LCPARM ) ;
                  LCPARM := LCPARM + PTRSIZE ;
                  CALLLIBRARYFUNC ( FCP , LCCALLER ) ;
+
+                 (******************************************)
+                 (* libraryfunc returns a result (nil)     *)
+                 (* which is not needed. To keep stack     *)
+                 (* in sync, one stack element must be     *)
+                 (* popped. no need to generate code       *)
+                 (* in stage 2.                            *)
+                 (******************************************)
+
+                 GEN3 ( PCODE_STR , ORD ( '0' ) , 0 , 0 ) ;
                end (* FREEX1 *) ;
 
 
@@ -18263,6 +18302,16 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                  GEN3 ( PCODE_STR , ORD ( 'I' ) , LEVEL , LCPARM ) ;
                  LCPARM := LCPARM + INTSIZE ;
                  CALLLIBRARYFUNC ( FCP , LCCALLER ) ;
+
+                 (******************************************)
+                 (* libraryfunc returns a result (nil)     *)
+                 (* which is not needed. To keep stack     *)
+                 (* in sync, one stack element must be     *)
+                 (* popped. no need to generate code       *)
+                 (* in stage 2.                            *)
+                 (******************************************)
+
+                 GEN3 ( PCODE_STR , ORD ( '0' ) , 0 , 0 ) ;
                end (* CHKHEAP1 *) ;
 
 
@@ -21158,18 +21207,13 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
               // right operand is char array                        
               //****************************************************
 
-                                GEN3_NEU ( PCODEP , PCODE_STR , ORD (
-                                           'A' ) , LEVEL , SCRATCHPOS +
-                                           4 ) ;
-                                GEN3_NEU ( PCODEP , PCODE_STR , ORD (
-                                           'C' ) , LEVEL , SCRATCHPOS )
-                                           ;
-                                GEN2_NEU ( PCODEP , PCODE_LDA , LEVEL ,
-                                           SCRATCHPOS , NIL ) ;
-                                GEN3_NEU ( PCODEP , PCODE_LOD , ORD (
-                                           'A' ) , LEVEL , SCRATCHPOS +
-                                           4 ) ;
-                                TYPIND := 'M'
+                                TYPIND := '1'
+
+              //****************************************************
+              // modification of left operand is done in            
+              // stage 2 or PCINT                                   
+              //****************************************************
+
                               end (* then *)
                             else
                               if IS_STDTYPE ( LATTR . TYPTR , 'R' )
@@ -21257,12 +21301,13 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
               // left operand is char array                          
               //*****************************************************
 
-                                  GEN3_NEU ( PCODEP , PCODE_STR , ORD (
-                                             'C' ) , LEVEL , SCRATCHPOS
-                                             ) ;
-                                  GEN2_NEU ( PCODEP , PCODE_LDA , LEVEL
-                                             , SCRATCHPOS , NIL ) ;
-                                  TYPIND := 'M'
+                                  TYPIND := '2'
+
+              //****************************************************
+              // modification of right operand is done in           
+              // stage 2 or PCINT                                   
+              //****************************************************
+
                                 end (* then *)
                               else
                                 if not IS_CARRAY ( LATTR . TYPTR ) then
@@ -23014,6 +23059,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                    begin
                      WRITE ( PCODEP , SOURCENAME ) ;
                    end (* then *) ;
+                 WRITE ( PCODEP , ',' ) ;
+                 WRITE ( PCODEP , 0 : 1 ) ;
                  WRITELN ( PCODEP ) ;
                  INCR_IC ;
 
@@ -23146,6 +23193,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
           begin
             WRITE ( PCODEP , SOURCENAME ) ;
           end (* then *) ;
+        WRITE ( PCODEP , ',' ) ;
+        WRITE ( PCODEP , SCRATCHPOS : 1 ) ;
         WRITELN ( PCODEP ) ;
         INCR_IC ;
 

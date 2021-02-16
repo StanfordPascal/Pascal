@@ -61,6 +61,8 @@
 /*  18.10.2020 ! Oppolzer    ! Chaining MST to CUP (stacked)          */
 /*  18.10.2020 ! Oppolzer    ! doing MST work at CUP time             */
 /*  13.11.2020 ! Oppolzer    ! implementing SQI and SQR (missing!)    */
+/*  14.02.2021 ! Oppolzer    ! Comparisons with Type Indic. 1 and 2   */
+/*  .......... ! ........    ! .....................................  */
 /*  .......... ! ........    ! .....................................  */
 /*  .......... ! ........    ! .....................................  */
 /*  .......... ! ........    ! .....................................  */
@@ -4332,86 +4334,6 @@ static int compare_set (char what,
 
 
 
-static int compare_char_links (char wlinks,
-                               char *wrechts,
-                               int lrechts)
-
-{
-   int x;
-   char buffer [256];
-
-#if 0
-   printf ("start compare_char_links\n");
-   printf ("wlinks = %c\n", wlinks);
-   printf ("lrechts = %d wrechts = %-*.*s\n",
-            lrechts, lrechts, lrechts, wrechts);
-#endif
-
-   if (lrechts == 1)
-   {
-      x = wlinks - *wrechts;
-   }
-   else if (lrechts == 0)
-   {
-      x = wlinks - ' ';
-   }
-   else
-   {
-      memcpy (buffer, blankbuf, lrechts);
-      *buffer = wlinks;
-      x = memcmp (buffer, wrechts, lrechts);
-   }
-
-#if 0
-   printf ("end compare_char_links, x = %d\n", x);
-#endif
-
-   return x;
-}
-
-
-
-
-static int compare_char_rechts (char *wlinks,
-                                char wrechts,
-                                int llinks)
-
-{
-   int x;
-   char buffer [256];
-
-#if 0
-   printf ("start compare_char_rechts\n");
-   printf ("llinks = %d wlinks = %-*.*s\n",
-            llinks, llinks, llinks, wlinks);
-   printf ("wrechts = %c\n", wrechts);
-#endif
-
-   if (llinks == 1)
-   {
-      x = *wlinks - wrechts;
-   }
-   else if (llinks == 0)
-   {
-      x = ' ' - wrechts;
-   }
-   else
-   {
-      memcpy (buffer, blankbuf, llinks);
-      *buffer = wrechts;
-      x = memcmp (wlinks, buffer, llinks);
-   }
-
-#if 0
-   printf ("end compare_char_links, x = %d\n", x);
-#endif
-
-   return x;
-}
-
-
-
-
 static int compare_char_array (char *wlinks,
                                char *wrechts,
                                int llinks,
@@ -4548,8 +4470,6 @@ static int do_comparison (global_store *gs,
 
       case '1':
 
-         BREMSE_V ("+++ comparison: value 1 deprecated !!\n");
-
          /************************************************/
          /*   get 2 values from top of stack             */
          /*   right: char array - left: char             */
@@ -4559,16 +4479,15 @@ static int do_comparison (global_store *gs,
          (gs -> sp) -= 4;
          charl = STACK_C (gs -> sp);
 
-         lenr = pcode -> q;
+         lenl = pcode -> q;   // always 1
+         lenr = pcode -> p;
 
-         res = compare_char_links (charl,
+         res = compare_char_array (&charl,
                                    ADDRSTOR (wertr),
-                                   lenr);
+                                   lenl, lenr);
          break;
 
       case '2':
-
-         BREMSE_V ("+++ comparison: value 2 deprecated !!\n");
 
          /************************************************/
          /*   get 2 values from top of stack             */
@@ -4580,10 +4499,11 @@ static int do_comparison (global_store *gs,
          wertl = STACK_I (gs -> sp);
 
          lenl = pcode -> q;
+         lenr = pcode -> p;   // always 1
 
-         res = compare_char_rechts (ADDRSTOR (wertl),
-                                    charr,
-                                    lenl);
+         res = compare_char_array (ADDRSTOR (wertl),
+                                   &charr,
+                                   lenl, lenr);
          break;
 
       case 'R':
@@ -7340,43 +7260,47 @@ static void int1 (global_store *gs)
             dwert = *doublep;
          }
 
-         /************************************************/
-         /*   store value into level and address         */
-         /************************************************/
-
-         disp = gs -> display [pcode -> p];
-         addr = disp + pcode -> q;
-         gs -> effadr = addr;
-
-         storep = ADDRSTOR (addr);
-
-         switch (pcode -> t)
+         if (pcode -> t != '0')
          {
-            case 'B':
-            case 'C':
-               *storep = wert;
-               break;
-            case 'H':
-               shortp = (short *) storep;
-               *shortp = wert;
-               break;
-            case 'N':
-               voidp = (void **) storep;
-               *voidp = NULL;
-               break;
-            case 'A':
-            case 'I':
-               intp = (int *) storep;
-               *intp = wert;
-               break;
+            /************************************************/
+            /*   store value into level and address         */
+            /************************************************/
+            /*   02.2021: don't do anything, if T = 0       */
+            /*   only decrement stack pointer ...           */
+            /************************************************/
 
-            case 'R':
-               *((double *) storep) = dwert;
-               break;
+            disp = gs -> display [pcode -> p];
+            addr = disp + pcode -> q;
+            gs -> effadr = addr;
 
-            default:
-               BREMSE ("+++ default case !!\n");
-               break;
+            storep = ADDRSTOR (addr);
+
+            switch (pcode -> t)
+            {
+               case 'B':
+               case 'C':
+                  *storep = wert;
+                  break;
+               case 'H':
+                  shortp = (short *) storep;
+                  *shortp = wert;
+                  break;
+               case 'N':
+                  voidp = (void **) storep;
+                  *voidp = NULL;
+                  break;
+               case 'A':
+               case 'I':
+                  intp = (int *) storep;
+                  *intp = wert;
+                  break;
+               case 'R':
+                  *((double *) storep) = dwert;
+                  break;
+               default:
+                  BREMSE ("+++ default case !!\n");
+                  break;
+            }
          }
 
          /************************************************/

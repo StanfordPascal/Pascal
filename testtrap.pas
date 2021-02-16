@@ -12,6 +12,6 @@ var X : XRECORD ;
 
 begin (* HAUPTPROGRAMM *)
   WRITELN ( 'test trap 5 with record parameter' ) ;
-  TRAP ( 5 , ADDR ( X ) ) ;
+  TRAP ( 5 , X ) ;
   WRITELN ( 'after trap' ) ;
 end (* HAUPTPROGRAMM *) .

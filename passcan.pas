@@ -2383,7 +2383,7 @@ procedure PASSCAN ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB :
      /*********************************************/
 
          INIT ( SCB ) ;
-         INIT_SCAN_CODE
+         INIT_SCAN_CODE ;
        end (* then *) ;
      SCB . SYMBOL := '' ;
      if SCB . MODUS > 0 then

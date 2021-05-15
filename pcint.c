@@ -62,7 +62,7 @@
 /*  18.10.2020 ! Oppolzer    ! doing MST work at CUP time             */
 /*  13.11.2020 ! Oppolzer    ! implementing SQI and SQR (missing!)    */
 /*  14.02.2021 ! Oppolzer    ! Comparisons with Type Indic. 1 and 2   */
-/*  .......... ! ........    ! .....................................  */
+/*  11.04.2021 ! Oppolzer    ! New PCODE inst IAC (Ind Acc w. Copy)   */
 /*  .......... ! ........    ! .....................................  */
 /*  .......... ! ........    ! .....................................  */
 /*  .......... ! ........    ! .....................................  */
@@ -1529,6 +1529,7 @@ static void *cspf_xit (void *vgs,
    fprintf (stdout, "\n*** EXIT Aufruf mit Parameter = %d ***\n",
             parm1);
 
+   gs -> global_rc = parm1;
    gs -> stepanz = -10;
 
    return NULL;
@@ -5756,6 +5757,80 @@ static void int1 (global_store *gs)
 
          break;
 
+      case XXX_IAC:
+
+         /************************************************/
+         /*   indirect access by addr at top of stack    */
+         /*   after copying the addr (no pop)            */
+         /************************************************/
+
+         stackp = ADDRSTACK (gs -> sp);
+         intp = (int *) stackp;
+         sourcep = ADDRSTOR (*intp);
+
+         /************************************************/
+         /*   incr addr                                  */
+         /************************************************/
+
+         sourcep += pcode -> q;
+
+         /************************************************/
+         /*   incr sp to keep addr at stack position     */
+         /************************************************/
+
+         (gs -> sp) += 4;
+         stackp = ADDRSTACK (gs -> sp);
+
+         /************************************************/
+         /*   load constant at stack position            */
+         /************************************************/
+
+         switch (pcode -> t)
+         {
+            case 'A':
+               voidp = (void **) stackp;
+               *voidp = *((void **) sourcep);
+               break;
+
+            case 'B':
+            case 'C':
+               intp = (int *) stackp;
+               *intp = 0;
+               charp = (char *) stackp;
+               *charp = *((char *) sourcep);
+               break;
+
+            case 'I':
+               intp = (int *) stackp;
+               *intp = *((int *) sourcep);
+               break;
+
+            case 'H':
+
+               /************************************************/
+               /*   expand to long format when writing         */
+               /*   to stack                                   */
+               /************************************************/
+
+               intp = (int *) stackp;
+               wert = *((short *) sourcep);
+               *intp = wert;
+               break;
+
+            case 'R':
+               doublep = (double *) stackp;
+               *doublep = *((double *) sourcep);
+               (gs -> sp) += 4;
+               STACKTYPE (gs -> sp) = 'R';
+               break;
+
+            default:
+               BREMSE ("+++ default case !!\n");
+               break;
+         }
+
+         break;
+
       case XXX_INC:
 
          /************************************************/
@@ -9881,6 +9956,6 @@ int main (int argc, char **argv)
    if (protfile != NULL)
       fclose (protfile);
 
-   return rc;
+   return gs.global_rc;
 }
 

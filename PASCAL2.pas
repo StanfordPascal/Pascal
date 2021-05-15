@@ -134,6 +134,59 @@ program PCODE_TRANSLATOR ( PCODE , PCODE1 , PCODE2 , PCODE3 , OUTPUT ,
 (*                                                                  *)
 (********************************************************************)
 (*                                                                  *)
+(*  May 2021 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*             (berndoppolzer@yahoo.com)                            *)
+(*                                                                  *)
+(*  Fix error in GETOP_SIMPLE - generated LR Rx,0 instead of        *)
+(*  XR Rx,Rx - which in turn lead to wrong behaviour in             *)
+(*  MFI operation, which in turn made PASFORM signal EOF            *)
+(*  at the very beginning of the source file :-((                   *)
+(*                                                                  *)
+(*  It is really time to rewrite the P-Code to 370 translator       *)
+(*                                                                  *)
+(*  but this is a really big task, because the existing             *)
+(*  translator does a really good job with respect to               *)
+(*  optimization (the older parts, at least).                       *)
+(*                                                                  *)
+(********************************************************************)
+(*                                                                  *)
+(*  May 2021 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*             (berndoppolzer@yahoo.com)                            *)
+(*                                                                  *)
+(*  PASCAL2 abended when compiling PASFORM - no error with          *)
+(*  other modules !!                                                *)
+(*                                                                  *)
+(*  After some checking I found out that the error seems to         *)
+(*  be an initialization problem. The error was resolved by         *)
+(*  adding some initializations to the local variables of           *)
+(*  procedure ASMNXTINST.                                           *)
+(*                                                                  *)
+(*  This motivated me to add an option $I - if this option is       *)
+(*  set, the compiler generates code to initialize the              *)
+(*  automatic area to hex zeroes on every block entry.              *)
+(*  This is a performance nightmare, of course, so this             *)
+(*  should be used only as a last resort, if no other               *)
+(*  remedy for strange runtime errors can be found.                 *)
+(*                                                                  *)
+(*  The $I option is implemented in PASCAL1 and passed to           *)
+(*  PASCAL2 (see the format changes in the ENT instruction),        *)
+(*  but not yet fully implemented in PASCAL2.                       *)
+(*                                                                  *)
+(*  BTW: ENT now can handle more "boolean" options without          *)
+(*  much effort - see the new ENT format (there is one              *)
+(*  string of booleans of variable length)                          *)
+(*                                                                  *)
+(*  ... and a side note: I don't want to invest much time           *)
+(*  in PASCAL2, because a new PCODE translator will be built        *)
+(*  in the next months, called PASCAL3, with the following          *)
+(*  features:                                                       *)
+(*                                                                  *)
+(*  - completely re-structured                                      *)
+(*  - maybe 31 bit ready                                            *)
+(*  - maybe generates code for other platforms, too                 *)
+(*                                                                  *)
+(********************************************************************)
+(*                                                                  *)
 (*  Feb 2021 - Extensions to the Compiler by Bernd Oppolzer         *)
 (*             (berndoppolzer@yahoo.com)                            *)
 (*                                                                  *)
@@ -1226,6 +1279,7 @@ type OPTYPE = ( PCTS , PCTI , PLOD , PSTR , PLDA , PLOC , PSTO , PLDC ,
                         ASM : BOOLEAN ;
                         ASMVERB : BOOLEAN ;
                         GET_STAT : BOOLEAN ;
+                        INIT_AUTO : BOOLEAN ;
                         DEBUG_LEV : 0 .. 9 ;
                         STATNAME : ALFA ;
                         SOURCENAME : ALFA ;
@@ -1262,6 +1316,19 @@ type OPTYPE = ( PCTS , PCTI , PLOD , PSTR , PLDA , PLOC , PSTO , PLDC ,
                    STMT : INTEGER ;
                    OFFS : ICRNG ;
                  end ;
+
+     //************************************************************
+     // base type for literal pool                                 
+     //************************************************************
+
+     LITERAL = record
+                 LTYPE : CHAR ;
+                 LENGTH : HINTEGER ;
+                 XIDP : INTEGER ;
+                 LNK : ICRNG_EXT ;
+                 XLINECNT : INTEGER ;
+                 OPTIMIZED : BOOLEAN ;
+               end ;
 
 
 var GS : GLOBAL_STATE ;
@@ -1747,14 +1814,7 @@ var GS : GLOBAL_STATE ;
     // lnk = link into code array or zero, if notused               
     //**************************************************************
 
-    LITTBL : array [ 1 .. LITCNT ] of record
-                                        LTYPE : CHAR ;
-                                        LENGTH : HINTEGER ;
-                                        XIDP : INTEGER ;
-                                        LNK : ICRNG_EXT ;
-                                        XLINECNT : INTEGER ;
-                                        OPTIMIZED : BOOLEAN ;
-                                      end ;
+    LITTBL : array [ 1 .. LITCNT ] of LITERAL ;
     LBLTBL : array [ 0 .. LBLCNT ] of record
                                         DEFINED : BOOLEAN ;
                                         LNK : ICRNG_EXT
@@ -1815,7 +1875,7 @@ var GS : GLOBAL_STATE ;
 const HEXTAB : array [ 0 .. 15 ] of CHAR = '0123456789abcdef' ;
       DATNULL : DATUM =
       ( 0.0 , NIL , 0 , 0 , ( 0 , 0 ) , 0 , FALSE , FALSE , ' ' , NON ,
-        NEITHER ) ;
+        NEITHER , 0 , ( 0 , 0 ) ) ;
       XTBLN : MNEM_TABLE =
       ( '(00)' , '(01)' , '(02)' , '(03)' , 'SPM ' , 'BALR' , 'BCTR' ,
         'BCR ' , 'SSK ' , 'ISK ' , 'SVC ' , '(0B)' , '(0C)' , '(0D)' ,
@@ -3075,6 +3135,9 @@ function READNXTINST ( var PCODEF : TEXT ; MODUS : INTEGER ) : BOOLEAN
 
    procedure READ_ENT ;
 
+      var X : INTEGER ;
+          OPTV : CHAR ( 8 ) ;
+
       begin (* READ_ENT *)
 
         (*************************************************************)
@@ -3101,10 +3164,34 @@ function READNXTINST ( var PCODEF : TEXT ; MODUS : INTEGER ) : BOOLEAN
             if PCODEF -> = ' ' then
               SKIPBLANKS ;
             READ ( PCODEF , PIAKT -> . CURPNAME , CH ) ;
+
+        //****************************************
+        // change input format here - 10.05.2021  
+        // support old and new format             
+        //****************************************
+
             READ ( PCODEF , PIAKT -> . SAVERGS , CH ) ;
-            READ ( PCODEF , PIAKT -> . ASM , CH ) ;
-            READ ( PCODEF , PIAKT -> . GET_STAT , CH ) ;
-            READ ( PCODEF , PIAKT -> . ASMVERB , CH ) ;
+            if CH = ',' then
+              begin
+                READ ( PCODEF , PIAKT -> . ASM , CH ) ;
+                READ ( PCODEF , PIAKT -> . GET_STAT , CH ) ;
+                READ ( PCODEF , PIAKT -> . ASMVERB , CH ) ;
+                PIAKT -> . INIT_AUTO := FALSE ;
+              end (* then *)
+            else
+              begin
+                OPTV := ' ' ;
+                OPTV [ 2 ] := CH ;
+                X := 2 ;
+                repeat
+                  X := X + 1 ;
+                  READ ( PCODEF , OPTV [ X ] )
+                until OPTV [ X ] = ',' ;
+                PIAKT -> . ASM := OPTV [ 2 ] = 'T' ;
+                PIAKT -> . GET_STAT := OPTV [ 3 ] = 'T' ;
+                PIAKT -> . ASMVERB := OPTV [ 4 ] = 'T' ;
+                PIAKT -> . INIT_AUTO := OPTV [ 5 ] = 'T' ;
+              end (* else *) ;
             READ ( PCODEF , PIAKT -> . DEBUG_LEV , CH ) ;
             READ ( PCODEF , PIAKT -> . CURPNO , CH ) ;
             PIAKT -> . STATNAME := ' ' ;
@@ -3130,9 +3217,21 @@ function READNXTINST ( var PCODEF : TEXT ; MODUS : INTEGER ) : BOOLEAN
             READLBL ( DUMMYLABEL ) ;
             if PCODEF -> = ' ' then
               SKIPBLANKS ;
-            READ ( PCODEF , DUMMYNAME , CH , DUMMYBOOL , CH , DUMMYBOOL
-                   , CH , DUMMYBOOL , CH , DUMMYBOOL , CH , DUMMYINT ,
-                   CH , MATCH_CURPNO , CH ) ;
+
+        //****************************************
+        // change input format here - 10.05.2021  
+        // support old and new format             
+        //****************************************
+
+            READ ( PCODEF , DUMMYNAME , CH , DUMMYBOOL , CH ) ;
+            if CH = ',' then
+              READ ( PCODEF , DUMMYBOOL , CH , DUMMYBOOL , CH ,
+                     DUMMYBOOL , CH )
+            else
+              repeat
+                READ ( PCODEF , CH )
+              until CH = ',' ;
+            READ ( PCODEF , DUMMYINT , CH , MATCH_CURPNO , CH ) ;
             READLN ( PCODEF ) ;
             PIAKT := PIANKER ;
             while PIAKT <> NIL do
@@ -3841,18 +3940,18 @@ procedure ASMNXTINST ;
          SL16 = 65536 ;       //            16
          SL24 = 16777216 ;    //            24
 
-   var P1 , P2 , B1 , B2 : LVLRNG ;
-       Q1 , Q2 : ADRRNG ;
-       I , J : INTEGER ;
-       OPPTR : STKPTR ;
-       RGADR1 : RGRNG ;
-       RGADR2 : RGRNG ;
+   var P1 , P2 , B1 , B2 : LVLRNG := 0 ;
+       Q1 , Q2 : ADRRNG := 0 ;
+       I , J : INTEGER := 0 ;
+       OPPTR : STKPTR := 0 ;
+       RGADR1 : RGRNG := 0 ;
+       RGADR2 : RGRNG := 0 ;
        LBLX : PLABEL ;
        C : CHAR ;
-       LITOK : INTEGER ;
+       LITOK : INTEGER := 0 ;
        TAG : array [ 1 .. 3 ] of CHAR ;
-       NXTINT : 0 .. INTCNT ;
-       XOFFS : INTEGER ;
+       NXTINT : 0 .. INTCNT := 0 ;
+       XOFFS : INTEGER := 0 ;
 
        (***************************************************)
        (* THE FOLLOWING PROCEDURES ARE FOR OBJECT CODE    *)
@@ -6453,7 +6552,10 @@ procedure ASMNXTINST ;
                       end (* case *) ;
                     end (* tag/ca *) ;
               NEITHER :
-                GENLA_LR ( TXRG , FPA . DSPLMT , 0 , 0 ) ;
+                if FPA . DSPLMT <> 0 then
+                  GENLA_LR ( TXRG , FPA . DSPLMT , 0 , 0 )
+                else
+                  GENRR ( XXR , TXRG , TXRG ) ;
               otherwise
                 
             end (* case *) ;
@@ -13205,6 +13307,14 @@ procedure ASMNXTINST ;
           Q1 , QX : ADRRNG ;
 
       begin (* MFIOPERATION *)
+        if FALSE then
+          begin
+            WRITELN ( TRACEF , 'start mfioperation, linecnt = ' ,
+                      LINECNT : 1 ) ;
+            DUMPSTKELEM ( 'Left ' , LEFT ) ;
+            DUMPSTKELEM ( 'Pat  ' , PAT ) ;
+            WRITELN ( TRACEF , 'len       = ' , LEN ) ;
+          end (* then *) ;
         if LEN > 0 then
 
         //******************************************************
@@ -17649,6 +17759,11 @@ procedure ASMNXTINST ;
         STK [ TOP - 1 ] := L ;
       end (* BOPERATION *) ;
 
+          //*****
+          //$A+  
+          //*****
+
+
 
    procedure CHECK_CHAR_LITERAL ;
 
@@ -17662,15 +17777,26 @@ procedure ASMNXTINST ;
    //*****************************************************
 
 
+      var WORKI : INTEGER ;
+          PX : ANYPTR ;
+          PNXTLIT : -> LITERAL ;
+
       begin (* CHECK_CHAR_LITERAL *)
+        if FALSE then
+          WRITELN ( TRACEF , 'start CHECK_CHAR_LITERAL' ) ;
         LITOK := 0 ;
         for I := 1 to NXTLIT do
           with LITTBL [ I ] do
             if LTYPE = 'C' then
               if LENGTH >= SLNGTH then
                 begin
-                  if MEMCMPX ( ADDR ( SVAL ) , ADDR ( IDP_POOL . C [
-                  XIDP ] ) , SLNGTH ) = 0 then
+
+        //******************************************
+        // zwischenvariable wg. compilerfehler :-(  
+        //******************************************
+
+                  PX := ADDR ( IDP_POOL . C [ XIDP ] ) ;
+                  if MEMCMPX ( ADDR ( SVAL ) , PX , SLNGTH ) = 0 then
                     begin
                       XOFFS := 0 ;
                       LITOK := I ;
@@ -17679,8 +17805,14 @@ procedure ASMNXTINST ;
                   if LENGTH > SLNGTH then
                     begin
                       XOFFS := LENGTH - SLNGTH ;
-                      if MEMCMPX ( ADDR ( SVAL ) , ADDR ( IDP_POOL . C
-                      [ XIDP + XOFFS ] ) , SLNGTH ) = 0 then
+
+        //******************************************
+        // zwischenvariable wg. compilerfehler :-(  
+        //******************************************
+
+                      PX := ADDR ( IDP_POOL . C [ XIDP + XOFFS ] ) ;
+                      if MEMCMPX ( ADDR ( SVAL ) , PX , SLNGTH ) = 0
+                      then
                         begin
                           LITOK := I ;
                           break
@@ -17696,15 +17828,26 @@ procedure ASMNXTINST ;
 
         if LITOK > 0 then
           begin
+            if FALSE then
+              WRITELN ( 'CHECK_CHAR_LITERAL: LITOK  = ' , LITOK : 1 ) ;
             TAG := 'use' ;
             NXTLIT := NXTLIT + 1 ;
-            LITTBL [ NXTLIT ] . XLINECNT := LINECNT ;
-            LITTBL [ NXTLIT ] . LNK := - TOP - 1 ;
-            LITTBL [ NXTLIT ] . LTYPE := 'C' ;
-            LITTBL [ NXTLIT ] . LENGTH := SLNGTH ;
-            LITTBL [ NXTLIT ] . XIDP := LITTBL [ LITOK ] . XIDP + XOFFS
-                                        ;
-            LITTBL [ NXTLIT ] . OPTIMIZED := FALSE ;
+            PNXTLIT := ADDR ( LITTBL [ NXTLIT ] ) ;
+            if FALSE then
+              WRITELN ( 'CHECK_CHAR_LITERAL: NXTLIT = ' , NXTLIT : 1 )
+                        ;
+            PNXTLIT -> . XLINECNT := LINECNT ;
+            PNXTLIT -> . LNK := - TOP - 1 ;
+            PNXTLIT -> . LTYPE := 'C' ;
+            PNXTLIT -> . LENGTH := SLNGTH ;
+
+        //******************************************
+        // zwischenvariable wg. compilerfehler :-(  
+        //******************************************
+
+            WORKI := LITTBL [ LITOK ] . XIDP + XOFFS ;
+            PNXTLIT -> . XIDP := WORKI ;
+            PNXTLIT -> . OPTIMIZED := FALSE ;
             if FALSE then
               begin
                 WRITELN ( TRACEF , '----------------------------------'
@@ -17746,12 +17889,13 @@ procedure ASMNXTINST ;
               end (* then *) ;
             TAG := 'add' ;
             NXTLIT := NXTLIT + 1 ;
-            LITTBL [ NXTLIT ] . XLINECNT := LINECNT ;
-            LITTBL [ NXTLIT ] . LNK := - TOP - 1 ;
-            LITTBL [ NXTLIT ] . LTYPE := 'C' ;
-            LITTBL [ NXTLIT ] . LENGTH := SLNGTH ;
-            LITTBL [ NXTLIT ] . XIDP := LX . NXTCH ;
-            LITTBL [ NXTLIT ] . OPTIMIZED := FALSE ;
+            PNXTLIT := ADDR ( LITTBL [ NXTLIT ] ) ;
+            PNXTLIT -> . XLINECNT := LINECNT ;
+            PNXTLIT -> . LNK := - TOP - 1 ;
+            PNXTLIT -> . LTYPE := 'C' ;
+            PNXTLIT -> . LENGTH := SLNGTH ;
+            PNXTLIT -> . XIDP := LX . NXTCH ;
+            PNXTLIT -> . OPTIMIZED := FALSE ;
             if FALSE then
               begin
                 WRITELN ( TRACEF , '----------------------------------'
@@ -17812,9 +17956,17 @@ procedure ASMNXTINST ;
         //*****************************************************
 
         if FALSE then
-          WRITELN ( TRACEF , TAG , ' literal nr. ' , LITOK : 1 ,
-                    ' sval   = ' , SVAL : SLNGTH ) ;
+          begin
+            WRITELN ( TRACEF , TAG , ' literal nr. ' , LITOK : 1 ,
+                      ' sval   = ' , SVAL : SLNGTH ) ;
+            WRITELN ( TRACEF , 'ende CHECK_CHAR_LITERAL' ) ;
+          end (* then *)
       end (* CHECK_CHAR_LITERAL *) ;
+
+          //*****
+          //$A-  
+          //*****
+
 
 
    begin (* ASMNXTINST *)
@@ -17928,6 +18080,7 @@ procedure ASMNXTINST ;
      case OPCODE of
        PLOD : with STK [ TOP ] do
                 begin
+                  STK [ TOP ] := DATNULL ;
                   if OPNDTYPE in [ ADR , INT , PSET ] then
                     begin
                       if ( Q MOD INTSIZE ) <> 0 then
@@ -18535,8 +18688,8 @@ procedure SETUP ;
        AVAILFP [ NXTRG ] := TRUE ;
 
      //****************************************
-     // set typecode depending on type letter
-     // no numbers !!                        
+     // set typecode depending on type letter  
+     // no numbers !!                          
      //****************************************
 
      for CH := 'A' to 'Z' do

@@ -1,0 +1,50 @@
+*
+* ---- for Information: EXECs of old (1979) Stanford compiler
+*
+*     PASCOMP  EXEC      Y2  - old Compiler EXEC
+*     PCODE370 EXEC      Y2  - old PCODE translator EXEC
+*     PASCRUN  EXEC      Y2  - old Pascal Run EXEC
+*
+*     will be renamed to
+*
+*     PASC79   EXEC      Y2  - old Compiler EXEC
+*     PCODE79  EXEC      Y2  - old PCODE translator EXEC
+*     PASCR79  EXEC      Y2  - old Pascal Run EXEC
+*
+* ---- Stanford Pascal Files for CMS (Oppolzer Version 2021.01)
+*
+&1 &2 PASCOMP  EXEC      A1  - new Compiler EXEC                                 was: PASCOMPN
+&1 &2 PASFORM  EXEC      A1  - Pascal Formatter                                  was: PASF
+&1 &2 PASLINK  EXEC      A1  - Pascal Linker
+&1 &2 PASRUN   EXEC      A1  - Pascal Run EXEC
+&1 &2 PASRUNC  EXEC      A1  - Pascal Run EXEC for the compiler
+&1 &2 PASRUNS  EXEC      A1  - PASRUN, but with standard allocations             was: PRUN
+&1 &2 PASC370  EXEC      A1  - EXEC to run the PCODE to 370 translator           was: PCODENNN
+&1 &2 PASCAL   EXEC      A1  - total Compiler and PCODE translator EXEC          was: PP
+&1 &2 PASCAL   MESSAGES  A1  - Repository for error messages
+&1 &2 XRUNPARM MODULE    A1  - CMS startup code for OS modules
+&1 &2 PASCAL1  TEXT      A1  - Compiler
+&1 &2 PASCAL2  TEXT      A1  - PCODE-Translator
+&1 &2 PASFORM  TEXT      A1  - Pascal Formatter
+&1 &2 PASLIBX  TEXT      A1  - Runtime library Pascal part
+&1 &2 PASMAIN  TEXT      A1  - Runtime library Main program entry
+&1 &2 PASMONN  TEXT      A1  - Runtime library Pascal monitor
+&1 &2 PASSCAN  TEXT      A1  - Pascal compiler symbol scanner
+&1 &2 PASSNAPC TEXT      A1  - Pascal SNAPSHOT for CMS
+&1 &2 PASUTILS TEXT      A1  - Runtime library utility functions
+&1 &2 XRUNPARM TEXT      A1  - CMS startup code (object version)
+&1 &2 PASMATH  TXTLIB    A2  - Runtime library Fortran math lib
+*
+* ---- Stanford Pascal Sources for CMS
+*
+&1 &2 PASCAL1  PASCAL    A1  - Compiler
+&1 &2 PASCAL2  PASCAL    A1  - PCODE-Translator
+&1 &2 PASFORM  PASCAL    A1  - Pascal Formatter
+&1 &2 PASLIBX  PASCAL    A1  - Runtime library Pascal part
+&1 &2 PASMAIN  ASSEMBLE  A1  - Runtime library Main program entry
+&1 &2 PASMONN  ASSEMBLE  A1  - Runtime library Pascal monitor
+&1 &2 PASSCAN  PASCAL    A1  - Pascal compiler symbol scanner
+&1 &2 PASSNAPC PASCAL    A1  - Pascal SNAPSHOT for CMS
+&1 &2 PASUTILS PASCAL    A1  - Runtime library utility functions
+&1 &2 XRUNPARM ASSEMBLE  A1  - CMS startup code for OS modules
+*

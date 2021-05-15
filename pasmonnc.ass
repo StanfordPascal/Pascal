@@ -152,6 +152,16 @@
 *    Some more modifications in 2020 by Bernd Oppolzer
 *    (berndoppolzer@yahoo.com)
 *
+*    - resolved error in $PASSCMP
+*      added support for string on stack representation
+*      (comparisons following string function calls were not handled
+*      correctly)
+*
+***********************************************************************
+*
+*    Some more modifications in 2020 by Bernd Oppolzer
+*    (berndoppolzer@yahoo.com)
+*
 *    - new CSPs (Pascal Standard Procedures):
 *      RFC, RFS and RFV - read char, char array and varchar from file
 *      these new CSPs replace the old CSPs RDC, RDS and RDV;
@@ -2319,18 +2329,35 @@ $PASSCMP DS    0H
          L     R5,8(R2)      r5 = carr / varc indicator second str
          L     R4,12(R2)     r4 = addr of second string or desc
 *
+SCMP1    DS    0H
          LTR   R7,R7         if length positive (that is: CARR)
-         BNM   PR            use length in R7 and addr in R6
+         BNM   SCMP2         use length in R7 and addr in R6
+         LH    R7,0(R6)
+         LTR   R7,R7         if maxlength negative then
+         BM    SCMP1A        string on stack representation
          LH    R7,2(R6)      length of first string
          LA    R6,4(R6)      address of first string content
+         B     SCMP2
+SCMP1A   DS    0H
+         LH    R7,2(R6)      length of first string
+         L     R6,4(R6)      address of first string content
+         B     SCMP2
 *
-PR       DS    0H
+SCMP2    DS    0H
          LTR   R5,R5         if length positive (that is: CARR)
-         BNM   POK           use length in R5 and addr in R4
+         BNM   SCMPOK        use length in R5 and addr in R4
+         LH    R5,0(R4)
+         LTR   R5,R5         if maxlength negative then
+         BM    SCMP2A        string on stack representation
          LH    R5,2(R4)      length of second string
          LA    R4,4(R4)      address of second string content
+         B     SCMPOK
+SCMP2A   DS    0H
+         LH    R5,2(R4)      length of second string
+         L     R4,4(R4)      address of second string content
+         B     SCMPOK
 *
-POK      DS    0H
+SCMPOK   DS    0H
 *
 *        CVD   R4,DOWOCMP
 *        UNPK  TRCMP1+24(9),DOWOCMP+3(5)

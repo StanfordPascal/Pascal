@@ -204,6 +204,9 @@ type WORT = array [ 1 .. 100 ] of CHAR ;
      //************************************************************
      // muss mit Def. beim Scanner                                 
      // uebereinstimmen                                            
+     // konkret: die Typen bei Compiler, Scanner und PASFORM       
+     // sind unterschiedlich, aber die initialen "Subsets" sind    
+     // identisch                                                  
      //************************************************************
 
      SYMB = ( SYMB_EOF , SYMB_UNKNOWN , EOLCHAR , SEPARATOR , COMMENT1
@@ -3281,6 +3284,11 @@ procedure VORBESETZEN ;
 
 procedure INIT_SCANNER ;
 
+//*****
+//$A+  
+//*****
+
+
    var CTEMP : array [ 1 .. 16 ] of CHAR ;
 
    begin (* INIT_SCANNER *)
@@ -3420,6 +3428,12 @@ begin (* HAUPTPROGRAMM *)
   REWRITE ( AUSGABE ) ;
   INPOINTER := 0 ;
   OUTPOINTER := EINR ;
+
+  //***********************************************
+  // klaeren: wieso funktioniert memset nicht ???  
+  //***********************************************
+
+  SCB . DATEIENDE := 0 ;
   if VERARB_MODUS < 3 then
     PROG
   else

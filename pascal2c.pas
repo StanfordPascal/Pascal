@@ -1,5 +1,5 @@
-program PCODE_TRANSLATOR ( INPUT , OUTPUT , OBJCODE , LIST002 , TRACEF
-                           ) ;
+program PCODE_TRANSLATOR ( PCODE , PCODE1 , PCODE2 , PCODE3 , OUTPUT ,
+                           OBJCODE , LIST002 , TRACEF ) ;
 
 (********************************************************************)
 (*$D-,N+                                                            *)
@@ -89,6 +89,9 @@ program PCODE_TRANSLATOR ( INPUT , OUTPUT , OBJCODE , LIST002 , TRACEF
 (*  new errors from 2016 and later (Bernd Oppolzer):                *)
 (*                                                                  *)
 (*  701- top of stack is not 1 at beginning of statement            *)
+(*  710- % directive is not %INCLUDE                                *)
+(*  711- %INCLUDE does not specify pcodex                           *)
+(*  712- %INCLUDE pcodex but not pcode1, 2 or 3                     *)
 (*  75x- registers are not available (different variants)           *)
 (*  750- no single register available                               *)
 (*  751- no register pair available (for string operations)         *)
@@ -128,6 +131,18 @@ program PCODE_TRANSLATOR ( INPUT , OUTPUT , OBJCODE , LIST002 , TRACEF
 (********************************************************************)
 (*                                                                  *)
 (*  History records - newest first                                  *)
+(*                                                                  *)
+(********************************************************************)
+(*                                                                  *)
+(*  Oct 2020 - Extensions to the Compiler by Bernd Oppolzer         *)
+(*             (berndoppolzer@yahoo.com)                            *)
+(*                                                                  *)
+(*  PCODE output in different parts using %INCLUDE directive        *)
+(*  because file size (maximum number of lines) is limited          *)
+(*  on the VM/CMS platform                                          *)
+(*                                                                  *)
+(*  PASCAL2 has to read the PCODE input and implement the           *)
+(*  %INCLUDE statement                                              *)
 (*                                                                  *)
 (********************************************************************)
 (*                                                                  *)
@@ -561,9 +576,9 @@ program PCODE_TRANSLATOR ( INPUT , OUTPUT , OBJCODE , LIST002 , TRACEF
 
 
 
-const VERSION = '2020.09' ;        // Version for display message
-      VERSION2 = 0x2009 ;          // Version for load module
-      VERSION3 = 'XL2''2009''' ;   // Version for LIST002 listing
+const VERSION = '2020.11' ;        // Version for display message
+      VERSION2 = 0x2011 ;          // Version for load module
+      VERSION3 = 'XL2''2011''' ;   // Version for LIST002 listing
       MXADR = 65535 ;
       SHRTINT = 4095 ;
       HALFINT = 32700 ;
@@ -1247,7 +1262,7 @@ var GS : GLOBAL_STATE ;
     // CURRENT (SYMBOLIC) PCODE /CSP NAME                           
     //**************************************************************
 
-    PCODE , OLDPCODE : OPTYPE ;
+    OPCODE , OLDOPCODE : OPTYPE ;
     CSP , OLDCSP : CSPTYPE ;
     P_OPCODE , EMPTY : BETA ;
     PROCOFFSET : INTEGER ;
@@ -1730,12 +1745,24 @@ var GS : GLOBAL_STATE ;
     PROGHDR : array [ 1 .. HDRLNGTH ] of CHAR ;
 
     (*******************************************************)
+    (* PCODE   = primary pcode input file                  *)
+    (* PCODE1  = first pcode include file                  *)
+    (* PCODE2  = second pcode include file                 *)
+    (* PCODE3  = third pcode include file                  *)
+    (* OBJCODE = 370 objcode output file                   *)
     (* LIST002 = Datei fuer ASSEMBLER-Ausgabe              *)
     (*                                                     *)
     (* STATNAME = Name der Static Csect (falls vorhanden)  *)
     (* posofproclen = Position des ProcLen-Feldes          *)
     (*******************************************************)
 
+    PCODEP : -> TEXT ;
+    PCODE_FILENO : 0 .. 3 ;
+    EOF_PCODE : BOOLEAN ;
+    PCODE : TEXT ;
+    PCODE1 : TEXT ;
+    PCODE2 : TEXT ;
+    PCODE3 : TEXT ;
     OBJCODE : TEXT ;
     LIST002 : TEXT ;
     TRACEF : TEXT ;
@@ -2156,18 +2183,18 @@ procedure ENTERLOOKUP ;
 
                  NAME := P_OPCODE ;
                  if OP_SP then
-                   OPCDE := PCODE
+                   OPCDE := OPCODE
                  else
                    SPCDE := CSP
                end (* then *)
              else
                if OP_SP then
-                 PCODE := UNDEF_OP
+                 OPCODE := UNDEF_OP
                else
                  CSP := UNDEF_CSP
          else
            if OP_SP then
-             PCODE := OPCDE
+             OPCODE := OPCDE
            else
              CSP := SPCDE ;
        break ;
@@ -2289,7 +2316,8 @@ procedure HEXHW ( HW : HINTEGER ; var HEX : HEX4 ) ;
 
 
 
-procedure READNXTINST ( MODUS : INTEGER ) ;
+function READNXTINST ( var PCODEF : TEXT ; MODUS : INTEGER ) : BOOLEAN
+                     ;
 
 (*****************************************)
 (* TO READ AND DECODE NEXT P_INSTRUCTION *)
@@ -2334,13 +2362,13 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
             CADDR := 0 ;
             NAM := '        ' ;
             LEN := 0 ;
-            if EOL ( INPUT ) then
+            if EOL ( PCODEF ) then
               ERROR ( 618 ) ;
             repeat
-              READ ( CH ) ;
+              READ ( PCODEF , CH ) ;
               LEN := LEN + 1 ;
               NAM [ LEN ] := CH ;
-            until ( INPUT -> = ' ' ) or ( LEN = 8 ) ;
+            until ( PCODEF -> = ' ' ) or ( LEN = 8 ) ;
             if NAM [ 1 ] in [ '0' .. '9' ] then
               begin
                 I := 1 ;
@@ -2378,7 +2406,7 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
           Z : INTEGER ;
 
       begin (* READSET *)
-        READ ( CH , CH ) ;
+        READ ( PCODEF , CH , CH ) ;
 
         (****************************)
         (* typ = e - d.h. empty set *)
@@ -2387,7 +2415,7 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
         if CH = 'E' then
           begin
             PSLNGTH := 0 ;
-            READLN ( INPUT ) ;
+            READLN ( PCODEF ) ;
             if ASM then
               begin
                 WRITE ( LIST002 , '  E()' ) ;
@@ -2404,9 +2432,9 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
 
         if CH = 'X' then
           begin
-            READ ( PSLNGTH ) ;
+            READ ( PCODEF , PSLNGTH ) ;
             Z := 30 ;
-            READ ( CH ) ;
+            READ ( PCODEF , CH ) ;
             if ASM then
               WRITE ( LIST002 , '  S,X' , PSLNGTH : 1 , '''' ) ;
             if FALSE then
@@ -2414,22 +2442,22 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
             I := 0 ;
             while TRUE do
               begin
-                READ ( CH1 ) ;
+                READ ( PCODEF , CH1 ) ;
                 if CH1 = '''' then
                   begin
-                    if INPUT -> <> ',' then
+                    if PCODEF -> <> ',' then
                       begin
                         if FALSE then
                           WRITELN ( TRACEF , '''' ) ;
                         break ;
                       end (* then *) ;
-                    READLN ( INPUT ) ;
+                    READLN ( PCODEF ) ;
                     repeat
-                      READ ( CH ) ;
+                      READ ( PCODEF , CH ) ;
                     until CH = '''' ;
                     continue ;
                   end (* then *) ;
-                READ ( CH2 ) ;
+                READ ( PCODEF , CH2 ) ;
                 if FALSE then
                   WRITE ( TRACEF , CH1 , CH2 ) ;
                 I := I + 1 ;
@@ -2452,7 +2480,7 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
                 Z := Z + 2 ;
               end (* while *) ;
             PSLNGTH := I ;
-            READLN ( INPUT ) ;
+            READLN ( PCODEF ) ;
             if ASM then
               begin
                 WRITE ( LIST002 , '''' ) ;
@@ -2467,9 +2495,9 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
 
         if CH = 'C' then
           begin
-            READ ( PSLNGTH ) ;
+            READ ( PCODEF , PSLNGTH ) ;
             Z := 30 ;
-            READ ( CH ) ;
+            READ ( PCODEF , CH ) ;
             if ASM then
               WRITE ( LIST002 , '  S,C' , PSLNGTH : 1 , '''' ) ;
             if FALSE then
@@ -2477,18 +2505,18 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
             X := [ ] ;
             while TRUE do
               begin
-                READ ( CH ) ;
+                READ ( PCODEF , CH ) ;
                 if CH = '''' then
                   begin
-                    CH := INPUT -> ;
+                    CH := PCODEF -> ;
                     if CH = '''' then
-                      READ ( CH )
+                      READ ( PCODEF , CH )
                     else
                       if CH = ',' then
                         begin
-                          READLN ( INPUT ) ;
+                          READLN ( PCODEF ) ;
                           repeat
-                            READ ( CH ) ;
+                            READ ( PCODEF , CH ) ;
                           until CH = '''' ;
                           continue ;
                         end (* then *)
@@ -2524,7 +2552,7 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
                   end (* then *) ;
               end (* while *) ;
             MEMCPY ( ADDR ( PSVAL ) , ADDR ( X ) , PSLNGTH ) ;
-            READLN ( INPUT ) ;
+            READLN ( PCODEF ) ;
             if ASM then
               begin
                 WRITE ( LIST002 , '''' ) ;
@@ -2538,8 +2566,8 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
    procedure SKIPBLANKS ;
 
       begin (* SKIPBLANKS *)
-        GET ( INPUT ) ;
-        if EOL ( INPUT ) then
+        GET ( PCODEF ) ;
+        if EOL ( PCODEF ) then
           ERROR ( 618 ) ;
       end (* SKIPBLANKS *) ;
 
@@ -2563,11 +2591,11 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
         (* or hex content                                      *)
         (*******************************************************)
 
-        if ( PCODE = PDFC ) and ( INPUT -> = '0' ) then
+        if ( OPCODE = PDFC ) and ( PCODEF -> = '0' ) then
           begin
             OPNDTYPE := NON ;
-            READ ( CH1 ) ;
-            READLN ( CH , IVAL ) ;
+            READ ( PCODEF , CH1 ) ;
+            READLN ( PCODEF , CH , IVAL ) ;
             SLNGTH := IVAL ;
             if ASM then
               begin
@@ -2577,12 +2605,12 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
           end (* then *)
         else
           begin
-            OPNDTYPE := TYPCDE [ INPUT -> ] ;
-            READ ( CH1 ) ;
+            OPNDTYPE := TYPCDE [ PCODEF -> ] ;
+            READ ( PCODEF , CH1 ) ;
             case OPNDTYPE of
               HINT , BOOL , INT :
                 begin
-                  READLN ( CH , IVAL ) ;
+                  READLN ( PCODEF , CH , IVAL ) ;
                   if ASM then
                     begin
                       WRITE ( LIST002 , CH1 : 3 , ',' , IVAL : 1 ) ;
@@ -2590,7 +2618,7 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
                     end (* then *) ;
                 end (* tag/ca *) ;
               CHRC : begin
-                       READLN ( CH , CH , CH ) ;
+                       READLN ( PCODEF , CH , CH , CH ) ;
                        IVAL := ORD ( CH ) ;
                        if ASM then
                          begin
@@ -2599,7 +2627,7 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
                          end (* then *) ;
                      end (* tag/ca *) ;
               REEL : begin
-                       READLN ( CH , RVAL ) ;
+                       READLN ( PCODEF , CH , RVAL ) ;
                        if ASM then
                          begin
                            WRITE ( LIST002 , 'R,' : 4 , RVAL : 20 ) ;
@@ -2607,7 +2635,7 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
                          end (* then *) ;
                      end (* tag/ca *) ;
               ADR : begin
-                      READLN ( INPUT ) ;
+                      READLN ( PCODEF ) ;
                       IVAL := - 1 ;
                       if ASM then
                         begin
@@ -2616,12 +2644,12 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
                         end (* then *) ;
                     end (* tag/ca *) ;
               PSET : begin
-                       READSET
+                       READSET ;
                      end (* tag/ca *) ;
               PROC : begin
-                       READ ( CH ) ;
+                       READ ( PCODEF , CH ) ;
                        READLBL ( LBL2 ) ;
-                       READLN ( INPUT ) ;
+                       READLN ( PCODEF ) ;
                        if ASM then
                          begin
                            WRITE ( LIST002 , 'P,' : 4 , LBL2 . NAM :
@@ -2631,28 +2659,29 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
                      end (* tag/ca *) ;
               CARR : begin
                        LEN := - 1 ;
-                       READ ( CH ) ;
+                       READ ( PCODEF , CH ) ;
 
         /************************************/
         /* read optional length information */
         /************************************/
 
-                       if not ( INPUT -> in [ '''' , 'B' , 'X' ] ) then
+                       if not ( PCODEF -> in [ '''' , 'B' , 'X' ] )
+                       then
                          begin
-                           READ ( LEN ) ;
-                           READ ( CH ) ;
+                           READ ( PCODEF , LEN ) ;
+                           READ ( PCODEF , CH ) ;
                          end (* then *) ;
 
         /**************************/
         /* read optional type tag */
         /**************************/
 
-                       READ ( CH ) ;
+                       READ ( PCODEF , CH ) ;
                        TYPETAG := ' ' ;
                        if CH in [ 'X' , 'B' ] then
                          begin
                            TYPETAG := CH ;
-                           READ ( CH ) ;
+                           READ ( PCODEF , CH ) ;
                          end (* then *) ;
                        SVAL := ' ' ;
                        J := 0 ;
@@ -2663,7 +2692,7 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
         /* read rest of line into buffer */
         /*********************************/
 
-                         READLN ( BUFFER ) ;
+                         READLN ( PCODEF , BUFFER ) ;
                          I := 80 ;
                          while BUFFER [ I ] = ' ' do
                            I := I - 1 ;
@@ -2678,7 +2707,7 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
                            begin
                              I := I - 2 ;
                              SKIPBLANKS ;
-                             READ ( CH ) ;
+                             READ ( PCODEF , CH ) ;
                              CH := ',' ;
                            end (* then *)
                          else
@@ -2855,7 +2884,7 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
    procedure READ_XBG ;
 
       begin (* READ_XBG *)
-        READLN ( Q ) ;
+        READLN ( PCODEF , Q ) ;
         if ASM then
           begin
             WRITE ( LIST002 , ' ' : 2 , Q : 1 ) ;
@@ -2896,7 +2925,7 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
    procedure READ_XEN ;
 
       begin (* READ_XEN *)
-        READLN ( Q , CH , P ) ;
+        READLN ( PCODEF , Q , CH , P ) ;
         if ASM then
           begin
             WRITE ( LIST002 , ' ' : 2 , Q : 1 , ',' , P : 1 ) ;
@@ -2937,24 +2966,24 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
             SKIPBLANKS ;
             case GS . MOD1DEFSTEP of
               0 : begin
-                    READLN ( CH , CH , Q ) ;
+                    READLN ( PCODEF , CH , CH , Q ) ;
                     PIAKT -> . DATA_SIZE := Q ;
                     GS . MOD1DEFSTEP := 1 ;
                   end (* tag/ca *) ;
               1 : begin
-                    READLN ( CH , CH , Q ) ;
+                    READLN ( PCODEF , CH , CH , Q ) ;
                     PIAKT -> . CODE_SIZE := Q ;
                     PIAKT -> . LARGE_PROC := ( PIAKT -> . CODE_SIZE >
                                              SHRT_PROC ) or DEBUG ;
                     GS . MOD1DEFSTEP := 2 ;
                   end (* tag/ca *) ;
               2 : begin
-                    READLN ( CH , CH , Q ) ;
+                    READLN ( PCODEF , CH , CH , Q ) ;
                     PIAKT -> . CALL_HIGHER := ( Q <> 0 ) ;
                     GS . MOD1DEFSTEP := - 1 ;
                   end (* tag/ca *) ;
               otherwise
-                READLN
+                READLN ( PCODEF )
             end (* case *) ;
             return
           end (* then *) ;
@@ -2964,9 +2993,9 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
         (*****************************************)
 
         SKIPBLANKS ;
-        if INPUT -> = 'C' then
+        if PCODEF -> = 'C' then
           begin
-            READLN ( CH , CH , CH , CH1 , CH ) ;
+            READLN ( PCODEF , CH , CH , CH , CH1 , CH ) ;
             if ASM then
               begin
                 WRITE ( LIST002 , '  C,''' , CH1 : 1 , '''' ) ;
@@ -2976,9 +3005,9 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
             OPNDTYPE := TYPCDE [ 'C' ] ;
           end (* then *)
         else
-          if INPUT -> = 'I' then
+          if PCODEF -> = 'I' then
             begin
-              READLN ( CH , CH , Q ) ;
+              READLN ( PCODEF , CH , CH , Q ) ;
               if ASM then
                 begin
                   WRITE ( LIST002 , '  I,' , Q : 1 ) ;
@@ -2987,9 +3016,9 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
               OPNDTYPE := TYPCDE [ 'I' ] ;
             end (* then *)
           else
-            if INPUT -> = 'B' then
+            if PCODEF -> = 'B' then
               begin
-                READLN ( CH , CH , Q ) ;
+                READLN ( PCODEF , CH , CH , Q ) ;
                 if ASM then
                   begin
                     WRITE ( LIST002 , '  I,' , Q : 1 ) ;
@@ -2999,7 +3028,7 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
               end (* then *)
             else
               begin
-                READLN ( Q ) ;
+                READLN ( PCODEF , Q ) ;
                 if ASM then
                   begin
                     WRITE ( LIST002 , ' ' : 2 , Q : 1 ) ;
@@ -3033,26 +3062,26 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
               end (* else *) ;
             PIAKT -> . NEXT := NIL ;
             SKIPBLANKS ;
-            PIAKT -> . OPNDTYPE := TYPCDE [ INPUT -> ] ;
-            READ ( CH1 , CH , P , CH ) ;
+            PIAKT -> . OPNDTYPE := TYPCDE [ PCODEF -> ] ;
+            READ ( PCODEF , CH1 , CH , P , CH ) ;
             READLBL ( PIAKT -> . SEGSZE ) ;
-            if INPUT -> = ' ' then
+            if PCODEF -> = ' ' then
               SKIPBLANKS ;
-            READ ( PIAKT -> . CURPNAME , CH ) ;
-            READ ( PIAKT -> . SAVERGS , CH ) ;
-            READ ( PIAKT -> . ASM , CH ) ;
-            READ ( PIAKT -> . GET_STAT , CH ) ;
-            READ ( PIAKT -> . ASMVERB , CH ) ;
-            READ ( PIAKT -> . DEBUG_LEV , CH ) ;
-            READ ( PIAKT -> . CURPNO , CH ) ;
+            READ ( PCODEF , PIAKT -> . CURPNAME , CH ) ;
+            READ ( PCODEF , PIAKT -> . SAVERGS , CH ) ;
+            READ ( PCODEF , PIAKT -> . ASM , CH ) ;
+            READ ( PCODEF , PIAKT -> . GET_STAT , CH ) ;
+            READ ( PCODEF , PIAKT -> . ASMVERB , CH ) ;
+            READ ( PCODEF , PIAKT -> . DEBUG_LEV , CH ) ;
+            READ ( PCODEF , PIAKT -> . CURPNO , CH ) ;
             PIAKT -> . STATNAME := ' ' ;
             PIAKT -> . SOURCENAME := ' ' ;
-            if INPUT -> <> ',' then
-              READ ( PIAKT -> . STATNAME , CH )
+            if PCODEF -> <> ',' then
+              READ ( PCODEF , PIAKT -> . STATNAME , CH )
             else
-              READ ( CH ) ;
-            READ ( PIAKT -> . SOURCENAME ) ;
-            READLN ( INPUT ) ;
+              READ ( PCODEF , CH ) ;
+            READ ( PCODEF , PIAKT -> . SOURCENAME ) ;
+            READLN ( PCODEF ) ;
             DEBUG := PIAKT -> . DEBUG_LEV >= 2 ;
             PIAKT -> . FLOW_TRACE := PIAKT -> . DEBUG_LEV >= 3 ;
             return ;
@@ -3060,14 +3089,14 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
         else
           begin
             SKIPBLANKS ;
-            READ ( CH1 , CH , P , CH ) ;
+            READ ( PCODEF , CH1 , CH , P , CH ) ;
             READLBL ( DUMMYLABEL ) ;
-            if INPUT -> = ' ' then
+            if PCODEF -> = ' ' then
               SKIPBLANKS ;
-            READ ( DUMMYNAME , CH , DUMMYBOOL , CH , DUMMYBOOL , CH ,
-                   DUMMYBOOL , CH , DUMMYBOOL , CH , DUMMYINT , CH ,
-                   MATCH_CURPNO , CH ) ;
-            READLN ( INPUT ) ;
+            READ ( PCODEF , DUMMYNAME , CH , DUMMYBOOL , CH , DUMMYBOOL
+                   , CH , DUMMYBOOL , CH , DUMMYBOOL , CH , DUMMYINT ,
+                   CH , MATCH_CURPNO , CH ) ;
+            READLN ( PCODEF ) ;
             PIAKT := PIANKER ;
             while PIAKT <> NIL do
               begin
@@ -3105,19 +3134,19 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
      P := 0 ;
      Q := 0 ;
      LBL1 . LEN := 0 ;
-     if INPUT -> <> ' ' then
+     if PCODEF -> <> ' ' then
        begin
          READLBL ( LBL1 ) ;
        end (* then *) ;
-     GET ( INPUT ) ;
-     if INPUT -> = ' ' then
+     GET ( PCODEF ) ;
+     if PCODEF -> = ' ' then
        SKIPBLANKS ;
 
      //************************************************************
      // P-Opcode einlesen                                          
      //************************************************************
 
-     READ ( P_OPCODE ) ;
+     READ ( PCODEF , P_OPCODE ) ;
 
      //************************************************************
      // when reading the first time, only certain P-Opcodes are    
@@ -3130,7 +3159,8 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
          P_OPCODE <> 'DEF' ) and ( P_OPCODE <> 'STP' ) and ( P_OPCODE
          <> 'XBG' ) and ( P_OPCODE <> 'XEN' ) then
            begin
-             READLN ( INPUT ) ;
+             READLN ( PCODEF ) ;
+             READNXTINST := EOF ( PCODEF ) ;
              return ;
            end (* then *) ;
        end (* then *)
@@ -3147,7 +3177,8 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
          if GS . XBG_XEN_SUPPRESSED > 0 then
            if P_OPCODE <> 'XEN' then
              begin
-               READLN ( INPUT ) ;
+               READLN ( PCODEF ) ;
+               READNXTINST := EOF ( PCODEF ) ;
                return ;
              end (* then *) ;
          if ASM and ( P_OPCODE <> 'LOC' ) and ( P_OPCODE <> 'ENT' ) and
@@ -3175,7 +3206,7 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
      // korrekt implementiert sind                                 
      //************************************************************
 
-     if PCODE = PENT then
+     if OPCODE = PENT then
        begin
          if TOP <> 1 then
            ERROR ( 701 ) ;
@@ -3196,7 +3227,7 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
      // korrekt implementiert sind                                 
      //************************************************************
 
-     case PCODE of
+     case OPCODE of
 
      //************************************************************
      // pcodes with no operands                                    
@@ -3207,12 +3238,12 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
        PUNI , PINT , PDIF , PINN , PCRD , PLAB , PSAV , PRST , PCHR ,
        PORD , PXPO , PPOP , PXLB , PADA , PSBA , PMCP :
          begin
-           READLN ( INPUT ) ;
+           READLN ( PCODEF ) ;
            if ASM then
              LIST002_NEWLINE ;
          end (* tag/ca *) ;
        PEND : begin
-                READLN ( INPUT ) ;
+                READLN ( PCODEF ) ;
                 if ASM then
                   LIST002_NEWLINE ;
                 ASM := FALSE ;
@@ -3232,7 +3263,8 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
        PSTP : begin
                 if MODUS = 1 then
                   begin
-                    READLN ( INPUT ) ;
+                    READLN ( PCODEF ) ;
+                    READNXTINST := EOF ( PCODEF ) ;
                     return
                   end (* then *) ;
 
@@ -3240,7 +3272,7 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
      (* NO OPERANDS *)
      (***************)
 
-                READLN ( INPUT ) ;
+                READLN ( PCODEF ) ;
                 if ASM then
                   LIST002_NEWLINE ;
               end (* tag/ca *) ;
@@ -3252,7 +3284,7 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
      (* INTEGER OPERAND *)
      (*******************)
 
-           READLN ( Q ) ;
+           READLN ( PCODEF , Q ) ;
            if ASM then
              begin
                WRITE ( LIST002 , ' ' : 2 , Q : 1 ) ;
@@ -3265,7 +3297,7 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
      (* INTEGER OPERAND *)
      (*******************)
 
-                READLN ( Q ) ;
+                READLN ( PCODEF , Q ) ;
                 if ASM then
                   LIST002_PRINTLOC ( Q ) ;
                 LINECNT := Q
@@ -3277,12 +3309,12 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
      (* TYPE-CODE; if blank then b *)
      (******************************)
 
-           GET ( INPUT ) ;
-           CH1 := INPUT -> ;
+           GET ( PCODEF ) ;
+           CH1 := PCODEF -> ;
            if CH1 = ' ' then
              CH1 := 'B' ;
            OPNDTYPE := TYPCDE [ CH1 ] ;
-           READLN ( INPUT ) ;
+           READLN ( PCODEF ) ;
            if ASM then
              begin
                WRITE ( LIST002 , CH1 : 3 ) ;
@@ -3297,8 +3329,8 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
      (**********************************)
 
            SKIPBLANKS ;
-           OPNDTYPE := TYPCDE [ INPUT -> ] ;
-           READLN ( CH1 , CH , Q ) ;
+           OPNDTYPE := TYPCDE [ PCODEF -> ] ;
+           READLN ( PCODEF , CH1 , CH , Q ) ;
            if ASM then
              begin
                WRITE ( LIST002 , CH1 : 3 , ',' , Q : 1 ) ;
@@ -3312,7 +3344,7 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
      (* TWO INTEGER OPERANDS *)
      (************************)
 
-           READLN ( P , CH , Q ) ;
+           READLN ( PCODEF , P , CH , Q ) ;
            if ASM then
              begin
                WRITE ( LIST002 , ' ' : 2 , P : 1 , ',' , Q : 1 ) ;
@@ -3327,8 +3359,8 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
      (**************************************)
 
            SKIPBLANKS ;
-           OPNDTYPE := TYPCDE [ INPUT -> ] ;
-           READLN ( CH1 , CH , P , CH , Q ) ;
+           OPNDTYPE := TYPCDE [ PCODEF -> ] ;
+           READLN ( PCODEF , CH1 , CH , P , CH , Q ) ;
            if ASM then
              begin
                WRITE ( LIST002 , CH1 : 3 , ',' , P : 1 , ',' , Q : 1 )
@@ -3342,7 +3374,7 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
      (* THREE INTEGER OPERANDS *)
      (**************************)
 
-                READLN ( IVAL , CH , P , CH , Q ) ;
+                READLN ( PCODEF , IVAL , CH , P , CH , Q ) ;
                 if ASM then
                   begin
                     WRITE ( LIST002 , ' ' : 2 , IVAL : 1 , ',' , P : 1
@@ -3363,30 +3395,30 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
                 P_IS_CHAR := FALSE ;
                 Q_IS_CHAR := FALSE ;
                 SKIPBLANKS ;
-                OPNDTYPE := TYPCDE [ INPUT -> ] ;
-                READ ( CH1 , CH ) ;
-                if INPUT -> = '''' then
+                OPNDTYPE := TYPCDE [ PCODEF -> ] ;
+                READ ( PCODEF , CH1 , CH ) ;
+                if PCODEF -> = '''' then
                   begin
-                    READ ( CH ) ;
-                    READ ( CH ) ;
+                    READ ( PCODEF , CH ) ;
+                    READ ( PCODEF , CH ) ;
                     P := ORD ( CH ) ;
                     P_IS_CHAR := TRUE ;
-                    READ ( CH ) ;
+                    READ ( PCODEF , CH ) ;
                   end (* then *)
                 else
-                  READ ( P ) ;
-                READ ( CH ) ;
-                if INPUT -> = '''' then
+                  READ ( PCODEF , P ) ;
+                READ ( PCODEF , CH ) ;
+                if PCODEF -> = '''' then
                   begin
-                    READ ( CH ) ;
-                    READ ( CH ) ;
+                    READ ( PCODEF , CH ) ;
+                    READ ( PCODEF , CH ) ;
                     Q := ORD ( CH ) ;
                     Q_IS_CHAR := TRUE ;
-                    READ ( CH ) ;
+                    READ ( PCODEF , CH ) ;
                   end (* then *)
                 else
-                  READ ( Q ) ;
-                READLN ;
+                  READ ( PCODEF , Q ) ;
+                READLN ( PCODEF ) ;
                 if ASM then
                   begin
                     WRITE ( LIST002 , CH1 : 3 , ',' ) ;
@@ -3410,10 +3442,10 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
      (*********************************************)
 
            SKIPBLANKS ;
-           OPNDTYPE := TYPCDE [ INPUT -> ] ;
+           OPNDTYPE := TYPCDE [ PCODEF -> ] ;
            if OPNDTYPE = CARR then
              begin
-               READLN ( CH1 , CH , Q ) ;
+               READLN ( PCODEF , CH1 , CH , Q ) ;
                if ASM then
                  begin
                    WRITE ( LIST002 , CH1 : 3 , ',' , Q : 1 ) ;
@@ -3422,7 +3454,7 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
              end (* then *)
            else
              begin
-               READLN ( CH1 ) ;
+               READLN ( PCODEF , CH1 ) ;
                if ASM then
                  begin
                    WRITE ( LIST002 , CH1 : 3 ) ;
@@ -3434,7 +3466,8 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
                 if MODUS = 1 then
                   begin
                     GS . MOD1DEFSTEP := 0 ;
-                    READLN ( INPUT ) ;
+                    READLN ( PCODEF ) ;
+                    READNXTINST := EOF ( PCODEF ) ;
                     return
                   end (* then *) ;
 
@@ -3443,10 +3476,10 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
      (*********************************************)
 
                 SKIPBLANKS ;
-                OPNDTYPE := TYPCDE [ INPUT -> ] ;
+                OPNDTYPE := TYPCDE [ PCODEF -> ] ;
                 if OPNDTYPE = CARR then
                   begin
-                    READLN ( CH1 , CH , Q ) ;
+                    READLN ( PCODEF , CH1 , CH , Q ) ;
                     if ASM then
                       begin
                         WRITE ( LIST002 , CH1 : 3 , ',' , Q : 1 ) ;
@@ -3455,7 +3488,7 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
                   end (* then *)
                 else
                   begin
-                    READLN ( CH1 ) ;
+                    READLN ( PCODEF , CH1 ) ;
                     if ASM then
                       begin
                         WRITE ( LIST002 , CH1 : 3 ) ;
@@ -3471,7 +3504,7 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
      (**********************)
 
            READLBL ( LBL2 ) ;
-           READLN ( INPUT ) ;
+           READLN ( PCODEF ) ;
            if ASM then
              begin
                WRITE ( LIST002 , ' ' : 2 , LBL2 . NAM : LBL2 . LEN ) ;
@@ -3485,7 +3518,7 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
      (**********************)
 
                 SKIPBLANKS ;
-                READLN ( BUF20 ) ;
+                READLN ( PCODEF , BUF20 ) ;
                 if ( BUF20 [ 1 ] in [ 'N' , 'O' ] ) and ( BUF20 [ 2 ] =
                 ',' ) then
                   begin
@@ -3530,8 +3563,9 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
      (* PROCEDURE NAME & NUMBER OPERANDS *)
      (************************************)
 
-                READLN ( CH1 , CST_CURPNAME , CST_CURPNO , CH , ASM ,
-                         CH , CST_GET_STAT , CH , CST_ASMVERB ) ;
+                READLN ( PCODEF , CH1 , CST_CURPNAME , CST_CURPNO , CH
+                         , ASM , CH , CST_GET_STAT , CH , CST_ASMVERB )
+                         ;
                 if ASM then
                   begin
                     if FIRST_LIST002 then
@@ -3558,19 +3592,19 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
      (*****************************************************)
 
                 SKIPBLANKS ;
-                OPNDTYPE := TYPCDE [ INPUT -> ] ;
-                READ ( CH1 ) ;
+                OPNDTYPE := TYPCDE [ PCODEF -> ] ;
+                READ ( PCODEF , CH1 ) ;
                 EXTLANG := ' ' ;
-                if INPUT -> <> ',' then
+                if PCODEF -> <> ',' then
                   begin
-                    EXTLANG := INPUT -> ;
-                    READ ( CH ) ;
+                    EXTLANG := PCODEF -> ;
+                    READ ( PCODEF , CH ) ;
                   end (* then *) ;
-                READ ( CH , P , CH ) ;
+                READ ( PCODEF , CH , P , CH ) ;
                 READLBL ( LBL2 ) ;
-                if INPUT -> = ' ' then
+                if PCODEF -> = ' ' then
                   SKIPBLANKS ;
-                READLN ( CH , Q ) ;
+                READLN ( PCODEF , CH , Q ) ;
                 if ASM then
                   begin
                     WRITE ( LIST002 , CH1 : 3 ) ;
@@ -3588,7 +3622,7 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
      (* STRING OPERAND *)
      (******************)
 
-                READLN ( CH , PROGHDR ) ;
+                READLN ( PCODEF , CH , PROGHDR ) ;
                 if ASM then
                   begin
                     WRITE ( LIST002 , ' ' , PROGHDR ) ;
@@ -3605,16 +3639,16 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
      (*************************************)
 
                 SKIPBLANKS ;
-                READ ( P_OPCODE ) ;
+                READ ( PCODEF , P_OPCODE ) ;
                 if FALSE then
                   WRITE ( TRACEF , 'read = ' , P_OPCODE ) ;
-                if INPUT -> = ',' then
+                if PCODEF -> = ',' then
                   begin
-                    READLN ( CH , PROCOFFSET ) ;
+                    READLN ( PCODEF , CH , PROCOFFSET ) ;
                   end (* then *)
                 else
                   begin
-                    READLN ( INPUT ) ;
+                    READLN ( PCODEF ) ;
                     PROCOFFSET := 0 ;
                   end (* else *) ;
                 OP_SP := FALSE ;
@@ -3641,7 +3675,7 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
      // TWO INTEGER OPERANDS                                       
      //************************************************************
 
-           READLN ( P , CH , Q ) ;
+           READLN ( PCODEF , P , CH , Q ) ;
            if ASM then
              begin
                WRITE ( LIST002 , ' ' : 2 , P : 1 , ',' , Q : 1 ) ;
@@ -3656,7 +3690,7 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
      // the first one is a mode indicator                          
      //************************************************************
 
-           READLN ( P , CH , Q ) ;
+           READLN ( PCODEF , P , CH , Q ) ;
            if ASM then
              begin
                WRITE ( LIST002 , ' ' : 2 , P : 1 , ',' , Q : 1 ) ;
@@ -3670,7 +3704,7 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
      // no operands                                                
      //************************************************************
 
-           READLN ( INPUT ) ;
+           READLN ( PCODEF ) ;
            if ASM then
              LIST002_NEWLINE ;
          end (* tag/ca *) ;
@@ -3681,7 +3715,7 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
      // one integer operand                                        
      //************************************************************
 
-           READLN ( Q ) ;
+           READLN ( PCODEF , Q ) ;
            if ASM then
              begin
                WRITE ( LIST002 , ' ' : 2 , Q : 1 ) ;
@@ -3694,7 +3728,7 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
      // one integer operand                                        
      //************************************************************
 
-                READLN ( Q ) ;
+                READLN ( PCODEF , Q ) ;
                 if ASM then
                   begin
                     WRITE ( LIST002 , ' ' : 2 , Q : 1 ) ;
@@ -3707,7 +3741,7 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
      // no operands                                                
      //************************************************************
 
-                READLN ( INPUT ) ;
+                READLN ( PCODEF ) ;
                 if ASM then
                   LIST002_NEWLINE ;
               end (* tag/ca *) ;
@@ -3721,16 +3755,17 @@ procedure READNXTINST ( MODUS : INTEGER ) ;
            if not ASM then
              WRITE ( OUTPUT , LBL1 . NAM : LBL1 . LEN , ' ' : 6 - LBL1
                      . LEN , ' "' , P_OPCODE , '" ' ) ;
-           while not EOLN do
+           while not EOLN ( PCODEF ) do
              begin
-               WRITE ( OUTPUT , INPUT -> ) ;
-               GET ( INPUT )
+               WRITE ( OUTPUT , PCODEF -> ) ;
+               GET ( PCODEF )
              end (* while *) ;
            WRITELN ( OUTPUT ) ;
-           READLN ( INPUT ) ;
+           READLN ( PCODEF ) ;
            ERROR ( 606 ) ;
          end (* otherw *) ;
-     end (* case *)
+     end (* case *) ;
+     READNXTINST := EOF ( PCODEF ) ;
    end (* READNXTINST *) ;
 
 
@@ -8595,7 +8630,7 @@ procedure ASMNXTINST ;
 
 
       begin (* BSETOPS *)
-        case PCODE of
+        case OPCODE of
 
         /************************************************************/
         /* UNI implementieren                                       */
@@ -9325,7 +9360,7 @@ procedure ASMNXTINST ;
 
 
       begin (* CSETOPS *)
-        case PCODE of
+        case OPCODE of
           PSLD : with STK [ TOP - 1 ] do
                    begin
                      FORCESET ( STK [ TOP - 1 ] , P ) ;
@@ -9811,11 +9846,11 @@ procedure ASMNXTINST ;
 
         //******************************************************
         // set the condition mask for the following branch      
-        // depending on the PCODE which started the string      
+        // depending on the opcode which started the string     
         // comparison                                           
         //******************************************************
 
-        BRCND := BRMSK [ PCODE ] ;
+        BRCND := BRMSK [ OPCODE ] ;
       end (* STRINGCOMPARE *) ;
 
 
@@ -9901,7 +9936,7 @@ procedure ASMNXTINST ;
         INTCHG := FALSE ;
         TEST_PENDING := FALSE ;
         FIXUPLOC := - 1 ;
-        if ( PCODE = PEQU ) or ( PCODE = PNEQ ) then
+        if ( OPCODE = PEQU ) or ( OPCODE = PNEQ ) then
           begin
             repeat
               if INTCHG then
@@ -9927,7 +9962,7 @@ procedure ASMNXTINST ;
         (* NULL RIGHT OPERAND *)
         (**********************)
 
-                  SETCONSTBOOL ( PCODE = PEQU )
+                  SETCONSTBOOL ( OPCODE = PEQU )
                 else
                   if R . VRBL then
                     if R . DRCT and ( R . VPA = RGS ) then
@@ -9948,7 +9983,7 @@ procedure ASMNXTINST ;
         (* R IS CONSTANT *)
         (*****************)
 
-                    SETCONSTBOOL ( PCODE <> PEQU )
+                    SETCONSTBOOL ( OPCODE <> PEQU )
               else
                 if L . VRBL then
                   if L . DRCT and ( L . VPA = RGS ) then
@@ -9998,7 +10033,7 @@ procedure ASMNXTINST ;
         (*****************)
 
                         if R . PLEN > L . PLEN then
-                          SETCONSTBOOL ( PCODE <> PEQU )
+                          SETCONSTBOOL ( OPCODE <> PEQU )
                         else
                           begin
                             I_S_R . S := R . PCNST -> . S [ 1 ] ;
@@ -10048,7 +10083,7 @@ procedure ASMNXTINST ;
         (*****************)
 
                         if L . PLEN < R . PLEN then
-                          SETCONSTBOOL ( PCODE <> PEQU )
+                          SETCONSTBOOL ( OPCODE <> PEQU )
                         else
                           begin
                             TESTNULL ( L , Q1 , P1 , R . PLEN ) ;
@@ -10071,7 +10106,7 @@ procedure ASMNXTINST ;
                         if L . PCNST -> . S [ I ] <> R . PCNST -> . S [
                         I ] then
                           EQ := FALSE ;
-                      SETCONSTBOOL ( ( PCODE = PEQU ) = EQ ) ;
+                      SETCONSTBOOL ( ( OPCODE = PEQU ) = EQ ) ;
                     end (* else *) ;
             until not INTCHG ;
           end (* then *)
@@ -10082,7 +10117,7 @@ procedure ASMNXTINST ;
         (* pcode IS PGEQ OR PLEQ                              *)
         (******************************************************)
 
-            if PCODE = PGEQ then
+            if OPCODE = PGEQ then
               begin
                 L := STK [ TOP ] ;
                 R := STK [ TOP - 1 ]
@@ -10092,7 +10127,7 @@ procedure ASMNXTINST ;
                 L := STK [ TOP - 1 ] ;
                 R := STK [ TOP ]
               end (* else *) ;
-            PCODE := PEQU ;
+            OPCODE := PEQU ;
             if L . PLEN <= 4 then
               begin
                 LOAD ( L ) ;
@@ -10202,7 +10237,7 @@ procedure ASMNXTINST ;
         FREEREG ( R ) ;
         L . DTYPE := BOOL ;
         if not CONSTSET then
-          BRCND := BRMSK [ PCODE ] ;
+          BRCND := BRMSK [ OPCODE ] ;
         if FIXUPLOC >= 0 then
           begin
             if ASM then
@@ -11225,7 +11260,7 @@ procedure ASMNXTINST ;
 
          begin (* ENT_RET *)
            PROCOFFSET_OLD := 0 ;
-           if PCODE = PENT then
+           if OPCODE = PENT then
              begin
 
            (***********************************************************)
@@ -11830,10 +11865,10 @@ procedure ASMNXTINST ;
 
            if FALSE then
              begin
-               WRITELN ( TRACEF , 'oldpcode      = ' , OLDPCODE ) ;
+               WRITELN ( TRACEF , 'oldopcode     = ' , OLDOPCODE ) ;
                WRITELN ( TRACEF , 'pdef_cnt      = ' , PDEF_CNT ) ;
              end (* then *) ;
-           CASE_FLAG := ( OLDPCODE = PDEF ) and ( PDEF_CNT = 2 ) ;
+           CASE_FLAG := ( OLDOPCODE = PDEF ) and ( PDEF_CNT = 2 ) ;
 
            (**********************)
            (* some inits         *)
@@ -11853,7 +11888,7 @@ procedure ASMNXTINST ;
 
 
       begin (* COPERATION *)
-        case PCODE of
+        case OPCODE of
 
         (************************)
         (* P_MACHINE PSEUDO OPS *)
@@ -11954,7 +11989,7 @@ procedure ASMNXTINST ;
         (* TO TREAT THIS AS A NOOP *)
         (***************************)
 
-                   PCODE := OLDPCODE ;
+                   OPCODE := OLDOPCODE ;
                  end (* tag/ca *) ;
           PDEF : DEF_OPERATION ;
 
@@ -12023,7 +12058,7 @@ procedure ASMNXTINST ;
                        GENRXLAB ( XL , RTREG , LBL2 , - 3 ) ;
                        GENRR ( XBCR , ANYCND , RTREG ) ;
                      end (* else *) ;
-                   PCODE := PUJP ;
+                   OPCODE := PUJP ;
                  end (* tag/ca *) ;
           PFJP : begin
                    TOP := TOP - 1 ;
@@ -12097,7 +12132,7 @@ procedure ASMNXTINST ;
                            if FPA . DSPLMT = 0 then
                              begin
                                BRCND := ANYCND ;
-                               PCODE := PUJP
+                               OPCODE := PUJP
                              end (* then *)
                            else
                              BRCND := NOCND ;
@@ -12381,7 +12416,7 @@ procedure ASMNXTINST ;
                  end (* tag/ca *) ;
           PENT , PRET :
             begin
-              if PCODE = PENT then
+              if OPCODE = PENT then
                 begin
                   GS . IN_PROCBODY := TRUE ;
                   GS . FILL_LINEPTR := TRUE ;
@@ -12539,10 +12574,10 @@ procedure ASMNXTINST ;
 
 
       begin (* UOPERATION *)
-        case PCODE of
+        case OPCODE of
           PFLT , PFLO :
             begin
-              if PCODE = PFLT then
+              if OPCODE = PFLT then
                 OPPTR := TOP - 1
               else
                 OPPTR := TOP - 2 ;
@@ -15290,7 +15325,7 @@ procedure ASMNXTINST ;
       begin (* STRINGOPS *)
         if FALSE then
           begin
-            WRITE ( TRACEF , 'start stringops - pcode = ' , PCODE ) ;
+            WRITE ( TRACEF , 'start stringops - pcode = ' , OPCODE ) ;
             WRITELN ( TRACEF , ' linecnt = ' , LINECNT : 1 ) ;
             WRITELN ( TRACEF , 'start stringops - p = ' , P ) ;
             WRITELN ( TRACEF , 'start stringops - q = ' , Q ) ;
@@ -15298,13 +15333,13 @@ procedure ASMNXTINST ;
           end (* then *) ;
         if FALSE then
           begin
-            WRITE ( TRACEF , 'start stringops - pcode = ' , PCODE ) ;
+            WRITE ( TRACEF , 'start stringops - pcode = ' , OPCODE ) ;
             WRITELN ( TRACEF , ' linecnt = ' , LINECNT : 1 ) ;
             WRITELN ( TRACEF , 'start stringops - p = ' , P ) ;
             WRITELN ( TRACEF , 'start stringops - q = ' , Q ) ;
             DUMPAVAIL ;
           end (* then *) ;
-        case PCODE of
+        case OPCODE of
 
         //*******************************************************
         // varchar push: save string workarea address            
@@ -16043,7 +16078,7 @@ procedure ASMNXTINST ;
         (* AS LEFT HAND OPERAND ...                       *)
         (**************************************************)
 
-        LR := ( PCODE in [ PSBA , PSBR , PDVR , PDVI , PMOD , PDIF ,
+        LR := ( OPCODE in [ PSBA , PSBR , PDVR , PDVI , PMOD , PDIF ,
               PINN ] ) or ( STK [ TOP - 1 ] . VRBL and STK [ TOP ] .
               DRCT ) or ( not STK [ TOP - 1 ] . DRCT ) or ( not STK [
               TOP ] . VRBL ) ;
@@ -16060,13 +16095,13 @@ procedure ASMNXTINST ;
           end (* else *) ;
         L := STK [ LOP ] ;
         R := STK [ ROP ] ;
-        case PCODE of
+        case OPCODE of
           PADI , PSBI :
             begin
               if not L . DRCT then
                 LOAD ( L ) ;
               if R . DRCT then
-                if PCODE = PADI then
+                if OPCODE = PADI then
                   begin
                     L . FPA . DSPLMT := L . FPA . DSPLMT + R . FPA .
                                         DSPLMT ;
@@ -16085,7 +16120,7 @@ procedure ASMNXTINST ;
 
               OP1 := XAR ;
               OP2 := XA ;
-              if PCODE = PSBI then
+              if OPCODE = PSBI then
                 begin
                   OP1 := XSR ;
                   OP2 := XS
@@ -16145,7 +16180,7 @@ procedure ASMNXTINST ;
         (*************)
 
                 end (* then *) ;
-              if not LR and ( PCODE = PSBI ) then
+              if not LR and ( OPCODE = PSBI ) then
 
         (***********************************)
         (*THIS DOES NOT SEEM TO BE COMPLETE*)
@@ -16378,7 +16413,7 @@ procedure ASMNXTINST ;
         (*******************)
 
               else
-                if PCODE = PDVI then
+                if OPCODE = PDVI then
                   L . FPA . DSPLMT := L . FPA . DSPLMT DIV R . FPA .
                                       DSPLMT
                 else
@@ -16415,7 +16450,7 @@ procedure ASMNXTINST ;
         (*********)
 
                   GENRXLIT ( XD , L . RGADR , R . FPA . DSPLMT , 0 ) ;
-                if PCODE = PDVI then
+                if OPCODE = PDVI then
                   begin
                     AVAIL [ L . RGADR ] := TRUE ;
                     L . RGADR := L . RGADR + 1
@@ -16438,7 +16473,7 @@ procedure ASMNXTINST ;
                   return
                 end (* then *) ;
               if not LR then
-                PCODE := INVBRM [ PCODE ] ;
+                OPCODE := INVBRM [ OPCODE ] ;
               case OPNDTYPE of
                 ADR , INT , HINT :
                   with R do
@@ -16466,7 +16501,7 @@ procedure ASMNXTINST ;
 
                         begin
                           if FPA . DSPLMT = 1 then
-                            if PCODE = PLES then
+                            if OPCODE = PLES then
 
         (**********************************)
         (* COMPARISON AGAINST 0 IS BETTER *)
@@ -16474,13 +16509,13 @@ procedure ASMNXTINST ;
 
                               begin
                                 FPA . DSPLMT := 0 ;
-                                PCODE := PLEQ
+                                OPCODE := PLEQ
                               end (* then *)
                             else
-                              if PCODE = PGEQ then
+                              if OPCODE = PGEQ then
                                 begin
                                   FPA . DSPLMT := 0 ;
-                                  PCODE := PGRT
+                                  OPCODE := PGRT
                                 end (* then *) ;
                           if FPA . DSPLMT = 0 then
                             GENRR ( XLTR , L . RGADR , L . RGADR )
@@ -16502,10 +16537,10 @@ procedure ASMNXTINST ;
         // because nil = -1                                     
         //******************************************************
 
-                                if PCODE = PEQU then
-                                  PCODE := PLES
+                                if OPCODE = PEQU then
+                                  OPCODE := PLES
                                 else
-                                  PCODE := PGEQ ;
+                                  OPCODE := PGEQ ;
                               end (* then *)
                             else
                               GENRXLIT ( XC , L . RGADR , FPA . DSPLMT
@@ -16531,7 +16566,7 @@ procedure ASMNXTINST ;
                                 Q := XCLI * SL24 + B1 * SL12 + Q1 ;
                                 GENRXLIT_EXTENDED ( XEX , L . RGADR , Q
                                                    , 0 , XCLI ) ;
-                                PCODE := INVBRM [ PCODE ] ;
+                                OPCODE := INVBRM [ OPCODE ] ;
                               end (* else *)
                           else
                             if FPA . DSPLMT = 0 then
@@ -16612,20 +16647,20 @@ procedure ASMNXTINST ;
                            AVAILFP [ L . RGADR ] := TRUE ;
                          end (* with *) ;
                 CARR : begin
-                         SOPERATION ( L , R , PCODE , Q ) ;
+                         SOPERATION ( L , R , OPCODE , Q ) ;
                          CSPACTIVE [ TRG1 ] := FALSE ;
                        end (* tag/ca *)
               end (* case *) ;
-              BRCND := BRMSK [ PCODE ] ;
+              BRCND := BRMSK [ OPCODE ] ;
             end (* tag/ca *) ;
           PAND , PIOR , PXOR :
             with R do
               begin
                 OP1 := XNR ;
-                if PCODE = PIOR then
+                if OPCODE = PIOR then
                   OP1 := XORX
                 else
-                  if PCODE = PXOR then
+                  if OPCODE = PXOR then
                     OP1 := XXR ;
                 LOAD ( L ) ;
                 LOAD ( R ) ;
@@ -16642,7 +16677,7 @@ procedure ASMNXTINST ;
             begin
               OP1 := XADR ;
               OP2 := XAD ;
-              if PCODE = PSBR then
+              if OPCODE = PSBR then
                 begin
                   OP1 := XSDR ;
                   OP2 := XSD
@@ -16677,7 +16712,7 @@ procedure ASMNXTINST ;
               LOAD ( L ) ;
               OP1 := XDDR ;
               OP2 := XDD ;
-              if PCODE = PMPR then
+              if OPCODE = PMPR then
                 begin
                   OP1 := XMDR ;
                   OP2 := XMD
@@ -16712,16 +16747,16 @@ procedure ASMNXTINST ;
 
 
    begin (* ASMNXTINST *)
-     if PCODE in [ PXBG , PXEN ] then
+     if OPCODE in [ PXBG , PXEN ] then
        return ;
-     if OLDPCODE = PUJP then
+     if OLDOPCODE = PUJP then
        if not CASE_FLAG then
 
      (************************************)
      (* IGNORE INACCESSIBLE INSTRUCTIONS *)
      (************************************)
 
-         if not ( PCODE in [ PXLB , PEND , PCST , PLAB , PLOC , PDEF ,
+         if not ( OPCODE in [ PXLB , PEND , PCST , PLAB , PLOC , PDEF ,
          PRET , PSTP , PENT , PCTS ] ) then
            return ;
 
@@ -16730,7 +16765,7 @@ procedure ASMNXTINST ;
      (********************************)
 
      if BRCND >= 0 then
-       if not ( PCODE in [ PFJP , PNOT , PLOC ] ) then
+       if not ( OPCODE in [ PFJP , PNOT , PLOC ] ) then
          with STK [ TOP - 1 ] do
            begin
 
@@ -16741,7 +16776,7 @@ procedure ASMNXTINST ;
              if NEG_CND then
                begin
                  LOAD ( STK [ TOP - 1 ] ) ;
-                 if PCODE = PAND then
+                 if OPCODE = PAND then
                    GENRR ( XBCTR , RGADR , 0 )
                  else
                    GENRXLIT ( XX , RGADR , 1 , 0 ) ;
@@ -16813,10 +16848,10 @@ procedure ASMNXTINST ;
 
      if FALSE then
        begin
-         WRITELN ( TRACEF , 'stack vor pcode = ' , PTBL [ PCODE ] ) ;
+         WRITELN ( TRACEF , 'stack vor pcode = ' , PTBL [ OPCODE ] ) ;
          DUMPSTK ( 1 , TOP - 1 )
        end (* then *) ;
-     case PCODE of
+     case OPCODE of
        PLOD : with STK [ TOP ] do
                 begin
                   if OPNDTYPE in [ ADR , INT , PSET ] then
@@ -17382,28 +17417,28 @@ procedure ASMNXTINST ;
                 TOP := TOP - 2 ;
                 if Q > 0 then
                   begin  // FORWARD MOVE
-                    SOPERATION ( STK [ TOP ] , STK [ TOP + 1 ] , PCODE
+                    SOPERATION ( STK [ TOP ] , STK [ TOP + 1 ] , OPCODE
                                  , Q )
                   end (* then *)
                 else
                   begin  // BACKWARD MOVE
                     Q := ABS ( Q ) ;
-                    SOPERATION ( STK [ TOP + 1 ] , STK [ TOP ] , PCODE
+                    SOPERATION ( STK [ TOP + 1 ] , STK [ TOP ] , OPCODE
                                  , Q ) ;
                   end (* else *) ;
               end (* tag/ca *) ;
        PMV1 : begin
-                PCODE := PMOV ;
+                OPCODE := PMOV ;
                 TOP := TOP - 2 ;
                 if Q > 0 then
                   begin  // FORWARD MOVE
-                    SOPERATION ( STK [ TOP ] , STK [ TOP + 1 ] , PCODE
+                    SOPERATION ( STK [ TOP ] , STK [ TOP + 1 ] , OPCODE
                                  , Q )
                   end (* then *)
                 else
                   begin  // BACKWARD MOVE
                     Q := ABS ( Q ) ;
-                    SOPERATION ( STK [ TOP + 1 ] , STK [ TOP ] , PCODE
+                    SOPERATION ( STK [ TOP + 1 ] , STK [ TOP ] , OPCODE
                                  , Q ) ;
                   end (* else *) ;
                 TOP := TOP + 1 ;
@@ -17504,16 +17539,16 @@ procedure ASMNXTINST ;
          STRINGOPS ;
        PBGN : ;               // do nothing on BGN
        otherwise              // otherwise show error
-         ERROR_SYMB ( 620 , PTBL [ PCODE ] )
+         ERROR_SYMB ( 620 , PTBL [ OPCODE ] )
      end (* case *) ;
      if FALSE then
        begin
-         WRITELN ( TRACEF , 'stack nach pcode = ' , PTBL [ PCODE ] ) ;
+         WRITELN ( TRACEF , 'stack nach pcode = ' , PTBL [ OPCODE ] ) ;
          DUMPSTK ( 1 , TOP - 1 ) ;
          WRITELN ( TRACEF , '--------------------------------------' ,
                    '--------------------------------------' ) ;
        end (* then *) ;
-     OLDPCODE := PCODE ;
+     OLDOPCODE := OPCODE ;
    end (* ASMNXTINST *) ;
 
 
@@ -17549,9 +17584,9 @@ procedure SETUP ;
      for I := 0 to HTSIZE do
        HTBL [ I ] . NAME := EMPTY ;
      OP_SP := TRUE ;
-     for PCODE := PCTS to PRED ( UNDEF_OP ) do
+     for OPCODE := PCTS to PRED ( UNDEF_OP ) do
        begin
-         P_OPCODE := PTBL [ PCODE ] ;
+         P_OPCODE := PTBL [ OPCODE ] ;
          ENTERLOOKUP
        end (* for *) ;
      OP_SP := FALSE ;
@@ -17597,7 +17632,7 @@ procedure SETUP ;
      BRCND := - 1 ;
      NEG_CND := FALSE ;
      TRACE := FALSE ;
-     OLDPCODE := PBGN ;
+     OLDOPCODE := PBGN ;
      CSPACTIVE [ TRG1 ] := FALSE ;
      MDTAG := PBGN ;
      TXRG := TRG14 ;
@@ -17654,8 +17689,58 @@ procedure SETUP ;
 
 
 
+procedure CHK_INCLUDE ;
+
+   var INCLUDECMD : CHAR ( 100 ) ;
+       INCLFILE : CHAR ( 8 ) ;
+
+   begin (* CHK_INCLUDE *)
+
+     //**************************************************
+     // check for %INCLUDE                               
+     // if so, change input file from PCODE to PCODEx    
+     //**************************************************
+
+     if PCODE_FILENO = 0 then
+       begin
+         if PCODE -> = '%' then
+           begin
+             READLN ( PCODE , INCLUDECMD ) ;
+             if LEFT ( INCLUDECMD , 9 ) <> '%INCLUDE ' then
+               ERROR ( 710 )
+             else
+               begin
+                 INCLFILE := SUBSTR ( INCLUDECMD , 10 , 8 ) ;
+                 if LEFT ( INCLFILE , 5 ) <> 'pcode' then
+                   ERROR ( 711 ) ;
+                 case INCLFILE [ 6 ] of
+                   '1' : begin
+                           RESET ( PCODE1 ) ;
+                           PCODE_FILENO := 1 ;
+                           PCODEP := ADDR ( PCODE1 ) ;
+                         end (* tag/ca *) ;
+                   '2' : begin
+                           RESET ( PCODE2 ) ;
+                           PCODE_FILENO := 2 ;
+                           PCODEP := ADDR ( PCODE2 ) ;
+                         end (* tag/ca *) ;
+                   '3' : begin
+                           RESET ( PCODE3 ) ;
+                           PCODE_FILENO := 3 ;
+                           PCODEP := ADDR ( PCODE3 ) ;
+                         end (* tag/ca *) ;
+                   otherwise
+                     ERROR ( 712 )
+                 end (* case *)
+               end (* else *)
+           end (* then *)
+       end (* then *) ;
+   end (* CHK_INCLUDE *) ;
+
+
+
 begin (* HAUPTPROGRAMM *)
-  RESET ( INPUT ) ;
+  RESET ( PCODE ) ;
   FIRST_LIST002 := TRUE ;
   INIT := TRUE ;
   SETUP ;
@@ -17688,14 +17773,22 @@ begin (* HAUPTPROGRAMM *)
     WRITELN ( OUTPUT ) ;
 
   //******************************************************************
-  // read input first time to gather procedure information            
+  // read pcode file first time to gather procedure information       
   //******************************************************************
 
   PIANKER := NIL ;
   XXIANKER := NIL ;
+  PCODE_FILENO := 0 ;
+  PCODEP := ADDR ( PCODE ) ;
   repeat
-    READNXTINST ( 1 ) ;
-  until PCODE = PSTP ;
+    CHK_INCLUDE ;
+    EOF_PCODE := READNXTINST ( PCODEP -> , 1 ) ;
+    if EOF_PCODE and ( PCODE_FILENO > 0 ) then
+      begin
+        PCODE_FILENO := 0 ;
+        PCODEP := ADDR ( PCODE ) ;
+      end (* then *)
+  until OPCODE = PSTP ;
   if FALSE then
     begin
       PIAKT := PIANKER ;
@@ -17730,20 +17823,26 @@ begin (* HAUPTPROGRAMM *)
   PIAKT := NIL ;
 
   //******************************************************************
-  // read input second time to process p-codes                        
+  // read pcode file second time to process p-codes                   
   // curpno must be set to minus 1 again,                             
   // otherwise the first LOC instruction will go wild ...             
   // mark (heapmark) must be delayed after the first read loop :-)    
   //******************************************************************
 
   MARK ( HEAPMARK ) ;
-  RESET ( INPUT ) ;
+  RESET ( PCODE ) ;
   repeat
-    READNXTINST ( 2 ) ;
+    CHK_INCLUDE ;
+    EOF_PCODE := READNXTINST ( PCODEP -> , 2 ) ;
     ASMNXTINST ;
     if TRACE then
       DUMPSTK ( 1 , TOP - 1 ) ;
-  until PCODE = PSTP ;
+    if EOF_PCODE and ( PCODE_FILENO > 0 ) then
+      begin
+        PCODE_FILENO := 0 ;
+        PCODEP := ADDR ( PCODE ) ;
+      end (* then *)
+  until OPCODE = PSTP ;
 
   //******************************************************************
   // check timer                                                      

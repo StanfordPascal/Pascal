@@ -513,6 +513,7 @@ static void load (void *vgs,
    sc_code *pcodex;
    sc_code *pcodey;
    char *cp;
+   char *cp1;
    char *cp2;
    char *cpsave;
    int *intp;
@@ -526,6 +527,7 @@ static void load (void *vgs,
    char buffer [257];
    int len_string;
    int diff;
+   int len_oper;
 
    /**********************************************************/
    /*   PCODE-Instruktion in den Speicher, vorher            */
@@ -559,13 +561,42 @@ static void load (void *vgs,
    else
       pcode -> plabel = NULL;
 
+   /**********************************************************/
+   /*   Operanden an PCode anhaengen                         */
+   /*   vorher Kommentare mit -- wegmachen und diese         */
+   /*   separat anhaengen                                    */
+   /**********************************************************/
+
    if (poper != NULL)
    {
-      pcode -> poper = malloc (strlen (poper) + 1);
-      strcpy (pcode -> poper, poper);
+      int comm_vorh;
+
+      cp1 = strstr (poper, "\'");
+      cp = strstr (poper, " ; ");
+
+      comm_vorh = (cp != NULL) && (cp1 == NULL || cp1 > cp);
+
+      if (comm_vorh)
+      {
+         pcode -> pcomm = malloc (strlen (cp) + 1);
+         strcpy (pcode -> pcomm, cp);
+         len_oper = cp - poper;
+         pcode -> poper = malloc (len_oper + 1);
+         memcpy (pcode -> poper, poper, len_oper);
+         pcode -> poper [len_oper] = 0x00;
+      }
+      else
+      {
+         pcode -> poper = malloc (strlen (poper) + 1);
+         strcpy (pcode -> poper, poper);
+         pcode -> pcomm = NULL;
+      }
    }
    else
+   {
       pcode -> poper = NULL;
+      pcode -> pcomm = NULL;
+   }
 
    pcode -> loc = gs -> loc_aktuell;
 
@@ -929,7 +960,7 @@ static void load (void *vgs,
              memcmp (gs -> ot [pcode_ent -> op] . opcode,
                      "ENT", 3) != 0)
          {
-            fprintf (stderr, "ENT not found before RET\n");
+            fprintf (stderr, "ENT not found before LAB/XLB\n");
             break;
          }
 
@@ -2751,6 +2782,7 @@ void listing (global_store *gs)
 {
    char *plabel;
    char *poper;
+   char *pcomm;
    sc_code *pcode;
    char header [100];
    cst_section *pcst;
@@ -2772,6 +2804,7 @@ void listing (global_store *gs)
    {
       plabel = pcode -> plabel;
       poper = pcode -> poper;
+      pcomm = pcode -> pcomm;
 
       if (memcmp (gs -> ot [pcode -> op] . opcode, "ENT", 3) == 0)
       {
@@ -2802,7 +2835,7 @@ void listing (global_store *gs)
       }
 
       fprintf (gs -> outfile,
-               "%06d: %03d %c%c %4d %9d %9d  %-8s %-3s %s %s\n",
+               "%06d: %03d %c%c %4d %9d %9d   %-8s %-3s %s%s %s\n",
                (int) (pcode - gs -> code0),
                pcode -> op,
                pcode -> t,
@@ -2813,6 +2846,7 @@ void listing (global_store *gs)
                (plabel != NULL ? plabel : ""),
                gs -> ot [pcode -> op] . opcode,
                (poper != NULL ? poper : ""),
+               (pcomm != NULL ? pcomm : ""),
                outmst);
 
       /**********************************************************/

@@ -16,6 +16,7 @@
 
 *.dbginfo
 *.list002
+*.list003
 *.lis
 *.bak
 *.map

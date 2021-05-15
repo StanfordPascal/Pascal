@@ -209,20 +209,19 @@ type WORT = array [ 1 .. 100 ] of CHAR ;
      SYMB = ( SYMB_EOF , SYMB_UNKNOWN , EOLCHAR , SEPARATOR , COMMENT1
             , COMMENT2 , COMMENT3 , COMMENT4 , COMMENT5 , STRINGCONST ,
             HEXSTRINGCONST , BINSTRINGCONST , INTCONST , INTDOTDOT ,
-            INTRBRACK , REALCONST , IDENT , SYLPARENT , SYRPARENT ,
-            SYLBRACK , SYRBRACK , SYCOMMA , SYSEMICOLON , SYARROW ,
-            SYPERIOD , SYDOTDOT , SYCOLON , SYPLUS , SYMINUS , SYMULT ,
-            SYSLASH , SYEQOP , SYNEOP , SYGTOP , SYLTOP , SYGEOP ,
-            SYLEOP , SYOROP , SYANDOP , SYASSIGN , SYCONCAT , SYAND ,
-            SYDIV , SYMOD , SYOR , SYXOR , SYIN , SYNOT , SYLABEL ,
-            SYCONST , SYTYPE , SYVAR , SYFUNC , SYPROG , SYPROC , SYSET
-            , SYPACKED , SYARRAY , SYRECORD , SYFILE , SYFORWARD ,
-            SYBEGIN , SYIF , SYCASE , SYREPEAT , SYWHILE , SYFOR ,
-            SYWITH , SYGOTO , SYEND , SYELSE , SYUNTIL , SYOF , SYDO ,
-            SYTO , SYDOWNTO , SYTHEN , SYFRTRN , SYEXTRN , SYOTHERWISE
-            , SYBREAK , SYCONTINUE , SYRETURN , SYMODULE , SYLOCAL ,
-            SYSTATIC , SYSQLBEGIN , SYSQLEND , SYSQLVAR , SYOVERLAY ,
-            NOTUSED ) ;
+            REALCONST , IDENT , SYLPARENT , SYRPARENT , SYLBRACK ,
+            SYRBRACK , SYCOMMA , SYSEMICOLON , SYARROW , SYPERIOD ,
+            SYDOTDOT , SYCOLON , SYPLUS , SYMINUS , SYMULT , SYSLASH ,
+            SYEQOP , SYNEOP , SYGTOP , SYLTOP , SYGEOP , SYLEOP ,
+            SYOROP , SYANDOP , SYASSIGN , SYAND , SYDIV , SYMOD , SYOR
+            , SYXOR , SYIN , SYNOT , SYLABEL , SYCONST , SYTYPE , SYVAR
+            , SYFUNC , SYPROG , SYPROC , SYSET , SYPACKED , SYARRAY ,
+            SYRECORD , SYFILE , SYFORWARD , SYBEGIN , SYIF , SYCASE ,
+            SYREPEAT , SYWHILE , SYFOR , SYWITH , SYGOTO , SYEND ,
+            SYELSE , SYUNTIL , SYOF , SYDO , SYTO , SYDOWNTO , SYTHEN ,
+            SYFRTRN , SYEXTRN , SYOTHERWISE , SYOTHER , SYBREAK ,
+            SYCONTINUE , SYRETURN , SYMODULE , SYLOCAL , SYSTATIC ,
+            SYSQLBEGIN , SYSQLEND , SYSQLVAR , SYOVERLAY , NOTUSED ) ;
      SYMSET = set of SYMB ;
 
      //************************************************************
@@ -269,8 +268,6 @@ type WORT = array [ 1 .. 100 ] of CHAR ;
      CHAR32 = array [ 1 .. 32 ] of CHAR ;
      SOURCELINE = array [ 1 .. MAXLSIZE ] of CHAR ;
      SCAN_ERRCLASS = 'A' .. 'Z' ;
-     SCANF_PTR = ANYPTR ;
-     SCANFT_PTR = ANYPTR ;
      OPTIONS_PTR = -> COMP_OPTIONS ;
      SCAN_BLOCK = record
                     MODUS : INTEGER ;        // modus of scanner
@@ -291,10 +288,10 @@ type WORT = array [ 1 .. 100 ] of CHAR ;
                     FEZAHL : INTEGER ;       // no of errors
                     WAZAHL : INTEGER ;       // no of warnings
                     INZAHL : INTEGER ;       // no of informations
-                    FEANFANG : SCANF_PTR ;   // anchor to err list
-                    FEAKT : SCANF_PTR ;      // actual err elem
-                    FTTAB : SCANFT_PTR ;     // error text table
-                    FTTABA : SCANFT_PTR ;    // same for applic.
+                    FEANFANG : ANYPTR ;      // anchor to err list
+                    FEAKT : ANYPTR ;         // actual err elem
+                    FTTAB : ANYPTR ;         // error text table
+                    FTTABA : ANYPTR ;        // same for applic.
                     OPTLINE : SOURCELINE ;   // options line
                     POPT : OPTIONS_PTR ;     // ptr to opt struct
 
@@ -304,7 +301,7 @@ type WORT = array [ 1 .. 100 ] of CHAR ;
 
                     PROTOUT : BOOLEAN ;        // switch for prot out
                     TERMOUT : BOOLEAN ;        // switch for term out
-                    FEAKT_ALT : SCANF_PTR ;    // old feakt
+                    FEAKT_ALT : ANYPTR ;       // old feakt
                     LINEINFO : CHAR32 ;        // line information
                     LINEINFO_SIZE : INTEGER ;  // size of lineinfo
 
@@ -2188,18 +2185,16 @@ procedure CSIMPSTATE ;
 
 
 
-procedure CTYPE ( var MORE_LINES : BOOLEAN ) ;
+procedure CTYPE ;
 
    var EINRSAVE : INTEGER ;
        ANZKLAMAUF : INTEGER ;
-       ZZAUS_START : INTEGER ;
 
 
    procedure FIELDLIST ( VORSCHUB : BOOLEAN ) ;
 
       var EINRS2 : INTEGER ;
           VS : BOOLEAN ;
-          DUMMYB : BOOLEAN ;
 
       begin (* FIELDLIST *)
         VS := VORSCHUB ;
@@ -2270,7 +2265,7 @@ procedure CTYPE ( var MORE_LINES : BOOLEAN ) ;
                 OUTSYMBOL ( S ) ;
                 INSYMBOL ;
                 S := SY ;
-                CTYPE ( DUMMYB ) ;
+                CTYPE ;
                 STRIPUTEST
               end (* else *)
           end (* while *)
@@ -2278,18 +2273,10 @@ procedure CTYPE ( var MORE_LINES : BOOLEAN ) ;
 
 
    begin (* CTYPE *)
-     MORE_LINES := FALSE ;
      if S <> SYEND then
        begin
          EINRSAVE := EINR ;
          EINR := OUTPOINTER ;
-
-     //**********************************************
-     // store zzaus to check, if more than one line  
-     // written during type processing               
-     //**********************************************
-
-         ZZAUS_START := ZZAUS ;
          ANZKLAMAUF := 0 ;
          if S = SYLPARENT then
            begin
@@ -2341,9 +2328,7 @@ procedure CTYPE ( var MORE_LINES : BOOLEAN ) ;
                EINR := EINRSAVE ;
              end (* then *)
            else
-             EINR := EINRSAVE ;
-         if ZZAUS > ZZAUS_START then
-           MORE_LINES := TRUE ;
+             EINR := EINRSAVE
        end (* then *)
    end (* CTYPE *) ;
 
@@ -2723,263 +2708,6 @@ procedure CBLOCK ( FSYS : SYMSET ; FUELLWORT : PWORT ; BLOCKLEVEL :
        SALT : SYMB ;
        INCR : INTEGER ;
        PROC_VORH : BOOLEAN ;
-       DUMMYB : BOOLEAN ;
-
-
-   procedure HANDLE_CONST ;
-
-      var EINRSAVE : INTEGER ;
-          TYPE_MORE_LINES : BOOLEAN ;
-
-      begin (* HANDLE_CONST *)
-        NEUZEILE ( FALSE ) ;
-        if BLOCKLEVEL = 1 then
-          NEUZEILE ( FALSE ) ;
-        NEUZEILE ( TRUE ) ;
-        OUTSYMBOL ( S ) ;
-        EINRKOMM := OUTPOINTER ;
-        INSYMBOL ;
-        S := SY ;
-        EINR := EINR + 6 ;
-        while S = IDENT do
-          begin
-            INCR := 0 ;
-            repeat
-              OUTSYMBOL ( S ) ;
-              SALT := S ;
-              INSYMBOL ;
-              S := SY ;
-            until S in [ SYCOLON , SYEQOP , SYASSIGN , SYSEMICOLON ] ;
-
-        //**********************************************
-        // wenn Doppelpunkt folgt, dann hat die         
-        // Konstante einen Typ                          
-        //**********************************************
-
-            EINRSAVE := EINR ;
-            if S = SYCOLON then
-              begin
-                OUTSYMBOL ( S ) ;
-                EINR := OUTPOINTER ;
-                INSYMBOL ;
-                S := SY ;
-                CTYPE ( TYPE_MORE_LINES ) ;
-                if not TYPE_MORE_LINES then
-                  EINR := EINRSAVE ;
-              end (* then *) ;
-            repeat
-              OUTSYMBOL ( S ) ;
-
-        //**********************************************
-        // wenn nach gleichheitszeichen eine runde oder 
-        // eckige klammer folgt, dann neuzeile          
-        //**********************************************
-
-              SALT := S ;
-              INSYMBOL ;
-              S := SY ;
-              if ( SALT in [ SYEQOP , SYASSIGN ] ) and ( S in [
-              SYLPARENT , SYLBRACK ] ) then
-                begin
-                  NEUZEILE ( TRUE ) ;
-                  INCR := INCR + 2 ;
-                  EINR := EINR + 2 ;
-                end (* then *) ;
-            until S = SYSEMICOLON ;
-            OUTSYMBOL ( S ) ;
-            EINR := EINRSAVE ;
-            INSYMBOL ;
-            S := SY ;
-            if S = IDENT then
-              NEUZEILE ( TRUE )
-          end (* while *) ;
-        EINR := EINR - 6 ;
-      end (* HANDLE_CONST *) ;
-
-
-   procedure HANDLE_VAR ;
-
-      var EINRSAVE : INTEGER ;
-
-      begin (* HANDLE_VAR *)
-        NEUZEILE ( FALSE ) ;
-        if BLOCKLEVEL = 1 then
-          NEUZEILE ( FALSE ) ;
-        NEUZEILE ( TRUE ) ;
-        OUTSYMBOL ( S ) ;
-        EINRKOMM := OUTPOINTER ;
-        INSYMBOL ;
-        S := SY ;
-        EINR := EINR + 4 ;
-        while S = IDENT do
-          begin
-            INCR := 0 ;
-            repeat
-              OUTSYMBOL ( S ) ;
-              SALT := S ;
-              INSYMBOL ;
-              S := SY ;
-            until S in [ SYCOLON , SYEQOP , SYASSIGN , SYSEMICOLON ] ;
-            if S <> SYCOLON then
-              ERROR ( 6 ) ;
-            EINRSAVE := EINR ;
-            OUTSYMBOL ( S ) ;
-            EINR := OUTPOINTER ;
-            INSYMBOL ;
-            S := SY ;
-            CTYPE ( DUMMYB ) ;
-
-        //**********************************************
-        // nach CTYPE ist S entweder =, :=              
-        // oder IDENT (oder eines der Symbole,          
-        // das einen neuen Abschnitt einleitet)         
-        //**********************************************
-
-            if ( S in [ SYEQOP , SYASSIGN ] ) then
-              begin
-                repeat
-                  OUTSYMBOL ( S ) ;
-
-        //**********************************************
-        // wenn nach gleichheitszeichen eine runde oder 
-        // eckige klammer folgt, dann neuzeile          
-        //**********************************************
-
-                  SALT := S ;
-                  INSYMBOL ;
-                  S := SY ;
-                  if ( SALT in [ SYEQOP , SYASSIGN ] ) and ( S in [
-                  SYLPARENT , SYLBRACK ] ) then
-                    begin
-                      NEUZEILE ( TRUE ) ;
-                      INCR := INCR + 2 ;
-                      EINR := EINR + 2 ;
-                    end (* then *) ;
-                until S = SYSEMICOLON ;
-
-        //**********************************************
-        // hier weiterlesen, weil die globale schleife  
-        // IDENT oder eines der Wortsymbole erwartet    
-        //**********************************************
-
-                OUTSYMBOL ( S ) ;
-                INSYMBOL ;
-                S := SY ;
-              end (* then *) ;
-            EINR := EINRSAVE ;
-            if S = IDENT then
-              NEUZEILE ( TRUE )
-          end (* while *) ;
-        EINR := EINR - 4 ;
-      end (* HANDLE_VAR *) ;
-
-
-   procedure HANDLE_SQLVAR ;
-
-      begin (* HANDLE_SQLVAR *)
-        NEUZEILE ( FALSE ) ;
-        if BLOCKLEVEL = 1 then
-          NEUZEILE ( FALSE ) ;
-        NEUZEILE ( TRUE ) ;
-        OUTSYMBOL ( S ) ;
-        EINRKOMM := OUTPOINTER ;
-        INSYMBOL ;
-        S := SY ;
-        EINR := EINR + 7 ;
-        while S = IDENT do
-          begin
-            repeat
-              OUTSYMBOL ( S ) ;
-              INSYMBOL ;
-              S := SY
-            until S = SYCOLON ;
-            OUTSYMBOL ( S ) ;
-            INSYMBOL ;
-            S := SY ;
-            CTYPE ( DUMMYB ) ;
-            if S = IDENT then
-              NEUZEILE ( TRUE )
-          end (* while *) ;
-        EINR := EINR - 7 ;
-      end (* HANDLE_SQLVAR *) ;
-
-
-   procedure HANDLE_STATIC ;
-
-      var EINRSAVE : INTEGER ;
-
-      begin (* HANDLE_STATIC *)
-        NEUZEILE ( FALSE ) ;
-        if BLOCKLEVEL = 1 then
-          NEUZEILE ( FALSE ) ;
-        NEUZEILE ( TRUE ) ;
-        OUTSYMBOL ( S ) ;
-        EINRKOMM := OUTPOINTER ;
-        INSYMBOL ;
-        S := SY ;
-        EINR := EINR + 7 ;
-        while S = IDENT do
-          begin
-            INCR := 0 ;
-            repeat
-              OUTSYMBOL ( S ) ;
-              SALT := S ;
-              INSYMBOL ;
-              S := SY ;
-            until S in [ SYCOLON , SYEQOP , SYASSIGN , SYSEMICOLON ] ;
-            if S <> SYCOLON then
-              ERROR ( 6 ) ;
-            EINRSAVE := EINR ;
-            OUTSYMBOL ( S ) ;
-            EINR := OUTPOINTER ;
-            INSYMBOL ;
-            S := SY ;
-            CTYPE ( DUMMYB ) ;
-
-        //**********************************************
-        // nach CTYPE ist S entweder =, :=              
-        // oder IDENT (oder eines der Symbole,          
-        // das einen neuen Abschnitt einleitet)         
-        //**********************************************
-
-            if ( S in [ SYEQOP , SYASSIGN ] ) then
-              begin
-                repeat
-                  OUTSYMBOL ( S ) ;
-
-        //**********************************************
-        // wenn nach gleichheitszeichen eine runde oder 
-        // eckige klammer folgt, dann neuzeile          
-        //**********************************************
-
-                  SALT := S ;
-                  INSYMBOL ;
-                  S := SY ;
-                  if ( SALT in [ SYEQOP , SYASSIGN ] ) and ( S in [
-                  SYLPARENT , SYLBRACK ] ) then
-                    begin
-                      NEUZEILE ( TRUE ) ;
-                      INCR := INCR + 2 ;
-                      EINR := EINR + 2 ;
-                    end (* then *) ;
-                until S = SYSEMICOLON ;
-
-        //**********************************************
-        // hier weiterlesen, weil die globale schleife  
-        // IDENT oder eines der Wortsymbole erwartet    
-        //**********************************************
-
-                OUTSYMBOL ( S ) ;
-                INSYMBOL ;
-                S := SY ;
-              end (* then *) ;
-            EINR := EINRSAVE ;
-            if S = IDENT then
-              NEUZEILE ( TRUE )
-          end (* while *) ;
-        EINR := EINR - 7 ;
-      end (* HANDLE_STATIC *) ;
-
 
    begin (* CBLOCK *)
      EINRKOMMSAVE := EINRKOMM ;
@@ -3011,6 +2739,49 @@ procedure CBLOCK ( FSYS : SYMSET ; FUELLWORT : PWORT ; BLOCKLEVEL :
              EINR := EINRSAVE ;
              continue ;
            end (* then *) ;
+         if S = SYCONST then
+           begin
+             NEUZEILE ( FALSE ) ;
+             if BLOCKLEVEL = 1 then
+               NEUZEILE ( FALSE ) ;
+             NEUZEILE ( TRUE ) ;
+             OUTSYMBOL ( S ) ;
+             EINRKOMM := OUTPOINTER ;
+             INSYMBOL ;
+             S := SY ;
+             EINR := EINR + 6 ;
+             while S = IDENT do
+               begin
+                 INCR := 0 ;
+                 repeat
+                   OUTSYMBOL ( S ) ;
+
+     (************************************************)
+     (* wenn nach gleichheitszeichen eine runde oder *)
+     (* eckige klammer folgt, dann neuzeile          *)
+     (************************************************)
+
+                   SALT := S ;
+                   INSYMBOL ;
+                   S := SY ;
+                   if ( SALT = SYEQOP ) and ( ( S = SYLPARENT ) or ( S
+                   = SYLBRACK ) ) then
+                     begin
+                       NEUZEILE ( TRUE ) ;
+                       INCR := INCR + 2 ;
+                       EINR := EINR + 2 ;
+                     end (* then *) ;
+                 until S = SYSEMICOLON ;
+                 OUTSYMBOL ( S ) ;
+                 EINR := EINR - INCR ;
+                 INSYMBOL ;
+                 S := SY ;
+                 if S = IDENT then
+                   NEUZEILE ( TRUE )
+               end (* while *) ;
+             EINR := EINR - 6 ;
+             continue ;
+           end (* then *) ;
          if S = SYTYPE then
            begin
              NEUZEILE ( FALSE ) ;
@@ -3032,31 +2803,95 @@ procedure CBLOCK ( FSYS : SYMSET ; FUELLWORT : PWORT ; BLOCKLEVEL :
                  OUTSYMBOL ( S ) ;
                  INSYMBOL ;
                  S := SY ;
-                 CTYPE ( DUMMYB ) ;
+                 CTYPE ;
                  if S = IDENT then
                    NEUZEILE ( TRUE )
                end (* while *) ;
              EINR := EINR - 5 ;
              continue ;
            end (* then *) ;
-         if S = SYCONST then
-           begin
-             HANDLE_CONST ;
-             continue ;
-           end (* then *) ;
          if S = SYSQLVAR then
            begin
-             HANDLE_SQLVAR ;
+             NEUZEILE ( FALSE ) ;
+             if BLOCKLEVEL = 1 then
+               NEUZEILE ( FALSE ) ;
+             NEUZEILE ( TRUE ) ;
+             OUTSYMBOL ( S ) ;
+             EINRKOMM := OUTPOINTER ;
+             INSYMBOL ;
+             S := SY ;
+             EINR := EINR + 7 ;
+             while S = IDENT do
+               begin
+                 repeat
+                   OUTSYMBOL ( S ) ;
+                   INSYMBOL ;
+                   S := SY
+                 until S = SYCOLON ;
+                 OUTSYMBOL ( S ) ;
+                 INSYMBOL ;
+                 S := SY ;
+                 CTYPE ;
+                 if S = IDENT then
+                   NEUZEILE ( TRUE )
+               end (* while *) ;
+             EINR := EINR - 7 ;
              continue ;
            end (* then *) ;
          if S = SYVAR then
            begin
-             HANDLE_VAR ;
+             NEUZEILE ( FALSE ) ;
+             if BLOCKLEVEL = 1 then
+               NEUZEILE ( FALSE ) ;
+             NEUZEILE ( TRUE ) ;
+             OUTSYMBOL ( S ) ;
+             EINRKOMM := OUTPOINTER ;
+             INSYMBOL ;
+             S := SY ;
+             EINR := EINR + 4 ;
+             while S = IDENT do
+               begin
+                 repeat
+                   OUTSYMBOL ( S ) ;
+                   INSYMBOL ;
+                   S := SY
+                 until S = SYCOLON ;
+                 OUTSYMBOL ( S ) ;
+                 INSYMBOL ;
+                 S := SY ;
+                 CTYPE ;
+                 if S = IDENT then
+                   NEUZEILE ( TRUE )
+               end (* while *) ;
+             EINR := EINR - 4 ;
              continue ;
            end (* then *) ;
          if S = SYSTATIC then
            begin
-             HANDLE_STATIC ;
+             NEUZEILE ( FALSE ) ;
+             if BLOCKLEVEL = 1 then
+               NEUZEILE ( FALSE ) ;
+             NEUZEILE ( TRUE ) ;
+             OUTSYMBOL ( S ) ;
+             EINRKOMM := OUTPOINTER ;
+             INSYMBOL ;
+             S := SY ;
+             EINR := EINR + 7 ;
+             while S = IDENT do
+               begin
+                 repeat
+                   OUTSYMBOL ( S ) ;
+                   INSYMBOL ;
+                   S := SY
+                 until S = SYCOLON ;
+                 OUTSYMBOL ( S ) ;
+                 INSYMBOL ;
+                 S := SY ;
+                 CTYPE ;
+                 if S = IDENT then
+                   NEUZEILE ( TRUE )
+               end (* while *) ;
+             EINR := EINR - 7 ;
              continue ;
            end (* then *) ;
          break ;
@@ -3386,7 +3221,7 @@ begin (* HAUPTPROGRAMM *)
   STERMSYMBOLE := [ SYMB_EOF , SYSEMICOLON , SYELSE , SYEND ,
                   SYOTHERWISE , SYUNTIL ] ;
   TTERMSYMBOLE := [ SYMB_EOF , SYSEMICOLON , SYEND , SYRECORD ,
-                  SYRPARENT , SYEQOP , SYASSIGN ] ;
+                  SYRPARENT ] ;
   BLANKSYMBOLE := [ IDENT , INTCONST , SYAND , SYARRAY , SYBEGIN ,
                   SYBREAK , SYCASE , SYCONST , SYCONTINUE , SYDO ,
                   SYELSE , SYEND , SYFOR , SYFUNC , SYGOTO , SYIF ,

@@ -1996,6 +1996,7 @@ function $PASMEM ( FUNCCODE : INTEGER ; X : VOIDPTR ) : VOIDPTR ;
              WRITELN ( 'PHEAP ...........: ' , PHEAP ) ;
              LISTE_ALLER_HANCS ( PHEAP , TRUE ) ;
              WRITELN ( '*** Ende CHKHEAP ****' ) ;
+             $PASMEM := NIL
            end (* tag/ca *) ;
 
      /*******************************************/
@@ -2023,6 +2024,7 @@ function $PASMEM ( FUNCCODE : INTEGER ; X : VOIDPTR ) : VOIDPTR ;
              WRITELN ( '*** DISPOSE has been called ***' ) ;
              WRITELN ( '*** Argument for DISPOSE = ' , X ) ;
              WRITELN ( '*** DISPOSE has no effect ***' ) ;
+             $PASMEM := NIL
            end (* tag/ca *) ;
        otherwise
          $PASMEM := NIL

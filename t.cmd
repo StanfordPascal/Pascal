@@ -1,3 +1,18 @@
+rem call pasf comperrf
+rem call pp comperrf
+rem set dd_pcode=testch01.pcode
+rem call prun comperrf
+rem goto :ende
+
+    call pasf pascal3
+    call pp pascal3
+    call t2 testch01
+    call t2 testset7
+    call t2 testhex
+
+:ende
+@echo off
+
 rem call pp pascal2
 rem call pas2 teststr0
 rem pause
@@ -24,10 +39,10 @@ rem call pp testavl
 rem call prun testavl avltree >xxx
 rem call xa xxx
 rem ********************************************************
-    call pasf xcompn
-    call pasf paslibx
-    call pp xcompn
-    call pp paslibx
-    call xcompn xcompn.pas xcompn.v1
+rem call pasf xcompn
+rem call pasf paslibx
+rem call pp xcompn
+rem call pp paslibx
+rem call xcompn xcompn.pas xcompn.v1
 rem call xcompn AUSGABE.TFIN2002 AUSGABE.TFIN2202
-    call xcompn AUSGABE.TFUP2002 AUSGABE.TFUP2202
+rem call xcompn AUSGABE.TFUP2002 AUSGABE.TFUP2202

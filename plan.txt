@@ -1,11 +1,24 @@
 
-2021.01:
+2021.03:
 
+* Fehler reparieren bei Modulen
+* Kommentare ignorieren bei PCINT perfektionieren
+* Kommentare ignorieren bei PASCAL2
+* Kommentare bei PCODE ab Spalte 30
+- MFI mit Laenge < 2000 mit MVCs
+- PASCAL2 versteht PCode IAC noch nicht
+- weitere Kommentare in PASCAL1
 - Vergleiche Typ M muessen auch mit Laenge > 256 funktionieren !! (PCINT)
 - Probleme bei Konstanten usw. CHAR (1000)
 - Probleme bei STATIC xxx CHAR (1000)
 - Klaeren, ob ASSEMBLER-Call nach Einfuegen von Scratch-Area noch geht
 - Uebergabe von Char Array an CONST STRING bringt keinen Fehler, geht aber nicht
+- weiter bei Themen von 2021.01
+
+=======================================================================================
+
+2021.01:
+
 - DCOS und DLOG in PCINT aufnehmen
 - Neue Funktion $PASRDX zum Lesen von Skalaren
 - New Stanford Pascal Sprachbeschreibung erstellen

@@ -259,6 +259,7 @@ typedef struct
    int  ipmst;    /* bei CUP: zeigt auf zug. MST */
    char *plabel;  /* Label                       */
    char *poper;   /* weitere Operanden           */
+   char *pcomm;   /* Kommentare nach --          */
    void *psect;   /* Verweis auf Section         */
    char *psource; /* Zeiger auf Sourcecode       */
    int  loc;      /* LOC = line of code          */
@@ -337,6 +338,7 @@ typedef struct
    FILE *inpfile;                 /* Eingabedatei fuer PRR          */
    char inpzeile [256];           /* Eingabebuffer fuer PRR         */
    FILE *outfile;                 /* Ausgabedatei fuer Listing      */
+   int global_rc;                 /* rc to be returned by main      */
    opctab *ot;                    /* Tabelle Opcodes etc.           */
    funtab *ft;                    /* Tabelle Funktionen             */
    char sourcename [16];          /* Sourcename                     */
@@ -527,78 +529,79 @@ static const filecb nullfcb_bin =
 #define XXX_FLT    30
 #define XXX_GEQ    31
 #define XXX_GRT    32
-#define XXX_INC    33
-#define XXX_IND    34
-#define XXX_INN    35
-#define XXX_INT    36
-#define XXX_IOR    37
-#define XXX_IXA    38
-#define XXX_LAB    39
-#define XXX_LCA    40
-#define XXX_LDA    41
-#define XXX_LDC    42
-#define XXX_LEQ    43
-#define XXX_LES    44
-#define XXX_LOC    45
-#define XXX_LOD    46
-#define XXX_MCC    47
-#define XXX_MCP    48
-#define XXX_MCV    49
-#define XXX_MFI    50
-#define XXX_MOD    51
-#define XXX_MOV    52
-#define XXX_MPI    53
-#define XXX_MPR    54
-#define XXX_MSE    55
-#define XXX_MST    56
-#define XXX_MV1    57
-#define XXX_MZE    58
-#define XXX_NEQ    59
-#define XXX_NEW    60
-#define XXX_NGI    61
-#define XXX_NGR    62
-#define XXX_NOT    63
-#define XXX_ODD    64
-#define XXX_ORD    65
-#define XXX_PAK    66
-#define XXX_POP    67
-#define XXX_RET    68
-#define XXX_RND    69
-#define XXX_RST    70
-#define XXX_SAV    71
-#define XXX_SBA    72
-#define XXX_SBI    73
-#define XXX_SBR    74
-#define XXX_SCL    75
-#define XXX_SLD    76
-#define XXX_SMV    77
-#define XXX_SQI    78
-#define XXX_SQR    79
-#define XXX_STO    80
-#define XXX_STP    81
-#define XXX_STR    82
-#define XXX_TRC    83
-#define XXX_UJP    84
-#define XXX_UNI    85
-#define XXX_UXJ    86
-#define XXX_VC1    87
-#define XXX_VC2    88
-#define XXX_VCC    89
-#define XXX_VIX    90
-#define XXX_VLD    91
-#define XXX_VLM    92
-#define XXX_VMV    93
-#define XXX_VPO    94
-#define XXX_VPU    95
-#define XXX_VRP    96
-#define XXX_VSM    97
-#define XXX_VST    98
-#define XXX_XBG    99
-#define XXX_XEN   100
-#define XXX_XJP   101
-#define XXX_XLB   102
-#define XXX_XOR   103
-#define XXX_XPO   104
+#define XXX_IAC    33
+#define XXX_INC    34
+#define XXX_IND    35
+#define XXX_INN    36
+#define XXX_INT    37
+#define XXX_IOR    38
+#define XXX_IXA    39
+#define XXX_LAB    40
+#define XXX_LCA    41
+#define XXX_LDA    42
+#define XXX_LDC    43
+#define XXX_LEQ    44
+#define XXX_LES    45
+#define XXX_LOC    46
+#define XXX_LOD    47
+#define XXX_MCC    48
+#define XXX_MCP    49
+#define XXX_MCV    50
+#define XXX_MFI    51
+#define XXX_MOD    52
+#define XXX_MOV    53
+#define XXX_MPI    54
+#define XXX_MPR    55
+#define XXX_MSE    56
+#define XXX_MST    57
+#define XXX_MV1    58
+#define XXX_MZE    59
+#define XXX_NEQ    60
+#define XXX_NEW    61
+#define XXX_NGI    62
+#define XXX_NGR    63
+#define XXX_NOT    64
+#define XXX_ODD    65
+#define XXX_ORD    66
+#define XXX_PAK    67
+#define XXX_POP    68
+#define XXX_RET    69
+#define XXX_RND    70
+#define XXX_RST    71
+#define XXX_SAV    72
+#define XXX_SBA    73
+#define XXX_SBI    74
+#define XXX_SBR    75
+#define XXX_SCL    76
+#define XXX_SLD    77
+#define XXX_SMV    78
+#define XXX_SQI    79
+#define XXX_SQR    80
+#define XXX_STO    81
+#define XXX_STP    82
+#define XXX_STR    83
+#define XXX_TRC    84
+#define XXX_UJP    85
+#define XXX_UNI    86
+#define XXX_UXJ    87
+#define XXX_VC1    88
+#define XXX_VC2    89
+#define XXX_VCC    90
+#define XXX_VIX    91
+#define XXX_VLD    92
+#define XXX_VLM    93
+#define XXX_VMV    94
+#define XXX_VPO    95
+#define XXX_VPU    96
+#define XXX_VRP    97
+#define XXX_VSM    98
+#define XXX_VST    99
+#define XXX_XBG    00
+#define XXX_XEN   101
+#define XXX_XJP   102
+#define XXX_XLB   103
+#define XXX_XOR   104
+#define XXX_XPO   105
 
 
 
@@ -667,6 +670,7 @@ static opctab ot [] =
    { "FLT", XXX_FLT, 0, ' ' },
    { "GEQ", XXX_GEQ, 0, 'V' },
    { "GRT", XXX_GRT, 0, 'V' },
+   { "IAC", XXX_IAC, 0, 'D' },
    { "INC", XXX_INC, 0, 'D' },
    { "IND", XXX_IND, 0, 'D' },
    { "INN", XXX_INN, 0, ' ' },

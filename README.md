@@ -13,11 +13,37 @@ MVS and CMS (on Hercules) and on today's z/OS, too, although
 limited to AMODE 24, at the moment. The P-Code is translated
 to 370 machine code, there.
 
-On Windows, you can run the compiler using PP.CMD, which is
-part of the repository.
-
 For more information, see the Stanford Pascal compiler website:
 http://bernd-oppolzer.de/job9.htm
 or the New Stanford Pascal compiler Facebook page:
 https://www.facebook.com/StanfordPascal/
+
+--------------------------------------------------------------
+
+Windows users:
+
+There will be installation scripts and helpfiles in the near future.
+
+For the moment:
+
+The P-Code interpreter is located in the bin subdirectory.
+The compiler files (Pascal and P-Code) are in the src subdirectory.
+The message repository is in the etc subdirectory.
+
+If you combine these directories, you have all you need to run
+the compiler. PASCAL.CMD in subdirectory script will run the
+compiler, and PRUN.CMD in the same subdirectory will run your
+compiled P-Code files.
+
+--------------------------------------------------------------
+
+Unix and Linux (and other systems) users:
+
+You will have to build PCINT from the source code first.
+
+After that, use the same subdirectories as the Windows users.
+Script pp in subdirectory script_ix shows how to call the compiler,
+and script prun calls the compiled P-Code files.
+
+Have fun :-)
 

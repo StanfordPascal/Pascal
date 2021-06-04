@@ -26,7 +26,7 @@ There will be installation scripts and helpfiles in the near future.
 
 For the moment:
 
-The P-Code interpreter is located in the bin subdirectory.
+The P-Code interpreter PCINT is located in the bin subdirectory.
 The compiler files (Pascal and P-Code) are in the src subdirectory.
 The message repository is in the etc subdirectory.
 
@@ -39,7 +39,11 @@ compiled P-Code files.
 
 Unix and Linux (and other systems) users:
 
-You will have to build PCINT from the source code first.
+You will have to build the P-Code interpreter PCINT from the
+source code first. The PCINT source code and all related files
+are in the bin subdirectory. There is no makefile; simply compile
+all the sources (.c, .h) in the bin subdirectory; the executable
+should be named pcint.
 
 After that, use the same subdirectories as the Windows users.
 Script pp in subdirectory script_ix shows how to call the compiler,

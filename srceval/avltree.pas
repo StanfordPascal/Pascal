@@ -974,10 +974,10 @@ function AVLCACHE ( FUNKCODE : CHAR ( 8 ) ;   // Funktionscode
 
    static PCACHEDIR : VOIDPTR ;
 
-   const COMMAND_COUNT = 9 ;
+   const COMMAND_COUNT = 10 ;
          COMMANDS : array [ 1 .. COMMAND_COUNT ] of CHAR ( 8 ) =
          ( 'CREATE' , 'GET' , 'PUT' , 'GFIRST' , 'GNEXT' , 'TRACE' ,
-           'DELETE' , 'SHOWALL' , 'START' ) ;
+           'DELETE' , 'SHOWALL' , 'START' , 'CLEAR' ) ;
 
 
    function DIRCOMP ( X1 : VOIDPTR ; L1 : INTEGER ; X2 : VOIDPTR ; L2 :
@@ -1373,6 +1373,35 @@ function AVLCACHE ( FUNKCODE : CHAR ( 8 ) ;   // Funktionscode
                  end (* else *)
              until TRUE
            end (* tag/ca *) ;
+       10 : begin
+              repeat // START - one time loop
+                PAVLC := PHANDLE ;
+
+     //************************************************************
+     // check handle and return if handle nok                      
+     //************************************************************
+
+                if PAVLC = NIL then
+                  begin
+                    RC := 20 ;
+                    break
+                  end (* then *) ;
+                if PAVLC -> . MAGIC <> 'AVLCACHE' then
+                  begin
+                    RC := 20 ;
+                    break
+                  end (* then *) ;
+
+     //************************************************************
+     // search for key and return data if found                    
+     //************************************************************
+
+                PBAUMX := PAVLC -> . PTREE ;
+                AVLFREE ( PBAUMX ) ;
+                PAVLC -> . PTREE := NIL ;
+                PAVLC -> . COUNT := 0 ;
+              until TRUE
+            end (* tag/ca *) ;
        otherwise
          begin
            

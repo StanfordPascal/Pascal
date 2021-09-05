@@ -32,7 +32,7 @@ $PASLIB# CST $PASMAIN                0,T,F,F
 120 DFC I,0
  END
  LOC 174
-$LIBX002 ENT P,2,L1  CHECK_PLATFORM      ,T,T,F,F,2,2,,        ,112
+$LIBX002 ENT P,2,L1  CHECK_PLATFORM      ,TTFFF,2,2,,        ,112
  LOC 174
  VPU 2,120
  LDC C,'0'
@@ -60,7 +60,7 @@ L1 DEF I,128
  DEF I,27
  DEF B,0
  LOC 201
-$LIBX003 ENT A,2,L1  ALLOC_AREAX         ,T,T,F,F,2,3,,        ,120
+$LIBX003 ENT A,2,L1  ALLOC_AREAX         ,TTFFF,2,3,,        ,120
  LOC 201
  VPU 2,132
  LOD I,2,112                 ; SIZE                
@@ -79,7 +79,7 @@ L1 DEF I,256
  DEF I,16
  DEF B,0
  LOC 230
-$LIBX005 ENT P,3,L1  DUMPCHAR            ,T,T,F,F,2,5,,        ,120
+$LIBX005 ENT P,3,L1  DUMPCHAR            ,TTFFF,2,5,,        ,120
  LOC 230
  VPU 3,128
  LOD C,3,112                 ; CH                  
@@ -113,7 +113,7 @@ L1 DEF I,168
  DEF I,31
  DEF B,0
  LOC 246
-$LIBX006 ENT P,3,L1  DUMPZEILE           ,T,T,F,F,2,6,,        ,128
+$LIBX006 ENT P,3,L1  DUMPZEILE           ,TTFFF,2,6,,        ,128
  LOC 246
  VPU 3,144
  LDA 1,260
@@ -536,7 +536,7 @@ L1 DEF I,272
  DEF I,479
  DEF B,0
  LOC 319
-$LIBX004 ENT P,2,L1  DUMP                ,T,T,F,F,2,4,,        ,128
+$LIBX004 ENT P,2,L1  DUMP                ,TTFFF,2,4,,        ,128
  LOC 319
  VPU 2,144
  LDA 1,260
@@ -622,7 +622,7 @@ L1 DEF I,280
  DEF I,90
  DEF B,1
  LOC 351
-$LIBX007 ENT P,2,L1  LISTE_DER_LUECKEN   ,T,T,F,F,2,7,,        ,120
+$LIBX007 ENT P,2,L1  LISTE_DER_LUECKEN   ,TTFFF,2,7,,        ,120
  LOC 351
  VPU 2,152
  LDA 1,260
@@ -810,7 +810,7 @@ L1 DEF I,160
  DEF I,209
  DEF B,0
  LOC 402
-$LIBX008 ENT P,2,L1  LISTE_ALLER_HANCS   ,T,T,F,F,2,8,,        ,120
+$LIBX008 ENT P,2,L1  LISTE_ALLER_HANCS   ,TTFFF,2,8,,        ,120
  LOC 402
  VPU 2,136
  LDC B,0
@@ -1029,7 +1029,7 @@ L1 DEF I,264
  DEF I,279
  DEF B,0
  LOC 455
-$LIBX009 ENT P,2,L1  REMOVE_HFRE         ,T,T,F,F,2,9,,        ,136
+$LIBX009 ENT P,2,L1  REMOVE_HFRE         ,TTFFF,2,9,,        ,136
  LOC 455
  VPU 2,144
  LOD C,2,112                 ; V                   
@@ -1306,7 +1306,7 @@ L1 DEF I,152
  DEF I,316
  DEF B,0
  LOC 554
-$LIBX011 ENT P,3,L1  MODIFY_PRIOR        ,T,T,F,F,2,11,,        ,136
+$LIBX011 ENT P,3,L1  MODIFY_PRIOR        ,TTFFF,2,11,,        ,136
  LOC 554
  VPU 3,144
  LOD C,3,116                 ; VORG_MODUS          
@@ -1385,7 +1385,7 @@ L1 DEF I,152
  DEF I,80
  DEF B,0
  LOC 580
-$LIBX012 ENT P,3,L1  CHAIN_PRIOR         ,T,T,F,F,2,12,,        ,136
+$LIBX012 ENT P,3,L1  CHAIN_PRIOR         ,TTFFF,2,12,,        ,136
  LOC 580
  VPU 3,144
  LOD C,3,116                 ; VORG_MODUS          
@@ -1454,7 +1454,7 @@ L1 DEF I,152
  DEF I,71
  DEF B,0
  LOC 601
-$LIBX013 ENT P,3,L1  COPY_HFRE           ,T,T,F,F,2,13,,        ,128
+$LIBX013 ENT P,3,L1  COPY_HFRE           ,TTFFF,2,13,,        ,128
  LOC 601
  VPU 3,136
  LOD I,3,120                 ; SIZE                
@@ -1495,7 +1495,7 @@ L1 DEF I,144
  DEF I,41
  DEF B,0
  LOC 626
-$LIBX014 ENT P,3,L1  INS_HFRE_EQUAL      ,T,T,F,F,2,14,,        ,136
+$LIBX014 ENT P,3,L1  INS_HFRE_EQUAL      ,TTFFF,2,14,,        ,136
  LOC 626
  VPU 3,148
  LOD A,3,112                 ; PFREEN              
@@ -1629,7 +1629,7 @@ L1 DEF I,288
  DEF I,139
  DEF B,0
  LOC 672
-$LIBX015 ENT P,3,L1  INS_HFRE_ABOVE      ,T,T,F,F,2,15,,        ,136
+$LIBX015 ENT P,3,L1  INS_HFRE_ABOVE      ,TTFFF,2,15,,        ,136
  LOC 672
  VPU 3,144
  LOD C,3,128                 ; VORG_MODUS          
@@ -1733,7 +1733,7 @@ L1 DEF I,152
  DEF I,114
  DEF B,0
  LOC 717
-$LIBX016 ENT P,3,L1  SUCHE_HFRE_NACH_GROE,T,T,F,F,2,16,,        ,112
+$LIBX016 ENT P,3,L1  SUCHE_HFRE_NACH_GROE,TTFFF,2,16,,        ,112
  LOC 717
  VPU 3,120
  LDC C,'T'
@@ -1821,7 +1821,7 @@ L1 DEF I,128
  DEF I,93
  DEF B,0
  LOC 748
-$LIBX017 ENT P,3,L1  SUCHE_HFRE          ,T,T,F,F,2,17,,        ,112
+$LIBX017 ENT P,3,L1  SUCHE_HFRE          ,TTFFF,2,17,,        ,112
  LOC 748
  VPU 3,124
  LOD A,2,160                 ; PLAUFALT            
@@ -1915,7 +1915,7 @@ L1 DEF I,136
  DEF I,98
  DEF B,0
  LOC 804
-$LIBX018 ENT P,3,L1  SUCHE_HFRE_NACH_ADRE,T,T,F,F,2,18,,        ,112
+$LIBX018 ENT P,3,L1  SUCHE_HFRE_NACH_ADRE,TTFFF,2,18,,        ,112
  LOC 804
  VPU 3,124
  LDC B,0
@@ -2055,7 +2055,7 @@ L1 DEF I,136
  DEF I,150
  DEF B,0
  LOC 868
-$LIBX019 ENT P,3,L1  INSERT_HFRE         ,T,T,F,F,2,19,,        ,112
+$LIBX019 ENT P,3,L1  INSERT_HFRE         ,TTFFF,2,19,,        ,112
  LOC 868
  VPU 3,120
  MST 2,0
@@ -2107,7 +2107,7 @@ L1 DEF I,264
  DEF I,51
  DEF B,0
  LOC 894
-$LIBX010 ENT P,2,L1  MODIFY_TREE         ,T,T,F,F,2,10,,        ,112
+$LIBX010 ENT P,2,L1  MODIFY_TREE         ,TTFFF,2,10,,        ,112
  LOC 894
  VPU 2,184
  LDC I,0
@@ -3166,7 +3166,7 @@ L1 DEF I,328
  DEF I,1343
  DEF B,1
  LOC 1274
-$LIBX020 ENT A,2,L1  ALLOC_AREA          ,T,T,F,F,2,20,,        ,120
+$LIBX020 ENT A,2,L1  ALLOC_AREA          ,TTFFF,2,20,,        ,120
  LOC 1274
  VPU 2,172
  LOD I,2,112                 ; SIZE                
@@ -3930,7 +3930,7 @@ L1 DEF I,320
  DEF I,950
  DEF B,0
  LOC 1528
-$LIBX021 ENT P,2,L1  FREE_AREAX          ,T,T,F,F,2,21,,        ,120
+$LIBX021 ENT P,2,L1  FREE_AREAX          ,TTFFF,2,21,,        ,120
  LOC 1528
  VPU 2,132
  MST 1,0
@@ -3946,7 +3946,7 @@ L1 DEF I,256
  DEF I,13
  DEF B,0
  LOC 1550
-$LIBX022 ENT A,2,L1  CHECK_AREA_ALLOC    ,T,T,F,F,2,22,,        ,120
+$LIBX022 ENT A,2,L1  CHECK_AREA_ALLOC    ,TTFFF,2,22,,        ,120
  LOC 1550
  VPU 2,160
  LDC N
@@ -4259,7 +4259,7 @@ L1 DEF I,288
  DEF I,387
  DEF B,0
  LOC 1682
-$LIBX023 ENT P,2,L1  FREE_AREA           ,T,T,F,F,2,23,,        ,120
+$LIBX023 ENT P,2,L1  FREE_AREA           ,TTFFF,2,23,,        ,120
  LOC 1682
  VPU 2,196
  LDC N
@@ -4895,7 +4895,7 @@ L1 DEF I,344
  DEF I,734
  DEF B,0
  LOC 1950
-$PASMEM  ENT A,2,L1  $PASMEM             ,T,T,F,F,2,24,,        ,120
+$PASMEM  ENT A,2,L1  $PASMEM             ,TTFFF,2,24,,        ,120
  LOC 1950
  VPU 2,128
  LOD I,2,112                 ; FUNCCODE            
@@ -5135,7 +5135,7 @@ $LI#X025 CST ROUNDX1                25,T,F,F
 168 DFC R, 1000000000000000.0 
  END
  LOC 2086
-$LIBX025 ENT R,2,L1  ROUNDX1             ,T,T,F,F,0,25,$LI#X025,,128
+$LIBX025 ENT R,2,L1  ROUNDX1             ,TTFFF,0,25,$LI#X025,,128
  LOC 2086
  VPU 2,160
  LCA P,$LI#X025
@@ -5295,7 +5295,7 @@ L1 DEF I,168
  DEF I,159
  DEF B,0
  LOC 2148
-$PASMAT  ENT R,2,L1  $PASMAT             ,T,T,F,F,0,26,,,128
+$PASMAT  ENT R,2,L1  $PASMAT             ,TTFFF,0,26,,,128
  LOC 2148
  VPU 2,136
  LOD I,2,112                 ; FUNCCODE            
@@ -5328,7 +5328,7 @@ L1 DEF I,272
  DEF I,30
  DEF B,0
  LOC 2188
-CMSX     ENT P,2,L1  CMSX                ,T,T,F,F,0,27,,,120
+CMSX     ENT P,2,L1  CMSX                ,TTFFF,0,27,,,120
  LOC 2188
  VPU 2,276
  LOD A,2,112                 ; CMD                 
@@ -5542,7 +5542,7 @@ L1 DEF I,400
  DEF I,276
  DEF B,0
  LOC 2279
-WINX     ENT P,2,L1  WINX                ,T,T,F,F,0,28,,,120
+WINX     ENT P,2,L1  WINX                ,TTFFF,0,28,,,120
  LOC 2279
  VPU 2,268
  LOD A,2,112                 ; CMD                 
@@ -5685,7 +5685,7 @@ L1 DEF I,392
  DEF I,191
  DEF B,0
  LOC 2365
-$PASSTR1 ENT V,2,L1  $PASSTR1            ,T,T,F,F,0,29,,,128
+$PASSTR1 ENT V,2,L1  $PASSTR1            ,TTFFF,0,29,,,128
  LOC 2365
  VPU 2,188
  VPU 2,192
@@ -6502,7 +6502,7 @@ L1 DEF I,200
  DEF I,832
  DEF B,0
  LOC 2636
-$PASSTR2 ENT I,2,L1  $PASSTR2            ,T,T,F,F,0,30,,,128
+$PASSTR2 ENT I,2,L1  $PASSTR2            ,TTFFF,0,30,,,128
  LOC 2636
  VPU 2,224
  LOD I,2,112                 ; FUNCCODE            
@@ -7497,7 +7497,7 @@ $PASSTR# CST $PASSTR3               31,T,F,F
 271 DFC B,255
  END
  LOC 2926
-$PASSTR3 ENT V,2,L1  $PASSTR3            ,T,T,F,F,0,31,$PASSTR#,,128
+$PASSTR3 ENT V,2,L1  $PASSTR3            ,TTFFF,0,31,$PASSTR#,,128
  LOC 2926
  VPU 2,540
  VPU 2,544
@@ -7772,7 +7772,7 @@ L1 DEF I,560
  DEF I,295
  DEF B,0
  LOC 2986
-FILESTAT ENT C,2,L1  FILESTAT            ,T,T,F,F,0,32,,,120
+FILESTAT ENT C,2,L1  FILESTAT            ,TTFFF,0,32,,,120
  LOC 2986
  VPU 2,136
  LCA P,$PASLIB#
@@ -7830,7 +7830,7 @@ L1 DEF I,144
  DEF I,58
  DEF B,0
  LOC 3011
-$LIBX033 ENT C,2,L1  TOUPPER             ,T,T,F,F,0,33,,,120
+$LIBX033 ENT C,2,L1  TOUPPER             ,TTFFF,0,33,,,120
  LOC 3011
  VPU 2,128
  LOD C,2,112                 ; CH                  
@@ -7886,7 +7886,7 @@ $PASRDR# CST $PASRDR                34,T,F,F
 168 DFC R, 0.0000000001       
  END
  LOC 3051
-$PASRDR  ENT R,2,L1  $PASRDR             ,T,T,F,F,0,34,$PASRDR#,,120
+$PASRDR  ENT R,2,L1  $PASRDR             ,TTFFF,0,34,$PASRDR#,,120
  LOC 3051
  VPU 2,192
  LOD I,2,116                 ; WIDTH               
@@ -8745,7 +8745,7 @@ L1 DEF I,320
  DEF I,879
  DEF B,0
  LOC 3331
-$PASRDI  ENT I,2,L1  $PASRDI             ,T,T,F,F,0,35,,,120
+$PASRDI  ENT I,2,L1  $PASRDI             ,TTFFF,0,35,,,120
  LOC 3331
  VPU 2,140
  LOD I,2,116                 ; WIDTH               
@@ -9122,7 +9122,7 @@ L1 DEF I,264
  DEF I,381
  DEF B,0
  LOC 3465
-$PASRDB  ENT B,2,L1  $PASRDB             ,T,T,F,F,0,36,,,120
+$PASRDB  ENT B,2,L1  $PASRDB             ,TTFFF,0,36,,,120
  LOC 3465
  VPU 2,148
  LOD I,2,116                 ; WIDTH               
@@ -9586,7 +9586,7 @@ L1 DEF I,272
  DEF I,479
  DEF B,0
  LOC 3643
-$PASRDX  ENT I,2,L1  $PASRDX             ,T,T,F,F,0,37,,,128
+$PASRDX  ENT I,2,L1  $PASRDX             ,TTFFF,0,37,,,128
  LOC 3643
  VPU 2,184
  LOD I,2,120                 ; WIDTH               
@@ -9951,7 +9951,7 @@ L1 DEF I,312
  DEF I,378
  DEF B,0
  LOC 3785
-$PASRSC  ENT C,2,L1  $PASRSC             ,T,T,F,F,0,38,,,128
+$PASRSC  ENT C,2,L1  $PASRSC             ,TTFFF,0,38,,,128
  LOC 3785
  VPU 2,140
  LOD I,2,120                 ; WIDTH               
@@ -10029,7 +10029,7 @@ L1 DEF I,144
  DEF I,81
  DEF B,0
  LOC 3828
-$PASRSS  ENT P,2,L1  $PASRSS             ,T,T,F,F,0,39,,,136
+$PASRSS  ENT P,2,L1  $PASRSS             ,TTFFF,0,39,,,136
  LOC 3828
  VPU 2,156
  LOD A,2,124                 ; RES                 
@@ -10146,7 +10146,7 @@ L1 DEF I,160
  DEF I,120
  DEF B,0
  LOC 3871
-$PASRSV  ENT P,2,L1  $PASRSV             ,T,T,F,F,0,40,,,128
+$PASRSV  ENT P,2,L1  $PASRSV             ,TTFFF,0,40,,,128
  LOC 3871
  VPU 2,144
  XBG 24
@@ -10274,7 +10274,7 @@ L1 DEF I,160
  DEF I,131
  DEF B,0
  LOC 3918
-$PASRSB  ENT B,2,L1  $PASRSB             ,T,T,F,F,0,41,,,128
+$PASRSB  ENT B,2,L1  $PASRSB             ,TTFFF,0,41,,,128
  LOC 3918
  VPU 2,164
  LOD I,2,120                 ; WIDTH               
@@ -10742,7 +10742,7 @@ L1 DEF I,288
  DEF I,487
  DEF B,0
  LOC 4085
-$PASRSI  ENT I,2,L1  $PASRSI             ,T,T,F,F,0,42,,,128
+$PASRSI  ENT I,2,L1  $PASRSI             ,TTFFF,0,42,,,128
  LOC 4085
  VPU 2,156
  LOD I,2,120                 ; WIDTH               
@@ -11200,7 +11200,7 @@ $PASRSR# CST $PASRSR                43,T,F,F
 168 DFC R, 0.0000000001       
  END
  LOC 4240
-$PASRSR  ENT R,2,L1  $PASRSR             ,T,T,F,F,0,43,$PASRSR#,,128
+$PASRSR  ENT R,2,L1  $PASRSR             ,TTFFF,0,43,$PASRSR#,,128
  LOC 4240
  VPU 2,208
  LOD I,2,120                 ; WIDTH               
@@ -12173,7 +12173,7 @@ L1 DEF I,248
  DEF I,997
  DEF B,0
  LOC 4537
-$PASWRI  ENT P,2,L1  $PASWRI             ,T,T,F,F,0,44,,,128
+$PASWRI  ENT P,2,L1  $PASWRI             ,TTFFF,0,44,,,128
  LOC 4537
  VPU 2,184
  LOD I,2,116                 ; WIDTH               
@@ -12455,7 +12455,7 @@ L1 DEF I,192
  DEF I,292
  DEF B,0
  LOC 4630
-$PASWRR  ENT P,2,L1  $PASWRR             ,T,T,F,F,0,45,,,136
+$PASWRR  ENT P,2,L1  $PASWRR             ,TTFFF,0,45,,,136
  LOC 4630
  VPU 2,276
  LOD I,2,116                 ; WIDTH               
@@ -12958,7 +12958,7 @@ L1 DEF I,288
  DEF I,596
  DEF B,0
  LOC 4816
-$PASWRX  ENT P,2,L1  $PASWRX             ,T,T,F,F,0,46,,,128
+$PASWRX  ENT P,2,L1  $PASWRX             ,TTFFF,0,46,,,128
  LOC 4816
  VPU 2,176
  LOD I,2,120                 ; WIDTH               

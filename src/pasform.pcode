@@ -1,0 +1,10144 @@
+$PASMAI# CST $PASMAIN                0,F,F,F
+ LOC 179
+16 DFC H,0
+18 DFC H,4
+20 DFC H,4
+22 DFC H,1
+24 DFC H,40
+26 DFC H,4
+28 DFC H,45
+30 DFC H,4
+32 DFC H,50
+34 DFC H,4
+36 DFC H,55
+38 DFC H,4
+40 DFC H,45
+42 DFC H,4
+44 DFC H,50
+46 DFC H,4
+48 DFC H,40
+50 DFC H,4
+52 DFC H,55
+54 DFC H,4
+56 DFC M,'STRG '
+61 DFC M,'PSET '
+66 DFC M,'REEL '
+71 DFC M,'XINT '
+76 DFC M,'*'
+ LOC 228
+78 DFC H,0
+80 DFC H,91
+82 DFC H,14
+84 DFC H,8
+86 DFC H,736
+88 DFC H,7
+90 DFC H,744
+92 DFC H,9
+94 DFC H,754
+96 DFC H,8
+98 DFC H,763
+100 DFC H,8
+102 DFC H,772
+104 DFC H,10
+106 DFC H,783
+108 DFC H,8
+110 DFC H,792
+112 DFC H,7
+114 DFC H,800
+116 DFC H,8
+118 DFC H,809
+120 DFC H,8
+122 DFC H,818
+124 DFC H,10
+126 DFC H,829
+128 DFC H,7
+130 DFC H,837
+132 DFC H,11
+134 DFC H,849
+136 DFC H,7
+138 DFC H,857
+140 DFC H,7
+142 DFC H,865
+144 DFC H,6
+146 DFC H,872
+148 DFC H,8
+150 DFC H,881
+152 DFC H,4
+154 DFC H,886
+156 DFC H,4
+158 DFC H,891
+160 DFC H,4
+162 DFC H,896
+164 DFC H,7
+166 DFC H,904
+168 DFC H,6
+170 DFC H,911
+172 DFC H,5
+174 DFC H,917
+176 DFC H,6
+178 DFC H,924
+180 DFC H,6
+182 DFC H,931
+184 DFC H,5
+186 DFC H,937
+188 DFC H,7
+190 DFC H,945
+192 DFC H,8
+194 DFC H,954
+196 DFC H,6
+198 DFC H,961
+200 DFC H,4
+202 DFC H,966
+204 DFC H,7
+206 DFC H,974
+208 DFC H,9
+210 DFC H,984
+212 DFC H,6
+214 DFC H,991
+216 DFC H,8
+218 DFC H,1000
+220 DFC H,7
+222 DFC H,1008
+224 DFC H,8
+226 DFC H,1017
+228 DFC H,5
+230 DFC H,1023
+232 DFC H,6
+234 DFC H,1030
+236 DFC H,6
+238 DFC H,1037
+240 DFC H,6
+242 DFC H,1044
+244 DFC H,5
+246 DFC H,1050
+248 DFC H,6
+250 DFC H,1057
+252 DFC H,7
+254 DFC H,1065
+256 DFC H,7
+258 DFC H,1073
+260 DFC H,5
+262 DFC H,1079
+264 DFC H,4
+266 DFC H,1084
+268 DFC H,5
+270 DFC H,1090
+272 DFC H,4
+274 DFC H,1095
+276 DFC H,5
+278 DFC H,1101
+280 DFC H,5
+282 DFC H,1107
+284 DFC H,5
+286 DFC H,1113
+288 DFC H,8
+290 DFC H,1122
+292 DFC H,8
+294 DFC H,1131
+296 DFC H,7
+298 DFC H,1139
+300 DFC H,6
+302 DFC H,1146
+304 DFC H,6
+306 DFC H,1153
+308 DFC H,6
+310 DFC H,1160
+312 DFC H,6
+314 DFC H,1167
+316 DFC H,6
+318 DFC H,1174
+320 DFC H,6
+322 DFC H,1181
+324 DFC H,6
+326 DFC H,1188
+328 DFC H,7
+330 DFC H,1196
+332 DFC H,6
+334 DFC H,1203
+336 DFC H,7
+338 DFC H,1211
+340 DFC H,6
+342 DFC H,1218
+344 DFC H,7
+346 DFC H,1226
+348 DFC H,8
+350 DFC H,1235
+352 DFC H,8
+354 DFC H,1244
+356 DFC H,7
+358 DFC H,1252
+360 DFC H,11
+362 DFC H,1264
+364 DFC H,7
+366 DFC H,1272
+368 DFC H,8
+370 DFC H,1281
+372 DFC H,8
+374 DFC H,1290
+376 DFC H,9
+378 DFC H,1300
+380 DFC H,9
+382 DFC H,1310
+384 DFC H,5
+386 DFC H,1316
+388 DFC H,9
+390 DFC H,1326
+392 DFC H,9
+394 DFC H,1336
+396 DFC H,9
+398 DFC H,1346
+400 DFC H,8
+402 DFC H,1355
+404 DFC H,14
+406 DFC H,1370
+408 DFC H,14
+410 DFC H,1385
+412 DFC H,11
+414 DFC H,1397
+416 DFC H,8
+418 DFC H,1406
+420 DFC H,8
+422 DFC H,1415
+424 DFC H,8
+426 DFC H,1424
+428 DFC H,8
+430 DFC H,1433
+432 DFC H,8
+434 DFC H,1442
+436 DFC H,9
+438 DFC H,1452
+440 DFC H,7
+442 DFC H,1460
+444 DFC H,12
+446 DFC H,1473
+448 DFC H,8
+450 DFC H,1355
+452 DFC H,14
+454 DFC H,1433
+456 DFC H,8
+458 DFC H,1424
+460 DFC H,8
+462 DFC H,1415
+464 DFC H,8
+466 DFC H,1406
+468 DFC H,8
+470 DFC H,1397
+472 DFC H,8
+474 DFC H,1452
+476 DFC H,7
+478 DFC H,1370
+480 DFC H,14
+482 DFC H,1310
+484 DFC H,5
+486 DFC H,1346
+488 DFC H,8
+490 DFC H,1336
+492 DFC H,9
+494 DFC H,1326
+496 DFC H,9
+498 DFC H,736
+500 DFC H,7
+502 DFC H,1316
+504 DFC H,9
+506 DFC H,1442
+508 DFC H,9
+510 DFC H,1385
+512 DFC H,11
+514 DFC H,1107
+516 DFC H,5
+518 DFC H,1131
+520 DFC H,7
+522 DFC H,1000
+524 DFC H,7
+526 DFC H,1244
+528 DFC H,7
+530 DFC H,1122
+532 DFC H,8
+534 DFC H,966
+536 DFC H,7
+538 DFC H,829
+540 DFC H,7
+542 DFC H,954
+544 DFC H,6
+546 DFC H,1218
+548 DFC H,7
+550 DFC H,1264
+552 DFC H,7
+554 DFC H,1113
+556 DFC H,8
+558 DFC H,1057
+560 DFC H,7
+562 DFC H,818
+564 DFC H,10
+566 DFC H,1101
+568 DFC H,5
+570 DFC H,886
+572 DFC H,4
+574 DFC H,1226
+576 DFC H,8
+578 DFC H,872
+580 DFC H,8
+582 DFC H,904
+584 DFC H,6
+586 DFC H,911
+588 DFC H,5
+590 DFC H,1181
+592 DFC H,6
+594 DFC H,849
+596 DFC H,7
+598 DFC H,984
+600 DFC H,6
+602 DFC H,931
+604 DFC H,5
+606 DFC H,974
+608 DFC H,9
+610 DFC H,857
+612 DFC H,7
+614 DFC H,1037
+616 DFC H,6
+618 DFC H,1153
+620 DFC H,6
+622 DFC H,917
+624 DFC H,6
+626 DFC H,1167
+628 DFC H,6
+630 DFC H,961
+632 DFC H,4
+634 DFC H,1079
+636 DFC H,4
+638 DFC H,1065
+640 DFC H,7
+642 DFC H,1281
+644 DFC H,8
+646 DFC H,1146
+648 DFC H,6
+650 DFC H,792
+652 DFC H,7
+654 DFC H,1300
+656 DFC H,9
+658 DFC H,1160
+660 DFC H,6
+662 DFC H,1473
+664 DFC H,8
+666 DFC H,1460
+668 DFC H,12
+670 DFC H,1203
+672 DFC H,7
+674 DFC H,1095
+676 DFC H,5
+678 DFC H,800
+680 DFC H,8
+682 DFC H,1196
+684 DFC H,6
+686 DFC H,1174
+688 DFC H,6
+690 DFC H,1073
+692 DFC H,5
+694 DFC H,891
+696 DFC H,4
+698 DFC H,1090
+700 DFC H,4
+702 DFC H,1139
+704 DFC H,6
+706 DFC H,837
+708 DFC H,11
+710 DFC H,744
+712 DFC H,9
+714 DFC H,1008
+716 DFC H,8
+718 DFC H,1235
+720 DFC H,8
+722 DFC H,1211
+724 DFC H,6
+726 DFC H,1023
+728 DFC H,6
+730 DFC H,1030
+732 DFC H,6
+734 DFC H,1272
+736 DFC H,8
+738 DFC H,991
+740 DFC H,8
+742 DFC H,945
+744 DFC H,8
+746 DFC H,809
+748 DFC H,8
+750 DFC H,1290
+752 DFC H,9
+754 DFC H,1252
+756 DFC H,11
+758 DFC H,1017
+760 DFC H,5
+762 DFC H,1188
+764 DFC H,7
+766 DFC H,772
+768 DFC H,10
+770 DFC H,763
+772 DFC H,8
+774 DFC H,754
+776 DFC H,8
+778 DFC H,783
+780 DFC H,8
+782 DFC H,865
+784 DFC H,6
+786 DFC H,881
+788 DFC H,4
+790 DFC H,1050
+792 DFC H,6
+794 DFC H,896
+796 DFC H,7
+798 DFC H,1044
+800 DFC H,5
+802 DFC H,937
+804 DFC H,7
+806 DFC H,924
+808 DFC H,6
+810 DFC H,1084
+812 DFC H,5
+814 DFC M,'NOTUSED '
+822 DFC M,'SYOVERLAY '
+832 DFC M,'SYSQLVAR '
+841 DFC M,'SYSQLEND '
+850 DFC M,'SYSQLBEGIN '
+861 DFC M,'SYSTATIC '
+870 DFC M,'SYLOCAL '
+878 DFC M,'SYMODULE '
+887 DFC M,'SYRETURN '
+896 DFC M,'SYCONTINUE '
+907 DFC M,'SYBREAK '
+915 DFC M,'SYOTHERWISE '
+927 DFC M,'SYEXTRN '
+935 DFC M,'SYFRTRN '
+943 DFC M,'SYTHEN '
+950 DFC M,'SYDOWNTO '
+959 DFC M,'SYTO '
+964 DFC M,'SYDO '
+969 DFC M,'SYOF '
+974 DFC M,'SYUNTIL '
+982 DFC M,'SYELSE '
+989 DFC M,'SYEND '
+995 DFC M,'SYGOTO '
+1002 DFC M,'SYWITH '
+1009 DFC M,'SYFOR '
+1015 DFC M,'SYWHILE '
+1023 DFC M,'SYREPEAT '
+1032 DFC M,'SYCASE '
+1039 DFC M,'SYIF '
+1044 DFC M,'SYBEGIN '
+1052 DFC M,'SYFORWARD '
+1062 DFC M,'SYFILE '
+1069 DFC M,'SYRECORD '
+1078 DFC M,'SYARRAY '
+1086 DFC M,'SYPACKED '
+1095 DFC M,'SYSET '
+1101 DFC M,'SYPROC '
+1108 DFC M,'SYPROG '
+1115 DFC M,'SYFUNC '
+1122 DFC M,'SYVAR '
+1128 DFC M,'SYTYPE '
+1135 DFC M,'SYCONST '
+1143 DFC M,'SYLABEL '
+1151 DFC M,'SYNOT '
+1157 DFC M,'SYIN '
+1162 DFC M,'SYXOR '
+1168 DFC M,'SYOR '
+1173 DFC M,'SYMOD '
+1179 DFC M,'SYDIV '
+1185 DFC M,'SYAND '
+1191 DFC M,'SYCONCAT '
+1200 DFC M,'SYASSIGN '
+1209 DFC M,'SYANDOP '
+1217 DFC M,'SYOROP '
+1224 DFC M,'SYLEOP '
+1231 DFC M,'SYGEOP '
+1238 DFC M,'SYLTOP '
+1245 DFC M,'SYGTOP '
+1252 DFC M,'SYNEOP '
+1259 DFC M,'SYEQOP '
+1266 DFC M,'SYSLASH '
+1274 DFC M,'SYMULT '
+1281 DFC M,'SYMINUS '
+1289 DFC M,'SYPLUS '
+1296 DFC M,'SYCOLON '
+1304 DFC M,'SYDOTDOT '
+1313 DFC M,'SYPERIOD '
+1322 DFC M,'SYARROW '
+1330 DFC M,'SYSEMICOLON '
+1342 DFC M,'SYCOMMA '
+1350 DFC M,'SYRBRACK '
+1359 DFC M,'SYLBRACK '
+1368 DFC M,'SYRPARENT '
+1378 DFC M,'SYLPARENT '
+1388 DFC M,'IDENT '
+1394 DFC M,'REALCONST '
+1404 DFC M,'INTRBRACK '
+1414 DFC M,'INTDOTDOT '
+1424 DFC M,'INTCONST '
+1433 DFC M,'BINSTRINGCONST '
+1448 DFC M,'HEXSTRINGCONST '
+1463 DFC M,'STRINGCONST '
+1475 DFC M,'COMMENT5 '
+1484 DFC M,'COMMENT4 '
+1493 DFC M,'COMMENT3 '
+1502 DFC M,'COMMENT2 '
+1511 DFC M,'COMMENT1 '
+1520 DFC M,'SEPARATOR '
+1530 DFC M,'EOLCHAR '
+1538 DFC M,'SYMB_UNKNOWN '
+1551 DFC M,'SYMB_EOF '
+1560 DFC M,'*'
+ LOC 501
+1561 DFC M,20,'IF                  '
+1581 DFC M,20,'DO                  '
+1601 DFC M,20,'OF                  '
+1621 DFC M,20,'TO                  '
+1641 DFC M,20,'IN                  '
+1661 DFC M,20,'OR                  '
+1681 DFC M,20,'END                 '
+1701 DFC M,20,'FOR                 '
+1721 DFC M,20,'VAR                 '
+1741 DFC M,20,'DIV                 '
+1761 DFC M,20,'MOD                 '
+1781 DFC M,20,'SET                 '
+1801 DFC M,20,'AND                 '
+1821 DFC M,20,'NOT                 '
+1841 DFC M,20,'XOR                 '
+1861 DFC M,20,'THEN                '
+1881 DFC M,20,'ELSE                '
+1901 DFC M,20,'WITH                '
+1921 DFC M,20,'GOTO                '
+1941 DFC M,20,'CASE                '
+1961 DFC M,20,'TYPE                '
+1981 DFC M,20,'FILE                '
+2001 DFC M,20,'BEGIN               '
+2021 DFC M,20,'UNTIL               '
+2041 DFC M,20,'WHILE               '
+2061 DFC M,20,'ARRAY               '
+2081 DFC M,20,'CONST               '
+2101 DFC M,20,'LABEL               '
+2121 DFC M,20,'LOCAL               '
+2141 DFC M,20,'BREAK               '
+2161 DFC M,20,'REPEAT              '
+2181 DFC M,20,'RECORD              '
+2201 DFC M,20,'DOWNTO              '
+2221 DFC M,20,'PACKED              '
+2241 DFC M,20,'RETURN              '
+2261 DFC M,20,'MODULE              '
+2281 DFC M,20,'STATIC              '
+2301 DFC M,20,'SQLEND              '
+2321 DFC M,20,'SQLVAR              '
+2341 DFC M,20,'FORWARD             '
+2361 DFC M,20,'PROGRAM             '
+2381 DFC M,20,'FORTRAN             '
+2401 DFC M,20,'OVERLAY             '
+2421 DFC M,20,'EXTERNAL            '
+2441 DFC M,20,'FUNCTION            '
+2461 DFC M,20,'CONTINUE            '
+2481 DFC M,20,'SQLBEGIN            '
+2501 DFC M,20,'PROCEDURE           '
+2521 DFC M,20,'OTHERWISE           '
+2541 DFC M,20,'                    '
+2561 DFC M,20,'                    '
+2581 DFC M,20,'                    '
+2601 DFC M,20,'                    '
+2621 DFC M,20,'                    '
+2641 DFC M,20,'                    '
+2661 DFC M,20,'                    '
+2681 DFC M,20,'                    '
+2701 DFC M,20,'                    '
+2721 DFC M,20,'                    '
+2741 DFC M,20,'                    '
+ LOC 508
+2762 DFC H,1
+2764 DFC H,1
+2766 DFC H,7
+2768 DFC H,16
+2770 DFC H,23
+2772 DFC H,31
+2774 DFC H,40
+2776 DFC H,44
+2778 DFC H,48
+2780 DFC H,50
+2782 DFC H,-1
+2784 DFC H,-1
+ LOC 524
+2786 DFC H,62
+2788 DFC H,73
+2790 DFC H,72
+2792 DFC H,74
+2794 DFC H,46
+2796 DFC H,44
+2798 DFC H,69
+2800 DFC H,66
+2802 DFC H,51
+2804 DFC H,42
+2806 DFC H,43
+2808 DFC H,55
+2810 DFC H,41
+2812 DFC H,47
+2814 DFC H,45
+2816 DFC H,76
+2818 DFC H,70
+2820 DFC H,67
+2822 DFC H,68
+2824 DFC H,63
+2826 DFC H,50
+2828 DFC H,59
+2830 DFC H,61
+2832 DFC H,71
+2834 DFC H,65
+2836 DFC H,57
+2838 DFC H,49
+2840 DFC H,48
+2842 DFC H,84
+2844 DFC H,80
+2846 DFC H,64
+2848 DFC H,58
+2850 DFC H,75
+2852 DFC H,56
+2854 DFC H,82
+2856 DFC H,83
+2858 DFC H,85
+2860 DFC H,87
+2862 DFC H,88
+2864 DFC H,60
+2866 DFC H,53
+2868 DFC H,77
+2870 DFC H,89
+2872 DFC H,78
+2874 DFC H,52
+2876 DFC H,81
+2878 DFC H,86
+2880 DFC H,54
+2882 DFC H,79
+2884 DFC H,90
+2886 DFC H,90
+2888 DFC H,90
+2890 DFC H,90
+2892 DFC H,90
+2894 DFC H,90
+2896 DFC H,90
+2898 DFC H,90
+2900 DFC H,90
+2902 DFC H,90
+2904 DFC H,90
+ END
+ LOC 574
+$PRV0007 ENT P,2,L1  HALTX               ,TFFFF,2,7,,        ,112
+ LOC 574
+ VPU 2,120
+ LDC I,8
+ CSP XIT,128
+ LOC 575
+ RET P
+L1 DEF I,128
+ DEF I,8
+ DEF B,0
+ LOC 582
+$PRV0008 ENT P,2,L1  ERROR               ,TFFFF,2,8,,        ,120
+ LOC 582
+ VPU 2,128
+ LDA 1,260
+ CSP SIO,136
+ LCA M,7,'+++ FRM'
+ LDC I,7
+ LDC I,7
+ CSP WRS,136
+ LOD I,2,112                 ; ERRNO               
+ LDC I,3
+ NGI
+ CSP WRI,136
+ LCA M,2,': '
+ LDC I,2
+ LDC I,2
+ CSP WRS,136
+ CSP EIO,136
+ LOC 583
+ LOD I,2,112                 ; ERRNO               
+ LOC 584
+ XJP N,L5
+L8 LAB
+ LDA 1,260
+ CSP SIO,136
+ LCA M,36,'String does not fit into target line'
+ LDC I,36
+ LDC I,36
+ CSP WRS,136
+ CSP WLN,136
+ CSP EIO,136
+ UJP L7
+L9 LAB
+ LOC 585
+ LDA 1,260
+ CSP SIO,136
+ LCA M,39,'EOF found when processing SQL statement'
+ LDC I,39
+ LDC I,39
+ CSP WRS,136
+ CSP WLN,136
+ CSP EIO,136
+ UJP L7
+L10 LAB
+ LOC 586
+ LDA 1,260
+ CSP SIO,136
+ LCA M,21,'Syntax error detected'
+ LDC I,21
+ LDC I,21
+ CSP WRS,136
+ CSP WLN,136
+ CSP EIO,136
+ UJP L7
+L11 LAB
+ LOC 587
+ LDA 1,260
+ CSP SIO,136
+ LCA M,21,'Syntax error detected'
+ LDC I,21
+ LDC I,21
+ CSP WRS,136
+ CSP WLN,136
+ CSP EIO,136
+ UJP L7
+L12 LAB
+ LOC 588
+ LDA 1,260
+ CSP SIO,136
+ LCA M,33,'Empty statement not expected here'
+ LDC I,33
+ LDC I,33
+ CSP WRS,136
+ CSP WLN,136
+ CSP EIO,136
+ UJP L7
+L6 LAB
+ LOC 590
+ LDA 1,260
+ CSP SIO,136
+ LCA M,13,'unknown error'
+ LDC I,13
+ LDC I,13
+ CSP WRS,136
+ CSP WLN,136
+ CSP EIO,136
+ UJP L7
+L5 LAB
+ LOC 591
+ DEF I,1
+ UJP L8
+ DEF I,2
+ UJP L9
+ DEF I,3
+ UJP L10
+ DEF I,4
+ UJP L11
+ DEF I,5
+ UJP L12
+L7 LAB
+ LOC 593
+ MST 1,0
+ CUP P,1,$PRV0007,136
+ RET P
+L1 DEF I,136
+ DEF I,148
+ DEF B,0
+ LOC 600
+$PRV0009 ENT C,2,L1  MINOR               ,TFFFF,2,9,,        ,120
+ LOC 600
+ VPU 2,128
+ LOD C,2,112                 ; CH                  
+ ORD
+ LCA S,C32'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+ SLD 32,132
+ INN
+ FJP L3
+ LOC 601
+ LOD C,2,112                 ; CH                  
+ ORD
+ LDC C,'A'
+ ORD
+ SBI
+ LDC C,'a'
+ ORD
+ ADI
+ CHR
+ LOC 602
+ CHK I,0,255
+ STR C,2,72
+ UJP L4
+L3 LAB
+ LOC 604
+ LOD C,2,112                 ; CH                  
+ CHK I,0,255
+ STR C,2,72
+L4 LAB
+ RET C
+L1 DEF I,168
+ DEF I,31
+ DEF B,0
+ LOC 611
+$PRV0010 ENT P,2,L1  WRITEHEXBYTE        ,TFFFF,2,10,,        ,120
+ LOC 611
+ VPU 2,128
+ LOD A,2,112                 ; F                   
+ CSP SIO,136
+ LCA M,16,'0123456789abcdef'
+ LOD I,2,116                 ; I                   
+ LDC I,16
+ DVI
+ CHK J,0,15
+ IXA 1
+ IND C,0                     ;  Å                  
+ LDC I,1
+ CSP WRC,136
+ LCA M,16,'0123456789abcdef'
+ LOD I,2,116                 ; I                   
+ LDC I,16
+ MOD
+ CHK J,0,15
+ IXA 1
+ IND C,0                     ;  Å                  
+ LDC I,1
+ CSP WRC,136
+ CSP EIO,136
+ LOC 612
+ RET P
+L1 DEF I,136
+ DEF I,37
+ DEF B,0
+ LOC 624
+$PRV0011 ENT B,2,L1  RESWRDSQL           ,TFFFF,2,11,,        ,112
+ LOC 624
+ VPU 2,144
+ LDC B,0
+ STR B,2,136
+ LOC 625
+ LDA 2,120                   ; TESTWORT            
+ LCA M,10,'          '
+ MOV 10
+ LOC 626
+ LOD I,1,1512                ; W1ENDE              
+ LDC I,10
+ LEQ I
+ FJP L3
+ LOC 628
+ LOD I,1,1512                ; W1ENDE              
+ STR I,2,140
+ UJP L4
+L3 LAB
+ LOC 629
+ LDC I,10
+ STR I,2,140
+L4 LAB
+ LOC 630
+ LDC I,1
+ STR I,2,132
+ LOD I,2,140                 ; WORTENDE            
+ STR I,2,148
+ LDC I,1
+ LOD I,2,148
+ LEQ I
+ FJP L7
+L5 LAB
+ LOC 631
+ LDA 2,120                   ; TESTWORT            
+ LOD I,2,132                 ; I                   
+ CHK J,1,10
+ DEC I,1
+ IXA 1
+ LDA 1,1412                  ; W1                  
+ LOD I,2,132                 ; I                   
+ CHK J,1,100
+ DEC I,1
+ IXA 1
+ IND C,0                     ; I                   
+ CHK I,0,255
+ STO C
+ LOD I,2,132                 ; I                   
+ LOD I,2,148
+ NEQ I
+ FJP L7
+ LOD I,2,132                 ; I                   
+ INC I,1
+ STR I,2,132
+ UJP L5
+L7 LAB
+ LOC 632
+ LDC I,1
+ STR I,2,132
+ LOD I,1,1900                ; ANZSQLWORTE         
+ STR I,2,148
+ LDC I,1
+ LOD I,2,148
+ LEQ I
+ FJP L10
+L8 LAB
+ LOC 633
+ LDA 2,120                   ; TESTWORT            
+ LDA 1,1600                  ; WTABSQL             
+ LOD I,2,132                 ; I                   
+ CHK J,1,30
+ DEC I,1
+ IXA 10
+ EQU M,10,10
+ FJP L11
+ LOC 634
+ LDC B,1
+ STR B,2,136
+L11 LAB
+ LOD I,2,132                 ; I                   
+ LOD I,2,148
+ NEQ I
+ FJP L10
+ LOD I,2,132                 ; I                   
+ INC I,1
+ STR I,2,132
+ UJP L8
+L10 LAB
+ LOC 636
+ LOD B,2,136                 ; RW                  
+ STR B,2,72
+ RET B
+L1 DEF I,152
+ DEF I,101
+ DEF B,0
+ LOC 643
+$PRV0012 ENT P,2,L1  NEUZEILEKOMM        ,TFFFF,2,12,,        ,120
+ LOC 643
+ VPU 2,128
+ LOD I,2,112                 ; EIN                 
+ LDC I,51
+ GRT I
+ FJP L3
+ LOC 644
+ LDC I,51
+ STR I,2,112
+L3 LAB
+ LOC 645
+ LDA 1,420
+ CSP SIO,136
+ CSP WLN,136
+ CSP EIO,136
+ LOC 646
+ LOD I,1,712                 ; ZZAUS               
+ LDC I,1
+ ADI
+ STR I,1,712
+ LOC 647
+ LOD I,2,112                 ; EIN                 
+ LDC I,0
+ GRT I
+ FJP L4
+ LOC 649
+ LDA 1,420
+ CSP SIO,136
+ LDC C,' '
+ LOD I,2,112                 ; EIN                 
+ CSP WRC,136
+ CSP EIO,136
+ LOC 651
+ LOD I,2,112                 ; EIN                 
+ STR I,1,1908
+ LOC 652
+ UJP L5
+L4 LAB
+ LOC 653
+ LDC I,0
+ STR I,1,1908
+L5 LAB
+ LOC 654
+ LDC B,0
+ STR B,1,1586
+ LOC 655
+ RET P
+L1 DEF I,136
+ DEF I,49
+ DEF B,0
+ LOC 664
+$PRV0013 ENT P,2,L1  KOMMSTERNZEILE      ,TFFFF,2,13,,        ,112
+ LOC 664
+ VPU 2,124
+ LOD C,1,1940                ; KOMMC               
+ ORD
+ CHK I,0,255
+ LOC 665
+ XJP N,L5
+L8 LAB
+ LDA 1,420
+ CSP SIO,128
+ LCA M,2,'(*'
+ LDC I,2
+ LDC I,2
+ CSP WRS,128
+ CSP EIO,128
+ UJP L7
+L9 LAB
+ LOC 666
+ LOD I,1,1592                ; EINRKOMM            
+ LDC I,0
+ EQU I
+ FJP L10
+ LOC 667
+ LDA 1,420
+ CSP SIO,128
+ LCA M,2,'(*'
+ LDC I,2
+ LDC I,2
+ CSP WRS,128
+ CSP EIO,128
+ LOC 668
+ UJP L11
+L10 LAB
+ LOC 669
+ LDA 1,420
+ CSP SIO,128
+ LCA M,2,'/*'
+ LDC I,2
+ LDC I,2
+ CSP WRS,128
+ CSP EIO,128
+L11 LAB
+ UJP L7
+L12 LAB
+ LOC 670
+ LDA 1,420
+ CSP SIO,128
+ LCA M,2,'(*'
+ LDC I,2
+ LDC I,2
+ CSP WRS,128
+ CSP EIO,128
+ UJP L7
+L13 LAB
+ LOC 671
+ LDA 1,420
+ CSP SIO,128
+ LDC C,'"'
+ LDC I,1
+ CSP WRC,128
+ CSP EIO,128
+ UJP L7
+L14 LAB
+ LOC 672
+ LDA 1,420
+ CSP SIO,128
+ LCA M,2,'//'
+ LDC I,2
+ LDC I,2
+ CSP WRS,128
+ CSP EIO,128
+ UJP L7
+L5 LAB
+ LOC 673
+ DEF C,'"'
+ UJP L13
+ DEF C,')'
+ UJP L8
+ DEF C,'+'
+ UJP L14
+ DEF C,'/'
+ UJP L9
+ DEF C,'}'
+ UJP L12
+L6 LAB
+L7 LAB
+ LOC 674
+ LDC I,1
+ STR I,2,120
+ LOD I,1,1948                ; KOMMC               
+ STR I,2,128
+ LDC I,1
+ LOD I,2,128
+ LEQ I
+ FJP L18
+L16 LAB
+ LOC 675
+ LDA 1,420
+ CSP SIO,136
+ LDC C,'*'
+ LDC I,1
+ CSP WRC,136
+ CSP EIO,136
+ LOD I,2,120                 ; I                   
+ LOD I,2,128
+ NEQ I
+ FJP L18
+ LOD I,2,120                 ; I                   
+ INC I,1
+ STR I,2,120
+ UJP L16
+L18 LAB
+ LOC 676
+ LOD C,1,1940                ; KOMMC               
+ ORD
+ LCA S,C32'"+'
+ SLD 32,128
+ INN
+ FJP L19
+ LOC 677
+ LDA 1,420
+ CSP SIO,128
+ LCA M,2,'**'
+ LDC I,2
+ LDC I,2
+ CSP WRS,128
+ CSP EIO,128
+L19 LAB
+ LOC 678
+ LOD C,1,1940                ; KOMMC               
+ ORD
+ CHK I,0,255
+ LOC 679
+ XJP N,L22
+L25 LAB
+ LDA 1,420
+ CSP SIO,128
+ LCA M,2,'*)'
+ LDC I,2
+ LDC I,2
+ CSP WRS,128
+ CSP EIO,128
+ UJP L24
+L26 LAB
+ LOC 680
+ LOD I,1,1592                ; EINRKOMM            
+ LDC I,0
+ EQU I
+ FJP L27
+ LOC 681
+ LDA 1,420
+ CSP SIO,128
+ LCA M,2,'*)'
+ LDC I,2
+ LDC I,2
+ CSP WRS,128
+ CSP EIO,128
+ LOC 682
+ UJP L28
+L27 LAB
+ LOC 683
+ LDA 1,420
+ CSP SIO,128
+ LCA M,2,'*/'
+ LDC I,2
+ LDC I,2
+ CSP WRS,128
+ CSP EIO,128
+L28 LAB
+ UJP L24
+L29 LAB
+ LOC 684
+ LDA 1,420
+ CSP SIO,128
+ LCA M,2,'*)'
+ LDC I,2
+ LDC I,2
+ CSP WRS,128
+ CSP EIO,128
+ UJP L24
+L30 LAB
+ LOC 685
+ LDA 1,420
+ CSP SIO,128
+ LDC C,'"'
+ LDC I,1
+ CSP WRC,128
+ CSP EIO,128
+ UJP L24
+L31 LAB
+ LOC 686
+ UJP L24
+L22 LAB
+ LOC 687
+ DEF C,'"'
+ UJP L30
+ DEF C,')'
+ UJP L25
+ DEF C,'+'
+ UJP L31
+ DEF C,'/'
+ UJP L26
+ DEF C,'}'
+ UJP L29
+L23 LAB
+L24 LAB
+ LOC 688
+ RET P
+L1 DEF I,160
+ DEF I,215
+ DEF B,0
+ LOC 715
+$PRV0014 ENT P,2,L1  READKOMM            ,TFFFF,2,14,,        ,120
+ LOC 715
+ VPU 2,280
+ LDC B,0
+ STR B,2,140
+ LOC 716
+ LDC I,1
+ STR I,2,144
+ LOC 717
+ LDC I,1
+ STR I,2,148
+ LOC 726
+ LOD A,2,112                 ; KOMMC               
+ IND A,16                    ; KOMMC               
+ LDC N
+ EQU A
+ FJP L3
+ LOC 728
+ LOD A,2,112                 ; KOMMC               
+ INC A,1                     ; KOMMC               
+ LOD A,2,112                 ; KOMMC               
+ IND B,36                    ; KOMMC               
+ NOT B
+ STO B
+ LOC 729
+ LOD A,2,112                 ; KOMMC               
+ INC A,48                    ; KOMMC               
+ LOD A,2,112                 ; KOMMC               
+ IND I,32                    ; KOMMC               
+ LDC I,1
+ SBI
+ STO I
+ LOC 730
+ LOD A,2,112                 ; KOMMC               
+ IND I,48                    ; KOMMC               
+ LOD I,1,1908                ; OUTPOINTER          
+ LDC I,1
+ SBI
+ LES I
+ FJP L4
+ LOC 731
+ LOD A,2,112                 ; KOMMC               
+ INC A,48                    ; KOMMC               
+ LOD I,1,1908                ; OUTPOINTER          
+ LOC 732
+ LDC I,1
+ SBI
+ STO I
+L4 LAB
+L3 LAB
+L5 LAB
+ LOC 740
+ LOD B,2,140                 ; ENDOFKOMM           
+ NOT B
+ FJP L6
+ LOC 742
+ LOD A,2,112                 ; KOMMC               
+ INC A,2                     ; KOMMC               
+ LDC B,0
+ STO B
+ LOC 743
+ LDA 2,152                   ; KOMMP               
+ LDC C,' '
+ VC1
+ LDC I,120
+ VRP
+ VST 0,120
+ VPO 2,280
+ LOC 744
+ LDC I,0
+ STR I,2,276
+ LOC 745
+ LOD C,1,889                 ; SCB                 
+ CHK I,0,255
+ STR C,2,128
+L7 LAB
+ LOC 746
+ LOD B,1,752                 ; SCB                 
+ NOT B
+ FJP L8
+ LOC 748
+ LOD I,2,276                 ; KOMML               
+ LDC I,1
+ ADI
+ STR I,2,276
+ LOC 749
+ LDA 2,152                   ; KOMMP               
+ LOD I,2,276                 ; KOMML               
+ VIX
+ LOD C,2,128                 ; CH                  
+ CHK I,0,255
+ STO C
+ LOC 750
+ LOD A,2,112                 ; KOMMC               
+ IND C,0                     ; KOMMC               
+ ORD
+ CHK I,0,255
+ LOC 751
+ XJP N,L11
+L14 LAB
+ LOC 752
+ LOD I,2,148                 ; ZUSTAND             
+ LOC 753
+ XJP N,L17
+L20 LAB
+ LOC 754
+ LOD C,2,128                 ; CH                  
+ LDC C,'*'
+ EQU C
+ FJP L21
+ LOC 756
+ LDC I,2
+ STR I,2,148
+ UJP L22
+L21 LAB
+ LOC 757
+ LOD C,2,128                 ; CH                  
+ LDC C,'('
+ EQU C
+ FJP L23
+ LOC 759
+ LDC I,3
+ STR I,2,148
+L23 LAB
+L22 LAB
+ UJP L19
+L24 LAB
+ LOC 761
+ LOD C,2,128                 ; CH                  
+ LDC C,'*'
+ EQU C
+ FJP L25
+ LOC 763
+ LDC I,2
+ STR I,2,148
+ UJP L26
+L25 LAB
+ LOC 764
+ LOD C,2,128                 ; CH                  
+ LDC C,')'
+ EQU C
+ FJP L27
+ LOC 766
+ LOD I,2,144                 ; ANZKOMM             
+ LDC I,1
+ SBI
+ STR I,2,144
+ LOC 767
+ LOD I,2,144                 ; ANZKOMM             
+ LDC I,0
+ LEQ I
+ FJP L28
+ LOC 769
+ LDC B,1
+ STR B,2,140
+ UJP L29
+L28 LAB
+ LOC 771
+ LDC I,1
+ STR I,2,148
+L29 LAB
+ LOC 772
+ UJP L30
+L27 LAB
+ LOC 774
+ LDC I,1
+ STR I,2,148
+L30 LAB
+L26 LAB
+ UJP L19
+L31 LAB
+ LOC 776
+ LOD C,2,128                 ; CH                  
+ LDC C,'*'
+ EQU C
+ FJP L32
+ LOC 778
+ LDC I,1
+ STR I,2,148
+ LOC 779
+ LOD I,2,144                 ; ANZKOMM             
+ LOC 780
+ LDC I,1
+ ADI
+ STR I,2,144
+ LOC 781
+ UJP L33
+L32 LAB
+ LOC 783
+ LDC I,1
+ STR I,2,148
+L33 LAB
+ UJP L19
+L17 LAB
+ LOC 784
+ DEF I,1
+ UJP L20
+ DEF I,2
+ UJP L24
+ DEF I,3
+ UJP L31
+L18 LAB
+L19 LAB
+ LOC 785
+ UJP L13
+L35 LAB
+ LOC 787
+ LOD I,2,148                 ; ZUSTAND             
+ LOC 788
+ XJP N,L38
+L41 LAB
+ LOC 789
+ LOD C,2,128                 ; CH                  
+ LDC C,'*'
+ EQU C
+ FJP L42
+ LOC 791
+ LDC I,2
+ STR I,2,148
+ UJP L43
+L42 LAB
+ LOC 792
+ LOD C,2,128                 ; CH                  
+ LDC C,'/'
+ EQU C
+ FJP L44
+ LOC 794
+ LDC I,3
+ STR I,2,148
+L44 LAB
+L43 LAB
+ UJP L40
+L45 LAB
+ LOC 796
+ LOD C,2,128                 ; CH                  
+ LDC C,'*'
+ EQU C
+ FJP L46
+ LOC 798
+ LDC I,2
+ STR I,2,148
+ UJP L47
+L46 LAB
+ LOC 799
+ LOD C,2,128                 ; CH                  
+ LDC C,'/'
+ EQU C
+ FJP L48
+ LOC 801
+ LOD I,2,144                 ; ANZKOMM             
+ LDC I,1
+ SBI
+ STR I,2,144
+ LOC 802
+ LOD I,2,144                 ; ANZKOMM             
+ LDC I,0
+ LEQ I
+ FJP L49
+ LOC 804
+ LDC B,1
+ STR B,2,140
+ UJP L50
+L49 LAB
+ LOC 806
+ LDC I,1
+ STR I,2,148
+L50 LAB
+ LOC 807
+ UJP L51
+L48 LAB
+ LOC 809
+ LDC I,1
+ STR I,2,148
+L51 LAB
+L47 LAB
+ UJP L40
+L52 LAB
+ LOC 811
+ LOD C,2,128                 ; CH                  
+ LDC C,'*'
+ EQU C
+ FJP L53
+ LOC 813
+ LDC I,1
+ STR I,2,148
+ LOC 814
+ LOD I,2,144                 ; ANZKOMM             
+ LOC 815
+ LDC I,1
+ ADI
+ STR I,2,144
+ LOC 816
+ UJP L54
+L53 LAB
+ LOC 818
+ LDC I,1
+ STR I,2,148
+L54 LAB
+ UJP L40
+L38 LAB
+ LOC 819
+ DEF I,1
+ UJP L41
+ DEF I,2
+ UJP L45
+ DEF I,3
+ UJP L52
+L39 LAB
+L40 LAB
+ LOC 820
+ UJP L13
+L56 LAB
+ LOC 822
+ LOD C,2,128                 ; CH                  
+ LDC C,'}'
+ EQU C
+ FJP L57
+ LOC 824
+ LOD I,2,144                 ; ANZKOMM             
+ LDC I,1
+ SBI
+ STR I,2,144
+ LOC 825
+ LOD I,2,144                 ; ANZKOMM             
+ LDC I,0
+ LEQ I
+ FJP L58
+ LOC 826
+ LDC B,1
+ STR B,2,140
+L58 LAB
+ LOC 828
+ UJP L59
+L57 LAB
+ LOC 829
+ LOD C,2,128                 ; CH                  
+ LDC C,'{'
+ EQU C
+ FJP L60
+ LOC 830
+ LOD I,2,144                 ; ANZKOMM             
+ LOC 831
+ LDC I,1
+ ADI
+ STR I,2,144
+L60 LAB
+L59 LAB
+ UJP L13
+L61 LAB
+ LOC 833
+ LOD C,2,128                 ; CH                  
+ LDC C,'"'
+ EQU C
+ STR B,2,140
+ LOC 834
+ UJP L13
+L62 LAB
+ LOC 835
+ UJP L13
+L11 LAB
+ LOC 836
+ DEF C,'"'
+ UJP L61
+ DEF C,')'
+ UJP L14
+ DEF C,'+'
+ UJP L62
+ DEF C,'/'
+ UJP L35
+ DEF C,'}'
+ UJP L56
+L12 LAB
+L13 LAB
+ LOC 837
+ LOD I,2,276                 ; KOMML               
+ LDC I,120
+ GEQ I
+ FJP L64
+ LOC 838
+ UJP L8
+L64 LAB
+ LOC 839
+ LOD B,2,140                 ; ENDOFKOMM           
+ FJP L65
+ LOC 840
+ UJP L8
+L65 LAB
+ LOC 841
+ MST 1,0
+ LDA 1,408                   ; EINGABE             
+ STR A,2,400
+ LDA 1,432                   ; LISTING             
+ STR A,2,404
+ LDA 1,744                   ; SCB                 
+ STR A,2,408
+ LDA 2,128                   ; CH                  
+ STR A,2,412
+ CUP P,9,PASSCANR,288
+ LOC 842
+ UJP L7
+L8 LAB
+ LOC 849
+ LOD B,1,752                 ; SCB                 
+ FJP L66
+ LOC 850
+ LOD A,2,112                 ; KOMMC               
+ IND C,0                     ; KOMMC               
+ LDC C,'+'
+ EQU C
+ FJP L67
+ LOC 852
+ LDC B,1
+ STR B,2,140
+ LOC 853
+ LOD A,2,112                 ; KOMMC               
+ INC A,2                     ; KOMMC               
+ LOC 854
+ LDC B,1
+ STO B
+L67 LAB
+L66 LAB
+ LOC 863
+ LOD B,2,140                 ; ENDOFKOMM           
+ FJP L68
+ LOC 864
+ LOD A,2,112                 ; KOMMC               
+ IND C,0                     ; KOMMC               
+ ORD
+ CHK I,0,255
+ LOC 865
+ XJP N,L71
+L74 LAB
+ LOC 866
+ LOD I,2,276                 ; KOMML               
+ LDC I,2
+ SBI
+ STR I,2,276
+ UJP L73
+L75 LAB
+ LOC 868
+ LOD I,2,276                 ; KOMML               
+ LDC I,1
+ SBI
+ STR I,2,276
+ UJP L73
+L76 LAB
+ LOC 870
+ UJP L73
+L71 LAB
+ DEF C,'"'
+ UJP L75
+ DEF C,')'
+ UJP L74
+ DEF C,'+'
+ UJP L76
+ DEF C,'/'
+ UJP L74
+ DEF C,'}'
+ UJP L75
+L72 LAB
+L73 LAB
+L68 LAB
+ LOC 871
+ LOD A,2,112                 ; KOMMC               
+ IND I,40                    ; KOMMC               
+ LDC I,0
+ EQU I
+ FJP L77
+ LOC 878
+ LDC B,0
+ FJP L78
+ LOC 880
+ LDA 1,1928
+ CSP SIO,288
+ LCA M,16,'before new kline'
+ LDC I,16
+ LDC I,16
+ CSP WRS,288
+ CSP WLN,288
+ CSP EIO,288
+ LOC 881
+ LDA 1,1928
+ CSP SIO,288
+ LCA M,16,'komm_nlines   = '
+ LDC I,16
+ LDC I,16
+ CSP WRS,288
+ LOD A,2,112                 ; KOMMC               
+ LOC 882
+ IND I,4                     ; KOMMC               
+ LDC I,12
+ CSP WRI,288
+ CSP WLN,288
+ CSP EIO,288
+ LOC 883
+ LDA 1,1928
+ CSP SIO,288
+ LCA M,16,'komml         = '
+ LDC I,16
+ LDC I,16
+ CSP WRS,288
+ LOD I,2,276                 ; KOMML               
+ LDC I,12
+ CSP WRI,288
+ CSP WLN,288
+ CSP EIO,288
+ LOC 884
+ LDA 1,1928
+ CSP SIO,288
+ LCA M,16,'kommp         = '
+ LDC I,16
+ LDC I,16
+ CSP WRS,288
+ LDC C,'<'
+ LDC I,1
+ CSP WRC,288
+ LDA 2,152                   ; KOMMP               
+ LDC I,0
+ CSP WRV,288
+ LOC 885
+ LDC C,'>'
+ LDC I,1
+ CSP WRC,288
+ CSP WLN,288
+ CSP EIO,288
+L78 LAB
+ LOC 887
+ LDA 2,136                   ; KLINE               
+ NEW 132,4
+ LOC 888
+ LOD A,2,112                 ; KOMMC               
+ IND A,16                    ; KOMMC               
+ LDC N
+ EQU A
+ FJP L79
+ LOC 890
+ LOD A,2,112                 ; KOMMC               
+ INC A,16                    ; KOMMC               
+ LOD A,2,136                 ; KLINE               
+ STO A
+ LOC 891
+ LOD A,2,112                 ; KOMMC               
+ INC A,20                    ; KOMMC               
+ LOC 892
+ LOD A,2,136                 ; KLINE               
+ STO A
+ LOC 893
+ UJP L80
+L79 LAB
+ LOC 895
+ LOD A,2,112                 ; KOMMC               
+ IND A,20                    ; KOMMC               
+ INC A,128                   ; KOMMC               
+ LOD A,2,136                 ; KLINE               
+ STO A
+ LOC 896
+ LOD A,2,112                 ; KOMMC               
+ INC A,20                    ; KOMMC               
+ LOC 897
+ LOD A,2,136                 ; KLINE               
+ STO A
+L80 LAB
+ LOC 898
+ LOD A,2,136                 ; KLINE               
+ INC A,128                   ; KLINE               
+ LDC N
+ STO A
+ LOC 899
+ LOD A,2,136                 ; KLINE               
+ MST 0,0
+ LDC I,1
+ STR I,2,408
+ LDA 2,152                   ; KOMMP               
+ VLD 1,120
+ LDA 2,288
+ VST 1,-1
+ STR A,2,412
+ LDC I,1
+ STR I,2,416
+ LOD I,2,276                 ; KOMML               
+ STR I,2,420
+ CUP V,9,$PASSTR1,296
+ VST 0,120
+ VPO 2,280
+ LOC 900
+ LOD A,2,112                 ; KOMMC               
+ INC A,4                     ; KOMMC               
+ LOD A,2,112                 ; KOMMC               
+ IND I,4                     ; KOMMC               
+ LDC I,1
+ ADI
+ STO I
+ LOC 907
+ LOD A,2,136                 ; KLINE               
+ STR A,2,288
+ LOC 909
+ LOD A,2,288                 ; NURSTERNE           
+ INC A,124                   ; NURSTERNE           
+ LDC B,1
+ STO B
+ LOC 910
+ LDC I,1
+ STR I,2,132
+ XBG 1
+ LOD A,2,288                 ; L                   
+ XEN 1,1
+ IND H,2
+ STR I,2,292
+ LDC I,1
+ LOD I,2,292
+ LEQ I
+ FJP L83
+L81 LAB
+ LOC 911
+ LOD A,2,288                 ; L                   
+ LOD I,2,132                 ; I                   
+ VIX
+ IND C,0                     ; I                   
+ ORD
+ LCA S,C32' *'
+ SLD 32,296
+ INN
+ NOT B
+ FJP L84
+ LOC 913
+ LOD A,2,288                 ; NURSTERNE           
+ INC A,124                   ; NURSTERNE           
+ LDC B,0
+ STO B
+ LOC 915
+ UJP L83
+L84 LAB
+ LOC 916
+ LOD I,2,132                 ; I                   
+ LOD I,2,292
+ NEQ I
+ FJP L83
+ LOD I,2,132                 ; I                   
+ INC I,1
+ STR I,2,132
+ UJP L81
+L83 LAB
+ LOC 918
+ UJP L85
+L77 LAB
+ LOC 919
+ LOD A,2,112                 ; KOMMC               
+ INC A,40                    ; KOMMC               
+ LDC I,0
+ STO I
+L85 LAB
+ LOC 926
+ LOD B,2,140                 ; ENDOFKOMM           
+ NOT B
+ FJP L86
+ LOC 928
+ MST 1,0
+ LDA 1,408                   ; EINGABE             
+ STR A,2,400
+ LDA 1,432                   ; LISTING             
+ STR A,2,404
+ LDA 1,744                   ; SCB                 
+ STR A,2,408
+ LDA 2,128                   ; CH                  
+ STR A,2,412
+ CUP P,9,PASSCANR,288
+ LOC 930
+ LOD C,2,128                 ; CH                  
+ CHK I,0,255
+ STR C,1,889
+L86 LAB
+ LOC 931
+ UJP L5
+L6 LAB
+ LOC 938
+ LOD B,1,752                 ; SCB                 
+ NOT B
+ FJP L87
+L88 LAB
+ LOC 941
+ MST 1,0
+ LDA 1,408                   ; EINGABE             
+ STR A,2,400
+ LDA 1,432                   ; LISTING             
+ STR A,2,404
+ LDA 1,744                   ; SCB                 
+ STR A,2,408
+ LDA 2,128                   ; CH                  
+ STR A,2,412
+ CUP P,9,PASSCANR,288
+ LOC 942
+ LOD C,2,128                 ; CH                  
+ CHK I,0,255
+ STR C,1,889
+ LOC 943
+ LOD C,2,128                 ; CH                  
+ ORD
+ LCA S,X32'0020000090000000000000000000000000000000000000',
+     '000000000000000000'
+ SLD 32,288
+ INN
+ NOT B
+ FJP L91
+ LOC 944
+ UJP L90
+L91 LAB
+ LOC 945
+ LOD B,1,752                 ; SCB                 
+ FJP L92
+ LOC 947
+ LOD A,2,112                 ; KOMMC               
+ INC A,2                     ; KOMMC               
+ LDC B,1
+ STO B
+ LOC 948
+ MST 1,0
+ LDA 1,408                   ; EINGABE             
+ STR A,2,400
+ LDA 1,432                   ; LISTING             
+ STR A,2,404
+ LDA 1,744                   ; SCB                 
+ STR A,2,408
+ LDA 2,128                   ; CH                  
+ STR A,2,412
+ CUP P,9,PASSCANR,288
+ LOC 949
+ LOD C,2,128                 ; CH                  
+ CHK I,0,255
+ STR C,1,889
+ LOC 951
+ UJP L90
+L92 LAB
+ LOC 953
+ LDC B,0
+ FJP L88
+L90 LAB
+ LOC 954
+ UJP L93
+L87 LAB
+ LOC 956
+ MST 1,0
+ LDA 1,408                   ; EINGABE             
+ STR A,2,400
+ LDA 1,432                   ; LISTING             
+ STR A,2,404
+ LDA 1,744                   ; SCB                 
+ STR A,2,408
+ LDA 2,128                   ; CH                  
+ STR A,2,412
+ CUP P,9,PASSCANR,288
+ LOC 958
+ LOD C,2,128                 ; CH                  
+ CHK I,0,255
+ STR C,1,889
+L93 LAB
+ LOC 964
+ LDC B,0
+ FJP L94
+ LOC 966
+ LDA 1,1928
+ CSP SIO,288
+ LOC 967
+ LCA M,76,'----------------------------------------------------',
+       '------------------------'
+ LDC I,76
+ LDC I,76
+ CSP WRS,288
+ CSP WLN,288
+ CSP EIO,288
+ LOC 968
+ LDA 1,1928
+ CSP SIO,288
+ LCA M,16,'kommtype      = '
+ LDC I,16
+ LDC I,16
+ CSP WRS,288
+ LOD A,2,112                 ; KOMMC               
+ IND C,0                     ; KOMMC               
+ LDC I,1
+ CSP WRC,288
+ CSP WLN,288
+ CSP EIO,288
+ LOC 969
+ LDA 1,1928
+ CSP SIO,288
+ LCA M,16,'komm_nlines   = '
+ LDC I,16
+ LDC I,16
+ CSP WRS,288
+ LOD A,2,112                 ; KOMMC               
+ IND I,4                     ; KOMMC               
+ LDC I,12
+ CSP WRI,288
+ CSP WLN,288
+ CSP EIO,288
+ LOC 971
+ LDA 1,1928
+ CSP SIO,288
+ LCA M,16,'komm_width    = '
+ LDC I,16
+ LDC I,16
+ CSP WRS,288
+ LOD A,2,112                 ; KOMMC               
+ IND I,8                     ; KOMMC               
+ LDC I,12
+ CSP WRI,288
+ CSP WLN,288
+ CSP EIO,288
+ LOC 972
+ LDA 1,1928
+ CSP SIO,288
+ LCA M,16,'kline_anker   = '
+ LDC I,16
+ LDC I,16
+ CSP WRS,288
+ LOD A,2,112                 ; KOMMC               
+ IND A,16                    ; KOMMC               
+ LDC I,8
+ CSP WRP,288
+ CSP WLN,288
+ CSP EIO,288
+ LOC 974
+ LDA 1,1928
+ CSP SIO,288
+ LCA M,16,'kline_akt     = '
+ LDC I,16
+ LDC I,16
+ CSP WRS,288
+ LOD A,2,112                 ; KOMMC               
+ IND A,20                    ; KOMMC               
+ LDC I,8
+ CSP WRP,288
+ CSP WLN,288
+ CSP EIO,288
+ LOC 975
+ LDA 1,1928
+ CSP SIO,288
+ LCA M,16,'scb.Lookahead = '
+ LDC I,16
+ LDC I,16
+ CSP WRS,288
+ LOD C,1,889                 ; SCB                 
+ LDC I,1
+ CSP WRC,288
+ CSP WLN,288
+ CSP EIO,288
+ LOC 976
+ LDA 1,1928
+ CSP SIO,288
+ LCA M,16,'scb.endofline = '
+ LDC I,16
+ LDC I,16
+ CSP WRS,288
+ LOD B,1,752                 ; SCB                 
+ LDC I,5
+ CSP WRB,288
+ CSP WLN,288
+ CSP EIO,288
+ LOC 977
+ LOD A,2,112                 ; KOMMC               
+ IND A,16                    ; KOMMC               
+ STR A,2,136
+L95 LAB
+ LOC 978
+ LOD A,2,136                 ; KLINE               
+ LDC N
+ NEQ A
+ FJP L96
+ LOC 980
+ LOD A,2,136                 ; KLINE               
+ STR A,2,288
+ LOC 982
+ LDA 1,1928
+ CSP SIO,296
+ LCA M,16,'length/kline  = '
+ LDC I,16
+ LDC I,16
+ CSP WRS,296
+ XBG 2
+ LOD A,2,288                 ; L                   
+ XEN 2,1
+ IND H,2
+ LDC I,12
+ CSP WRI,296
+ CSP WLN,296
+ CSP EIO,296
+ LOC 984
+ LDA 1,1928
+ CSP SIO,296
+ LCA M,16,'kline         = '
+ LDC I,16
+ LDC I,16
+ CSP WRS,296
+ LDC C,'<'
+ LDC I,1
+ CSP WRC,296
+ LOD A,2,288                 ; L                   
+ LDC I,0
+ CSP WRV,296
+ LOC 985
+ LDC C,'>'
+ LDC I,1
+ CSP WRC,296
+ CSP WLN,296
+ CSP EIO,296
+ LOC 986
+ LDA 1,1928
+ CSP SIO,296
+ LCA M,16,'nursterne     = '
+ LDC I,16
+ LDC I,16
+ CSP WRS,296
+ LOD A,2,288                 ; NURSTERNE           
+ IND B,124                   ; NURSTERNE           
+ LDC I,5
+ CSP WRB,296
+ CSP WLN,296
+ CSP EIO,296
+ LOC 988
+ LOD A,2,136                 ; KLINE               
+ IND A,128                   ; KLINE               
+ STR A,2,136
+ LOC 989
+ UJP L95
+L96 LAB
+L94 LAB
+ LOC 991
+ RET P
+L1 DEF I,416
+ DEF I,1065
+ DEF B,0
+ LOC 1011
+$PRV0015 ENT P,2,L1  WRITEKOMM           ,TFFFF,2,15,,        ,120
+ LOC 1011
+ VPU 2,152
+ LOD A,2,112                 ; KOMMC               
+ INC A,44                    ; KOMMC               
+ LDC B,0
+ STO B
+ LOC 1012
+ LOD A,2,112                 ; KOMMC               
+ INC A,8                     ; KOMMC               
+ LDC I,0
+ STO I
+ LOC 1013
+ LOD A,2,112                 ; KOMMC               
+ IND A,16                    ; KOMMC               
+ STR A,2,128
+L3 LAB
+ LOC 1014
+ LOD A,2,128                 ; KLINE               
+ LDC N
+ NEQ A
+ FJP L4
+ LOC 1016
+ XBG 3
+ LOD A,2,128                 ; KLINE               
+ XEN 3,1
+ IND H,2
+ STR I,2,136
+ LOC 1017
+ LOD A,2,112                 ; KOMMC               
+ IND I,8                     ; KOMMC               
+ LOD I,2,136                 ; BREITE              
+ LES I
+ FJP L5
+ LOC 1018
+ LOD A,2,112                 ; KOMMC               
+ INC A,8                     ; KOMMC               
+ LOD I,2,136                 ; BREITE              
+ STO I
+L5 LAB
+ LOC 1019
+ LOD A,2,128                 ; KLINE               
+ IND A,128                   ; KLINE               
+ STR A,2,128
+ LOC 1020
+ UJP L3
+L4 LAB
+ LOC 1021
+ LOD A,2,112                 ; KOMMC               
+ IND C,0                     ; KOMMC               
+ ORD
+ CHK I,0,255
+ LOC 1022
+ XJP N,L8
+L11 LAB
+ LOD A,2,112                 ; KOMMC               
+ INC A,12                    ; KOMMC               
+ LOD A,2,112                 ; KOMMC               
+ IND I,8                     ; KOMMC               
+ LDC I,4
+ ADI
+ STO I
+ UJP L10
+L12 LAB
+ LOC 1023
+ LOD A,2,112                 ; KOMMC               
+ INC A,12                    ; KOMMC               
+ LOD A,2,112                 ; KOMMC               
+ IND I,8                     ; KOMMC               
+ LDC I,4
+ ADI
+ STO I
+ UJP L10
+L13 LAB
+ LOC 1024
+ LOD A,2,112                 ; KOMMC               
+ INC A,12                    ; KOMMC               
+ LOD A,2,112                 ; KOMMC               
+ IND I,8                     ; KOMMC               
+ LDC I,4
+ ADI
+ STO I
+ UJP L10
+L14 LAB
+ LOC 1025
+ LOD A,2,112                 ; KOMMC               
+ INC A,12                    ; KOMMC               
+ LOD A,2,112                 ; KOMMC               
+ IND I,8                     ; KOMMC               
+ LDC I,2
+ ADI
+ STO I
+ UJP L10
+L15 LAB
+ LOC 1026
+ LOD A,2,112                 ; KOMMC               
+ INC A,12                    ; KOMMC               
+ LOD A,2,112                 ; KOMMC               
+ IND I,8                     ; KOMMC               
+ LDC I,2
+ ADI
+ STO I
+ UJP L10
+L8 LAB
+ LOC 1027
+ DEF C,'"'
+ UJP L14
+ DEF C,')'
+ UJP L11
+ DEF C,'+'
+ UJP L15
+ DEF C,'/'
+ UJP L12
+ DEF C,'}'
+ UJP L13
+L9 LAB
+L10 LAB
+ LOC 1033
+ LDC B,0
+ FJP L17
+ LOC 1035
+ LDA 1,1928
+ CSP SIO,160
+ LOC 1036
+ LCA M,76,'----------------------------------------------------',
+       '------------------------'
+ LDC I,76
+ LDC I,76
+ CSP WRS,160
+ CSP WLN,160
+ CSP EIO,160
+ LOC 1037
+ LDA 1,1928
+ CSP SIO,160
+ LOC 1038
+ LCA M,76,'Status am Anfang von Writekomm ---------------------',
+       '------------------------'
+ LDC I,76
+ LDC I,76
+ CSP WRS,160
+ CSP WLN,160
+ CSP EIO,160
+ LOC 1039
+ LDA 1,1928
+ CSP SIO,160
+ LCA M,16,'einrkomm      = '
+ LDC I,16
+ LDC I,16
+ CSP WRS,160
+ LOD I,1,1592                ; EINRKOMM            
+ LDC I,4
+ CSP WRI,160
+ CSP WLN,160
+ CSP EIO,160
+ LOC 1040
+ LDA 1,1928
+ CSP SIO,160
+ LCA M,16,'einrrechts    = '
+ LDC I,16
+ LDC I,16
+ CSP WRS,160
+ LOD A,2,112                 ; KOMMC               
+ IND I,48                    ; KOMMC               
+ LDC I,12
+ CSP WRI,160
+ CSP WLN,160
+ CSP EIO,160
+ LOC 1041
+ LDA 1,1928
+ CSP SIO,160
+ LCA M,16,'first.line    = '
+ LDC I,16
+ LDC I,16
+ CSP WRS,160
+ LOD A,2,112                 ; KOMMC               
+ LOC 1042
+ IND B,1                     ; KOMMC               
+ LDC I,5
+ CSP WRB,160
+ CSP WLN,160
+ CSP EIO,160
+ LOC 1043
+ LDA 1,1928
+ CSP SIO,160
+ LCA M,16,'last.line     = '
+ LDC I,16
+ LDC I,16
+ CSP WRS,160
+ LOD A,2,112                 ; KOMMC               
+ IND B,2                     ; KOMMC               
+ LDC I,5
+ CSP WRB,160
+ CSP WLN,160
+ CSP EIO,160
+ LOC 1045
+ LDA 1,1928
+ CSP SIO,160
+ LCA M,16,'scb.Lookahead = '
+ LDC I,16
+ LDC I,16
+ CSP WRS,160
+ LOD C,1,889                 ; SCB                 
+ LDC I,1
+ CSP WRC,160
+ CSP WLN,160
+ CSP EIO,160
+ LOC 1046
+ LDA 1,1928
+ CSP SIO,160
+ LCA M,16,'scb.endofline = '
+ LDC I,16
+ LDC I,16
+ CSP WRS,160
+ LOD B,1,752                 ; SCB                 
+ LDC I,5
+ CSP WRB,160
+ CSP WLN,160
+ CSP EIO,160
+ LOC 1047
+ LDA 1,1928
+ CSP SIO,160
+ LCA M,16,'outpointer    = '
+ LDC I,16
+ LDC I,16
+ CSP WRS,160
+ LOD I,1,1908                ; OUTPOINTER          
+ LDC I,12
+ CSP WRI,160
+ CSP WLN,160
+ CSP EIO,160
+ LOC 1048
+ LDA 1,1928
+ CSP SIO,160
+ LCA M,16,'kommtype      = '
+ LDC I,16
+ LDC I,16
+ CSP WRS,160
+ LOD A,2,112                 ; KOMMC               
+ IND C,0                     ; KOMMC               
+ LDC I,1
+ CSP WRC,160
+ CSP WLN,160
+ CSP EIO,160
+ LOC 1049
+ LDA 1,1928
+ CSP SIO,160
+ LCA M,16,'komm_nlines   = '
+ LDC I,16
+ LDC I,16
+ CSP WRS,160
+ LOD A,2,112                 ; KOMMC               
+ IND I,4                     ; KOMMC               
+ LDC I,12
+ CSP WRI,160
+ CSP WLN,160
+ CSP EIO,160
+ LOC 1051
+ LDA 1,1928
+ CSP SIO,160
+ LCA M,16,'komm_width    = '
+ LDC I,16
+ LDC I,16
+ CSP WRS,160
+ LOD A,2,112                 ; KOMMC               
+ IND I,8                     ; KOMMC               
+ LDC I,12
+ CSP WRI,160
+ CSP WLN,160
+ CSP EIO,160
+ LOC 1052
+ LDA 1,1928
+ CSP SIO,160
+ LCA M,16,'komm_width_br = '
+ LDC I,16
+ LDC I,16
+ CSP WRS,160
+ LOD A,2,112                 ; KOMMC               
+ LOC 1053
+ IND I,12                    ; KOMMC               
+ LDC I,12
+ CSP WRI,160
+ CSP WLN,160
+ CSP EIO,160
+ LOC 1054
+ LDA 1,1928
+ CSP SIO,160
+ LCA M,16,'kline_anker   = '
+ LDC I,16
+ LDC I,16
+ CSP WRS,160
+ LOD A,2,112                 ; KOMMC               
+ IND A,16                    ; KOMMC               
+ LDC I,8
+ CSP WRP,160
+ CSP WLN,160
+ CSP EIO,160
+ LOC 1056
+ LDA 1,1928
+ CSP SIO,160
+ LCA M,16,'kline_akt     = '
+ LDC I,16
+ LDC I,16
+ CSP WRS,160
+ LOD A,2,112                 ; KOMMC               
+ IND A,20                    ; KOMMC               
+ LDC I,8
+ CSP WRP,160
+ CSP WLN,160
+ CSP EIO,160
+ LOC 1057
+ LDA 1,1928
+ CSP SIO,160
+ LCA M,16,'scb.Lookahead = '
+ LDC I,16
+ LDC I,16
+ CSP WRS,160
+ LOD C,1,889                 ; SCB                 
+ LDC I,1
+ CSP WRC,160
+ CSP WLN,160
+ CSP EIO,160
+ LOC 1058
+ LDA 1,1928
+ CSP SIO,160
+ LCA M,16,'scb.endofline = '
+ LDC I,16
+ LDC I,16
+ CSP WRS,160
+ LOD B,1,752                 ; SCB                 
+ LDC I,5
+ CSP WRB,160
+ CSP WLN,160
+ CSP EIO,160
+ LOC 1059
+ LOD A,2,112                 ; KOMMC               
+ IND A,16                    ; KOMMC               
+ STR A,2,128
+L18 LAB
+ LOC 1060
+ LOD A,2,128                 ; KLINE               
+ LDC N
+ NEQ A
+ FJP L19
+ LOC 1062
+ LOD A,2,128                 ; KLINE               
+ STR A,2,156
+ LOC 1064
+ LDA 1,1928
+ CSP SIO,160
+ LCA M,16,'length/kline  = '
+ LDC I,16
+ LDC I,16
+ CSP WRS,160
+ XBG 4
+ LOD A,2,156                 ; L                   
+ XEN 4,1
+ IND H,2
+ LDC I,12
+ CSP WRI,160
+ CSP WLN,160
+ CSP EIO,160
+ LOC 1066
+ LDA 1,1928
+ CSP SIO,160
+ LCA M,16,'kline         = '
+ LDC I,16
+ LDC I,16
+ CSP WRS,160
+ LDC C,'<'
+ LDC I,1
+ CSP WRC,160
+ LOD A,2,156                 ; L                   
+ LDC I,0
+ CSP WRV,160
+ LOC 1067
+ LDC C,'>'
+ LDC I,1
+ CSP WRC,160
+ CSP WLN,160
+ CSP EIO,160
+ LOC 1068
+ LDA 1,1928
+ CSP SIO,160
+ LCA M,16,'nursterne     = '
+ LDC I,16
+ LDC I,16
+ CSP WRS,160
+ LOD A,2,156                 ; NURSTERNE           
+ IND B,124                   ; NURSTERNE           
+ LDC I,5
+ CSP WRB,160
+ CSP WLN,160
+ CSP EIO,160
+ LOC 1070
+ LOD A,2,128                 ; KLINE               
+ IND A,128                   ; KLINE               
+ STR A,2,128
+ LOC 1071
+ UJP L18
+L19 LAB
+L17 LAB
+ LOC 1078
+ LOD A,2,112                 ; KOMMC               
+ IND B,1                     ; KOMMC               
+ NOT B
+ FJP L20
+ LOC 1080
+ LOD I,1,1908                ; OUTPOINTER          
+ LDC I,1
+ ADI
+ LOD A,2,112                 ; KOMMC               
+ IND I,12                    ; KOMMC               
+ ADI
+ LDC I,72
+ GRT I
+ FJP L21
+ LOC 1081
+ LOD A,2,112                 ; KOMMC               
+ INC A,1                     ; KOMMC               
+ LOC 1082
+ LDC B,1
+ STO B
+ UJP L22
+L21 LAB
+ LOC 1084
+ LDA 1,420
+ CSP SIO,160
+ LDC C,' '
+ LDC I,1
+ CSP WRC,160
+ CSP EIO,160
+ LOC 1085
+ LOD I,1,1908                ; OUTPOINTER          
+ LDC I,1
+ ADI
+ STR I,1,1908
+L22 LAB
+L20 LAB
+ LOC 1094
+ LOD A,2,112                 ; KOMMC               
+ IND B,1                     ; KOMMC               
+ FJP L23
+ LOC 1096
+ LOD A,2,112                 ; KOMMC               
+ IND A,16                    ; KOMMC               
+ STR A,2,128
+ LOC 1097
+ LOD A,2,128                 ; KLINE               
+ IND B,124                   ; KLINE               
+ NOT B
+ FJP L24
+ LOC 1099
+ MST 1,0
+ LDC I,0
+ STR I,2,272
+ CUP P,3,$PRV0012,160
+ LOC 1100
+ LDC B,1
+ STR B,2,144
+ LOC 1101
+ MST 1,0
+ LOD I,1,1592                ; EINRKOMM            
+ STR I,2,272
+ CUP P,3,$PRV0012,160
+ LOC 1102
+ MST 1,0
+ CUP P,1,$PRV0013,160
+ LOC 1103
+ MST 1,0
+ LOD I,1,1592                ; EINRKOMM            
+ STR I,2,272
+ CUP P,3,$PRV0012,160
+ LOC 1105
+ UJP L25
+L24 LAB
+ LOC 1107
+ MST 1,0
+ LDC I,0
+ STR I,2,272
+ CUP P,3,$PRV0012,160
+ LOC 1108
+ LDC B,0
+ STR B,2,144
+ LOC 1109
+ MST 1,0
+ LOD I,1,1592                ; EINRKOMM            
+ STR I,2,272
+ CUP P,3,$PRV0012,160
+L25 LAB
+ LOC 1112
+ UJP L26
+L23 LAB
+ LOC 1114
+ LDC B,0
+ STR B,2,144
+ LOC 1123
+ LOD A,2,112                 ; KOMMC               
+ IND B,2                     ; KOMMC               
+ FJP L27
+ LOC 1125
+ LOD A,2,112                 ; KOMMC               
+ IND I,56                    ; KOMMC               
+ LOD A,2,112                 ; KOMMC               
+ IND I,28                    ; KOMMC               
+ LDC I,1
+ SBI
+ EQU I
+ FJP L28
+ LOC 1127
+ LOD A,2,112                 ; KOMMC               
+ INC A,48                    ; KOMMC               
+ LOD A,2,112                 ; KOMMC               
+ IND I,52                    ; KOMMC               
+ STO I
+ LOC 1128
+ LOD A,2,112                 ; KOMMC               
+ INC A,56                    ; KOMMC               
+ LOD A,2,112                 ; KOMMC               
+ LOC 1129
+ IND I,28                    ; KOMMC               
+ STO I
+ LOC 1130
+ UJP L29
+L28 LAB
+ LOC 1132
+ LOD A,2,112                 ; KOMMC               
+ INC A,52                    ; KOMMC               
+ LOD A,2,112                 ; KOMMC               
+ IND I,48                    ; KOMMC               
+ STO I
+ LOC 1133
+ LOD A,2,112                 ; KOMMC               
+ INC A,56                    ; KOMMC               
+ LOD A,2,112                 ; KOMMC               
+ LOC 1134
+ IND I,28                    ; KOMMC               
+ STO I
+L29 LAB
+ LOC 1135
+ LOD A,2,112                 ; KOMMC               
+ IND I,48                    ; KOMMC               
+ LOD I,1,1908                ; OUTPOINTER          
+ SBI
+ LDC I,1
+ ADI
+ STR I,2,132
+ LOC 1136
+ LOD I,2,132                 ; EINR_LOCAL          
+ LDC I,0
+ GRT I
+ FJP L30
+ LOC 1138
+ LDA 1,420
+ CSP SIO,160
+ LDC C,' '
+ LOD I,2,132                 ; EINR_LOCAL          
+ CSP WRC,160
+ CSP EIO,160
+ LOC 1139
+ LOD I,1,1908                ; OUTPOINTER          
+ LOC 1140
+ LOD I,2,132                 ; EINR_LOCAL          
+ ADI
+ STR I,1,1908
+L30 LAB
+ LOC 1142
+ UJP L31
+L27 LAB
+ LOC 1144
+ LDC I,0
+ STR I,2,148
+ LOC 1145
+ LOD A,2,112                 ; KOMMC               
+ IND A,16                    ; KOMMC               
+ STR A,2,128
+ LOC 1146
+ LOD A,2,128                 ; KLINE               
+ LDC N
+ NEQ A
+ FJP L32
+ LOC 1147
+ XBG 5
+ LOD A,2,128                 ; KLINE               
+ XEN 5,1
+ IND H,2
+ LDC I,4
+ ADI
+ STR I,2,148
+L32 LAB
+ LOC 1148
+ LOD I,1,1908                ; OUTPOINTER          
+ LDC I,1
+ ADI
+ LOD I,2,148                 ; LENKOMM             
+ ADI
+ LDC I,72
+ LES I
+ FJP L33
+ LOC 1150
+ LDA 1,420
+ CSP SIO,160
+ LDC C,' '
+ LDC I,1
+ CSP WRC,160
+ CSP EIO,160
+ LOC 1151
+ LOD I,1,1908                ; OUTPOINTER          
+ LOC 1152
+ LDC I,1
+ ADI
+ STR I,1,1908
+ LOC 1153
+ UJP L34
+L33 LAB
+ LOC 1155
+ LOD A,2,112                 ; KOMMC               
+ IND I,48                    ; KOMMC               
+ STR I,2,132
+ LOC 1156
+ MST 1,0
+ LOD I,2,132                 ; EINR_LOCAL          
+ STR I,2,272
+ CUP P,3,$PRV0012,160
+L34 LAB
+L31 LAB
+L26 LAB
+ LOC 1165
+ LOD A,2,112                 ; KOMMC               
+ IND A,16                    ; KOMMC               
+ STR A,2,128
+L35 LAB
+ LOC 1166
+ LOD A,2,128                 ; KLINE               
+ LDC N
+ NEQ A
+ FJP L36
+ LOC 1168
+ LOD A,2,128                 ; KLINE               
+ STR A,2,160
+ LOC 1170
+ LOD I,1,1908                ; OUTPOINTER          
+ LDC I,2
+ ADI
+ STR I,1,1908
+ LOC 1171
+ LOD A,2,112                 ; KOMMC               
+ IND C,0                     ; KOMMC               
+ ORD
+ CHK I,0,255
+ LOC 1172
+ XJP N,L39
+L42 LAB
+ LDA 1,420
+ CSP SIO,168
+ LCA M,2,'(*'
+ LDC I,2
+ LDC I,2
+ CSP WRS,168
+ CSP EIO,168
+ UJP L41
+L43 LAB
+ LOC 1173
+ LDA 1,420
+ CSP SIO,168
+ LCA M,2,'/*'
+ LDC I,2
+ LDC I,2
+ CSP WRS,168
+ CSP EIO,168
+ UJP L41
+L44 LAB
+ LOC 1174
+ LDA 1,420
+ CSP SIO,168
+ LCA M,2,'(*'
+ LDC I,2
+ LDC I,2
+ CSP WRS,168
+ CSP EIO,168
+ UJP L41
+L45 LAB
+ LOC 1176
+ LDA 1,420
+ CSP SIO,168
+ LDC C,'"'
+ LDC I,1
+ CSP WRC,168
+ CSP EIO,168
+ LOC 1177
+ LOD I,1,1908                ; OUTPOINTER          
+ LDC I,1
+ SBI
+ STR I,1,1908
+ LOC 1178
+ UJP L41
+L46 LAB
+ LOC 1179
+ LDA 1,420
+ CSP SIO,168
+ LCA M,2,'//'
+ LDC I,2
+ LDC I,2
+ CSP WRS,168
+ CSP EIO,168
+ UJP L41
+L39 LAB
+ LOC 1180
+ DEF C,'"'
+ UJP L45
+ DEF C,')'
+ UJP L42
+ DEF C,'+'
+ UJP L46
+ DEF C,'/'
+ UJP L43
+ DEF C,'}'
+ UJP L44
+L40 LAB
+L41 LAB
+ LOC 1181
+ LDA 1,420
+ CSP SIO,168
+ LOD A,2,160                 ; L                   
+ LDC I,0
+ CSP WRV,168
+ CSP EIO,168
+ LOC 1182
+ LOD I,1,1908                ; OUTPOINTER          
+ XBG 6
+ LOD A,2,160                 ; L                   
+ XEN 6,1
+ IND H,2
+ ADI
+ STR I,1,1908
+ LOC 1183
+ LOD A,2,112                 ; KOMMC               
+ IND I,8                     ; KOMMC               
+ XBG 7
+ LOD A,2,160                 ; L                   
+ XEN 7,1
+ IND H,2
+ SBI
+ STR I,2,140
+ LOC 1184
+ LOD I,2,140                 ; REST                
+ LDC I,0
+ GRT I
+ FJP L48
+ LOC 1185
+ LDA 1,420
+ CSP SIO,168
+ LDC C,' '
+ LOD I,2,140                 ; REST                
+ CSP WRC,168
+ CSP EIO,168
+L48 LAB
+ LOC 1186
+ LOD I,1,1908                ; OUTPOINTER          
+ LDC I,2
+ ADI
+ STR I,1,1908
+ LOC 1187
+ LOD A,2,112                 ; KOMMC               
+ IND C,0                     ; KOMMC               
+ ORD
+ CHK I,0,255
+ LOC 1188
+ XJP N,L51
+L54 LAB
+ LDA 1,420
+ CSP SIO,168
+ LCA M,2,'*)'
+ LDC I,2
+ LDC I,2
+ CSP WRS,168
+ CSP EIO,168
+ UJP L53
+L55 LAB
+ LOC 1189
+ LDA 1,420
+ CSP SIO,168
+ LCA M,2,'*/'
+ LDC I,2
+ LDC I,2
+ CSP WRS,168
+ CSP EIO,168
+ UJP L53
+L56 LAB
+ LOC 1190
+ LDA 1,420
+ CSP SIO,168
+ LCA M,2,'*)'
+ LDC I,2
+ LDC I,2
+ CSP WRS,168
+ CSP EIO,168
+ UJP L53
+L57 LAB
+ LOC 1192
+ LDA 1,420
+ CSP SIO,168
+ LDC C,'"'
+ LDC I,1
+ CSP WRC,168
+ CSP EIO,168
+ LOC 1193
+ LOD I,1,1908                ; OUTPOINTER          
+ LDC I,1
+ SBI
+ STR I,1,1908
+ LOC 1194
+ UJP L53
+L58 LAB
+ LOC 1195
+ LOD I,1,1908                ; OUTPOINTER          
+ LDC I,2
+ SBI
+ STR I,1,1908
+ UJP L53
+L51 LAB
+ LOC 1196
+ DEF C,'"'
+ UJP L57
+ DEF C,')'
+ UJP L54
+ DEF C,'+'
+ UJP L58
+ DEF C,'/'
+ UJP L55
+ DEF C,'}'
+ UJP L56
+L52 LAB
+L53 LAB
+ LOC 1198
+ LOD A,2,128                 ; KLINE               
+ IND A,128                   ; KLINE               
+ LDC N
+ NEQ A
+ FJP L60
+ LOC 1200
+ LOD A,2,112                 ; KOMMC               
+ IND B,1                     ; KOMMC               
+ NOT B
+ FJP L61
+ LOC 1201
+ LOD A,2,112                 ; KOMMC               
+ LOC 1202
+ IND I,48                    ; KOMMC               
+ STR I,2,132
+ UJP L62
+L61 LAB
+ LOC 1203
+ LOD I,1,1592                ; EINRKOMM            
+ STR I,2,132
+L62 LAB
+ LOC 1204
+ MST 1,0
+ LOD I,2,132                 ; EINR_LOCAL          
+ STR I,2,272
+ CUP P,3,$PRV0012,160
+L60 LAB
+ LOC 1206
+ LOD A,2,128                 ; KLINE               
+ IND A,128                   ; KLINE               
+ STR A,2,128
+ LOC 1207
+ UJP L35
+L36 LAB
+ LOC 1213
+ LOD B,2,144                 ; ENDEKASTEN          
+ FJP L63
+ LOC 1215
+ MST 1,0
+ LOD I,1,1592                ; EINRKOMM            
+ STR I,2,272
+ CUP P,3,$PRV0012,160
+ LOC 1216
+ MST 1,0
+ CUP P,1,$PRV0013,160
+L63 LAB
+ LOC 1223
+ LOD A,2,112                 ; KOMMC               
+ IND B,1                     ; KOMMC               
+ FJP L64
+ LOC 1225
+ LDA 1,420
+ CSP SIO,160
+ CSP WLN,160
+ CSP EIO,160
+ LOC 1226
+ LOD I,1,712                 ; ZZAUS               
+ LDC I,1
+ ADI
+ STR I,1,712
+ LOC 1227
+ LOD A,2,112                 ; KOMMC               
+ INC A,44                    ; KOMMC               
+ LDC B,1
+ STO B
+ LOC 1229
+ UJP L65
+L64 LAB
+ LOC 1231
+ LOD A,2,112                 ; KOMMC               
+ IND B,2                     ; KOMMC               
+ FJP L66
+ LOC 1232
+ LOD A,2,112                 ; KOMMC               
+ INC A,44                    ; KOMMC               
+ LDC B,1
+ STO B
+L66 LAB
+L65 LAB
+ LOC 1234
+ RET P
+L1 DEF I,280
+ DEF I,1090
+ DEF B,0
+ LOC 1248
+$PRV0016 ENT P,2,L1  WORK_KOMMENTAR      ,TFFFF,2,16,,        ,120
+ LOC 1248
+ VPU 2,128
+ LOD B,1,1584                ; DICHT               
+ FJP L3
+ LOC 1249
+ UJP L2
+L3 LAB
+ LOC 1256
+ LOD A,2,112                 ; KOMMC               
+ IND B,37                    ; KOMMC               
+ FJP L4
+ LOC 1258
+ MST 1,0
+ LDC I,0
+ STR I,2,248
+ CUP P,3,$PRV0012,136
+ LOC 1259
+ MST 1,0
+ LDC I,0
+ STR I,2,248
+ CUP P,3,$PRV0012,136
+ LOC 1260
+ MST 1,0
+ LDC I,0
+ STR I,2,248
+ CUP P,3,$PRV0012,136
+ LOC 1261
+ MST 1,0
+ LDC I,0
+ STR I,2,248
+ CUP P,3,$PRV0012,136
+ LOC 1262
+ LOD A,2,112                 ; KOMMC               
+ INC A,37                    ; KOMMC               
+ LDC B,0
+ STO B
+ LOC 1263
+ LOD A,2,112                 ; KOMMC               
+ INC A,1                     ; KOMMC               
+ LDC B,1
+ STO B
+L4 LAB
+ LOC 1270
+ MST 1,0
+ LOD A,2,112                 ; KOMMC               
+ STR A,2,248
+ CUP P,3,$PRV0015,136
+L2 LAB
+ LOC 1271
+ RET P
+L1 DEF I,256
+ DEF I,55
+ DEF B,0
+ LOC 1315
+$PRV0018 ENT P,3,L1  MODSTRING           ,TFFFF,2,18,,        ,120
+ LOC 1315
+ VPU 3,160
+ LDC B,0
+ FJP L3
+ LOC 1317
+ LDA 1,1928
+ CSP SIO,168
+ LCA M,11,'MODSTRING: '
+ LDC I,11
+ LDC I,11
+ CSP WRS,168
+ LOD C,3,112                 ; STRTYPE             
+ LDC I,1
+ CSP WRC,168
+ LDC C,' '
+ LDC I,1
+ CSP WRC,168
+ LOD A,3,116                 ; L                   
+ IND I,0                     ; L                   
+ LDC I,1
+ CSP WRI,168
+ LOC 1318
+ LCA M,2,' <'
+ LDC I,2
+ LDC I,2
+ CSP WRS,168
+ CSP EIO,168
+ LOC 1319
+ LDC I,1
+ STR I,2,120
+ LOD A,3,116                 ; L                   
+ IND I,0                     ; L                   
+ STR I,3,164
+ LDC I,1
+ LOD I,3,164
+ LEQ I
+ FJP L6
+L4 LAB
+ LOC 1320
+ LDA 1,1928
+ CSP SIO,168
+ LDA 2,168                   ; XSTRING             
+ LOD I,2,120                 ; I                   
+ CHK J,1,254
+ DEC I,1
+ IXA 1
+ IND C,0                     ; I                   
+ LDC I,1
+ CSP WRC,168
+ CSP EIO,168
+ LOD I,2,120                 ; I                   
+ LOD I,3,164
+ NEQ I
+ FJP L6
+ LOD I,2,120                 ; I                   
+ INC I,1
+ STR I,2,120
+ UJP L4
+L6 LAB
+ LOC 1321
+ LDA 1,1928
+ CSP SIO,168
+ LDC C,'>'
+ LDC I,1
+ CSP WRC,168
+ CSP WLN,168
+ CSP EIO,168
+L3 LAB
+ LOC 1323
+ LOD C,3,112                 ; STRTYPE             
+ ORD
+ CHK I,0,255
+ LOC 1324
+ XJP N,L9
+L12 LAB
+ LOC 1325
+ LDC I,1
+ STR I,3,152
+ LOC 1326
+ LDC I,0
+ STR I,3,156
+L13 LAB
+ LOC 1327
+ LOD I,3,152                 ; SX                  
+ LOD A,3,116                 ; L                   
+ IND I,0                     ; L                   
+ LEQ I
+ FJP L14
+ LOC 1329
+ LDA 2,168                   ; XSTRING             
+ LOD I,3,152                 ; SX                  
+ CHK J,1,254
+ DEC I,1
+ IXA 1
+ IND C,0                     ; SX                  
+ LDC C,'''
+ NEQ C
+ LOD I,3,152                 ; SX                  
+ LOD A,3,116                 ; L                   
+ IND I,0                     ; L                   
+ EQU I
+ IOR B
+ FJP L15
+ LOC 1331
+ LOD I,3,156                 ; TX                  
+ LDC I,1
+ ADI
+ STR I,3,156
+ LOC 1332
+ LOD I,3,156                 ; TX                  
+ LOD I,3,152                 ; SX                  
+ LES I
+ FJP L16
+ LOC 1333
+ LDA 2,168                   ; XSTRING             
+ LOD I,3,156                 ; TX                  
+ CHK J,1,254
+ DEC I,1
+ IXA 1
+ LDA 2,168                   ; XSTRING             
+ LOD I,3,152                 ; SX                  
+ CHK J,1,254
+ DEC I,1
+ IXA 1
+ IND C,0                     ; SX                  
+ CHK I,0,255
+ STO C
+L16 LAB
+ LOC 1334
+ LOD I,3,152                 ; SX                  
+ LOC 1335
+ LDC I,1
+ ADI
+ STR I,3,152
+ LOC 1336
+ UJP L17
+L15 LAB
+ LOC 1337
+ LDA 2,168                   ; XSTRING             
+ LOD I,3,152                 ; SX                  
+ LDC I,1
+ ADI
+ CHK J,1,254
+ DEC I,1
+ IXA 1
+ IND C,0                     ;  Å                  
+ LDC C,'''
+ EQU C
+ FJP L18
+ LOC 1339
+ LOD I,3,156                 ; TX                  
+ LDC I,1
+ ADI
+ STR I,3,156
+ LOC 1340
+ LOD I,3,156                 ; TX                  
+ LOD I,3,152                 ; SX                  
+ LES I
+ FJP L19
+ LOC 1341
+ LDA 2,168                   ; XSTRING             
+ LOD I,3,156                 ; TX                  
+ CHK J,1,254
+ DEC I,1
+ IXA 1
+ LDA 2,168                   ; XSTRING             
+ LOD I,3,152                 ; SX                  
+ CHK J,1,254
+ DEC I,1
+ IXA 1
+ IND C,0                     ; SX                  
+ CHK I,0,255
+ STO C
+L19 LAB
+ LOC 1342
+ LOD I,3,152                 ; SX                  
+ LOC 1343
+ LDC I,2
+ ADI
+ STR I,3,152
+L18 LAB
+L17 LAB
+ LOC 1344
+ UJP L13
+L14 LAB
+ LOC 1345
+ LOD A,3,116                 ; L                   
+ LOD I,3,156                 ; TX                  
+ STO I
+ LOC 1346
+ UJP L11
+L20 LAB
+ LOC 1353
+ LDC I,0
+ STR I,3,132
+ LOC 1354
+ LDC I,1
+ STR I,3,140
+ LOD A,3,116                 ; L                   
+ IND I,0                     ; L                   
+ STR I,3,164
+ LDC I,1
+ LOD I,3,164
+ LEQ I
+ FJP L23
+L21 LAB
+ LOC 1355
+ LDA 2,168                   ; XSTRING             
+ LOD I,3,140                 ; X                   
+ CHK J,1,254
+ DEC I,1
+ IXA 1
+ IND C,0                     ; X                   
+ LDC C,'_'
+ NEQ C
+ FJP L24
+ LOC 1357
+ LOD I,3,132                 ; LNEU                
+ LDC I,1
+ ADI
+ STR I,3,132
+ LOC 1358
+ LOD I,3,132                 ; LNEU                
+ LOD I,3,140                 ; X                   
+ LES I
+ FJP L25
+ LOC 1359
+ LDA 2,168                   ; XSTRING             
+ LOD I,3,132                 ; LNEU                
+ CHK J,1,254
+ DEC I,1
+ IXA 1
+ LDA 2,168                   ; XSTRING             
+ LOD I,3,140                 ; X                   
+ CHK J,1,254
+ DEC I,1
+ IXA 1
+ IND C,0                     ; X                   
+ CHK I,0,255
+ STO C
+L25 LAB
+L24 LAB
+ LOC 1360
+ LOD I,3,140                 ; X                   
+ LOD I,3,164
+ NEQ I
+ FJP L23
+ LOD I,3,140                 ; X                   
+ INC I,1
+ STR I,3,140
+ UJP L21
+L23 LAB
+ LOC 1361
+ LOD A,3,116                 ; L                   
+ LOD I,3,132                 ; LNEU                
+ STO I
+ LOC 1367
+ LDC I,1
+ STR I,3,128
+ LOC 1368
+ LOD A,3,116                 ; L                   
+ IND I,0                     ; L                   
+ LDC I,7
+ ADI
+ LDC I,8
+ DVI
+ STR I,3,132
+ LOC 1374
+ LOD A,3,116                 ; L                   
+ IND I,0                     ; L                   
+ LDC I,8
+ MOD
+ STR I,3,136
+ LOC 1375
+ LOD I,3,136                 ; L1                  
+ LDC I,0
+ EQU I
+ FJP L26
+ LOC 1376
+ LDC I,8
+ STR I,3,136
+L26 LAB
+ LOC 1377
+ LDC I,1
+ STR I,3,140
+ LOD I,3,132                 ; LNEU                
+ STR I,3,164
+ LDC I,1
+ LOD I,3,164
+ LEQ I
+ FJP L29
+L27 LAB
+ LOC 1379
+ LDC I,0
+ STR I,3,148
+ LOC 1380
+ LDC I,1
+ STR I,3,144
+ LOD I,3,136                 ; L1                  
+ STR I,3,168
+ LDC I,1
+ LOD I,3,168
+ LEQ I
+ FJP L32
+L30 LAB
+ LOC 1382
+ LOD I,3,148                 ; INEU                
+ LDC I,2
+ MPI
+ STR I,3,148
+ LOC 1383
+ LDA 2,168                   ; XSTRING             
+ LOD I,3,128                 ; IX                  
+ CHK J,1,254
+ DEC I,1
+ IXA 1
+ IND C,0                     ; IX                  
+ LDC C,'1'
+ EQU C
+ FJP L33
+ LOC 1384
+ LOD I,3,148                 ; INEU                
+ LDC I,1
+ ADI
+ STR I,3,148
+L33 LAB
+ LOC 1385
+ LOD I,3,128                 ; IX                  
+ LDC I,1
+ ADI
+ STR I,3,128
+ LOC 1386
+ LOD I,3,144                 ; X2                  
+ LOD I,3,168
+ NEQ I
+ FJP L32
+ LOD I,3,144                 ; X2                  
+ INC I,1
+ STR I,3,144
+ UJP L30
+L32 LAB
+ LOC 1387
+ LDC I,8
+ STR I,3,136
+ LOC 1388
+ LDA 2,168                   ; XSTRING             
+ LOD I,3,140                 ; X                   
+ CHK J,1,254
+ DEC I,1
+ IXA 1
+ LOD I,3,148                 ; INEU                
+ CHR
+ CHK I,0,255
+ STO C
+ LOC 1389
+ LOD I,3,140                 ; X                   
+ LOD I,3,164
+ NEQ I
+ FJP L29
+ LOD I,3,140                 ; X                   
+ INC I,1
+ STR I,3,140
+ UJP L27
+L29 LAB
+ LOC 1390
+ LOD A,3,116                 ; L                   
+ LOD I,3,132                 ; LNEU                
+ STO I
+ LOC 1391
+ UJP L11
+L34 LAB
+ LOC 1393
+ LDC I,0
+ STR I,3,132
+ LOC 1394
+ LDC I,1
+ STR I,3,140
+ LOD A,3,116                 ; L                   
+ IND I,0                     ; L                   
+ STR I,3,164
+ LDC I,1
+ LOD I,3,164
+ LEQ I
+ FJP L37
+L35 LAB
+ LOC 1395
+ LDA 2,168                   ; XSTRING             
+ LOD I,3,140                 ; X                   
+ CHK J,1,254
+ DEC I,1
+ IXA 1
+ IND C,0                     ; X                   
+ LDC C,'_'
+ NEQ C
+ FJP L38
+ LOC 1397
+ LOD I,3,132                 ; LNEU                
+ LDC I,1
+ ADI
+ STR I,3,132
+ LOC 1398
+ LOD I,3,132                 ; LNEU                
+ LOD I,3,140                 ; X                   
+ LES I
+ FJP L39
+ LOC 1399
+ LDA 2,168                   ; XSTRING             
+ LOD I,3,132                 ; LNEU                
+ CHK J,1,254
+ DEC I,1
+ IXA 1
+ LDA 2,168                   ; XSTRING             
+ LOD I,3,140                 ; X                   
+ CHK J,1,254
+ DEC I,1
+ IXA 1
+ IND C,0                     ; X                   
+ CHK I,0,255
+ STO C
+L39 LAB
+L38 LAB
+ LOC 1400
+ LOD I,3,140                 ; X                   
+ LOD I,3,164
+ NEQ I
+ FJP L37
+ LOD I,3,140                 ; X                   
+ INC I,1
+ STR I,3,140
+ UJP L35
+L37 LAB
+ LOC 1401
+ LOD A,3,116                 ; L                   
+ LOD I,3,132                 ; LNEU                
+ STO I
+ LOC 1407
+ LDC I,1
+ STR I,3,128
+ LOC 1408
+ LOD A,3,116                 ; L                   
+ IND I,0                     ; L                   
+ LDC I,1
+ ADI
+ LDC I,2
+ DVI
+ STR I,3,132
+ LOC 1414
+ LOD A,3,116                 ; L                   
+ IND I,0                     ; L                   
+ LDC I,2
+ MOD
+ STR I,3,136
+ LOC 1415
+ LOD I,3,136                 ; L1                  
+ LDC I,0
+ EQU I
+ FJP L40
+ LOC 1416
+ LDC I,2
+ STR I,3,136
+L40 LAB
+ LOC 1417
+ LDC I,1
+ STR I,3,140
+ LOD I,3,132                 ; LNEU                
+ STR I,3,164
+ LDC I,1
+ LOD I,3,164
+ LEQ I
+ FJP L43
+L41 LAB
+ LOC 1419
+ LDC I,0
+ STR I,3,148
+ LOC 1420
+ LDC I,1
+ STR I,3,144
+ LOD I,3,136                 ; L1                  
+ STR I,3,168
+ LDC I,1
+ LOD I,3,168
+ LEQ I
+ FJP L46
+L44 LAB
+ LOC 1422
+ LOD I,3,148                 ; INEU                
+ LDC I,16
+ MPI
+ STR I,3,148
+ LOC 1423
+ LDA 2,168                   ; XSTRING             
+ LOD I,3,128                 ; IX                  
+ CHK J,1,254
+ DEC I,1
+ IXA 1
+ IND C,0                     ; IX                  
+ ORD
+ LCA S,C32'123456789'
+ SLD 32,172
+ INN
+ FJP L47
+ LOC 1424
+ LOD I,3,148                 ; INEU                
+ LDA 2,168                   ; XSTRING             
+ LOD I,3,128                 ; IX                  
+ CHK J,1,254
+ DEC I,1
+ IXA 1
+ IND C,0                     ; IX                  
+ ORD
+ ADI
+ LOC 1425
+ LDC C,'0'
+ ORD
+ LOC 1426
+ SBI
+ STR I,3,148
+ UJP L48
+L47 LAB
+ LOC 1427
+ LDA 2,168                   ; XSTRING             
+ LOD I,3,128                 ; IX                  
+ CHK J,1,254
+ DEC I,1
+ IXA 1
+ IND C,0                     ; IX                  
+ ORD
+ LCA S,C32'ABCDEF'
+ SLD 32,172
+ INN
+ FJP L49
+ LOC 1428
+ LOD I,3,148                 ; INEU                
+ LDA 2,168                   ; XSTRING             
+ LOD I,3,128                 ; IX                  
+ CHK J,1,254
+ DEC I,1
+ IXA 1
+ IND C,0                     ; IX                  
+ ORD
+ ADI
+ LOC 1429
+ LDC C,'A'
+ ORD
+ SBI
+ LOC 1430
+ LDC I,10
+ ADI
+ STR I,3,148
+ UJP L50
+L49 LAB
+ LOC 1431
+ LDA 2,168                   ; XSTRING             
+ LOD I,3,128                 ; IX                  
+ CHK J,1,254
+ DEC I,1
+ IXA 1
+ IND C,0                     ; IX                  
+ ORD
+ LCA S,C32'abcdef'
+ SLD 32,172
+ INN
+ FJP L51
+ LOC 1432
+ LOD I,3,148                 ; INEU                
+ LDA 2,168                   ; XSTRING             
+ LOD I,3,128                 ; IX                  
+ CHK J,1,254
+ DEC I,1
+ IXA 1
+ IND C,0                     ; IX                  
+ ORD
+ ADI
+ LOC 1433
+ LDC C,'a'
+ ORD
+ SBI
+ LDC I,10
+ ADI
+ STR I,3,148
+L51 LAB
+L50 LAB
+L48 LAB
+ LOC 1434
+ LOD I,3,128                 ; IX                  
+ LDC I,1
+ ADI
+ STR I,3,128
+ LOC 1435
+ LOD I,3,144                 ; X2                  
+ LOD I,3,168
+ NEQ I
+ FJP L46
+ LOD I,3,144                 ; X2                  
+ INC I,1
+ STR I,3,144
+ UJP L44
+L46 LAB
+ LOC 1436
+ LDC I,2
+ STR I,3,136
+ LOC 1437
+ LDA 2,168                   ; XSTRING             
+ LOD I,3,140                 ; X                   
+ CHK J,1,254
+ DEC I,1
+ IXA 1
+ LOD I,3,148                 ; INEU                
+ CHR
+ CHK I,0,255
+ STO C
+ LOC 1438
+ LOD I,3,140                 ; X                   
+ LOD I,3,164
+ NEQ I
+ FJP L43
+ LOD I,3,140                 ; X                   
+ INC I,1
+ STR I,3,140
+ UJP L41
+L43 LAB
+ LOC 1439
+ LOD A,3,116                 ; L                   
+ LOD I,3,132                 ; LNEU                
+ STO I
+ LOC 1441
+ UJP L11
+L9 LAB
+ DEF C,'B'
+ UJP L20
+ DEF C,'C'
+ UJP L12
+ DEF C,'X'
+ UJP L34
+L10 LAB
+L11 LAB
+ LOC 1442
+ LDC B,0
+ FJP L52
+ LOC 1444
+ LDA 1,1928
+ CSP SIO,168
+ LCA M,11,'ENDE MODS: '
+ LDC I,11
+ LDC I,11
+ CSP WRS,168
+ LOD C,3,112                 ; STRTYPE             
+ LDC I,1
+ CSP WRC,168
+ LDC C,' '
+ LDC I,1
+ CSP WRC,168
+ LOD A,3,116                 ; L                   
+ IND I,0                     ; L                   
+ LDC I,1
+ CSP WRI,168
+ LOC 1445
+ LCA M,2,' <'
+ LDC I,2
+ LDC I,2
+ CSP WRS,168
+ CSP EIO,168
+ LOC 1446
+ LDC I,1
+ STR I,2,120
+ LOD A,3,116                 ; L                   
+ IND I,0                     ; L                   
+ STR I,3,164
+ LDC I,1
+ LOD I,3,164
+ LEQ I
+ FJP L55
+L53 LAB
+ LOC 1447
+ LOD C,3,112                 ; STRTYPE             
+ LDC C,'C'
+ EQU C
+ FJP L56
+ LOC 1448
+ LDA 1,1928
+ CSP SIO,168
+ LDA 2,168                   ; XSTRING             
+ LOD I,2,120                 ; I                   
+ CHK J,1,254
+ DEC I,1
+ IXA 1
+ IND C,0                     ; I                   
+ LDC I,1
+ CSP WRC,168
+ CSP EIO,168
+ LOC 1449
+ UJP L57
+L56 LAB
+ LOC 1450
+ MST 1,0
+ LDA 1,1928                  ; TRACEF              
+ STR A,3,280
+ LDA 2,168                   ; XSTRING             
+ LOD I,2,120                 ; I                   
+ CHK J,1,254
+ DEC I,1
+ IXA 1
+ IND C,0                     ; I                   
+ ORD
+ STR I,3,284
+ CUP P,5,$PRV0010,168
+L57 LAB
+ LOD I,2,120                 ; I                   
+ LOD I,3,164
+ NEQ I
+ FJP L55
+ LOD I,2,120                 ; I                   
+ INC I,1
+ STR I,2,120
+ UJP L53
+L55 LAB
+ LOC 1451
+ LDA 1,1928
+ CSP SIO,168
+ LDC C,'>'
+ LDC I,1
+ CSP WRC,168
+ CSP WLN,168
+ CSP EIO,168
+L52 LAB
+ LOC 1453
+ RET P
+L1 DEF I,288
+ DEF I,790
+ DEF B,0
+ LOC 1467
+$PRV0019 ENT P,3,L1  CHECK_KOMMENTARVORH ,TFFFF,2,19,,        ,112
+ LOC 1467
+ VPU 3,120
+ LOD I,1,876                 ; SCB                 
+ LOD I,1,1968                ; KOMMC               
+ SBI
+ LDC I,1
+ GRT I
+ FJP L3
+ LOC 1468
+ LOD I,1,1944                ; KOMMC               
+ LDC I,0
+ GRT I
+ FJP L4
+ LOC 1470
+ MST 1,0
+ LDA 1,1940                  ; KOMMC               
+ STR A,3,240
+ CUP P,3,$PRV0016,128
+ LOC 1471
+ LDC I,0
+ STR I,1,1944
+ LOC 1472
+ LDC N
+ STR A,1,1956
+ LOC 1473
+ LDC N
+ STR A,1,1960
+L4 LAB
+L3 LAB
+ LOC 1475
+ RET P
+L1 DEF I,248
+ DEF I,34
+ DEF B,0
+ LOC 1479
+$PRV0017 ENT P,2,L1  INSYMBOL            ,TFFFF,2,17,,        ,112
+ LOC 1479
+ VPU 2,424
+ LDC I,0
+ STR I,1,1368
+ LOC 1480
+ LDC C,' '
+ STR C,1,1364
+ LOC 1487
+ LDC I,0
+ STR I,1,1944
+ LOC 1488
+ LDC N
+ STR A,1,1956
+ LOC 1489
+ LDC N
+ STR A,1,1960
+L3 LAB
+ LOC 1495
+ LDC B,1
+ FJP L4
+ LOC 1502
+ MST 1,0
+ LDA 1,408                   ; EINGABE             
+ STR A,2,544
+ LDA 1,432                   ; LISTING             
+ STR A,2,548
+ LDA 1,744                   ; SCB                 
+ STR A,2,552
+ LDC B,0
+ STR B,2,556
+ CUP P,9,PASSCAN ,432
+ LOC 1508
+ LOD H,1,890                 ; SCB                 
+ CHK I,0,90
+ STR H,1,1356
+ LOC 1509
+ LOD I,1,1012                ; SCB                 
+ STR I,1,1360
+ LOC 1510
+ LOD I,1,876                 ; SCB                 
+ STR I,1,1388
+ LOC 1511
+ LDC B,0
+ FJP L5
+ LOC 1512
+ LDA 1,1928
+ CSP SIO,432
+ LCA M,19,'nach passcan: sy = '
+ LDC I,19
+ LDC I,19
+ CSP WRS,432
+ LOD H,1,1356                ; SY                  
+ MST 0,0
+ LDA 1,1928
+ STR I,2,544
+ LDC I,20
+ STR I,2,552
+ STR I,2,548
+ LCA P,$PASMAI#
+ INC A,78
+ STR I,2,556
+ CUP P,9,$PASWRX ,432
+ LOC 1513
+ LCA M,16,' zeile/spalte = '
+ LDC I,16
+ LDC I,16
+ CSP WRS,432
+ LOD I,1,876                 ; SCB                 
+ LDC I,5
+ CSP WRI,432
+ LOC 1514
+ LOD I,1,880                 ; SCB                 
+ LDC I,5
+ CSP WRI,432
+ LOD I,1,1968                ; KOMMC               
+ LDC I,5
+ CSP WRI,432
+ CSP WLN,432
+ CSP EIO,432
+L5 LAB
+ LOC 1524
+ LOD I,1,1964                ; KOMMC               
+ LOD I,1,876                 ; SCB                 
+ NEQ I
+ FJP L6
+ LOC 1526
+ LOD I,1,876                 ; SCB                 
+ STR I,1,1964
+ LOC 1527
+ LDC B,0
+ STR B,1,1976
+L6 LAB
+ LOC 1529
+ LOD H,1,1356                ; SY                  
+ ORD
+ LOC 1530
+ LCA S,X4'1f800000'
+ SLD 4,432
+ INN
+ NOT B
+ FJP L7
+ LOC 1532
+ LDC B,1
+ STR B,1,1976
+L7 LAB
+ LOC 1540
+ LOD H,1,1356                ; SY                  
+ ORD
+ CHK I,0,90
+ LOC 1546
+ XJP N,L10
+L13 LAB
+ LOC 1547
+ UJP L3
+ UJP L12
+L14 LAB
+ LOC 1550
+ MST 2,0
+ CUP P,1,$PRV0019,432
+ LOC 1551
+ LDC C,'/'
+ STR C,1,1940
+ LOC 1552
+ LOD I,1,876                 ; SCB                 
+ STR I,1,1968
+ LOC 1553
+ LOD I,1,880                 ; SCB                 
+ LDC I,2
+ SBI
+ STR I,1,1972
+ LOC 1554
+ MST 1,0
+ LDA 1,1940                  ; KOMMC               
+ STR A,2,544
+ CUP P,3,$PRV0014,432
+ LOC 1555
+ UJP L3
+ LOC 1556
+ UJP L12
+L15 LAB
+ LOC 1559
+ MST 2,0
+ CUP P,1,$PRV0019,432
+ LOC 1560
+ LDC C,')'
+ STR C,1,1940
+ LOC 1561
+ LOD I,1,876                 ; SCB                 
+ STR I,1,1968
+ LOC 1562
+ LOD I,1,880                 ; SCB                 
+ LDC I,2
+ SBI
+ STR I,1,1972
+ LOC 1563
+ MST 1,0
+ LDA 1,1940                  ; KOMMC               
+ STR A,2,544
+ CUP P,3,$PRV0014,432
+ LOC 1564
+ UJP L3
+ LOC 1565
+ UJP L12
+L16 LAB
+ LOC 1568
+ MST 2,0
+ CUP P,1,$PRV0019,432
+ LOC 1569
+ LDC C,'}'
+ STR C,1,1940
+ LOC 1570
+ LOD I,1,876                 ; SCB                 
+ STR I,1,1968
+ LOC 1571
+ LOD I,1,880                 ; SCB                 
+ LDC I,2
+ SBI
+ STR I,1,1972
+ LOC 1572
+ MST 1,0
+ LDA 1,1940                  ; KOMMC               
+ STR A,2,544
+ CUP P,3,$PRV0014,432
+ LOC 1573
+ UJP L3
+ LOC 1574
+ UJP L12
+L17 LAB
+ LOC 1577
+ MST 2,0
+ CUP P,1,$PRV0019,432
+ LOC 1578
+ LDC C,'"'
+ STR C,1,1940
+ LOC 1579
+ LOD I,1,876                 ; SCB                 
+ STR I,1,1968
+ LOC 1580
+ LOD I,1,880                 ; SCB                 
+ LDC I,2
+ SBI
+ STR I,1,1972
+ LOC 1581
+ MST 1,0
+ LDA 1,1940                  ; KOMMC               
+ STR A,2,544
+ CUP P,3,$PRV0014,432
+ LOC 1582
+ UJP L3
+ LOC 1583
+ UJP L12
+L18 LAB
+ LOC 1586
+ MST 2,0
+ CUP P,1,$PRV0019,432
+ LOC 1587
+ LDC C,'+'
+ STR C,1,1940
+ LOC 1588
+ LOD I,1,876                 ; SCB                 
+ STR I,1,1968
+ LOC 1589
+ LOD I,1,880                 ; SCB                 
+ LDC I,2
+ SBI
+ STR I,1,1972
+ LOC 1590
+ MST 1,0
+ LDA 1,1940                  ; KOMMC               
+ STR A,2,544
+ CUP P,3,$PRV0014,432
+ LOC 1591
+ UJP L3
+ LOC 1592
+ UJP L12
+L19 LAB
+ LOC 1600
+ LDA 1,1392                  ; ID                  
+ LCA M,20,'                    '
+ MOV 20
+ LOC 1601
+ LOD I,1,1360                ; SYLENGTH            
+ STR I,2,124
+ LOC 1602
+ LOD I,2,124                 ; K                   
+ LDC I,20
+ GRT I
+ FJP L20
+ LOC 1603
+ LDC I,20
+ STR I,2,124
+L20 LAB
+ LOC 1604
+ LDA 1,1392                  ; ID                  
+ LDA 1,892                   ; SCB                 
+ LOD I,2,124                 ; K                   
+ MCP
+ LOC 1606
+ LDC I,1
+ STR I,2,120
+ LOD I,2,124                 ; K                   
+ STR I,2,432
+ LDC I,1
+ LOD I,2,432
+ LEQ I
+ FJP L23
+L21 LAB
+ LOC 1607
+ LDA 1,1392                  ; ID                  
+ LOD I,2,120                 ; I                   
+ CHK J,1,20
+ DEC I,1
+ IXA 1
+ LDA 1,444                   ; UPSHIFT             
+ LDA 1,1392                  ; ID                  
+ LOD I,2,120                 ; I                   
+ CHK J,1,20
+ DEC I,1
+ IXA 1
+ IND C,0                     ; I                   
+ CHK J,0,255
+ IXA 1
+ IND C,0                     ; I                   
+ CHK I,0,255
+ STO C
+ LOD I,2,120                 ; I                   
+ LOD I,2,432
+ NEQ I
+ FJP L23
+ LOD I,2,120                 ; I                   
+ INC I,1
+ STR I,2,120
+ UJP L21
+L23 LAB
+ LOC 1608
+ LDA 1,892                   ; SCB                 
+ LDA 1,1392                  ; ID                  
+ LOD I,2,124                 ; K                   
+ MCP
+ LOC 1616
+ LOD I,2,124                 ; K                   
+ LDC I,9
+ LEQ I
+ FJP L24
+ LOC 1617
+ LCA P,$PASMAI#
+ INC A,2762                  ;  Å                  
+ LOD I,2,124                 ; K                   
+ CHK J,1,12
+ DEC I,1
+ IXA 2
+ IND H,0                     ; K                   
+ STR I,2,120
+ LCA P,$PASMAI#
+ INC A,2762                  ;                     
+ LOD I,2,124                 ; K                   
+ LDC I,1
+ ADI
+ CHK J,1,12
+ DEC I,1
+ IXA 2
+ IND H,0                     ;  Å                  
+ LDC I,1
+ SBI
+ STR I,2,432
+ LOD I,2,120                 ; I                   
+ LOD I,2,432
+ LEQ I
+ FJP L27
+L25 LAB
+ LOC 1618
+ LCA P,$PASMAI#
+ INC A,1561                  ;                     
+ LOD I,2,120                 ; I                   
+ CHK J,1,60
+ DEC I,1
+ IXA 20
+ LDA 1,1392                  ; ID                  
+ EQU M,20,20
+ FJP L28
+ LOC 1620
+ LCA P,$PASMAI#
+ INC A,2786                  ;  Y                  
+ LOD I,2,120                 ; I                   
+ CHK J,1,60
+ DEC I,1
+ IXA 2
+ IND H,0                     ; I                   
+ CHK I,0,90
+ STR H,1,1356
+ LOC 1621
+ UJP L27
+L28 LAB
+ LOC 1622
+ LOD I,2,120                 ; I                   
+ LOD I,2,432
+ NEQ I
+ FJP L27
+ LOD I,2,120                 ; I                   
+ INC I,1
+ STR I,2,120
+ UJP L25
+L27 LAB
+L24 LAB
+ LOC 1623
+ UJP L12
+L29 LAB
+ LOC 1632
+ LOD I,1,1360                ; SYLENGTH            
+ LDC I,2
+ SBI
+ STR I,2,124
+ LOC 1633
+ LDA 2,168                   ; XSTRING             
+ LDA 1,892                   ; SCB                 
+ LDC I,2
+ CHK J,1,120
+ DEC I,1
+ IXA 1
+ LOC 1634
+ LOD I,2,124                 ; K                   
+ MCP
+ LOC 1635
+ MST 2,0
+ LDC C,'C'
+ STR C,2,544
+ LDA 2,124                   ; K                   
+ STR A,2,548
+ CUP P,5,$PRV0018,432
+ LOC 1636
+ LDC C,' '
+ STR C,1,1364
+ LOC 1637
+ LOD I,2,124                 ; K                   
+ STR I,1,1360
+ LOC 1638
+ LOD I,1,1360                ; SYLENGTH            
+ LDC I,0
+ EQU I
+ FJP L30
+ LOC 1639
+ LDC C,' '
+ ORD
+ LOC 1640
+ STR I,1,1368
+ UJP L31
+L30 LAB
+ LOC 1641
+ LOD I,1,1360                ; SYLENGTH            
+ LDC I,1
+ EQU I
+ FJP L32
+ LOC 1642
+ LDA 2,168                   ; XSTRING             
+ LDC I,1
+ CHK J,1,254
+ DEC I,1
+ IXA 1
+ IND C,0                     ;  Å                  
+ ORD
+ LOC 1643
+ STR I,1,1368
+ UJP L33
+L32 LAB
+ LOC 1645
+ LOD I,1,1360                ; SYLENGTH            
+ LDC I,254
+ GRT I
+ FJP L34
+ LOC 1647
+ MST 1,0
+ LDC I,398
+ STR I,2,544
+ CUP P,3,$PRV0008,432
+ LOC 1649
+ LDC I,254
+ STR I,1,1360
+L34 LAB
+ LOC 1650
+ LDA 1,1368                  ; VAL                 
+ NEW 264,4
+ LOC 1651
+ LOD A,1,1368                ; VAL                 
+ INC A,4                     ; VAL                 
+ LDC C,'S'
+ STO C
+ LOC 1652
+ LOD A,1,1368                ; VAL                 
+ LOD I,1,1360                ; SYLENGTH            
+ STO I
+ LOC 1653
+ LOD A,1,1368                ; VAL                 
+ INC A,8                     ; VAL                 
+ LDA 2,168                   ; XSTRING             
+ MOV 254
+L33 LAB
+L31 LAB
+ LOC 1655
+ UJP L12
+L35 LAB
+ LOC 1663
+ LOD I,1,1360                ; SYLENGTH            
+ LDC I,3
+ SBI
+ STR I,2,124
+ LOC 1664
+ LDA 2,168                   ; XSTRING             
+ LDA 1,892                   ; SCB                 
+ LDC I,3
+ CHK J,1,120
+ DEC I,1
+ IXA 1
+ LOC 1665
+ LOD I,2,124                 ; K                   
+ MCP
+ LOC 1666
+ MST 2,0
+ LDC C,'X'
+ STR C,2,544
+ LDA 2,124                   ; K                   
+ STR A,2,548
+ CUP P,5,$PRV0018,432
+ LOC 1667
+ LDC C,'X'
+ STR C,1,1364
+ LOC 1668
+ LOD I,2,124                 ; K                   
+ STR I,1,1360
+ LOC 1669
+ LOD I,1,1360                ; SYLENGTH            
+ LDC I,0
+ EQU I
+ FJP L36
+ LOC 1671
+ LDC C,' '
+ ORD
+ STR I,1,1368
+ LOC 1672
+ LDC I,1
+ STR I,1,1360
+ LOC 1674
+ UJP L37
+L36 LAB
+ LOC 1675
+ LOD I,1,1360                ; SYLENGTH            
+ LDC I,1
+ EQU I
+ FJP L38
+ LOC 1676
+ LDA 2,168                   ; XSTRING             
+ LDC I,1
+ CHK J,1,254
+ DEC I,1
+ IXA 1
+ IND C,0                     ;  Å                  
+ ORD
+ LOC 1677
+ STR I,1,1368
+ UJP L39
+L38 LAB
+ LOC 1679
+ LOD I,1,1360                ; SYLENGTH            
+ LDC I,254
+ GRT I
+ FJP L40
+ LOC 1681
+ MST 1,0
+ LDC I,398
+ STR I,2,544
+ CUP P,3,$PRV0008,432
+ LOC 1683
+ LDC I,254
+ STR I,1,1360
+L40 LAB
+ LOC 1684
+ LDA 1,1368                  ; VAL                 
+ NEW 264,4
+ LOC 1685
+ LOD A,1,1368                ; VAL                 
+ INC A,4                     ; VAL                 
+ LDC C,'S'
+ STO C
+ LOC 1686
+ LOD A,1,1368                ; VAL                 
+ LOD I,1,1360                ; SYLENGTH            
+ STO I
+ LOC 1687
+ LOD A,1,1368                ; VAL                 
+ INC A,8                     ; VAL                 
+ LDA 2,168                   ; XSTRING             
+ MOV 254
+L39 LAB
+L37 LAB
+ LOC 1689
+ LDC I,9
+ STR H,1,1356
+ LOC 1690
+ UJP L12
+L41 LAB
+ LOC 1698
+ LOD I,1,1360                ; SYLENGTH            
+ LDC I,3
+ SBI
+ STR I,2,124
+ LOC 1699
+ LDA 2,168                   ; XSTRING             
+ LDA 1,892                   ; SCB                 
+ LDC I,3
+ CHK J,1,120
+ DEC I,1
+ IXA 1
+ LOC 1700
+ LOD I,2,124                 ; K                   
+ MCP
+ LOC 1701
+ MST 2,0
+ LDC C,'B'
+ STR C,2,544
+ LDA 2,124                   ; K                   
+ STR A,2,548
+ CUP P,5,$PRV0018,432
+ LOC 1702
+ LDC C,'X'
+ STR C,1,1364
+ LOC 1703
+ LOD I,2,124                 ; K                   
+ STR I,1,1360
+ LOC 1704
+ LOD I,1,1360                ; SYLENGTH            
+ LDC I,0
+ EQU I
+ FJP L42
+ LOC 1706
+ LDC C,' '
+ ORD
+ STR I,1,1368
+ LOC 1707
+ LDC I,1
+ STR I,1,1360
+ LOC 1709
+ UJP L43
+L42 LAB
+ LOC 1710
+ LOD I,1,1360                ; SYLENGTH            
+ LDC I,1
+ EQU I
+ FJP L44
+ LOC 1711
+ LDA 2,168                   ; XSTRING             
+ LDC I,1
+ CHK J,1,254
+ DEC I,1
+ IXA 1
+ IND C,0                     ;  Å                  
+ ORD
+ LOC 1712
+ STR I,1,1368
+ UJP L45
+L44 LAB
+ LOC 1714
+ LOD I,1,1360                ; SYLENGTH            
+ LDC I,254
+ GRT I
+ FJP L46
+ LOC 1716
+ MST 1,0
+ LDC I,398
+ STR I,2,544
+ CUP P,3,$PRV0008,432
+ LOC 1718
+ LDC I,254
+ STR I,1,1360
+L46 LAB
+ LOC 1719
+ LDA 1,1368                  ; VAL                 
+ NEW 264,4
+ LOC 1720
+ LOD A,1,1368                ; VAL                 
+ INC A,4                     ; VAL                 
+ LDC C,'S'
+ STO C
+ LOC 1721
+ LOD A,1,1368                ; VAL                 
+ LOD I,1,1360                ; SYLENGTH            
+ STO I
+ LOC 1722
+ LOD A,1,1368                ; VAL                 
+ INC A,8                     ; VAL                 
+ LDA 2,168                   ; XSTRING             
+ MOV 254
+L45 LAB
+L43 LAB
+ LOC 1724
+ LDC I,9
+ STR H,1,1356
+ LOC 1725
+ UJP L12
+L47 LAB
+ LOC 1733
+ LDA 2,128                   ; DIGIT               
+ LCA M,40,'                                        '
+ MOV 40
+ LOC 1734
+ LOD I,1,1360                ; SYLENGTH            
+ STR I,2,124
+ LOC 1735
+ LOD H,1,1356                ; SY                  
+ LDC I,13
+ EQU I
+ FJP L48
+ LOC 1736
+ LOD I,2,124                 ; K                   
+ LDC I,2
+ SBI
+ STR I,2,124
+L48 LAB
+ LOC 1737
+ LOD I,2,124                 ; K                   
+ LDC I,40
+ GRT I
+ FJP L49
+ LOC 1738
+ LDC I,40
+ STR I,2,124
+L49 LAB
+ LOC 1739
+ LDA 2,128                   ; DIGIT               
+ LDA 1,892                   ; SCB                 
+ LOD I,2,124                 ; K                   
+ MCP
+ LOC 1740
+ LDC I,0
+ STR I,1,1368
+ LOC 1746
+ LDA 2,128                   ; DIGIT               
+ LDC I,2
+ CHK J,1,40
+ DEC I,1
+ IXA 1
+ IND C,0                     ;  Å                  
+ LDC C,'X'
+ EQU C
+ LDA 2,128                   ; DIGIT               
+ LDC I,2
+ CHK J,1,40
+ DEC I,1
+ IXA 1
+ IND C,0                     ;  Å                  
+ LDC C,'x'
+ EQU C
+ IOR B
+ FJP L50
+ LOC 1749
+ LDC I,3
+ STR I,2,120
+ LOD I,2,124                 ; K                   
+ STR I,2,432
+ LDC I,3
+ LOD I,2,432
+ LEQ I
+ FJP L53
+L51 LAB
+ LOC 1750
+ LOD I,1,1368                ; IVAL                
+ LOD I,1,708                 ; MXINT16             
+ LEQ I
+ FJP L54
+ LOC 1751
+ LDA 2,128                   ; DIGIT               
+ LOD I,2,120                 ; I                   
+ CHK J,1,40
+ DEC I,1
+ IXA 1
+ IND C,0                     ; I                   
+ ORD
+ CHK I,0,255
+ LOC 1752
+ XJP N,L57
+L60 LAB
+ LOC 1753
+ LOD I,1,1368                ; IVAL                
+ LDC I,16
+ MPI
+ LDA 2,128                   ; DIGIT               
+ LOD I,2,120                 ; I                   
+ CHK J,1,40
+ DEC I,1
+ IXA 1
+ IND C,0                     ; I                   
+ ORD
+ ADI
+ LOC 1754
+ LDC C,'0'
+ ORD
+ SBI
+ STR I,1,1368
+ UJP L59
+L61 LAB
+ LOC 1756
+ LOD I,1,1368                ; IVAL                
+ LDC I,16
+ MPI
+ LDA 2,128                   ; DIGIT               
+ LOD I,2,120                 ; I                   
+ CHK J,1,40
+ DEC I,1
+ IXA 1
+ IND C,0                     ; I                   
+ ORD
+ ADI
+ LOC 1757
+ LDC C,'A'
+ ORD
+ SBI
+ LDC I,10
+ ADI
+ STR I,1,1368
+ UJP L59
+L62 LAB
+ LOC 1759
+ LOD I,1,1368                ; IVAL                
+ LDC I,16
+ MPI
+ LDA 2,128                   ; DIGIT               
+ LOD I,2,120                 ; I                   
+ CHK J,1,40
+ DEC I,1
+ IXA 1
+ IND C,0                     ; I                   
+ ORD
+ ADI
+ LOC 1760
+ LDC C,'a'
+ ORD
+ SBI
+ LDC I,10
+ ADI
+ STR I,1,1368
+ UJP L59
+L63 LAB
+ LOC 1761
+ UJP L59
+L57 LAB
+ LOC 1762
+ DEF C,'0'
+ UJP L60
+ DEF C,'1'
+ UJP L60
+ DEF C,'2'
+ UJP L60
+ DEF C,'3'
+ UJP L60
+ DEF C,'4'
+ UJP L60
+ DEF C,'5'
+ UJP L60
+ DEF C,'6'
+ UJP L60
+ DEF C,'7'
+ UJP L60
+ DEF C,'8'
+ UJP L60
+ DEF C,'9'
+ UJP L60
+ DEF C,'A'
+ UJP L61
+ DEF C,'B'
+ UJP L61
+ DEF C,'C'
+ UJP L61
+ DEF C,'D'
+ UJP L61
+ DEF C,'E'
+ UJP L61
+ DEF C,'F'
+ UJP L61
+ DEF C,'_'
+ UJP L63
+ DEF C,'a'
+ UJP L62
+ DEF C,'b'
+ UJP L62
+ DEF C,'c'
+ UJP L62
+ DEF C,'d'
+ UJP L62
+ DEF C,'e'
+ UJP L62
+ DEF C,'f'
+ UJP L62
+L58 LAB
+L59 LAB
+ LOC 1763
+ UJP L65
+L54 LAB
+ LOC 1765
+ MST 1,0
+ LDC I,203
+ STR I,2,552
+ CUP P,3,$PRV0008,440
+ LOC 1766
+ LDC I,0
+ STR I,1,1368
+ LOC 1768
+ UJP L53
+L65 LAB
+ LOC 1769
+ LOD I,2,120                 ; I                   
+ LOD I,2,432
+ NEQ I
+ FJP L53
+ LOD I,2,120                 ; I                   
+ INC I,1
+ STR I,2,120
+ UJP L51
+L53 LAB
+ LOC 1770
+ UJP L66
+L50 LAB
+ LOC 1776
+ LDA 2,128                   ; DIGIT               
+ LDC I,2
+ CHK J,1,40
+ DEC I,1
+ IXA 1
+ IND C,0                     ;  Å                  
+ LDC C,'B'
+ EQU C
+ LDA 2,128                   ; DIGIT               
+ LDC I,2
+ CHK J,1,40
+ DEC I,1
+ IXA 1
+ IND C,0                     ;  Å                  
+ LDC C,'b'
+ EQU C
+ IOR B
+ FJP L67
+ LOC 1779
+ LDC I,3
+ STR I,2,120
+ LOD I,2,124                 ; K                   
+ STR I,2,432
+ LDC I,3
+ LOD I,2,432
+ LEQ I
+ FJP L70
+L68 LAB
+ LOC 1780
+ LOD I,1,1368                ; IVAL                
+ LOD I,1,700                 ; MXINT2              
+ LEQ I
+ FJP L71
+ LOC 1781
+ LDA 2,128                   ; DIGIT               
+ LOD I,2,120                 ; I                   
+ CHK J,1,40
+ DEC I,1
+ IXA 1
+ IND C,0                     ; I                   
+ ORD
+ CHK I,0,255
+ LOC 1782
+ XJP N,L74
+L77 LAB
+ LOD I,1,1368                ; IVAL                
+ LDC I,2
+ MPI
+ STR I,1,1368
+ UJP L76
+L78 LAB
+ LOC 1783
+ LOD I,1,1368                ; IVAL                
+ LDC I,2
+ MPI
+ LDC I,1
+ ADI
+ STR I,1,1368
+ UJP L76
+L79 LAB
+ LOC 1784
+ UJP L76
+L74 LAB
+ LOC 1785
+ DEF C,'0'
+ UJP L77
+ DEF C,'1'
+ UJP L78
+ DEF C,'_'
+ UJP L79
+L75 LAB
+L76 LAB
+ LOC 1786
+ UJP L81
+L71 LAB
+ LOC 1788
+ MST 1,0
+ LDC I,203
+ STR I,2,552
+ CUP P,3,$PRV0008,440
+ LOC 1789
+ LDC I,0
+ STR I,1,1368
+ LOC 1791
+ UJP L70
+L81 LAB
+ LOC 1792
+ LOD I,2,120                 ; I                   
+ LOD I,2,432
+ NEQ I
+ FJP L70
+ LOD I,2,120                 ; I                   
+ INC I,1
+ STR I,2,120
+ UJP L68
+L70 LAB
+ LOC 1793
+ UJP L82
+L67 LAB
+ LOC 1801
+ LDC I,1
+ STR I,2,120
+ LOD I,2,124                 ; K                   
+ STR I,2,432
+ LDC I,1
+ LOD I,2,432
+ LEQ I
+ FJP L85
+L83 LAB
+ LOC 1802
+ LDA 2,128                   ; DIGIT               
+ LOD I,2,120                 ; I                   
+ CHK J,1,40
+ DEC I,1
+ IXA 1
+ IND C,0                     ; I                   
+ LDC C,'_'
+ NEQ C
+ FJP L86
+ LOC 1803
+ LOD I,1,1368                ; IVAL                
+ LOD I,1,704                 ; MXINT10             
+ LEQ I
+ FJP L87
+ LOC 1804
+ LOD I,1,1368                ; IVAL                
+ LDC I,10
+ MPI
+ LDA 2,128                   ; DIGIT               
+ LOD I,2,120                 ; I                   
+ CHK J,1,40
+ DEC I,1
+ IXA 1
+ IND C,0                     ; I                   
+ ORD
+ LOC 1805
+ LDC C,'0'
+ ORD
+ SBI
+ LOC 1806
+ ADI
+ STR I,1,1368
+ UJP L88
+L87 LAB
+ LOC 1808
+ MST 1,0
+ LDC I,203
+ STR I,2,552
+ CUP P,3,$PRV0008,440
+ LOC 1809
+ LDC I,0
+ STR I,1,1368
+ LOC 1811
+ UJP L85
+L88 LAB
+L86 LAB
+ LOC 1812
+ LOD I,2,120                 ; I                   
+ LOD I,2,432
+ NEQ I
+ FJP L85
+ LOD I,2,120                 ; I                   
+ INC I,1
+ STR I,2,120
+ UJP L83
+L85 LAB
+L82 LAB
+L66 LAB
+ LOC 1813
+ UJP L12
+L89 LAB
+ LOC 1821
+ LDA 2,128                   ; DIGIT               
+ LCA M,40,'                                        '
+ MOV 40
+ LOC 1822
+ LOD I,1,1360                ; SYLENGTH            
+ STR I,2,124
+ LOC 1823
+ LOD I,2,124                 ; K                   
+ LDC I,40
+ GRT I
+ FJP L90
+ LOC 1824
+ LDC I,40
+ STR I,2,124
+L90 LAB
+ LOC 1825
+ LDA 2,128                   ; DIGIT               
+ LDA 1,892                   ; SCB                 
+ LOD I,2,124                 ; K                   
+ MCP
+ LOC 1826
+ LDA 1,1368                  ; VAL                 
+ LCA M,20,'                    '
+ MOV 20
+ LOC 1827
+ LOD I,2,124                 ; K                   
+ LDC I,19
+ LEQ I
+ FJP L91
+ LOC 1828
+ LDC I,2
+ STR I,2,120
+ LOD I,2,124                 ; K                   
+ LDC I,1
+ ADI
+ STR I,2,432
+ LDC I,2
+ LOD I,2,432
+ LEQ I
+ FJP L94
+L92 LAB
+ LOC 1829
+ LDA 1,1368                  ; VAL                 
+ LOD I,2,120                 ; I                   
+ CHK J,1,20
+ DEC I,1
+ IXA 1
+ LDA 2,128                   ; DIGIT               
+ LOD I,2,120                 ; I                   
+ LDC I,1
+ SBI
+ CHK J,1,40
+ DEC I,1
+ IXA 1
+ LOC 1830
+ IND C,0                     ;  Å                  
+ CHK I,0,255
+ STO C
+ LOD I,2,120                 ; I                   
+ LOD I,2,432
+ NEQ I
+ FJP L94
+ LOD I,2,120                 ; I                   
+ INC I,1
+ STR I,2,120
+ UJP L92
+L94 LAB
+ UJP L95
+L91 LAB
+ LOC 1832
+ MST 1,0
+ LDC I,203
+ STR I,2,544
+ CUP P,3,$PRV0008,432
+ LOC 1833
+ LCA M,3,'0.0'
+ LDA 1,1368                  ; VAL                 
+ LDC I,2
+ CHK J,1,20
+ DEC I,1
+ IXA 1
+ MOV -3
+L95 LAB
+ LOC 1835
+ UJP L12
+L11 LAB
+ LOC 1838
+ UJP L12
+L10 LAB
+ DEF I,3
+ UJP L13
+ DEF I,4
+ UJP L14
+ DEF I,5
+ UJP L15
+ DEF I,6
+ UJP L16
+ DEF I,7
+ UJP L17
+ DEF I,8
+ UJP L18
+ DEF I,9
+ UJP L29
+ DEF I,10
+ UJP L35
+ DEF I,11
+ UJP L41
+ DEF I,12
+ UJP L47
+ DEF I,13
+ UJP L47
+ DEF I,15
+ UJP L89
+ DEF I,16
+ UJP L19
+L12 LAB
+ LOC 1846
+ UJP L4
+ LOC 1847
+ UJP L3
+L4 LAB
+ LOC 1853
+ LDC B,0
+ FJP L97
+ LOC 1855
+ LDA 1,1928
+ CSP SIO,432
+ CSP WLN,432
+ CSP EIO,432
+ LOC 1856
+ LDA 1,1928
+ CSP SIO,432
+ LCA M,22,'rueckgabe vom scanner:'
+ LDC I,22
+ LDC I,22
+ CSP WRS,432
+ CSP WLN,432
+ CSP EIO,432
+ LOC 1857
+ LDA 1,1928
+ CSP SIO,432
+ LCA M,11,'sy       = '
+ LDC I,11
+ LDC I,11
+ CSP WRS,432
+ LOD H,1,1356                ; SY                  
+ MST 0,0
+ LDA 1,1928
+ STR I,2,544
+ LDC I,-1
+ STR I,2,552
+ STR I,2,548
+ LCA P,$PASMAI#
+ INC A,78
+ STR I,2,556
+ CUP P,9,$PASWRX ,432
+ CSP WLN,432
+ CSP EIO,432
+ LOC 1858
+ LDA 1,1928
+ CSP SIO,432
+ LCA M,11,'sylength = '
+ LDC I,11
+ LDC I,11
+ CSP WRS,432
+ LOD I,1,1360                ; SYLENGTH            
+ LDC I,1
+ CSP WRI,432
+ CSP WLN,432
+ CSP EIO,432
+L97 LAB
+ LOC 1865
+ LOD I,1,1944                ; KOMMC               
+ LDC I,0
+ GRT I
+ FJP L98
+ LOC 1866
+ MST 1,0
+ LDA 1,1940                  ; KOMMC               
+ STR A,2,544
+ CUP P,3,$PRV0016,432
+L98 LAB
+ LOC 1872
+ LDC I,0
+ STR I,1,1980
+ LOC 1873
+ LDC B,0
+ STR B,1,1516
+ LOC 1874
+ LDA 1,1412                  ; W1                  
+ LCA M,100,'                                                    ',
+       '                                                '
+ MOV 100
+ LOC 1875
+ LDC I,0
+ STR I,1,1512
+ LOC 1876
+ LOD H,1,1356                ; SY                  
+ LDC I,0
+ NEQ I
+ FJP L99
+ LOC 1878
+ LOD I,1,1012                ; SCB                 
+ STR I,1,1512
+ LOC 1879
+ LOD I,1,1512                ; W1ENDE              
+ LDC I,100
+ GRT I
+ FJP L100
+ LOC 1880
+ LDC I,100
+ STR I,1,1512
+L100 LAB
+ LOC 1881
+ LDA 1,1412                  ; W1                  
+ LDA 1,892                   ; SCB                 
+ LOD I,1,1512                ; W1ENDE              
+ MCP
+ LOC 1882
+ LOD H,1,1356                ; SY                  
+ LDC I,13
+ EQU I
+ FJP L101
+ LOC 1889
+ LOD I,1,1512                ; W1ENDE              
+ LDC I,1
+ ADI
+ STR I,1,1512
+ LOC 1890
+ LDA 1,1412                  ; W1                  
+ LOD I,1,1512                ; W1ENDE              
+ LDC I,2
+ SBI
+ CHK J,1,100
+ DEC I,1
+ IXA 1
+ LDC C,' '
+ STO C
+ LOC 1891
+ LDA 1,1412                  ; W1                  
+ LOD I,1,1512                ; W1ENDE              
+ CHK J,1,100
+ DEC I,1
+ IXA 1
+ LDC C,'.'
+ STO C
+L101 LAB
+L99 LAB
+ LOC 1894
+ RET P
+L1 DEF I,560
+ DEF I,1471
+ DEF B,1
+ LOC 1903
+$PRV0020 ENT P,2,L1  NEUZEILE            ,TFFFF,2,20,,        ,120
+ LOC 1903
+ VPU 2,132
+ LOD I,1,1588                ; EINR                
+ STR I,2,128
+ LOC 1904
+ LOD I,2,128                 ; EIN                 
+ LDC I,51
+ GRT I
+ FJP L3
+ LOC 1905
+ LDC I,51
+ STR I,2,128
+L3 LAB
+ LOC 1906
+ LDA 1,420
+ CSP SIO,136
+ CSP WLN,136
+ CSP EIO,136
+ LOC 1907
+ LOD I,1,712                 ; ZZAUS               
+ LDC I,1
+ ADI
+ STR I,1,712
+ LOC 1908
+ LOD B,2,112                 ; BLANKS              
+ FJP L4
+ LOC 1910
+ LOD I,2,128                 ; EIN                 
+ LDC I,0
+ GRT I
+ FJP L5
+ LOC 1911
+ LDA 1,420
+ CSP SIO,136
+ LDC C,' '
+ LOD I,2,128                 ; EIN                 
+ CSP WRC,136
+ CSP EIO,136
+L5 LAB
+ LOC 1913
+ LOD I,2,128                 ; EIN                 
+ STR I,1,1908
+ LOC 1914
+ UJP L6
+L4 LAB
+ LOC 1915
+ LDC I,0
+ STR I,1,1908
+L6 LAB
+ LOC 1916
+ LDC B,0
+ STR B,1,1586
+ LOC 1925
+ LDC B,0
+ STR B,1,1984
+ LOC 1926
+ RET P
+L1 DEF I,136
+ DEF I,59
+ DEF B,0
+ LOC 1935
+$PRV0021 ENT P,2,L1  PLATZZEILE          ,TFFFF,2,21,,        ,120
+ LOC 1935
+ VPU 2,132
+ LOD I,1,1588                ; EINR                
+ STR I,2,128
+ LOC 1936
+ LOD I,2,128                 ; EIN                 
+ LDC I,51
+ GRT I
+ FJP L3
+ LOC 1937
+ LDC I,51
+ STR I,2,128
+L3 LAB
+ LOC 1938
+ LOD I,2,112                 ; PLATZBEDARF         
+ LDC I,72
+ GRT I
+ FJP L4
+ LOC 1939
+ MST 1,0
+ LDC I,1
+ STR I,2,248
+ LOC 1940
+ CUP P,3,$PRV0008,136
+ UJP L5
+L4 LAB
+ LOC 1941
+ LOD I,2,128                 ; EIN                 
+ LOD I,2,112                 ; PLATZBEDARF         
+ ADI
+ LDC I,72
+ LES I
+ FJP L6
+ LOC 1942
+ MST 1,0
+ LDC B,1
+ STR B,2,248
+ LOC 1943
+ CUP P,3,$PRV0020,136
+ UJP L7
+L6 LAB
+ LOC 1945
+ LDA 1,420
+ CSP SIO,136
+ CSP WLN,136
+ CSP EIO,136
+ LOC 1946
+ LOD I,1,712                 ; ZZAUS               
+ LDC I,1
+ ADI
+ STR I,1,712
+ LOC 1947
+ LDC I,72
+ LOD I,2,112                 ; PLATZBEDARF         
+ SBI
+ LDC I,1
+ SBI
+ LDC I,0
+ GRT I
+ FJP L8
+ LOC 1948
+ LDA 1,420
+ CSP SIO,136
+ LDC C,' '
+ LDC I,72
+ LOD I,2,112                 ; PLATZBEDARF         
+ SBI
+ LDC I,1
+ SBI
+ CSP WRC,136
+ CSP EIO,136
+L8 LAB
+ LOC 1949
+ LDC I,72
+ LOD I,2,112                 ; PLATZBEDARF         
+ SBI
+ LDC I,1
+ SBI
+ STR I,1,1908
+ LOC 1950
+ LDC B,0
+ STR B,1,1586
+L7 LAB
+L5 LAB
+ LOC 1952
+ RET P
+L1 DEF I,256
+ DEF I,88
+ DEF B,0
+ LOC 1968
+$PRV0022 ENT P,2,L1  OUTSYMBOL           ,TFFFF,2,22,,        ,120
+ LOC 1968
+ VPU 2,140
+ LOD B,1,1984                ; KOMMC               
+ FJP L3
+ LOC 1970
+ MST 1,0
+ LDC B,1
+ STR B,2,256
+ CUP P,3,$PRV0020,144
+ LOC 1971
+ LDC B,0
+ STR B,1,1984
+L3 LAB
+ LOC 1978
+ LOD H,2,112                 ; S                   
+ ORD
+ CHK I,0,90
+ LOC 1979
+ XJP N,L6
+L9 LAB
+ LOC 1981
+ LDA 1,1412                  ; W1                  
+ LDC I,1
+ CHK J,1,100
+ DEC I,1
+ IXA 1
+ LDC C,'-'
+ STO C
+ LOC 1982
+ LDA 1,1412                  ; W1                  
+ LDC I,2
+ CHK J,1,100
+ DEC I,1
+ IXA 1
+ LDC C,'>'
+ STO C
+ LOC 1983
+ LDC I,2
+ STR I,1,1512
+ LOC 1984
+ UJP L8
+L10 LAB
+ LOC 1987
+ LDA 1,1412                  ; W1                  
+ LDC I,1
+ CHK J,1,100
+ DEC I,1
+ IXA 1
+ LDC C,'['
+ STO C
+ LOC 1988
+ LDC I,1
+ STR I,1,1512
+ LOC 1989
+ UJP L8
+L11 LAB
+ LOC 1992
+ LDA 1,1412                  ; W1                  
+ LDC I,1
+ CHK J,1,100
+ DEC I,1
+ IXA 1
+ LDC C,']'
+ STO C
+ LOC 1993
+ LDC I,1
+ STR I,1,1512
+ LOC 1994
+ UJP L8
+L7 LAB
+ LOC 1997
+ UJP L8
+L6 LAB
+ DEF I,19
+ UJP L10
+ DEF I,20
+ UJP L11
+ DEF I,23
+ UJP L9
+L8 LAB
+ LOC 1998
+ LOD B,1,1584                ; DICHT               
+ NOT B
+ FJP L13
+ LOC 2000
+ LOD I,1,1908                ; OUTPOINTER          
+ LOD I,1,1512                ; W1ENDE              
+ ADI
+ LDC I,1
+ ADI
+ STR I,2,132
+ LOC 2001
+ LOD H,2,112                 ; S                   
+ LDC I,26
+ EQU I
+ LOD B,1,1924                ; INSQLSTATE          
+ AND B
+ FJP L14
+ LOC 2002
+ LOD I,2,132                 ; PLATZBEDARF         
+ LDC I,8
+ ADI
+ STR I,2,132
+L14 LAB
+ LOC 2003
+ LOD I,2,132                 ; PLATZBEDARF         
+ LDC I,72
+ GRT I
+ FJP L15
+ LOC 2004
+ MST 1,0
+ LOD I,2,132                 ; PLATZBEDARF         
+ LOD I,1,1908                ; OUTPOINTER          
+ SBI
+ STR I,2,256
+ CUP P,3,$PRV0021,144
+L15 LAB
+ LOC 2005
+ LOD B,1,1924                ; INSQLSTATE          
+ NOT B
+ FJP L16
+ LOC 2006
+ LOD H,2,112                 ; S                   
+ ORD
+ LDA 1,1556                  ; WORTSYMBOLE         
+ SLD 12,144
+ INN
+ FJP L17
+ LOC 2007
+ LDC I,1
+ STR I,2,128
+ LOD I,1,1512                ; W1ENDE              
+ STR I,2,144
+ LDC I,1
+ LOD I,2,144
+ LEQ I
+ FJP L20
+L18 LAB
+ LOC 2009
+ LDA 1,1412                  ; W1                  
+ LOD I,2,128                 ; I                   
+ CHK J,1,100
+ DEC I,1
+ IXA 1
+ IND C,0                     ; I                   
+ CHK I,0,255
+ STR C,2,136
+ LOC 2010
+ MST 1,0
+ LOD C,2,136                 ; CH                  
+ CHK I,0,255
+ STR C,2,264
+ CUP C,3,$PRV0009,152
+ CHK I,0,255
+ STR C,2,136
+ LOC 2011
+ LDA 1,1412                  ; W1                  
+ LOD I,2,128                 ; I                   
+ CHK J,1,100
+ DEC I,1
+ IXA 1
+ LOD C,2,136                 ; CH                  
+ CHK I,0,255
+ STO C
+ LOC 2012
+ LOD I,2,128                 ; I                   
+ LOD I,2,144
+ NEQ I
+ FJP L20
+ LOD I,2,128                 ; I                   
+ INC I,1
+ STR I,2,128
+ UJP L18
+L20 LAB
+L17 LAB
+L16 LAB
+ LOC 2013
+ LOD I,1,1920                ; ZZAUSVOR            
+ LOD I,1,712                 ; ZZAUS               
+ EQU I
+ FJP L21
+ LOC 2014
+ LOD B,1,1925                ; SQLHOSTV            
+ NOT B
+ FJP L22
+ LOC 2015
+ LDA 1,420
+ CSP SIO,144
+ LDC C,' '
+ LDC I,1
+ CSP WRC,144
+ CSP EIO,144
+ LOC 2016
+ UJP L23
+L22 LAB
+ LOC 2017
+ LOD I,1,1908                ; OUTPOINTER          
+ LDC I,1
+ SBI
+ STR I,1,1908
+L23 LAB
+L21 LAB
+ LOC 2018
+ LOD I,1,712                 ; ZZAUS               
+ STR I,1,1920
+ LOC 2019
+ LDC I,1
+ STR I,2,128
+ LOD I,1,1512                ; W1ENDE              
+ STR I,2,144
+ LDC I,1
+ LOD I,2,144
+ LEQ I
+ FJP L26
+L24 LAB
+ LOC 2020
+ LDA 1,420
+ CSP SIO,152
+ LDA 1,1412                  ; W1                  
+ LOD I,2,128                 ; I                   
+ CHK J,1,100
+ DEC I,1
+ IXA 1
+ IND C,0                     ; I                   
+ LDC I,1
+ CSP WRC,152
+ CSP EIO,152
+ LOD I,2,128                 ; I                   
+ LOD I,2,144
+ NEQ I
+ FJP L26
+ LOD I,2,128                 ; I                   
+ INC I,1
+ STR I,2,128
+ UJP L24
+L26 LAB
+ LOC 2021
+ LOD H,2,112                 ; S                   
+ LDC I,26
+ EQU I
+ LOD B,1,1924                ; INSQLSTATE          
+ AND B
+ STR B,1,1925
+ LOC 2022
+ LOD I,1,1908                ; OUTPOINTER          
+ LOD I,1,1512                ; W1ENDE              
+ ADI
+ LOC 2023
+ LDC I,1
+ ADI
+ STR I,1,1908
+ LOC 2024
+ UJP L27
+L13 LAB
+ LOC 2026
+ LOD I,1,1908                ; OUTPOINTER          
+ LOD I,1,1512                ; W1ENDE              
+ ADI
+ STR I,2,132
+ LOC 2027
+ LOD B,1,1586                ; BLANKSVORHANDEN     
+ LOD H,2,112                 ; S                   
+ ORD
+ LDA 1,1520                  ; BLANKSYMBOLE        
+ SLD 12,144
+ INN
+ AND B
+ FJP L28
+ LOC 2028
+ LOD I,2,132                 ; PLATZBEDARF         
+ LDC I,1
+ ADI
+ STR I,2,132
+L28 LAB
+ LOC 2029
+ LOD I,2,132                 ; PLATZBEDARF         
+ LDC I,72
+ GRT I
+ FJP L29
+ LOC 2030
+ MST 1,0
+ LOD I,2,132                 ; PLATZBEDARF         
+ LOD I,1,1908                ; OUTPOINTER          
+ SBI
+ STR I,2,256
+ CUP P,3,$PRV0021,144
+L29 LAB
+ LOC 2031
+ LOD B,1,1586                ; BLANKSVORHANDEN     
+ LOD H,2,112                 ; S                   
+ ORD
+ LDA 1,1520                  ; BLANKSYMBOLE        
+ SLD 12,144
+ INN
+ AND B
+ FJP L30
+ LOC 2033
+ LDA 1,420
+ CSP SIO,144
+ LDC C,' '
+ LDC I,1
+ CSP WRC,144
+ CSP EIO,144
+ LOC 2034
+ LOD I,1,1908                ; OUTPOINTER          
+ LOC 2035
+ LDC I,1
+ ADI
+ STR I,1,1908
+L30 LAB
+ LOC 2036
+ LOD B,1,1924                ; INSQLSTATE          
+ NOT B
+ FJP L31
+ LOC 2037
+ LOD H,2,112                 ; S                   
+ ORD
+ LDA 1,1556                  ; WORTSYMBOLE         
+ SLD 12,144
+ INN
+ FJP L32
+ LOC 2038
+ LDC I,1
+ STR I,2,128
+ LOD I,1,1512                ; W1ENDE              
+ STR I,2,144
+ LDC I,1
+ LOD I,2,144
+ LEQ I
+ FJP L35
+L33 LAB
+ LOC 2040
+ LDA 1,1412                  ; W1                  
+ LOD I,2,128                 ; I                   
+ CHK J,1,100
+ DEC I,1
+ IXA 1
+ IND C,0                     ; I                   
+ CHK I,0,255
+ STR C,2,136
+ LOC 2041
+ MST 1,0
+ LOD C,2,136                 ; CH                  
+ CHK I,0,255
+ STR C,2,264
+ CUP C,3,$PRV0009,152
+ CHK I,0,255
+ STR C,2,136
+ LOC 2042
+ LDA 1,1412                  ; W1                  
+ LOD I,2,128                 ; I                   
+ CHK J,1,100
+ DEC I,1
+ IXA 1
+ LOD C,2,136                 ; CH                  
+ CHK I,0,255
+ STO C
+ LOC 2043
+ LOD I,2,128                 ; I                   
+ LOD I,2,144
+ NEQ I
+ FJP L35
+ LOD I,2,128                 ; I                   
+ INC I,1
+ STR I,2,128
+ UJP L33
+L35 LAB
+L32 LAB
+L31 LAB
+ LOC 2044
+ LDC I,1
+ STR I,2,128
+ LOD I,1,1512                ; W1ENDE              
+ STR I,2,144
+ LDC I,1
+ LOD I,2,144
+ LEQ I
+ FJP L38
+L36 LAB
+ LOC 2045
+ LDA 1,420
+ CSP SIO,152
+ LDA 1,1412                  ; W1                  
+ LOD I,2,128                 ; I                   
+ CHK J,1,100
+ DEC I,1
+ IXA 1
+ IND C,0                     ; I                   
+ LDC I,1
+ CSP WRC,152
+ CSP EIO,152
+ LOD I,2,128                 ; I                   
+ LOD I,2,144
+ NEQ I
+ FJP L38
+ LOD I,2,128                 ; I                   
+ INC I,1
+ STR I,2,128
+ UJP L36
+L38 LAB
+ LOC 2046
+ LOD I,1,1908                ; OUTPOINTER          
+ LOD I,1,1512                ; W1ENDE              
+ ADI
+ STR I,1,1908
+ LOC 2047
+ LOD H,2,112                 ; S                   
+ ORD
+ LDA 1,1520                  ; BLANKSYMBOLE        
+ SLD 12,144
+ INN
+ LOC 2048
+ STR B,1,1586
+L27 LAB
+ LOC 2049
+ RET P
+L1 DEF I,272
+ DEF I,437
+ DEF B,0
+ LOC 2056
+$PRV0023 ENT P,2,L1  STRIPUTEST          ,TFFFF,2,23,,        ,112
+ LOC 2056
+ VPU 2,120
+ LOD H,1,1906                ; S                   
+ LDC I,22
+ EQU I
+ FJP L3
+ LOC 2058
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,240
+ CUP P,3,$PRV0022,128
+L4 LAB
+ LOC 2060
+ MST 1,0
+ CUP P,1,$PRV0017,128
+ LOC 2062
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOD H,1,1906                ; S                   
+ LOC 2063
+ LDC I,22
+ NEQ I
+ FJP L4
+L3 LAB
+ LOC 2064
+ RET P
+L1 DEF I,248
+ DEF I,30
+ DEF B,0
+ LOC 2073
+$PRV0024 ENT P,2,L1  KOMM_ZWISCHEN_PROCS ,TFFFF,2,24,,        ,120
+ LOC 2073
+ VPU 2,132
+ LOD I,1,1592                ; EINRKOMM            
+ STR I,2,128
+ LOC 2074
+ LOD I,2,112                 ; BLOCKLEVEL          
+ LDC I,2
+ LEQ I
+ FJP L3
+ LOC 2076
+ LDC B,1
+ STR B,1,1977
+ LOC 2077
+ LDC I,0
+ STR I,1,1592
+L3 LAB
+ LOC 2079
+ LOD H,1,1906                ; S                   
+ LDC I,22
+ EQU I
+ FJP L4
+ LOC 2081
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,248
+ CUP P,3,$PRV0022,136
+L5 LAB
+ LOC 2083
+ MST 1,0
+ CUP P,1,$PRV0017,136
+ LOC 2084
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOC 2085
+ LOD H,1,1906                ; S                   
+ LOC 2086
+ LDC I,22
+ NEQ I
+ FJP L5
+L4 LAB
+ LOC 2087
+ LDC B,0
+ STR B,1,1977
+ LOC 2088
+ LOD I,2,128                 ; EINRKOMMSAVE        
+ STR I,1,1592
+ LOC 2089
+ RET P
+L1 DEF I,256
+ DEF I,52
+ DEF B,0
+ LOC 2099
+$PRV0025 ENT P,2,L1  SQLSTATE            ,TFFFF,2,25,,        ,112
+ LOC 2099
+ VPU 2,128
+ LDC I,1
+ STR I,1,1980
+ LOC 2100
+ LOD I,1,1588                ; EINR                
+ STR I,2,120
+ LOC 2101
+ LOD I,1,1588                ; EINR                
+ LDC I,9
+ ADI
+ STR I,1,1588
+ LOC 2102
+ LOD I,1,1588                ; EINR                
+ STR I,2,124
+ LOC 2103
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,248
+ CUP P,3,$PRV0022,136
+ LOC 2104
+ LDC B,1
+ STR B,1,1924
+ LOC 2105
+ MST 1,0
+ CUP P,1,$PRV0017,136
+ LOC 2106
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOC 2107
+ LOD I,1,1588                ; EINR                
+ LOD I,1,1512                ; W1ENDE              
+ ADI
+ LDC I,1
+ ADI
+ STR I,1,1588
+ LOC 2108
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,248
+ CUP P,3,$PRV0022,136
+ LOC 2109
+ MST 1,0
+ CUP P,1,$PRV0017,136
+ LOC 2110
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+L3 LAB
+ LOC 2112
+ MST 1,0
+ CUP B,1,$PRV0011,136
+ FJP L6
+ LOC 2120
+ LOD I,2,124                 ; EINRZWEI            
+ STR I,1,1588
+ LOC 2121
+ MST 1,0
+ LDC B,1
+ STR B,2,248
+ CUP P,3,$PRV0020,136
+ LOC 2122
+ LOD I,1,1588                ; EINR                
+ LOD I,1,1512                ; W1ENDE              
+ ADI
+ LOC 2123
+ LDC I,1
+ ADI
+ STR I,1,1588
+L6 LAB
+ LOC 2124
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,248
+ CUP P,3,$PRV0022,136
+ LOC 2125
+ MST 1,0
+ CUP P,1,$PRV0017,136
+ LOC 2126
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOC 2127
+ LOD H,1,1906                ; S                   
+ LDC I,0
+ EQU I
+ FJP L7
+ LOC 2128
+ MST 1,0
+ LDC I,2
+ STR I,2,248
+ CUP P,3,$PRV0008,136
+L7 LAB
+ LOC 2129
+ LOD H,1,1906                ; S                   
+ LDC I,22
+ EQU I
+ FJP L8
+ LOC 2130
+ LDA 1,260
+ CSP SIO,136
+ LCA M,41,'+++ Warnung: Strichpunkt in SQL-Einschub.'
+ LDC I,41
+ LDC I,41
+ CSP WRS,136
+ CSP WLN,136
+ CSP EIO,136
+L8 LAB
+ LOC 2131
+ LOD H,1,1906                ; S                   
+ LDC I,87
+ EQU I
+ LOD H,1,1906                ; S                   
+ LDC I,22
+ EQU I
+ IOR B
+ FJP L3
+ LOC 2132
+ LOD I,2,124                 ; EINRZWEI            
+ STR I,1,1588
+ LOC 2133
+ LOD I,1,1588                ; EINR                
+ LDC I,9
+ SBI
+ STR I,1,1588
+ LOC 2134
+ LDC B,0
+ STR B,1,1924
+ LOC 2135
+ LOD H,1,1906                ; S                   
+ LDC I,22
+ NEQ I
+ FJP L9
+ LOC 2137
+ MST 1,0
+ LDC B,1
+ STR B,2,248
+ CUP P,3,$PRV0020,136
+ LOC 2138
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,248
+ CUP P,3,$PRV0022,136
+ LOC 2139
+ MST 1,0
+ CUP P,1,$PRV0017,136
+ LOC 2140
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+L9 LAB
+ LOC 2142
+ MST 1,0
+ CUP P,1,$PRV0023,136
+ LOC 2143
+ LOD I,2,120                 ; EINRSAVE            
+ STR I,1,1588
+ LOC 2144
+ LDC I,0
+ STR I,1,1980
+ LOC 2145
+ RET P
+L1 DEF I,256
+ DEF I,179
+ DEF B,0
+ LOC 2157
+$PRV0027 ENT P,3,L1  CSFEHLERTEST        ,TFFFF,2,27,,        ,112
+ LOC 2157
+ VPU 3,120
+ LOD H,1,1906                ; S                   
+ ORD
+ LDA 1,1556                  ; WORTSYMBOLE         
+ SLD 12,124
+ LDA 1,1568                  ; EXPRSYMBOLE         
+ SLD 12,136
+ DIF
+ LDA 1,1532                  ; STERMSYMBOLE        
+ SLD 12,136
+ DIF
+ INN
+ FJP L3
+ LOC 2159
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,3,240
+ CUP P,3,$PRV0022,128
+ LOC 2160
+ MST 1,0
+ LDC I,3
+ STR I,3,240
+ CUP P,3,$PRV0008,128
+L3 LAB
+ LOC 2162
+ RET P
+L1 DEF I,248
+ DEF I,33
+ DEF B,0
+ LOC 2166
+$PRV0026 ENT P,2,L1  CSIMPSTATE          ,TFFFF,2,26,,        ,112
+ LOC 2166
+ VPU 2,124
+ LOD I,1,1588                ; EINR                
+ STR I,2,120
+L3 LAB
+ LOC 2168
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,240
+ CUP P,3,$PRV0022,128
+ LOC 2169
+ MST 1,0
+ CUP P,1,$PRV0017,128
+ LOC 2170
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOC 2172
+ MST 2,0
+ CUP P,1,$PRV0027,128
+ LOD H,1,1906                ; S                   
+ LDC I,39
+ EQU I
+ LOD H,1,1906                ; S                   
+ LDC I,17
+ EQU I
+ IOR B
+ LOD H,1,1906                ; S                   
+ ORD
+ LOC 2173
+ LDA 1,1532                  ; STERMSYMBOLE        
+ SLD 12,128
+ INN
+ IOR B
+ FJP L3
+ LOC 2174
+ LOD H,1,1906                ; S                   
+ ORD
+ LDA 1,1532                  ; STERMSYMBOLE        
+ SLD 12,128
+ INN
+ NOT B
+ FJP L6
+ LOC 2176
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,240
+ CUP P,3,$PRV0022,128
+ LOC 2177
+ LOD I,1,1908                ; OUTPOINTER          
+ STR I,1,1588
+ LOC 2178
+ MST 1,0
+ CUP P,1,$PRV0017,128
+ LOC 2179
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+L7 LAB
+ LOC 2180
+ LOD H,1,1906                ; S                   
+ ORD
+ LDA 1,1532                  ; STERMSYMBOLE        
+ SLD 12,128
+ INN
+ NOT B
+ FJP L8
+ LOC 2182
+ MST 2,0
+ CUP P,1,$PRV0027,128
+ LOC 2183
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,240
+ CUP P,3,$PRV0022,128
+ LOC 2184
+ MST 1,0
+ CUP P,1,$PRV0017,128
+ LOC 2186
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOC 2187
+ UJP L7
+L8 LAB
+L6 LAB
+ LOC 2188
+ MST 1,0
+ CUP P,1,$PRV0023,128
+ LOC 2190
+ LOD I,2,120                 ; EINRSAVE            
+ STR I,1,1588
+ RET P
+L1 DEF I,248
+ DEF I,101
+ DEF B,1
+ LOC 2208
+$PRV0029 ENT P,3,L1  FIELDLIST           ,TFFFF,2,29,,        ,120
+ LOC 2208
+ VPU 3,136
+ LOD B,3,112                 ; VORSCHUB            
+ STR B,3,132
+L3 LAB
+ LOC 2209
+ LOD H,1,1906                ; S                   
+ LDC I,69
+ NEQ I
+ LOD H,1,1906                ; S                   
+ LDC I,18
+ NEQ I
+ AND B
+ FJP L4
+ LOC 2211
+ LOD B,3,132                 ; VS                  
+ FJP L5
+ LOC 2212
+ MST 1,0
+ LDC B,1
+ STR B,3,256
+ CUP P,3,$PRV0020,144
+L5 LAB
+ LOC 2213
+ LDC B,1
+ STR B,3,132
+ LOC 2214
+ LOD H,1,1906                ; S                   
+ LDC I,63
+ EQU I
+ FJP L6
+L7 LAB
+ LOC 2217
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,3,256
+ CUP P,3,$PRV0022,144
+ LOC 2218
+ MST 1,0
+ CUP P,1,$PRV0017,144
+ LOC 2220
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOD H,1,1906                ; S                   
+ LDC I,72
+ EQU I
+ FJP L7
+ LOC 2221
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,3,256
+ CUP P,3,$PRV0022,144
+ LOC 2222
+ LOD I,1,1588                ; EINR                
+ LOD I,1,1580                ; INC                 
+ ADI
+ STR I,1,1588
+ LOC 2223
+ MST 1,0
+ CUP P,1,$PRV0017,144
+ LOC 2224
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+L10 LAB
+ LOC 2226
+ LOD H,1,1906                ; S                   
+ LDC I,69
+ NEQ I
+ LOD H,1,1906                ; S                   
+ LDC I,18
+ NEQ I
+ AND B
+ FJP L13
+ LOC 2228
+ LOD H,1,1906                ; S                   
+ LDC I,22
+ EQU I
+ FJP L14
+ LOC 2230
+ MST 1,0
+ LDC B,1
+ STR B,3,256
+ CUP P,3,$PRV0020,144
+ LOC 2231
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,3,256
+ CUP P,3,$PRV0022,144
+ LOC 2232
+ MST 1,0
+ CUP P,1,$PRV0017,144
+ LOC 2234
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOC 2235
+ UJP L15
+L14 LAB
+ LOC 2237
+ MST 1,0
+ LDC B,1
+ STR B,3,256
+ CUP P,3,$PRV0020,144
+L16 LAB
+ LOC 2239
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,3,256
+ CUP P,3,$PRV0022,144
+ LOC 2240
+ MST 1,0
+ CUP P,1,$PRV0017,144
+ LOC 2241
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOC 2242
+ LOD H,1,1906                ; S                   
+ LDC I,17
+ EQU I
+ FJP L16
+ LOC 2243
+ LOD I,1,1588                ; EINR                
+ STR I,3,128
+ LOC 2244
+ LOD I,1,1588                ; EINR                
+ LOD I,1,1580                ; INC                 
+ ADI
+ STR I,1,1588
+ LOC 2245
+ MST 1,0
+ LDC B,1
+ STR B,3,256
+ CUP P,3,$PRV0020,144
+ LOC 2246
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,3,256
+ CUP P,3,$PRV0022,144
+ LOC 2247
+ LOD I,1,1588                ; EINR                
+ LOD I,1,1580                ; INC                 
+ ADI
+ STR I,1,1588
+ LOC 2248
+ MST 1,0
+ CUP P,1,$PRV0017,144
+ LOC 2249
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+L19 LAB
+ LOC 2251
+ LOD H,1,1906                ; S                   
+ LDC I,18
+ NEQ I
+ FJP L22
+ LOC 2252
+ MST 2,0
+ LDC B,0
+ STR B,3,256
+ CUP P,3,$PRV0029,144
+L22 LAB
+ LOC 2253
+ LOD H,1,1906                ; S                   
+ LDC I,18
+ NEQ I
+ FJP L23
+ LOC 2254
+ MST 1,0
+ LDC B,1
+ STR B,3,256
+ LOC 2255
+ CUP P,3,$PRV0020,144
+L23 LAB
+ LOD H,1,1906                ; S                   
+ LDC I,18
+ EQU I
+ FJP L19
+ LOC 2256
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,3,256
+ CUP P,3,$PRV0022,144
+ LOC 2257
+ MST 1,0
+ CUP P,1,$PRV0017,144
+ LOC 2258
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOC 2259
+ MST 1,0
+ CUP P,1,$PRV0023,144
+ LOC 2261
+ LOD I,3,128                 ; EINRS2              
+ STR I,1,1588
+L15 LAB
+L13 LAB
+ LOC 2263
+ LOD H,1,1906                ; S                   
+ LDC I,69
+ EQU I
+ LOD H,1,1906                ; S                   
+ LDC I,18
+ EQU I
+ IOR B
+ FJP L10
+ LOC 2264
+ LOD I,1,1588                ; EINR                
+ LOC 2265
+ LOD I,1,1580                ; INC                 
+ SBI
+ STR I,1,1588
+ LOC 2266
+ UJP L24
+L6 LAB
+L25 LAB
+ LOC 2269
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,3,256
+ CUP P,3,$PRV0022,144
+ LOC 2270
+ MST 1,0
+ CUP P,1,$PRV0017,144
+ LOC 2272
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOD H,1,1906                ; S                   
+ LDC I,26
+ EQU I
+ FJP L25
+ LOC 2273
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,3,256
+ CUP P,3,$PRV0022,144
+ LOC 2274
+ MST 1,0
+ CUP P,1,$PRV0017,144
+ LOC 2275
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOC 2276
+ MST 1,0
+ LDA 3,133                   ; DUMMYB              
+ STR A,3,256
+ CUP P,3,$PRV0028,144
+ LOC 2278
+ MST 1,0
+ CUP P,1,$PRV0023,144
+L24 LAB
+ LOC 2280
+ UJP L3
+L4 LAB
+ RET P
+L1 DEF I,264
+ DEF I,272
+ DEF B,0
+ LOC 2284
+$PRV0028 ENT P,2,L1  CTYPE               ,TFFFF,2,28,,        ,120
+ LOC 2284
+ VPU 2,140
+ LOD A,2,112                 ; MORE_LINES          
+ LDC B,0
+ STO B
+ LOC 2285
+ LOD H,1,1906                ; S                   
+ LDC I,69
+ NEQ I
+ FJP L3
+ LOC 2287
+ LOD I,1,1588                ; EINR                
+ STR I,2,128
+ LOC 2288
+ LOD I,1,1908                ; OUTPOINTER          
+ STR I,1,1588
+ LOC 2295
+ LOD I,1,712                 ; ZZAUS               
+ STR I,2,136
+ LOC 2296
+ LDC I,0
+ STR I,2,132
+ LOC 2297
+ LOD H,1,1906                ; S                   
+ LDC I,17
+ EQU I
+ FJP L4
+ LOC 2299
+ LDA 1,1544                  ; TTERMSYMBOLE        
+ LDA 1,1544                  ; TTERMSYMBOLE        
+ SLD 12,144
+ LCA S,X4'00002000'
+ SLD 4,156
+ DIF
+ SMV 12,12
+ LOC 2300
+ LOD I,2,132                 ; ANZKLAMAUF          
+ LDC I,1
+ ADI
+ STR I,2,132
+L4 LAB
+L5 LAB
+ LOC 2302
+ LOD H,1,1906                ; S                   
+ ORD
+ LDA 1,1544                  ; TTERMSYMBOLE        
+ SLD 12,144
+ INN
+ NOT B
+ FJP L6
+ LOC 2304
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,256
+ CUP P,3,$PRV0022,144
+ LOC 2305
+ MST 1,0
+ CUP P,1,$PRV0017,144
+ LOC 2306
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOC 2307
+ LOD H,1,1906                ; S                   
+ LDC I,17
+ EQU I
+ FJP L7
+ LOC 2309
+ LDA 1,1544                  ; TTERMSYMBOLE        
+ LDA 1,1544                  ; TTERMSYMBOLE        
+ SLD 12,144
+ LCA S,X4'00002000'
+ SLD 4,156
+ DIF
+ SMV 12,12
+ LOC 2310
+ LOD I,2,132                 ; ANZKLAMAUF          
+ LDC I,1
+ ADI
+ STR I,2,132
+L7 LAB
+ LOC 2312
+ LOD H,1,1906                ; S                   
+ LDC I,18
+ EQU I
+ FJP L8
+ LOC 2314
+ LOD I,2,132                 ; ANZKLAMAUF          
+ LDC I,1
+ SBI
+ STR I,2,132
+ LOC 2315
+ LOD I,2,132                 ; ANZKLAMAUF          
+ LDC I,0
+ LES I
+ FJP L9
+ LOC 2316
+ LDA 1,1544                  ; TTERMSYMBOLE        
+ LDA 1,1544                  ; TTERMSYMBOLE        
+ SLD 12,144
+ LCA S,X4'00002000'
+ SLD 4,156
+ UNI
+ SMV 12,12
+L9 LAB
+L8 LAB
+ LOC 2318
+ UJP L5
+L6 LAB
+ LOC 2319
+ LDA 1,1544                  ; TTERMSYMBOLE        
+ LDA 1,1544                  ; TTERMSYMBOLE        
+ SLD 12,144
+ LCA S,X4'00002000'
+ SLD 4,156
+ UNI
+ SMV 12,12
+ LOC 2320
+ LOD H,1,1906                ; S                   
+ LDC I,22
+ EQU I
+ FJP L10
+ LOC 2322
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,256
+ CUP P,3,$PRV0022,144
+ LOC 2323
+ MST 1,0
+ CUP P,1,$PRV0017,144
+ LOC 2324
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOC 2325
+ LOD I,2,128                 ; EINRSAVE            
+ STR I,1,1588
+ LOC 2327
+ UJP L11
+L10 LAB
+ LOC 2328
+ LOD H,1,1906                ; S                   
+ LDC I,58
+ EQU I
+ FJP L12
+ LOC 2330
+ LOD I,2,128                 ; EINRSAVE            
+ STR I,1,1588
+ LOC 2331
+ LOD I,1,1588                ; EINR                
+ STR I,2,128
+ LOC 2332
+ LOD I,1,1908                ; OUTPOINTER          
+ STR I,1,1588
+ LOC 2333
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,256
+ CUP P,3,$PRV0022,144
+ LOC 2334
+ LOD I,1,1588                ; EINR                
+ LOD I,1,1580                ; INC                 
+ ADI
+ STR I,1,1588
+ LOC 2335
+ MST 1,0
+ CUP P,1,$PRV0017,144
+ LOC 2336
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOC 2337
+ MST 2,0
+ LDC B,1
+ STR B,2,256
+ CUP P,3,$PRV0029,144
+ LOC 2338
+ LOD I,1,1588                ; EINR                
+ LOD I,1,1580                ; INC                 
+ SBI
+ STR I,1,1588
+ LOC 2339
+ MST 1,0
+ LDC B,1
+ STR B,2,256
+ CUP P,3,$PRV0020,144
+ LOC 2340
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,256
+ CUP P,3,$PRV0022,144
+ LOC 2341
+ MST 1,0
+ CUP P,1,$PRV0017,144
+ LOC 2342
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOC 2343
+ MST 1,0
+ CUP P,1,$PRV0023,144
+ LOC 2344
+ LOD I,2,128                 ; EINRSAVE            
+ STR I,1,1588
+ LOC 2346
+ UJP L13
+L12 LAB
+ LOC 2347
+ LOD I,2,128                 ; EINRSAVE            
+ STR I,1,1588
+L13 LAB
+L11 LAB
+ LOC 2348
+ LOD I,1,712                 ; ZZAUS               
+ LOD I,2,136                 ; ZZAUS_START         
+ GRT I
+ FJP L14
+ LOC 2349
+ LOD A,2,112                 ; MORE_LINES          
+ LDC B,1
+ STO B
+L14 LAB
+L3 LAB
+ LOC 2351
+ RET P
+L1 DEF I,264
+ DEF I,240
+ DEF B,1
+ LOC 2362
+$PRV0030 ENT P,2,L1  CSTATE              ,TFFFF,2,30,,        ,136
+ LOC 2362
+ VPU 2,152
+ LOD H,1,1906                ; S                   
+ LDC I,61
+ EQU I
+ LOD B,1,1585                ; COMPOUNDNZ          
+ NOT B
+ AND B
+ FJP L3
+ LOC 2363
+ LDC B,0
+ STR B,2,124
+L3 LAB
+ LOC 2364
+ LOD B,2,124                 ; AUFNEUEZEILE        
+ FJP L4
+ LOC 2365
+ MST 1,0
+ LDC B,1
+ STR B,2,272
+ CUP P,3,$PRV0020,160
+L4 LAB
+ LOC 2371
+ LOD H,1,1906                ; S                   
+ LDC I,22
+ EQU I
+ FJP L5
+ LOC 2373
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,272
+ CUP P,3,$PRV0022,160
+ LOC 2374
+ MST 1,0
+ CUP P,1,$PRV0017,160
+ LOC 2375
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOC 2377
+ UJP L2
+L5 LAB
+ LOC 2383
+ LOD H,1,1906                ; S                   
+ LDC I,16
+ EQU I
+ FJP L6
+ LOC 2385
+ MST 1,0
+ CUP P,1,$PRV0026,160
+ LOC 2387
+ UJP L2
+L6 LAB
+ LOC 2393
+ LOD H,1,1906                ; S                   
+ LDC I,80
+ EQU I
+ FJP L7
+ LOC 2395
+ MST 1,0
+ CUP P,1,$PRV0026,160
+ LOC 2397
+ UJP L2
+L7 LAB
+ LOC 2403
+ LOD H,1,1906                ; S                   
+ LDC I,81
+ EQU I
+ FJP L8
+ LOC 2405
+ MST 1,0
+ CUP P,1,$PRV0026,160
+ LOC 2407
+ UJP L2
+L8 LAB
+ LOC 2413
+ LOD H,1,1906                ; S                   
+ LDC I,82
+ EQU I
+ FJP L9
+ LOC 2415
+ MST 1,0
+ CUP P,1,$PRV0026,160
+ LOC 2417
+ UJP L2
+L9 LAB
+ LOC 2423
+ LOD H,1,1906                ; S                   
+ LDC I,86
+ EQU I
+ FJP L10
+ LOC 2425
+ MST 1,0
+ CUP P,1,$PRV0025,160
+ LOC 2427
+ UJP L2
+L10 LAB
+ LOC 2433
+ LOD H,1,1906                ; S                   
+ LDC I,12
+ EQU I
+ FJP L11
+L12 LAB
+ LOC 2436
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,272
+ CUP P,3,$PRV0022,160
+ LOC 2437
+ MST 1,0
+ CUP P,1,$PRV0017,160
+ LOC 2439
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOD H,1,1906                ; S                   
+ LDC I,26
+ EQU I
+ FJP L12
+ LOC 2440
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,272
+ CUP P,3,$PRV0022,160
+ LOC 2441
+ MST 1,0
+ CUP P,1,$PRV0017,160
+ LOC 2442
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOC 2443
+ MST 1,0
+ LDA 2,112                   ; FSYS                
+ LDA 2,272
+ SMV -12,12
+ LDC B,1
+ STR B,2,284
+ LCA M,6,'      '
+ LDA 2,285
+ MOV -6
+ CUP P,7,$PRV0030,160
+ LOC 2445
+ UJP L2
+L11 LAB
+ LOC 2451
+ LOD H,1,1906                ; S                   
+ LDC I,61
+ EQU I
+ FJP L15
+ LOC 2453
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,272
+ CUP P,3,$PRV0022,160
+ LOC 2454
+ LOD B,1,1585                ; COMPOUNDNZ          
+ FJP L16
+ LOC 2455
+ LOD I,1,1588                ; EINR                
+ LOD I,1,1580                ; INC                 
+ ADI
+ STR I,1,1588
+L16 LAB
+ LOC 2456
+ MST 1,0
+ CUP P,1,$PRV0017,160
+ LOC 2457
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+L17 LAB
+ LOC 2459
+ MST 1,0
+ LDA 2,112                   ; FSYS                
+ LDA 2,272
+ SMV -12,12
+ LDC B,1
+ STR B,2,284
+ LCA M,6,'      '
+ LDA 2,285
+ MOV -6
+ LOC 2460
+ CUP P,7,$PRV0030,160
+ LOD H,1,1906                ; S                   
+ ORD
+ LDA 1,1532                  ; STERMSYMBOLE        
+ SLD 12,160
+ INN
+ FJP L17
+ LOC 2461
+ LOD B,1,1585                ; COMPOUNDNZ          
+ FJP L20
+ LOC 2463
+ LOD I,1,1588                ; EINR                
+ LOD I,1,1580                ; INC                 
+ SBI
+ STR I,1,1588
+ LOC 2464
+ MST 1,0
+ LDC B,1
+ STR B,2,272
+ CUP P,3,$PRV0020,160
+L20 LAB
+ LOC 2466
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,272
+ CUP P,3,$PRV0022,160
+ LOC 2467
+ LDA 2,125                   ; KENNUNG             
+ LCA M,6,'      '
+ NEQ M,6,6
+ FJP L21
+ LOC 2469
+ LOD I,1,1908                ; OUTPOINTER          
+ LDC I,13
+ ADI
+ LDC I,72
+ LES I
+ FJP L22
+ LOC 2471
+ LDA 1,420
+ CSP SIO,160
+ LCA M,4,' (* '
+ LDC I,4
+ LDC I,4
+ CSP WRS,160
+ CSP EIO,160
+ LOC 2472
+ LDC I,1
+ STR I,2,148
+ LDC B,1
+ FJP L25
+L23 LAB
+ LOC 2473
+ LDA 2,125                   ; KENNUNG             
+ LOD I,2,148                 ; LAUFX               
+ CHK J,1,6
+ DEC I,1
+ IXA 1
+ IND C,0                     ; LAUFX               
+ LDC C,' '
+ NEQ C
+ FJP L26
+ LOC 2474
+ LDA 1,420
+ CSP SIO,160
+ LDA 2,125                   ; KENNUNG             
+ LOD I,2,148                 ; LAUFX               
+ CHK J,1,6
+ DEC I,1
+ IXA 1
+ IND C,0                     ; LAUFX               
+ LDC I,1
+ CSP WRC,160
+ CSP EIO,160
+L26 LAB
+ LOD I,2,148                 ; LAUFX               
+ LDC I,6
+ NEQ I
+ FJP L25
+ LOD I,2,148                 ; LAUFX               
+ INC I,1
+ STR I,2,148
+ UJP L23
+L25 LAB
+ LOC 2475
+ LDA 1,420
+ CSP SIO,160
+ LCA M,3,' *)'
+ LDC I,3
+ LDC I,3
+ CSP WRS,160
+ CSP EIO,160
+ LOC 2476
+ LOD I,1,1908                ; OUTPOINTER          
+ LOC 2477
+ LDC I,13
+ ADI
+ STR I,1,1908
+L22 LAB
+ LOC 2479
+ LDC I,2
+ STR I,1,1980
+L21 LAB
+ LOC 2480
+ MST 1,0
+ CUP P,1,$PRV0017,160
+ LOC 2481
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOC 2483
+ MST 1,0
+ CUP P,1,$PRV0023,160
+ LOC 2484
+ UJP L27
+L15 LAB
+ LOC 2485
+ LOD H,1,1906                ; S                   
+ LDC I,63
+ EQU I
+ FJP L28
+L29 LAB
+ LOC 2488
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,272
+ CUP P,3,$PRV0022,160
+ LOC 2489
+ MST 1,0
+ CUP P,1,$PRV0017,160
+ LOC 2491
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOD H,1,1906                ; S                   
+ LDC I,72
+ EQU I
+ FJP L29
+ LOC 2492
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,272
+ CUP P,3,$PRV0022,160
+ LOC 2493
+ LOD I,1,1588                ; EINR                
+ LOD I,1,1580                ; INC                 
+ ADI
+ STR I,1,1588
+ LOC 2494
+ MST 1,0
+ CUP P,1,$PRV0017,160
+ LOC 2495
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+L32 LAB
+ LOC 2496
+ LOD H,1,1906                ; S                   
+ ORD
+ LDA 1,1532                  ; STERMSYMBOLE        
+ SLD 12,160
+ LCA S,X12'000000000000000002010000'
+ SLD 12,172
+ DIF
+ LOC 2497
+ INN
+ NOT B
+ FJP L33
+ LOC 2499
+ MST 1,0
+ LDC B,1
+ STR B,2,272
+ CUP P,3,$PRV0020,160
+ LOC 2500
+ LOD H,1,1906                ; S                   
+ LDC I,70
+ EQU I
+ FJP L34
+ LOC 2502
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,272
+ CUP P,3,$PRV0022,160
+ LOC 2503
+ MST 1,0
+ CUP P,1,$PRV0017,160
+ LOC 2504
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOC 2505
+ LOD I,1,1588                ; EINR                
+ LOD I,1,1580                ; INC                 
+ ADI
+ STR I,1,1588
+ LOC 2506
+ MST 1,0
+ LDC B,1
+ STR B,2,272
+ CUP P,3,$PRV0020,160
+ LOC 2507
+ MST 1,0
+ LDA 2,112                   ; FSYS                
+ LDA 2,272
+ SMV -12,12
+ LDC B,0
+ STR B,2,284
+ LCA M,6,'else/c'
+ LDA 2,285
+ MOV -6
+ CUP P,7,$PRV0030,160
+ LOC 2508
+ LOD I,1,1588                ; EINR                
+ LOD I,1,1580                ; INC                 
+ SBI
+ STR I,1,1588
+ LOC 2510
+ UJP L35
+L34 LAB
+ LOC 2511
+ LOD H,1,1906                ; S                   
+ LDC I,79
+ EQU I
+ FJP L36
+ LOC 2513
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,272
+ CUP P,3,$PRV0022,160
+ LOC 2514
+ MST 1,0
+ CUP P,1,$PRV0017,160
+ LOC 2515
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOC 2516
+ LOD I,1,1588                ; EINR                
+ LOD I,1,1580                ; INC                 
+ ADI
+ STR I,1,1588
+ LOC 2517
+ MST 1,0
+ LDC B,1
+ STR B,2,272
+ CUP P,3,$PRV0020,160
+ LOC 2518
+ MST 1,0
+ LDA 2,112                   ; FSYS                
+ LDA 2,272
+ SMV -12,12
+ LDC B,0
+ STR B,2,284
+ LCA M,6,'otherw'
+ LDA 2,285
+ MOV -6
+ CUP P,7,$PRV0030,160
+ LOC 2519
+ LOD I,1,1588                ; EINR                
+ LOD I,1,1580                ; INC                 
+ SBI
+ STR I,1,1588
+ LOC 2521
+ UJP L37
+L36 LAB
+L38 LAB
+ LOC 2523
+ LOD H,1,1906                ; S                   
+ LDC I,26
+ NEQ I
+ FJP L39
+ LOC 2525
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,272
+ CUP P,3,$PRV0022,160
+ LOC 2526
+ MST 1,0
+ CUP P,1,$PRV0017,160
+ LOC 2528
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ UJP L38
+L39 LAB
+ LOC 2529
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,272
+ CUP P,3,$PRV0022,160
+ LOC 2530
+ LOD I,1,1908                ; OUTPOINTER          
+ LOD I,1,1588                ; EINR                
+ SBI
+ LDC I,8
+ LEQ I
+ FJP L40
+ LOC 2532
+ LOD I,1,1588                ; EINR                
+ STR I,2,144
+ LOC 2533
+ LOD I,1,1908                ; OUTPOINTER          
+ STR I,1,1588
+ LOC 2535
+ UJP L41
+L40 LAB
+ LOC 2537
+ LOD I,1,1588                ; EINR                
+ STR I,2,144
+ LOC 2538
+ LOD I,1,1588                ; EINR                
+ LOD I,1,1580                ; INC                 
+ ADI
+ STR I,1,1588
+ LOC 2539
+ MST 1,0
+ LDC B,1
+ STR B,2,272
+ CUP P,3,$PRV0020,160
+L41 LAB
+ LOC 2541
+ MST 1,0
+ CUP P,1,$PRV0017,160
+ LOC 2542
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOC 2543
+ MST 1,0
+ LDA 2,112                   ; FSYS                
+ LDA 2,272
+ SMV -12,12
+ LDC B,0
+ STR B,2,284
+ LCA M,6,'tag/ca'
+ LDA 2,285
+ MOV -6
+ CUP P,7,$PRV0030,160
+ LOC 2544
+ LOD I,2,144                 ; EINRSAVE            
+ STR I,1,1588
+L37 LAB
+L35 LAB
+ LOC 2546
+ UJP L32
+L33 LAB
+ LOC 2547
+ LOD I,1,1588                ; EINR                
+ LOD I,1,1580                ; INC                 
+ SBI
+ STR I,1,1588
+ LOC 2548
+ MST 1,0
+ LDC B,1
+ STR B,2,272
+ CUP P,3,$PRV0020,160
+ LOC 2549
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,272
+ CUP P,3,$PRV0022,160
+ LOC 2550
+ LOD I,1,1908                ; OUTPOINTER          
+ LDC I,11
+ ADI
+ LDC I,72
+ LES I
+ FJP L42
+ LOC 2552
+ LDA 1,420
+ CSP SIO,160
+ LCA M,11,' (* case *)'
+ LDC I,11
+ LDC I,11
+ CSP WRS,160
+ CSP EIO,160
+ LOC 2553
+ LOD I,1,1908                ; OUTPOINTER          
+ LOC 2554
+ LDC I,11
+ ADI
+ STR I,1,1908
+L42 LAB
+ LOC 2555
+ LDC I,2
+ STR I,1,1980
+ LOC 2556
+ MST 1,0
+ CUP P,1,$PRV0017,160
+ LOC 2557
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOC 2559
+ MST 1,0
+ CUP P,1,$PRV0023,160
+ LOC 2560
+ UJP L43
+L28 LAB
+ LOC 2561
+ LOD H,1,1906                ; S                   
+ LDC I,66
+ EQU I
+ LOD H,1,1906                ; S                   
+ LDC I,65
+ EQU I
+ IOR B
+ LOD H,1,1906                ; S                   
+ LDC I,67
+ EQU I
+ IOR B
+ FJP L44
+ LOC 2563
+ LOD H,1,1906                ; S                   
+ LDC I,66
+ EQU I
+ FJP L45
+ LOC 2564
+ LDA 2,125                   ; KENNUNG             
+ LCA M,6,'for   '
+ MOV 6
+L45 LAB
+ LOC 2565
+ LOD H,1,1906                ; S                   
+ LDC I,65
+ EQU I
+ FJP L46
+ LOC 2566
+ LDA 2,125                   ; KENNUNG             
+ LCA M,6,'while '
+ MOV 6
+L46 LAB
+ LOC 2567
+ LOD H,1,1906                ; S                   
+ LDC I,67
+ EQU I
+ FJP L47
+ LOC 2568
+ LDA 2,125                   ; KENNUNG             
+ LCA M,6,'with  '
+ MOV 6
+L47 LAB
+L48 LAB
+ LOC 2570
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,272
+ CUP P,3,$PRV0022,160
+ LOC 2571
+ MST 1,0
+ CUP P,1,$PRV0017,160
+ LOC 2573
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOD H,1,1906                ; S                   
+ LDC I,73
+ EQU I
+ FJP L48
+ LOC 2574
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,272
+ CUP P,3,$PRV0022,160
+ LOC 2575
+ LOD I,1,1588                ; EINR                
+ LOD I,1,1580                ; INC                 
+ ADI
+ STR I,1,1588
+ LOC 2576
+ MST 1,0
+ CUP P,1,$PRV0017,160
+ LOC 2577
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOC 2578
+ MST 1,0
+ LDA 2,112                   ; FSYS                
+ LDA 2,272
+ SMV -12,12
+ LDC B,1
+ STR B,2,284
+ LDA 2,125                   ; KENNUNG             
+ LDA 2,285
+ MOV -6
+ CUP P,7,$PRV0030,160
+ LOC 2579
+ MST 1,0
+ CUP P,1,$PRV0023,160
+ LOC 2580
+ LOD I,1,1588                ; EINR                
+ LOD I,1,1580                ; INC                 
+ SBI
+ STR I,1,1588
+ LOC 2582
+ UJP L51
+L44 LAB
+ LOC 2583
+ LOD H,1,1906                ; S                   
+ LDC I,68
+ EQU I
+ FJP L52
+ LOC 2585
+ MST 1,0
+ CUP P,1,$PRV0026,160
+ UJP L53
+L52 LAB
+ LOC 2586
+ LOD H,1,1906                ; S                   
+ LDC I,62
+ EQU I
+ FJP L54
+L55 LAB
+ LOC 2589
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,272
+ CUP P,3,$PRV0022,160
+ LOC 2590
+ MST 1,0
+ CUP P,1,$PRV0017,160
+ LOC 2592
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOD H,1,1906                ; S                   
+ LDC I,76
+ EQU I
+ FJP L55
+ LOC 2593
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,272
+ CUP P,3,$PRV0022,160
+ LOC 2594
+ LOD I,1,1588                ; EINR                
+ LOD I,1,1580                ; INC                 
+ ADI
+ STR I,1,1588
+ LOC 2595
+ MST 1,0
+ CUP P,1,$PRV0017,160
+ LOC 2596
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOC 2597
+ MST 1,0
+ LDA 2,112                   ; FSYS                
+ LDA 2,272
+ SMV -12,12
+ LDC B,1
+ STR B,2,284
+ LCA M,6,'then  '
+ LDA 2,285
+ MOV -6
+ CUP P,7,$PRV0030,160
+ LOC 2598
+ LOD I,1,1588                ; EINR                
+ LOD I,1,1580                ; INC                 
+ SBI
+ STR I,1,1588
+ LOC 2599
+ LOD H,1,1906                ; S                   
+ LDC I,70
+ EQU I
+ FJP L58
+ LOC 2601
+ MST 1,0
+ LDC B,1
+ STR B,2,272
+ CUP P,3,$PRV0020,160
+ LOC 2602
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,272
+ CUP P,3,$PRV0022,160
+ LOC 2603
+ LOD I,1,1588                ; EINR                
+ LOD I,1,1580                ; INC                 
+ ADI
+ STR I,1,1588
+ LOC 2604
+ MST 1,0
+ CUP P,1,$PRV0017,160
+ LOC 2605
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOC 2606
+ MST 1,0
+ LDA 2,112                   ; FSYS                
+ LDA 2,272
+ SMV -12,12
+ LDC B,1
+ STR B,2,284
+ LCA M,6,'else  '
+ LDA 2,285
+ MOV -6
+ CUP P,7,$PRV0030,160
+ LOC 2607
+ MST 1,0
+ CUP P,1,$PRV0023,160
+ LOC 2608
+ LOD I,1,1588                ; EINR                
+ LOD I,1,1580                ; INC                 
+ SBI
+ STR I,1,1588
+ LOC 2610
+ UJP L59
+L58 LAB
+ LOC 2612
+ MST 1,0
+ CUP P,1,$PRV0023,160
+L59 LAB
+ LOC 2613
+ UJP L60
+L54 LAB
+ LOC 2614
+ LOD H,1,1906                ; S                   
+ LDC I,64
+ EQU I
+ FJP L61
+ LOC 2616
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,272
+ CUP P,3,$PRV0022,160
+ LOC 2617
+ LOD I,1,1588                ; EINR                
+ LOD I,1,1580                ; INC                 
+ ADI
+ STR I,1,1588
+ LOC 2618
+ MST 1,0
+ CUP P,1,$PRV0017,160
+ LOC 2619
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+L62 LAB
+ LOC 2621
+ MST 1,0
+ LDA 2,112                   ; FSYS                
+ LDA 2,272
+ SMV -12,12
+ LDC B,1
+ STR B,2,284
+ LCA M,6,'      '
+ LDA 2,285
+ MOV -6
+ LOC 2622
+ CUP P,7,$PRV0030,160
+ LOD H,1,1906                ; S                   
+ ORD
+ LDA 1,1532                  ; STERMSYMBOLE        
+ SLD 12,160
+ INN
+ FJP L62
+ LOC 2623
+ LOD I,1,1588                ; EINR                
+ LOD I,1,1580                ; INC                 
+ SBI
+ STR I,1,1588
+ LOC 2624
+ MST 1,0
+ LDC B,1
+ STR B,2,272
+ CUP P,3,$PRV0020,160
+L65 LAB
+ LOC 2626
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,272
+ CUP P,3,$PRV0022,160
+ LOC 2627
+ MST 1,0
+ CUP P,1,$PRV0017,160
+ LOC 2629
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOD H,1,1906                ; S                   
+ ORD
+ LDA 1,1532                  ; STERMSYMBOLE        
+ SLD 12,160
+ INN
+ FJP L65
+ LOC 2631
+ MST 1,0
+ CUP P,1,$PRV0023,160
+ LOC 2632
+ UJP L68
+L61 LAB
+ LOC 2634
+ LOD B,1,1516                ; NULLSTATE           
+ FJP L69
+ LOC 2635
+ MST 1,0
+ LDC I,5
+ STR I,2,272
+ LOC 2636
+ CUP P,3,$PRV0008,160
+ UJP L70
+L69 LAB
+ LOC 2638
+ LDC B,1
+ STR B,1,1516
+L70 LAB
+L68 LAB
+L60 LAB
+L53 LAB
+L51 LAB
+L43 LAB
+L27 LAB
+L2 LAB
+ LOC 2639
+ RET P
+L1 DEF I,296
+ DEF I,967
+ DEF B,0
+ LOC 2650
+$PRV0031 ENT P,2,L1  CBODY               ,TFFFF,2,31,,        ,152
+ LOC 2650
+ VPU 2,168
+ LOD H,1,1906                ; S                   
+ LDC I,61
+ EQU I
+ FJP L3
+ LOC 2652
+ LOD I,1,1592                ; EINRKOMM            
+ STR I,2,164
+ LOC 2653
+ MST 1,0
+ LDC B,1
+ STR B,2,288
+ CUP P,3,$PRV0020,176
+ LOC 2654
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,288
+ CUP P,3,$PRV0022,176
+ LOC 2655
+ LDA 1,420
+ CSP SIO,176
+ LCA M,4,' (* '
+ LDC I,4
+ LDC I,4
+ CSP WRS,176
+ CSP EIO,176
+ LOC 2656
+ LDC I,1
+ STR I,2,160
+ LOD I,2,144                 ; FUELLWORT           
+ STR I,2,176
+ LDC I,1
+ LOD I,2,176
+ LEQ I
+ FJP L6
+L4 LAB
+ LOC 2657
+ LDA 1,420
+ CSP SIO,184
+ LDA 2,124                   ; FUELLWORT           
+ LOD I,2,160                 ; I                   
+ CHK J,1,20
+ DEC I,1
+ IXA 1
+ IND C,0                     ; I                   
+ LDC I,1
+ CSP WRC,184
+ CSP EIO,184
+ LOD I,2,160                 ; I                   
+ LOD I,2,176
+ NEQ I
+ FJP L6
+ LOD I,2,160                 ; I                   
+ INC I,1
+ STR I,2,160
+ UJP L4
+L6 LAB
+ LOC 2658
+ LDA 1,420
+ CSP SIO,176
+ LCA M,3,' *)'
+ LDC I,3
+ LDC I,3
+ CSP WRS,176
+ CSP EIO,176
+ LOC 2659
+ LOD I,1,1588                ; EINR                
+ LOD I,1,1580                ; INC                 
+ ADI
+ STR I,1,1588
+ LOC 2660
+ LOD I,1,1588                ; EINR                
+ STR I,1,1592
+ LOC 2661
+ LDC I,2
+ STR I,1,1980
+ LOC 2662
+ MST 1,0
+ CUP P,1,$PRV0017,176
+ LOC 2663
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+L7 LAB
+ LOC 2665
+ MST 1,0
+ LDA 2,112                   ; FSYS                
+ LDA 2,288
+ SMV -12,12
+ LDC B,1
+ STR B,2,300
+ LCA M,6,'      '
+ LDA 2,301
+ MOV -6
+ LOC 2666
+ CUP P,7,$PRV0030,176
+ LOD H,1,1906                ; S                   
+ ORD
+ LDA 1,1532                  ; STERMSYMBOLE        
+ SLD 12,176
+ INN
+ FJP L7
+ LOC 2667
+ LOD I,1,1588                ; EINR                
+ LOD I,1,1580                ; INC                 
+ SBI
+ STR I,1,1588
+ LOC 2668
+ MST 1,0
+ LDC B,1
+ STR B,2,288
+ CUP P,3,$PRV0020,176
+ LOC 2669
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,288
+ CUP P,3,$PRV0022,176
+ LOC 2670
+ LDA 1,420
+ CSP SIO,176
+ LCA M,4,' (* '
+ LDC I,4
+ LDC I,4
+ CSP WRS,176
+ CSP EIO,176
+ LOC 2671
+ LDC I,1
+ STR I,2,160
+ LOD I,2,144                 ; FUELLWORT           
+ STR I,2,176
+ LDC I,1
+ LOD I,2,176
+ LEQ I
+ FJP L12
+L10 LAB
+ LOC 2672
+ LDA 1,420
+ CSP SIO,184
+ LDA 2,124                   ; FUELLWORT           
+ LOD I,2,160                 ; I                   
+ CHK J,1,20
+ DEC I,1
+ IXA 1
+ IND C,0                     ; I                   
+ LDC I,1
+ CSP WRC,184
+ CSP EIO,184
+ LOD I,2,160                 ; I                   
+ LOD I,2,176
+ NEQ I
+ FJP L12
+ LOD I,2,160                 ; I                   
+ INC I,1
+ STR I,2,160
+ UJP L10
+L12 LAB
+ LOC 2673
+ LDA 1,420
+ CSP SIO,176
+ LCA M,3,' *)'
+ LDC I,3
+ LDC I,3
+ CSP WRS,176
+ CSP EIO,176
+ LOC 2674
+ LDC I,2
+ STR I,1,1980
+ LOC 2675
+ MST 1,0
+ CUP P,1,$PRV0017,176
+ LOC 2676
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOC 2677
+ LOD I,2,164                 ; EINRKOMMSAVE        
+ STR I,1,1592
+ LOC 2678
+ MST 1,0
+ LOD I,2,148                 ; BLOCKLEVEL          
+ STR I,2,288
+ CUP P,3,$PRV0024,176
+ LOC 2680
+ UJP L13
+L3 LAB
+ LOC 2681
+ LOD H,1,1906                ; S                   
+ ORD
+ LCA S,X12'000000000000000800060000'
+ SLD 12,176
+ INN
+ FJP L14
+ LOC 2683
+ LOD I,1,1592                ; EINRKOMM            
+ STR I,2,164
+ LOC 2684
+ MST 1,0
+ LDC B,1
+ STR B,2,288
+ CUP P,3,$PRV0020,176
+ LOC 2685
+ LOD I,1,1588                ; EINR                
+ LOD I,1,1580                ; INC                 
+ ADI
+ STR I,1,1588
+ LOC 2686
+ LOD I,1,1588                ; EINR                
+ STR I,1,1592
+ LOC 2687
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,288
+ CUP P,3,$PRV0022,176
+ LOC 2688
+ MST 1,0
+ CUP P,1,$PRV0017,176
+ LOC 2689
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOC 2690
+ LOD H,1,1906                ; S                   
+ ORD
+ LCA S,X12'004080000000000000040000'
+ SLD 12,176
+ INN
+ FJP L15
+ LOC 2692
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,288
+ CUP P,3,$PRV0022,176
+ LOC 2693
+ MST 1,0
+ CUP P,1,$PRV0017,176
+ LOC 2694
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+L15 LAB
+ LOC 2696
+ LOD H,1,1906                ; S                   
+ LDC I,9
+ EQU I
+ FJP L16
+ LOC 2698
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,288
+ CUP P,3,$PRV0022,176
+ LOC 2699
+ MST 1,0
+ CUP P,1,$PRV0017,176
+ LOC 2700
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+L16 LAB
+ LOC 2702
+ LOD H,1,1906                ; S                   
+ LDC I,22
+ EQU I
+ FJP L17
+ LOC 2704
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,288
+ CUP P,3,$PRV0022,176
+ LOC 2705
+ MST 1,0
+ CUP P,1,$PRV0017,176
+ LOC 2706
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+L17 LAB
+ LOC 2708
+ LOD I,1,1588                ; EINR                
+ LOD I,1,1580                ; INC                 
+ SBI
+ STR I,1,1588
+ LOC 2709
+ LOD I,2,164                 ; EINRKOMMSAVE        
+ STR I,1,1592
+ LOC 2710
+ MST 1,0
+ LOD I,2,148                 ; BLOCKLEVEL          
+ STR I,2,288
+ CUP P,3,$PRV0024,176
+ LOC 2712
+ UJP L18
+L14 LAB
+ LOC 2713
+ MST 1,0
+ LDC I,4
+ STR I,2,288
+ LOC 2714
+ CUP P,3,$PRV0008,176
+L18 LAB
+L13 LAB
+ RET P
+L1 DEF I,312
+ DEF I,321
+ DEF B,0
+ LOC 2738
+$PRV0033 ENT P,3,L1  HANDLE_CONST        ,TFFFF,2,33,,        ,112
+ LOC 2738
+ VPU 3,128
+ MST 1,0
+ LDC B,0
+ STR B,3,248
+ CUP P,3,$PRV0020,136
+ LOC 2739
+ LOD I,2,148                 ; BLOCKLEVEL          
+ LDC I,1
+ EQU I
+ FJP L3
+ LOC 2740
+ MST 1,0
+ LDC B,0
+ STR B,3,248
+ CUP P,3,$PRV0020,136
+L3 LAB
+ LOC 2741
+ MST 1,0
+ LDC B,1
+ STR B,3,248
+ CUP P,3,$PRV0020,136
+ LOC 2742
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,3,248
+ CUP P,3,$PRV0022,136
+ LOC 2743
+ LOD I,1,1908                ; OUTPOINTER          
+ STR I,1,1592
+ LOC 2744
+ MST 1,0
+ CUP P,1,$PRV0017,136
+ LOC 2745
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOC 2746
+ LOD I,1,1588                ; EINR                
+ LDC I,6
+ ADI
+ STR I,1,1588
+L4 LAB
+ LOC 2747
+ LOD H,1,1906                ; S                   
+ LDC I,16
+ EQU I
+ FJP L5
+ LOC 2749
+ LDC I,0
+ STR I,2,204
+L6 LAB
+ LOC 2751
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,3,248
+ CUP P,3,$PRV0022,136
+ LOC 2752
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,200
+ LOC 2753
+ MST 1,0
+ CUP P,1,$PRV0017,136
+ LOC 2754
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOC 2755
+ LOD H,1,1906                ; S                   
+ ORD
+ LCA S,X8'0000022101000000'
+ SLD 8,136
+ INN
+ FJP L6
+ LOC 2762
+ LOD I,1,1588                ; EINR                
+ STR I,3,120
+ LOC 2763
+ LOD H,1,1906                ; S                   
+ LDC I,26
+ EQU I
+ FJP L9
+ LOC 2765
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,3,248
+ CUP P,3,$PRV0022,136
+ LOC 2766
+ LOD I,1,1908                ; OUTPOINTER          
+ STR I,1,1588
+ LOC 2767
+ MST 1,0
+ CUP P,1,$PRV0017,136
+ LOC 2768
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOC 2769
+ MST 1,0
+ LDA 3,124                   ; TYPE_MORE_LINES     
+ STR A,3,248
+ CUP P,3,$PRV0028,136
+ LOC 2770
+ LOD B,3,124                 ; TYPE_MORE_LINES     
+ NOT B
+ FJP L10
+ LOC 2771
+ LOD I,3,120                 ; EINRSAVE            
+ STR I,1,1588
+L10 LAB
+L9 LAB
+L11 LAB
+ LOC 2774
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,3,248
+ CUP P,3,$PRV0022,136
+ LOC 2781
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,200
+ LOC 2782
+ MST 1,0
+ CUP P,1,$PRV0017,136
+ LOC 2783
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOC 2784
+ LOD H,2,200                 ; SALT                
+ ORD
+ LCA S,X8'0000000101000000'
+ SLD 8,136
+ INN
+ LOD H,1,1906                ; S                   
+ ORD
+ LOC 2785
+ LCA S,X4'00005000'
+ SLD 4,136
+ INN
+ AND B
+ FJP L14
+ LOC 2787
+ MST 1,0
+ LDC B,1
+ STR B,3,248
+ CUP P,3,$PRV0020,136
+ LOC 2788
+ LOD I,2,204                 ; INCR                
+ LDC I,2
+ ADI
+ STR I,2,204
+ LOC 2789
+ LOD I,1,1588                ; EINR                
+ LDC I,2
+ ADI
+ STR I,1,1588
+L14 LAB
+ LOC 2791
+ LOD H,1,1906                ; S                   
+ LDC I,22
+ EQU I
+ FJP L11
+ LOC 2792
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,3,248
+ CUP P,3,$PRV0022,136
+ LOC 2793
+ LOD I,3,120                 ; EINRSAVE            
+ STR I,1,1588
+ LOC 2794
+ MST 1,0
+ CUP P,1,$PRV0017,136
+ LOC 2795
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOC 2796
+ LOD H,1,1906                ; S                   
+ LDC I,16
+ EQU I
+ FJP L15
+ LOC 2797
+ MST 1,0
+ LDC B,1
+ STR B,3,248
+ LOC 2798
+ CUP P,3,$PRV0020,136
+L15 LAB
+ UJP L4
+L5 LAB
+ LOC 2799
+ LOD I,1,1588                ; EINR                
+ LDC I,6
+ SBI
+ STR I,1,1588
+ LOC 2800
+ RET P
+L1 DEF I,256
+ DEF I,208
+ DEF B,0
+ LOC 2808
+$PRV0034 ENT P,3,L1  HANDLE_VAR          ,TFFFF,2,34,,        ,112
+ LOC 2808
+ VPU 3,124
+ MST 1,0
+ LDC B,0
+ STR B,3,240
+ CUP P,3,$PRV0020,128
+ LOC 2809
+ LOD I,2,148                 ; BLOCKLEVEL          
+ LDC I,1
+ EQU I
+ FJP L3
+ LOC 2810
+ MST 1,0
+ LDC B,0
+ STR B,3,240
+ CUP P,3,$PRV0020,128
+L3 LAB
+ LOC 2811
+ MST 1,0
+ LDC B,1
+ STR B,3,240
+ CUP P,3,$PRV0020,128
+ LOC 2812
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,3,240
+ CUP P,3,$PRV0022,128
+ LOC 2813
+ LOD I,1,1908                ; OUTPOINTER          
+ STR I,1,1592
+ LOC 2814
+ MST 1,0
+ CUP P,1,$PRV0017,128
+ LOC 2815
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOC 2816
+ LOD I,1,1588                ; EINR                
+ LDC I,4
+ ADI
+ STR I,1,1588
+L4 LAB
+ LOC 2817
+ LOD H,1,1906                ; S                   
+ LDC I,16
+ EQU I
+ FJP L5
+ LOC 2819
+ LDC I,0
+ STR I,2,204
+L6 LAB
+ LOC 2821
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,3,240
+ CUP P,3,$PRV0022,128
+ LOC 2822
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,200
+ LOC 2823
+ MST 1,0
+ CUP P,1,$PRV0017,128
+ LOC 2824
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOC 2825
+ LOD H,1,1906                ; S                   
+ ORD
+ LCA S,X8'0000022101000000'
+ SLD 8,128
+ INN
+ FJP L6
+ LOC 2826
+ LOD H,1,1906                ; S                   
+ LDC I,26
+ NEQ I
+ FJP L9
+ LOC 2827
+ MST 1,0
+ LDC I,6
+ STR I,3,240
+ CUP P,3,$PRV0008,128
+L9 LAB
+ LOC 2828
+ LOD I,1,1588                ; EINR                
+ STR I,3,120
+ LOC 2829
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,3,240
+ CUP P,3,$PRV0022,128
+ LOC 2830
+ LOD I,1,1908                ; OUTPOINTER          
+ STR I,1,1588
+ LOC 2831
+ MST 1,0
+ CUP P,1,$PRV0017,128
+ LOC 2832
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOC 2833
+ MST 1,0
+ LDA 2,209                   ; DUMMYB              
+ STR A,3,240
+ CUP P,3,$PRV0028,128
+ LOC 2841
+ LOD H,1,1906                ; S                   
+ ORD
+ LCA S,X8'0000000101000000'
+ SLD 8,128
+ INN
+ FJP L10
+L11 LAB
+ LOC 2844
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,3,240
+ CUP P,3,$PRV0022,128
+ LOC 2851
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,200
+ LOC 2852
+ MST 1,0
+ CUP P,1,$PRV0017,128
+ LOC 2853
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOC 2854
+ LOD H,2,200                 ; SALT                
+ ORD
+ LCA S,X8'0000000101000000'
+ SLD 8,128
+ INN
+ LOD H,1,1906                ; S                   
+ ORD
+ LOC 2855
+ LCA S,X4'00005000'
+ SLD 4,128
+ INN
+ AND B
+ FJP L14
+ LOC 2857
+ MST 1,0
+ LDC B,1
+ STR B,3,240
+ CUP P,3,$PRV0020,128
+ LOC 2858
+ LOD I,2,204                 ; INCR                
+ LDC I,2
+ ADI
+ STR I,2,204
+ LOC 2859
+ LOD I,1,1588                ; EINR                
+ LDC I,2
+ ADI
+ STR I,1,1588
+L14 LAB
+ LOC 2861
+ LOD H,1,1906                ; S                   
+ LDC I,22
+ EQU I
+ FJP L11
+ LOC 2868
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,3,240
+ CUP P,3,$PRV0022,128
+ LOC 2869
+ MST 1,0
+ CUP P,1,$PRV0017,128
+ LOC 2870
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+L10 LAB
+ LOC 2872
+ LOD I,3,120                 ; EINRSAVE            
+ STR I,1,1588
+ LOC 2873
+ LOD H,1,1906                ; S                   
+ LDC I,16
+ EQU I
+ FJP L15
+ LOC 2874
+ MST 1,0
+ LDC B,1
+ STR B,3,240
+ LOC 2875
+ CUP P,3,$PRV0020,128
+L15 LAB
+ UJP L4
+L5 LAB
+ LOC 2876
+ LOD I,1,1588                ; EINR                
+ LDC I,4
+ SBI
+ STR I,1,1588
+ LOC 2877
+ RET P
+L1 DEF I,248
+ DEF I,213
+ DEF B,0
+ LOC 2883
+$PRV0035 ENT P,3,L1  HANDLE_SQLVAR       ,TFFFF,2,35,,        ,112
+ LOC 2883
+ VPU 3,120
+ MST 1,0
+ LDC B,0
+ STR B,3,240
+ CUP P,3,$PRV0020,128
+ LOC 2884
+ LOD I,2,148                 ; BLOCKLEVEL          
+ LDC I,1
+ EQU I
+ FJP L3
+ LOC 2885
+ MST 1,0
+ LDC B,0
+ STR B,3,240
+ CUP P,3,$PRV0020,128
+L3 LAB
+ LOC 2886
+ MST 1,0
+ LDC B,1
+ STR B,3,240
+ CUP P,3,$PRV0020,128
+ LOC 2887
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,3,240
+ CUP P,3,$PRV0022,128
+ LOC 2888
+ LOD I,1,1908                ; OUTPOINTER          
+ STR I,1,1592
+ LOC 2889
+ MST 1,0
+ CUP P,1,$PRV0017,128
+ LOC 2890
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOC 2891
+ LOD I,1,1588                ; EINR                
+ LDC I,7
+ ADI
+ STR I,1,1588
+L4 LAB
+ LOC 2892
+ LOD H,1,1906                ; S                   
+ LDC I,16
+ EQU I
+ FJP L5
+L6 LAB
+ LOC 2895
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,3,240
+ CUP P,3,$PRV0022,128
+ LOC 2896
+ MST 1,0
+ CUP P,1,$PRV0017,128
+ LOC 2898
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOD H,1,1906                ; S                   
+ LDC I,26
+ EQU I
+ FJP L6
+ LOC 2899
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,3,240
+ CUP P,3,$PRV0022,128
+ LOC 2900
+ MST 1,0
+ CUP P,1,$PRV0017,128
+ LOC 2901
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOC 2902
+ MST 1,0
+ LDA 2,209                   ; DUMMYB              
+ STR A,3,240
+ CUP P,3,$PRV0028,128
+ LOC 2903
+ LOD H,1,1906                ; S                   
+ LDC I,16
+ EQU I
+ FJP L9
+ LOC 2904
+ MST 1,0
+ LDC B,1
+ STR B,3,240
+ LOC 2905
+ CUP P,3,$PRV0020,128
+L9 LAB
+ UJP L4
+L5 LAB
+ LOC 2906
+ LOD I,1,1588                ; EINR                
+ LDC I,7
+ SBI
+ STR I,1,1588
+ LOC 2907
+ RET P
+L1 DEF I,248
+ DEF I,109
+ DEF B,0
+ LOC 2915
+$PRV0036 ENT P,3,L1  HANDLE_STATIC       ,TFFFF,2,36,,        ,112
+ LOC 2915
+ VPU 3,124
+ MST 1,0
+ LDC B,0
+ STR B,3,240
+ CUP P,3,$PRV0020,128
+ LOC 2916
+ LOD I,2,148                 ; BLOCKLEVEL          
+ LDC I,1
+ EQU I
+ FJP L3
+ LOC 2917
+ MST 1,0
+ LDC B,0
+ STR B,3,240
+ CUP P,3,$PRV0020,128
+L3 LAB
+ LOC 2918
+ MST 1,0
+ LDC B,1
+ STR B,3,240
+ CUP P,3,$PRV0020,128
+ LOC 2919
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,3,240
+ CUP P,3,$PRV0022,128
+ LOC 2920
+ LOD I,1,1908                ; OUTPOINTER          
+ STR I,1,1592
+ LOC 2921
+ MST 1,0
+ CUP P,1,$PRV0017,128
+ LOC 2922
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOC 2923
+ LOD I,1,1588                ; EINR                
+ LDC I,7
+ ADI
+ STR I,1,1588
+L4 LAB
+ LOC 2924
+ LOD H,1,1906                ; S                   
+ LDC I,16
+ EQU I
+ FJP L5
+ LOC 2926
+ LDC I,0
+ STR I,2,204
+L6 LAB
+ LOC 2928
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,3,240
+ CUP P,3,$PRV0022,128
+ LOC 2929
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,200
+ LOC 2930
+ MST 1,0
+ CUP P,1,$PRV0017,128
+ LOC 2931
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOC 2932
+ LOD H,1,1906                ; S                   
+ ORD
+ LCA S,X8'0000022101000000'
+ SLD 8,128
+ INN
+ FJP L6
+ LOC 2933
+ LOD H,1,1906                ; S                   
+ LDC I,26
+ NEQ I
+ FJP L9
+ LOC 2934
+ MST 1,0
+ LDC I,6
+ STR I,3,240
+ CUP P,3,$PRV0008,128
+L9 LAB
+ LOC 2935
+ LOD I,1,1588                ; EINR                
+ STR I,3,120
+ LOC 2936
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,3,240
+ CUP P,3,$PRV0022,128
+ LOC 2937
+ LOD I,1,1908                ; OUTPOINTER          
+ STR I,1,1588
+ LOC 2938
+ MST 1,0
+ CUP P,1,$PRV0017,128
+ LOC 2939
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOC 2940
+ MST 1,0
+ LDA 2,209                   ; DUMMYB              
+ STR A,3,240
+ CUP P,3,$PRV0028,128
+ LOC 2948
+ LOD H,1,1906                ; S                   
+ ORD
+ LCA S,X8'0000000101000000'
+ SLD 8,128
+ INN
+ FJP L10
+L11 LAB
+ LOC 2951
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,3,240
+ CUP P,3,$PRV0022,128
+ LOC 2958
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,200
+ LOC 2959
+ MST 1,0
+ CUP P,1,$PRV0017,128
+ LOC 2960
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOC 2961
+ LOD H,2,200                 ; SALT                
+ ORD
+ LCA S,X8'0000000101000000'
+ SLD 8,128
+ INN
+ LOD H,1,1906                ; S                   
+ ORD
+ LOC 2962
+ LCA S,X4'00005000'
+ SLD 4,128
+ INN
+ AND B
+ FJP L14
+ LOC 2964
+ MST 1,0
+ LDC B,1
+ STR B,3,240
+ CUP P,3,$PRV0020,128
+ LOC 2965
+ LOD I,2,204                 ; INCR                
+ LDC I,2
+ ADI
+ STR I,2,204
+ LOC 2966
+ LOD I,1,1588                ; EINR                
+ LDC I,2
+ ADI
+ STR I,1,1588
+L14 LAB
+ LOC 2968
+ LOD H,1,1906                ; S                   
+ LDC I,22
+ EQU I
+ FJP L11
+ LOC 2975
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,3,240
+ CUP P,3,$PRV0022,128
+ LOC 2976
+ MST 1,0
+ CUP P,1,$PRV0017,128
+ LOC 2977
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+L10 LAB
+ LOC 2979
+ LOD I,3,120                 ; EINRSAVE            
+ STR I,1,1588
+ LOC 2980
+ LOD H,1,1906                ; S                   
+ LDC I,16
+ EQU I
+ FJP L15
+ LOC 2981
+ MST 1,0
+ LDC B,1
+ STR B,3,240
+ LOC 2982
+ CUP P,3,$PRV0020,128
+L15 LAB
+ UJP L4
+L5 LAB
+ LOC 2983
+ LOD I,1,1588                ; EINR                
+ LDC I,7
+ SBI
+ STR I,1,1588
+ LOC 2984
+ RET P
+L1 DEF I,248
+ DEF I,213
+ DEF B,0
+ LOC 2988
+$PRV0032 ENT P,2,L1  CBLOCK              ,TFFFF,2,32,,        ,112
+ LOC 2988
+ VPU 2,212
+ LOD I,1,1592                ; EINRKOMM            
+ STR I,2,164
+ LOC 2989
+ LOD I,1,1588                ; EINR                
+ STR I,1,1592
+L3 LAB
+ LOC 2990
+ LDC B,1
+ FJP L4
+ LOC 2992
+ LOD H,1,1906                ; S                   
+ LDC I,48
+ EQU I
+ FJP L5
+ LOC 2994
+ MST 1,0
+ LDC B,0
+ STR B,2,328
+ CUP P,3,$PRV0020,216
+ LOC 2995
+ LOD I,2,148                 ; BLOCKLEVEL          
+ LDC I,1
+ EQU I
+ FJP L6
+ LOC 2996
+ MST 1,0
+ LDC B,0
+ STR B,2,328
+ CUP P,3,$PRV0020,216
+L6 LAB
+ LOC 2997
+ MST 1,0
+ LDC B,1
+ STR B,2,328
+ CUP P,3,$PRV0020,216
+ LOC 2998
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,328
+ CUP P,3,$PRV0022,216
+ LOC 2999
+ LOD I,1,1588                ; EINR                
+ STR I,2,160
+ LOC 3000
+ LOD I,1,1908                ; OUTPOINTER          
+ STR I,1,1588
+ LOC 3001
+ LOD I,1,1592                ; EINRKOMM            
+ STR I,2,164
+ LOC 3002
+ LOD I,1,1908                ; OUTPOINTER          
+ STR I,1,1592
+ LOC 3003
+ MST 1,0
+ CUP P,1,$PRV0017,216
+ LOC 3004
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+L7 LAB
+ LOC 3005
+ LOD H,1,1906                ; S                   
+ LDC I,22
+ NEQ I
+ FJP L8
+ LOC 3007
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,328
+ CUP P,3,$PRV0022,216
+ LOC 3008
+ MST 1,0
+ CUP P,1,$PRV0017,216
+ LOC 3010
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ UJP L7
+L8 LAB
+ LOC 3011
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,328
+ CUP P,3,$PRV0022,216
+ LOC 3012
+ MST 1,0
+ CUP P,1,$PRV0017,216
+ LOC 3013
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOC 3014
+ LOD I,2,160                 ; EINRSAVE            
+ STR I,1,1588
+ LOC 3015
+ UJP L3
+L5 LAB
+ LOC 3017
+ LOD H,1,1906                ; S                   
+ LDC I,50
+ EQU I
+ FJP L9
+ LOC 3019
+ MST 1,0
+ LDC B,0
+ STR B,2,328
+ CUP P,3,$PRV0020,216
+ LOC 3020
+ LOD I,2,148                 ; BLOCKLEVEL          
+ LDC I,1
+ EQU I
+ FJP L10
+ LOC 3021
+ MST 1,0
+ LDC B,0
+ STR B,2,328
+ CUP P,3,$PRV0020,216
+L10 LAB
+ LOC 3022
+ MST 1,0
+ LDC B,1
+ STR B,2,328
+ CUP P,3,$PRV0020,216
+ LOC 3023
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,328
+ CUP P,3,$PRV0022,216
+ LOC 3024
+ LOD I,1,1908                ; OUTPOINTER          
+ STR I,1,1592
+ LOC 3025
+ MST 1,0
+ CUP P,1,$PRV0017,216
+ LOC 3026
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOC 3027
+ LOD I,1,1588                ; EINR                
+ LDC I,5
+ ADI
+ STR I,1,1588
+L11 LAB
+ LOC 3028
+ LOD H,1,1906                ; S                   
+ LDC I,16
+ EQU I
+ FJP L12
+L13 LAB
+ LOC 3031
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,328
+ CUP P,3,$PRV0022,216
+ LOC 3032
+ MST 1,0
+ CUP P,1,$PRV0017,216
+ LOC 3034
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOD H,1,1906                ; S                   
+ LDC I,31
+ EQU I
+ FJP L13
+ LOC 3035
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,328
+ CUP P,3,$PRV0022,216
+ LOC 3036
+ MST 1,0
+ CUP P,1,$PRV0017,216
+ LOC 3037
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOC 3038
+ MST 1,0
+ LDA 2,209                   ; DUMMYB              
+ STR A,2,328
+ CUP P,3,$PRV0028,216
+ LOC 3039
+ LOD H,1,1906                ; S                   
+ LDC I,16
+ EQU I
+ FJP L16
+ LOC 3040
+ MST 1,0
+ LDC B,1
+ STR B,2,328
+ LOC 3041
+ CUP P,3,$PRV0020,216
+L16 LAB
+ UJP L11
+L12 LAB
+ LOC 3042
+ LOD I,1,1588                ; EINR                
+ LDC I,5
+ SBI
+ STR I,1,1588
+ LOC 3043
+ UJP L3
+L9 LAB
+ LOC 3045
+ LOD H,1,1906                ; S                   
+ LDC I,49
+ EQU I
+ FJP L17
+ LOC 3047
+ MST 2,0
+ CUP P,1,$PRV0033,216
+ LOC 3048
+ UJP L3
+L17 LAB
+ LOC 3050
+ LOD H,1,1906                ; S                   
+ LDC I,88
+ EQU I
+ FJP L18
+ LOC 3052
+ MST 2,0
+ CUP P,1,$PRV0035,216
+ LOC 3053
+ UJP L3
+L18 LAB
+ LOC 3055
+ LOD H,1,1906                ; S                   
+ LDC I,51
+ EQU I
+ FJP L19
+ LOC 3057
+ MST 2,0
+ CUP P,1,$PRV0034,216
+ LOC 3058
+ UJP L3
+L19 LAB
+ LOC 3060
+ LOD H,1,1906                ; S                   
+ LDC I,85
+ EQU I
+ FJP L20
+ LOC 3062
+ MST 2,0
+ CUP P,1,$PRV0036,216
+ LOC 3063
+ UJP L3
+L20 LAB
+ LOC 3065
+ UJP L4
+ LOC 3066
+ UJP L3
+L4 LAB
+ LOC 3067
+ LDC B,0
+ STR B,2,208
+L21 LAB
+ LOC 3068
+ LOD H,1,1906                ; S                   
+ LDC I,54
+ EQU I
+ LOD H,1,1906                ; S                   
+ LDC I,52
+ EQU I
+ IOR B
+ LOD H,1,1906                ; S                   
+ LDC I,89
+ EQU I
+ IOR B
+ LOC 3069
+ LOD H,1,1906                ; S                   
+ LDC I,84
+ EQU I
+ IOR B
+ FJP L22
+ LOC 3071
+ LOD B,2,208                 ; PROC_VORH           
+ NOT B
+ FJP L23
+ LOC 3072
+ LOD I,2,148                 ; BLOCKLEVEL          
+ LDC I,1
+ EQU I
+ FJP L24
+ LOC 3073
+ MST 1,0
+ LDC B,0
+ STR B,2,328
+ CUP P,3,$PRV0020,216
+L24 LAB
+L23 LAB
+ LOC 3074
+ LDC B,1
+ STR B,2,208
+ LOC 3075
+ MST 1,0
+ LDC B,0
+ STR B,2,328
+ CUP P,3,$PRV0020,216
+ LOC 3076
+ MST 1,0
+ LDC B,0
+ STR B,2,328
+ CUP P,3,$PRV0020,216
+ LOC 3077
+ MST 1,0
+ LDC B,1
+ STR B,2,328
+ CUP P,3,$PRV0020,216
+ LOC 3078
+ LDC I,0
+ STR I,2,168
+ LOC 3079
+ LOD I,1,1588                ; EINR                
+ STR I,2,160
+ LOC 3080
+ LOD I,1,1588                ; EINR                
+ STR I,1,1592
+L25 LAB
+ LOC 3081
+ LOD H,1,1906                ; S                   
+ LDC I,89
+ EQU I
+ LOD H,1,1906                ; S                   
+ LDC I,84
+ EQU I
+ IOR B
+ FJP L26
+ LOC 3083
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,328
+ CUP P,3,$PRV0022,216
+ LOC 3084
+ MST 1,0
+ CUP P,1,$PRV0017,216
+ LOC 3085
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOC 3086
+ UJP L25
+L26 LAB
+ LOC 3087
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,328
+ CUP P,3,$PRV0022,216
+ LOC 3088
+ MST 1,0
+ CUP P,1,$PRV0017,216
+ LOC 3089
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOC 3090
+ LDA 2,176                   ; PROCWORT            
+ LCA M,20,'                    '
+ MOV 20
+ LOC 3091
+ LDC I,1
+ STR I,2,172
+ LOD I,1,1512                ; W1ENDE              
+ STR I,2,216
+ LDC I,1
+ LOD I,2,216
+ LEQ I
+ FJP L29
+L27 LAB
+ LOC 3092
+ LOD I,2,172                 ; I                   
+ LDC I,20
+ LEQ I
+ FJP L30
+ LOC 3093
+ LDA 2,176                   ; PROCWORT            
+ LOD I,2,172                 ; I                   
+ CHK J,1,20
+ DEC I,1
+ IXA 1
+ LDA 1,1412                  ; W1                  
+ LOD I,2,172                 ; I                   
+ CHK J,1,100
+ DEC I,1
+ IXA 1
+ IND C,0                     ; I                   
+ CHK I,0,255
+ STO C
+L30 LAB
+ LOD I,2,172                 ; I                   
+ LOD I,2,216
+ NEQ I
+ FJP L29
+ LOD I,2,172                 ; I                   
+ INC I,1
+ STR I,2,172
+ UJP L27
+L29 LAB
+ LOC 3094
+ LOD I,1,1512                ; W1ENDE              
+ LDC I,20
+ GRT I
+ FJP L31
+ LOC 3096
+ LDC I,20
+ STR I,2,196
+ UJP L32
+L31 LAB
+ LOC 3097
+ LOD I,1,1512                ; W1ENDE              
+ STR I,2,196
+L32 LAB
+L33 LAB
+ LOC 3099
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,328
+ CUP P,3,$PRV0022,216
+ LOC 3100
+ MST 1,0
+ CUP P,1,$PRV0017,216
+ LOC 3101
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOC 3102
+ LOD H,1,1906                ; S                   
+ LDC I,17
+ EQU I
+ FJP L36
+ LOC 3104
+ LOD I,2,168                 ; KLAMMZ              
+ LDC I,1
+ ADI
+ STR I,2,168
+ LOC 3105
+ LOD I,2,168                 ; KLAMMZ              
+ LDC I,1
+ EQU I
+ FJP L37
+ LOC 3108
+ LOD I,1,1908                ; OUTPOINTER          
+ STR I,1,1588
+L37 LAB
+L36 LAB
+ LOC 3110
+ LOD H,1,1906                ; S                   
+ LDC I,18
+ EQU I
+ FJP L38
+ LOC 3111
+ LOD I,2,168                 ; KLAMMZ              
+ LOC 3112
+ LDC I,1
+ SBI
+ STR I,2,168
+L38 LAB
+ LOD H,1,1906                ; S                   
+ LDC I,22
+ EQU I
+ LOD I,2,168                 ; KLAMMZ              
+ LDC I,0
+ EQU I
+ AND B
+ FJP L33
+ LOC 3113
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,328
+ CUP P,3,$PRV0022,216
+ LOC 3114
+ MST 1,0
+ CUP P,1,$PRV0017,216
+ LOC 3115
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOC 3116
+ LOD I,2,160                 ; EINRSAVE            
+ STR I,1,1588
+ LOC 3117
+ LOD I,1,1588                ; EINR                
+ LDC I,3
+ ADI
+ STR I,1,1588
+ LOC 3118
+ MST 1,0
+ LDA 2,112                   ; FSYS                
+ LDA 2,328
+ SMV -12,12
+ LDA 2,176                   ; PROCWORT            
+ LDA 2,340
+ MOV -24
+ LOD I,2,148                 ; BLOCKLEVEL          
+ LDC I,1
+ ADI
+ STR I,2,364
+ CUP P,7,$PRV0032,216
+ LOC 3119
+ LOD I,1,1588                ; EINR                
+ LDC I,3
+ SBI
+ STR I,1,1588
+ LOC 3120
+ LOD I,2,148                 ; BLOCKLEVEL          
+ LDC I,1
+ EQU I
+ FJP L39
+ LOC 3121
+ MST 1,0
+ LDC B,0
+ STR B,2,328
+ CUP P,3,$PRV0020,216
+L39 LAB
+ LOC 3122
+ UJP L21
+L22 LAB
+ LOC 3123
+ MST 1,0
+ LDC B,0
+ STR B,2,328
+ CUP P,3,$PRV0020,216
+ LOC 3124
+ LOD I,2,148                 ; BLOCKLEVEL          
+ LDC I,1
+ EQU I
+ LOD B,2,208                 ; PROC_VORH           
+ IOR B
+ FJP L40
+ LOC 3125
+ MST 1,0
+ LDC B,0
+ STR B,2,328
+ CUP P,3,$PRV0020,216
+L40 LAB
+ LOC 3126
+ MST 1,0
+ LDA 2,112                   ; FSYS                
+ LDA 2,328
+ SMV -12,12
+ LDA 2,124                   ; FUELLWORT           
+ LDA 2,340
+ MOV -24
+ LOD I,2,148                 ; BLOCKLEVEL          
+ STR I,2,364
+ CUP P,7,$PRV0031,216
+ LOC 3128
+ LOD I,2,164                 ; EINRKOMMSAVE        
+ STR I,1,1592
+ RET P
+L1 DEF I,368
+ DEF I,579
+ DEF B,1
+ LOC 3137
+$PRV0037 ENT P,2,L1  PROG                ,TFFFF,2,37,,        ,112
+ LOC 3137
+ VPU 2,124
+L3 LAB
+ LOC 3138
+ MST 1,0
+ CUP P,1,$PRV0017,128
+ LOC 3139
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,2,120
+ LOC 3140
+ MST 1,0
+ LOD H,2,120                 ; S                   
+ CHK I,0,90
+ STR H,2,240
+ CUP P,3,$PRV0022,128
+ LOC 3141
+ LOD H,2,120                 ; S                   
+ LDC I,69
+ EQU I
+ FJP L6
+ LOC 3143
+ LDC I,2
+ STR I,1,1980
+L6 LAB
+ LOC 3144
+ LOD B,1,1904                ; EOFILE              
+ FJP L3
+ RET P
+L1 DEF I,248
+ DEF I,31
+ DEF B,0
+ LOC 3155
+$PRV0038 ENT P,2,L1  CHANGE              ,TFFFF,2,38,,        ,128
+ LOC 3155
+ VPU 2,168
+ LDA 2,144                   ; MAINWORT            
+ LCA M,20,'HAUPTPROGRAMM       '
+ MOV 20
+ LOC 3156
+ LDC I,13
+ STR I,2,164
+ LOC 3157
+ LOD I,1,1588                ; EINR                
+ STR I,2,136
+ LOC 3158
+ MST 1,0
+ CUP P,1,$PRV0017,176
+ LOC 3159
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOC 3160
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,288
+ CUP P,3,$PRV0022,176
+ LOC 3161
+ LOD H,1,1906                ; S                   
+ LDC I,53
+ EQU I
+ LOD H,1,1906                ; S                   
+ LDC I,83
+ EQU I
+ IOR B
+ FJP L3
+ LOC 3163
+ LDA 2,144                   ; MAINWORT            
+ LCA M,20,'HAUPTPROGRAMM       '
+ MOV 20
+ LOC 3165
+ LDC I,13
+ STR I,2,164
+ LOC 3166
+ UJP L4
+L3 LAB
+ LOC 3168
+ MST 1,0
+ CUP P,1,$PRV0017,176
+ LOC 3169
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOC 3170
+ LDA 2,144                   ; MAINWORT            
+ LCA M,20,'                    '
+ MOV 20
+ LOC 3171
+ LDC I,1
+ STR I,2,140
+ LOD I,1,1512                ; W1ENDE              
+ STR I,2,176
+ LDC I,1
+ LOD I,2,176
+ LEQ I
+ FJP L7
+L5 LAB
+ LOC 3172
+ LOD I,2,140                 ; I                   
+ LDC I,20
+ LEQ I
+ FJP L8
+ LOC 3173
+ LDA 2,144                   ; MAINWORT            
+ LOD I,2,140                 ; I                   
+ CHK J,1,20
+ DEC I,1
+ IXA 1
+ LDA 1,1412                  ; W1                  
+ LOD I,2,140                 ; I                   
+ CHK J,1,100
+ DEC I,1
+ IXA 1
+ IND C,0                     ; I                   
+ CHK I,0,255
+ STO C
+L8 LAB
+ LOD I,2,140                 ; I                   
+ LOD I,2,176
+ NEQ I
+ FJP L7
+ LOD I,2,140                 ; I                   
+ INC I,1
+ STR I,2,140
+ UJP L5
+L7 LAB
+ LOC 3174
+ LOD I,1,1512                ; W1ENDE              
+ LDC I,20
+ GRT I
+ FJP L9
+ LOC 3176
+ LDC I,20
+ STR I,2,164
+ UJP L10
+L9 LAB
+ LOC 3177
+ LOD I,1,1512                ; W1ENDE              
+ STR I,2,164
+L10 LAB
+ LOC 3178
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,288
+ LOC 3179
+ CUP P,3,$PRV0022,176
+L4 LAB
+ LOC 3180
+ MST 1,0
+ CUP P,1,$PRV0017,176
+ LOC 3181
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+L11 LAB
+ LOC 3183
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,288
+ CUP P,3,$PRV0022,176
+ LOC 3184
+ LOD H,1,1906                ; S                   
+ LDC I,17
+ EQU I
+ FJP L14
+ LOC 3186
+ LOD I,1,1908                ; OUTPOINTER          
+ STR I,1,1588
+L15 LAB
+ LOC 3188
+ MST 1,0
+ CUP P,1,$PRV0017,176
+ LOC 3189
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOC 3190
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,288
+ LOC 3191
+ CUP P,3,$PRV0022,176
+ LOD H,1,1906                ; S                   
+ LDC I,18
+ EQU I
+ FJP L15
+L14 LAB
+ LOC 3193
+ MST 1,0
+ CUP P,1,$PRV0017,176
+ LOC 3195
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOD H,1,1906                ; S                   
+ LDC I,22
+ EQU I
+ FJP L11
+ LOC 3196
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,288
+ CUP P,3,$PRV0022,176
+ LOC 3197
+ MST 1,0
+ CUP P,1,$PRV0017,176
+ LOC 3198
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOC 3199
+ LOD I,2,136                 ; EINRSAVE            
+ STR I,1,1588
+ LOC 3200
+ MST 1,0
+ LDA 2,112                   ; FSYS                
+ LDA 2,288
+ SMV -12,12
+ LDA 2,144                   ; MAINWORT            
+ LDA 2,300
+ MOV -24
+ LDC I,1
+ STR I,2,324
+ CUP P,7,$PRV0032,176
+ LOC 3201
+ MST 1,0
+ LOD H,1,1906                ; S                   
+ CHK I,0,90
+ STR H,2,288
+ CUP P,3,$PRV0022,176
+ LOC 3202
+ LDC B,1
+ FJP L18
+ LOC 3204
+ MST 1,0
+ CUP P,1,$PRV0017,176
+ LOC 3205
+ LOD H,1,1356                ; SY                  
+ CHK I,0,90
+ STR H,1,1906
+ LOC 3206
+ LOD H,1,1906                ; S                   
+ LDC I,0
+ NEQ I
+ FJP L19
+ LOC 3207
+ LDA 1,260
+ CSP SIO,176
+ LCA M,31,'+++ Warnung: Es wurde nicht die'
+ LDC I,31
+ LDC I,31
+ CSP WRS,176
+ LOC 3208
+ LCA M,25,' ganze Datei verarbeitet.'
+ LDC I,25
+ LDC I,25
+ CSP WRS,176
+ CSP WLN,176
+ CSP EIO,176
+L19 LAB
+L18 LAB
+ LOC 3210
+ RET P
+L1 DEF I,328
+ DEF I,273
+ DEF B,0
+ LOC 3221
+$PRV0039 ENT P,2,L1  VORBESETZEN         ,TFFFF,2,39,,        ,112
+ LOC 3221
+ VPU 2,124
+ LDA 1,1600                  ; WTABSQL             
+ LDC I,1
+ CHK J,1,30
+ DEC I,1
+ IXA 10
+ LCA M,10,'CONNECT   '
+ MOV 10
+ LOC 3222
+ LDA 1,1600                  ; WTABSQL             
+ LDC I,2
+ CHK J,1,30
+ DEC I,1
+ IXA 10
+ LCA M,10,'DECLARE   '
+ MOV 10
+ LOC 3223
+ LDA 1,1600                  ; WTABSQL             
+ LDC I,3
+ CHK J,1,30
+ DEC I,1
+ IXA 10
+ LCA M,10,'DELETE    '
+ MOV 10
+ LOC 3224
+ LDA 1,1600                  ; WTABSQL             
+ LDC I,4
+ CHK J,1,30
+ DEC I,1
+ IXA 10
+ LCA M,10,'FROM      '
+ MOV 10
+ LOC 3225
+ LDA 1,1600                  ; WTABSQL             
+ LDC I,5
+ CHK J,1,30
+ DEC I,1
+ IXA 10
+ LCA M,10,'GROUP     '
+ MOV 10
+ LOC 3226
+ LDA 1,1600                  ; WTABSQL             
+ LDC I,6
+ CHK J,1,30
+ DEC I,1
+ IXA 10
+ LCA M,10,'HAVING    '
+ MOV 10
+ LOC 3227
+ LDA 1,1600                  ; WTABSQL             
+ LDC I,7
+ CHK J,1,30
+ DEC I,1
+ IXA 10
+ LCA M,10,'INSERT    '
+ MOV 10
+ LOC 3228
+ LDA 1,1600                  ; WTABSQL             
+ LDC I,8
+ CHK J,1,30
+ DEC I,1
+ IXA 10
+ LCA M,10,'INTO      '
+ MOV 10
+ LOC 3229
+ LDA 1,1600                  ; WTABSQL             
+ LDC I,9
+ CHK J,1,30
+ DEC I,1
+ IXA 10
+ LCA M,10,'ORDER     '
+ MOV 10
+ LOC 3230
+ LDA 1,1600                  ; WTABSQL             
+ LDC I,10
+ CHK J,1,30
+ DEC I,1
+ IXA 10
+ LCA M,10,'SELECT    '
+ MOV 10
+ LOC 3231
+ LDA 1,1600                  ; WTABSQL             
+ LDC I,11
+ CHK J,1,30
+ DEC I,1
+ IXA 10
+ LCA M,10,'SET       '
+ MOV 10
+ LOC 3232
+ LDA 1,1600                  ; WTABSQL             
+ LDC I,12
+ CHK J,1,30
+ DEC I,1
+ IXA 10
+ LCA M,10,'UNION     '
+ MOV 10
+ LOC 3233
+ LDA 1,1600                  ; WTABSQL             
+ LDC I,13
+ CHK J,1,30
+ DEC I,1
+ IXA 10
+ LCA M,10,'UPDATE    '
+ MOV 10
+ LOC 3234
+ LDA 1,1600                  ; WTABSQL             
+ LDC I,14
+ CHK J,1,30
+ DEC I,1
+ IXA 10
+ LCA M,10,'VALUES    '
+ MOV 10
+ LOC 3235
+ LDA 1,1600                  ; WTABSQL             
+ LDC I,15
+ CHK J,1,30
+ DEC I,1
+ IXA 10
+ LCA M,10,'WHERE     '
+ MOV 10
+ LOC 3236
+ LDC I,15
+ STR I,1,1900
+ LOC 3242
+ LDC I,0
+ CHR
+ STR C,2,120
+ LDC I,255
+ CHR
+ ORD
+ STR I,2,128
+ LOD C,2,120                 ; CH                  
+ ORD
+ LOD I,2,128
+ LEQ I
+ FJP L5
+L3 LAB
+ LOC 3243
+ LDA 1,444                   ; UPSHIFT             
+ LOD C,2,120                 ; CH                  
+ CHK J,0,255
+ IXA 1
+ LOD C,2,120                 ; CH                  
+ CHK I,0,255
+ STO C
+ LOD C,2,120                 ; CH                  
+ ORD
+ LOD I,2,128
+ NEQ I
+ FJP L5
+ LOD C,2,120                 ; CH                  
+ INC C,1
+ CHK I,0,255
+ STR C,2,120
+ UJP L3
+L5 LAB
+ LOC 3257
+ LDC C,'a'
+ STR C,2,120
+ LDC B,1
+ FJP L8
+L6 LAB
+ LOC 3259
+ LDA 1,444                   ; UPSHIFT             
+ LOD C,2,120                 ; CH                  
+ CHK J,0,255
+ IXA 1
+ LOD C,2,120                 ; CH                  
+ ORD
+ LDC C,'a'
+ ORD
+ SBI
+ LDC C,'A'
+ ORD
+ LOC 3260
+ ADI
+ CHR
+ CHK I,0,255
+ STO C
+ LOC 3261
+ LOD C,2,120                 ; CH                  
+ ORD
+ LDC C,'i'
+ ORD
+ NEQ I
+ FJP L8
+ LOD C,2,120                 ; CH                  
+ INC C,1
+ CHK I,0,255
+ STR C,2,120
+ UJP L6
+L8 LAB
+ LOC 3262
+ LDC C,'j'
+ STR C,2,120
+ LDC B,1
+ FJP L11
+L9 LAB
+ LOC 3264
+ LDA 1,444                   ; UPSHIFT             
+ LOD C,2,120                 ; CH                  
+ CHK J,0,255
+ IXA 1
+ LOD C,2,120                 ; CH                  
+ ORD
+ LDC C,'a'
+ ORD
+ SBI
+ LDC C,'A'
+ ORD
+ LOC 3265
+ ADI
+ CHR
+ CHK I,0,255
+ STO C
+ LOC 3266
+ LOD C,2,120                 ; CH                  
+ ORD
+ LDC C,'r'
+ ORD
+ NEQ I
+ FJP L11
+ LOD C,2,120                 ; CH                  
+ INC C,1
+ CHK I,0,255
+ STR C,2,120
+ UJP L9
+L11 LAB
+ LOC 3267
+ LDC C,'s'
+ STR C,2,120
+ LDC B,1
+ FJP L14
+L12 LAB
+ LOC 3269
+ LDA 1,444                   ; UPSHIFT             
+ LOD C,2,120                 ; CH                  
+ CHK J,0,255
+ IXA 1
+ LOD C,2,120                 ; CH                  
+ ORD
+ LDC C,'a'
+ ORD
+ SBI
+ LDC C,'A'
+ ORD
+ LOC 3270
+ ADI
+ CHR
+ CHK I,0,255
+ STO C
+ LOC 3271
+ LOD C,2,120                 ; CH                  
+ ORD
+ LDC C,'z'
+ ORD
+ NEQ I
+ FJP L14
+ LOD C,2,120                 ; CH                  
+ INC C,1
+ CHK I,0,255
+ STR C,2,120
+ UJP L12
+L14 LAB
+ LOC 3277
+ LDC I,2147483647
+ LDC I,2
+ DVI
+ STR I,1,700
+ LOC 3278
+ LDC I,2147483647
+ LDC I,10
+ DVI
+ STR I,1,704
+ LOC 3279
+ LDC I,2147483647
+ LDC I,16
+ DVI
+ STR I,1,708
+ LOC 3280
+ LDC B,0
+ STR B,1,1516
+ LOC 3281
+ RET P
+L1 DEF I,136
+ DEF I,343
+ DEF B,0
+ LOC 3301
+$PRV0040 ENT P,2,L1  INIT_SCANNER        ,TTFFF,2,40,,        ,112
+ LOC 3301
+ VPU 2,136
+ LDA 1,744                   ; SCB                 
+ LDC I,0
+ CHR
+ MFI 612
+ LOC 3302
+ LDA 1,716                   ; OPT                 
+ LDC I,0
+ CHR
+ MFI 28
+ LOC 3303
+ LDC I,0
+ STR I,1,716
+ LOC 3304
+ LDC I,80
+ STR I,1,720
+ LOC 3305
+ LDC I,72
+ STR I,1,724
+ LOC 3306
+ LDC B,1
+ STR B,1,728
+ LOC 3307
+ LDC B,1
+ STR B,1,729
+ LOC 3308
+ LDC B,1
+ STR B,1,730
+ LOC 3309
+ LDC B,1
+ STR B,1,731
+ LOC 3310
+ LDC B,1
+ STR B,1,732
+ LOC 3311
+ LDC B,1
+ STR B,1,733
+ LOC 3312
+ LDC B,0
+ STR B,1,734
+ LOC 3313
+ LDC I,2
+ STR H,1,736
+ LOC 3314
+ LDC B,0
+ STR B,1,738
+ LOC 3315
+ LDC B,0
+ STR B,1,739
+ LOC 3316
+ LDC B,1
+ STR B,1,740
+ LOC 3317
+ LDC B,0
+ STR B,1,741
+ LOC 3318
+ LDC B,0
+ STR B,1,742
+ LOC 3319
+ LDC B,0
+ STR B,1,743
+ LOC 3320
+ LDC I,120
+ STR I,1,1016
+ LOC 3321
+ LDC I,1
+ STR I,1,744
+ LOC 3322
+ LDC I,1
+ STR H,1,890
+ LOC 3323
+ LDA 1,753                   ; SCB                 
+ LCA M,120,'                                                    ',
+       '                                                        ',
+       '            '
+ MOV 120
+ LOC 3324
+ LDC I,0
+ STR I,1,876
+ LOC 3325
+ LDC I,1
+ STR I,1,880
+ LOC 3326
+ LDC I,0
+ STR I,1,884
+ LOC 3327
+ LDC B,0
+ STR B,1,888
+ LOC 3328
+ LDC N
+ STR A,1,1040
+ LOC 3329
+ LDC N
+ STR A,1,1048
+ LOC 3330
+ LDC N
+ STR A,1,1052
+ LOC 3331
+ LDA 1,716                   ; OPT                 
+ STR A,1,1176
+ LOC 3332
+ LDC N
+ STR A,1,1044
+ LOC 3333
+ LDC N
+ STR A,1,1184
+ LOC 3343
+ LDC B,1
+ STR B,1,1180
+ LOC 3344
+ LDC B,1
+ STR B,1,1181
+ LOC 3345
+ LDA 1,1188                  ; SCB                 
+ LCA M,32,'                                '
+ MOV 32
+ LOC 3346
+ LDC I,0
+ STR I,1,1220
+ LOC 3347
+ LDA 1,1228                  ; SCB                 
+ LOC 3349
+ LCA M,120,'1LINE #   Pascal Source Formatting Program - Version',
+       ' of MM.YYYY    hh:mm:ss  DD/MM/YYYY                     ',
+       '            '
+ MOV 120
+ LOC 3350
+ LDA 2,120                   ; CTEMP               
+ LCA M,16,'11.2017         '
+ MOV 16
+ LOC 3351
+ LDA 1,1228                  ; SCB                 
+ LDC I,57
+ CHK J,1,120
+ DEC I,1
+ IXA 1
+ LDA 2,120                   ; CTEMP               
+ MOV 7
+ LOC 3352
+ LDA 1,1228                  ; SCB                 
+ LDC I,68
+ CHK J,1,120
+ DEC I,1
+ IXA 1
+ LDA 1,338                   ; TIME                
+ MOV 8
+ LOC 3353
+ LDA 1,1228                  ; SCB                 
+ LDC I,78
+ CHK J,1,120
+ DEC I,1
+ IXA 1
+ LDA 1,328                   ; DATE                
+ MOV 10
+ LOC 3354
+ LDC I,100
+ STR I,1,1348
+ LOC 3361
+ LDC I,100
+ STR I,1,1224
+ LOC 3362
+ RET P
+L1 DEF I,144
+ DEF I,250
+ DEF B,0
+ LOC 3367
+ BGN PASFORM              23:03:38 09/05/2021
+$PASMAIN ENT P,1,L3  $PASMAIN            ,TTFFF,2,0,$PASMAI#,        ,112
+ LOC 3367
+ VPU 1,2000
+ LDA 1,1928
+ CSP SIO,2008
+ LCA M,8,'TRACEF  '
+ LDC I,0
+ CSP FDF,2008
+ CSP EIO,2008
+ LDA 1,432
+ CSP SIO,2008
+ LCA M,8,'LISTING '
+ LDC I,0
+ CSP FDF,2008
+ CSP EIO,2008
+ LDA 1,420
+ CSP SIO,2008
+ LCA M,8,'AUSGABE '
+ LDC I,0
+ CSP FDF,2008
+ CSP EIO,2008
+ LDA 1,408
+ CSP SIO,2008
+ LCA M,8,'EINGABE '
+ LDC I,0
+ CSP FDF,2008
+ CSP EIO,2008
+ LDA 1,1928                  ; TRACEF              
+ CSP SIO,2008
+ CSP REW,2008
+ CSP EIO,2008
+ LOC 3368
+ LDC I,4
+ STR I,1,1596
+ LOC 3369
+ LDC I,1
+ NGI
+ STR I,1,1964
+ LOC 3370
+ LDC C,' '
+ STR C,1,1940
+ LOC 3371
+ LDC B,0
+ STR B,1,1977
+ LOC 3372
+ LDC I,1
+ NGI
+ STR I,1,1968
+ LOC 3373
+ LDC I,1
+ NGI
+ STR I,1,1972
+ LOC 3374
+ LDC I,0
+ STR I,1,1944
+ LOC 3375
+ LDC I,0
+ STR I,1,1948
+ LOC 3376
+ LDC N
+ STR A,1,1956
+ LOC 3377
+ LDC N
+ STR A,1,1960
+ LOC 3378
+ LDC B,0
+ STR B,1,1984
+ LOC 3386
+ LDC B,1
+ STR B,1,1585
+ LOC 3387
+ LOD I,1,1596                ; VERARB_MODUS        
+ LDC I,4
+ GRT I
+ FJP L5
+ LOC 3389
+ LDC B,0
+ STR B,1,1585
+ LOC 3390
+ LOD I,1,1596                ; VERARB_MODUS        
+ LOC 3391
+ LDC I,2
+ SBI
+ STR I,1,1596
+L5 LAB
+ LOC 3392
+ LOD I,1,1596                ; VERARB_MODUS        
+ LDC I,1
+ EQU I
+ LOD I,1,1596                ; VERARB_MODUS        
+ LDC I,3
+ EQU I
+ IOR B
+ STR B,1,1584
+ LOC 3393
+ MST 1,0
+ CUP P,1,$PRV0039,2008
+ LOC 3394
+ LDA 1,1532                  ; STERMSYMBOLE        
+ LOC 3395
+ LCA S,X12'800002000000000007010000'
+ SLD 12,2004
+ SMV 12,12
+ LOC 3396
+ LDA 1,1544                  ; TTERMSYMBOLE        
+ LOC 3397
+ LCA S,X12'800022010100002004000000'
+ SLD 12,2004
+ SMV 12,12
+ LOC 3398
+ LDA 1,1520                  ; BLANKSYMBOLE        
+ LOC 3406
+ LCA S,X12'00088000004fffe7ffe9ffc0'
+ SLD 12,2004
+ SMV 12,12
+ LOC 3407
+ LDA 1,1556                  ; WORTSYMBOLE         
+ LOC 3414
+ LCA S,X12'00000000004fffe7ffe9ffc0'
+ SLD 12,2004
+ SMV 12,12
+ LOC 3415
+ LDA 1,1568                  ; EXPRSYMBOLE         
+ LCA S,X8'00000000004f0000'
+ SLD 8,2004
+ SMV 12,8
+ LOC 3416
+ MST 1,0
+ CUP P,1,$PRV0040,2008
+ LOC 3417
+ LDC I,0
+ STR I,1,1916
+ LOC 3418
+ LDC I,0
+ STR I,1,1588
+ LOC 3419
+ LDC I,0
+ STR I,1,1592
+ LOC 3420
+ LDC I,2
+ STR I,1,1580
+ LOC 3421
+ LDC B,0
+ STR B,1,1586
+ LOC 3422
+ LDC I,0
+ STR I,1,1980
+ LOC 3423
+ LDC B,0
+ STR B,1,1924
+ LOC 3424
+ LDC B,0
+ STR B,1,1925
+ LOC 3425
+ LDC I,0
+ STR I,1,712
+ LOC 3426
+ LDC I,1
+ NGI
+ STR I,1,1920
+ LOC 3427
+ LDA 1,408                   ; EINGABE             
+ CSP SIO,2008
+ CSP RES,2008
+ CSP EIO,2008
+ LOC 3428
+ LDA 1,420                   ; AUSGABE             
+ CSP SIO,2008
+ CSP REW,2008
+ CSP EIO,2008
+ LOC 3429
+ LDC I,0
+ STR I,1,1912
+ LOC 3430
+ LOD I,1,1588                ; EINR                
+ STR I,1,1908
+ LOC 3436
+ LDC I,0
+ STR I,1,748
+ LOC 3437
+ LOD I,1,1596                ; VERARB_MODUS        
+ LDC I,3
+ LES I
+ FJP L6
+ LOC 3439
+ MST 1,0
+ CUP P,1,$PRV0037,2008
+ UJP L7
+L6 LAB
+ LOC 3440
+ MST 1,0
+ LCA S,X12'000000000000fa0400000c00'
+ SLD 12,2120
+ LCA S,X12'0000000000000007f800e000'
+ SLD 12,2132
+ UNI
+ LCA S,X8'0000000000000001'
+ SLD 8,2132
+ DIF
+ LDA 1,2120
+ SMV -12,12
+ CUP P,3,$PRV0038,2008
+L7 LAB
+ LOC 3441
+ LDA 1,420
+ CSP SIO,2008
+ CSP WLN,2008
+ CSP EIO,2008
+ LOC 3449
+ LDA 1,260
+ CSP SIO,2008
+ LOD I,1,712                 ; ZZAUS               
+ LDC I,1
+ ADI
+ LDC I,6
+ CSP WRI,2008
+ LCA M,19,' Zeilen ausgegeben.'
+ LDC I,19
+ LDC I,19
+ CSP WRS,2008
+ CSP WLN,2008
+ CSP EIO,2008
+ LOC 3450
+ RET P
+L3 DEF I,2144
+ DEF I,246
+ DEF B,1
+ STP

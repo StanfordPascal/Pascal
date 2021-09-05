@@ -1,14 +1,25 @@
 @echo off
+rem
 rem ********************************************************
-rem Aenderung am 11.04.2021 - Opp
-rem Lesen Pas - Schreiben New - danach im Erfolgsfall rename
-rem Wenn Fehler gemeldet wird, kein Umbenennen
+rem * script to call the New Stanford Pascal Formatter
+rem * usage: pasf <sourcename> ...
+rem * without file extension, which must be .pas
+rem ********************************************************
+rem * env variable PASDIR has to be set to directory
+rem * containing the compiler files
+rem * which must be visible using the PATH variable
+rem ********************************************************
+rem
+rem ********************************************************
+rem changed 11.04.2021 - Opp
+rem reading .pas - writing .new - when success, rename
+rem if there is an error, no rename
 rem ********************************************************
 set dd_eingabe=%1.pas
 set dd_ausgabe=%1.new
 set dd_listing=%1.lis
 set dd_output=
-pcint pcode=pasform.pcode inc=paslibx,passcan pas=pasform.pas out=pasform.lis debug=n
+pcint pcode=%PASDIR%\pasform.pcode inc=%PASDIR%\paslibx,%PASDIR%\passcan pas=%PASDIR%\pasform.pas out=%PASDIR%\pasform.lis debug=n
 if errorlevel 4 goto :err
 if exist %1.bak erase %1.bak
 rename %1.pas %1.bak

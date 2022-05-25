@@ -1253,7 +1253,7 @@ L30 LAB
  STR I,4,256
  STR I,4,252
  LCA P,$PASMAI#
- INC A,2176
+ INC A,2504
  STR I,4,260
  CUP P,9,$PASWRX ,136
  CSP WLN,136
@@ -3552,7 +3552,7 @@ L26 LAB
  LOC 16510
  LDA 3,168                   ; PATBLANK            
  LCA P,$PASMAI#
- INC A,2408                  ;                     
+ INC A,2768                  ;                     
  MOV 56
  LOC 16511
  LDC C,' '
@@ -5465,7 +5465,7 @@ $PRV0131 ENT P,3,L1  BOPERATION_COMPARE  ,TFFFF,0,131,,,112
  STR I,3,376
  STR I,3,372
  LCA P,$PASMAI#
- INC A,2240
+ INC A,2576
  STR I,3,380
  CUP P,9,$PASWRX ,256
  CSP WLN,256
@@ -6733,7 +6733,7 @@ L30 LAB
  STR I,3,432
  STR I,3,428
  LCA P,$PASMAI#
- INC A,2240
+ INC A,2576
  STR I,3,436
  CUP P,9,$PASWRX ,312
  CSP WLN,312
@@ -6754,7 +6754,7 @@ L30 LAB
  STR I,3,432
  STR I,3,428
  LCA P,$PASMAI#
- INC A,2240
+ INC A,2576
  STR I,3,436
  CUP P,9,$PASWRX ,312
  CSP WLN,312
@@ -8762,7 +8762,7 @@ L13 LAB
  LDC I,18
  CSP WRS,192
  LCA P,$PASMAI#
- INC A,3488                  ;                     
+ INC A,3848                  ;                     
  LOD H,1,452                 ; OPCODE              
  IXA 3
  LDC I,3
@@ -8796,7 +8796,7 @@ L21 LAB
  LOD H,1,1004                ; TOP                 
  IXA 56
  LCA P,$PASMAI#
- INC A,2408                  ;                     
+ INC A,2768                  ;                     
  MOV 56
  LOC 18073
  LOD H,1,1066                ; OPNDTYPE            
@@ -9154,7 +9154,7 @@ L50 LAB
  LOD H,1,1004                ; TOP                 
  IXA 56
  LCA P,$PASMAI#
- INC A,2408                  ;                     
+ INC A,2768                  ;                     
  MOV 56
  LOC 18190
  LOD A,2,192                 ; DTYPE               
@@ -9229,7 +9229,7 @@ L52 LAB
  LOD H,1,1004                ; TOP                 
  IXA 56
  LCA P,$PASMAI#
- INC A,2408                  ;                     
+ INC A,2768                  ;                     
  MOV 56
  LOC 18206
  LOD A,2,192                 ; DTYPE               
@@ -9538,7 +9538,7 @@ L73 LAB
  LOD H,1,1004                ; TOP                 
  IXA 56
  LCA P,$PASMAI#
- INC A,2408                  ;                     
+ INC A,2768                  ;                     
  MOV 56
  LOC 18272
  LOD A,2,192                 ; DTYPE               
@@ -10767,7 +10767,7 @@ L19 LAB
  LDC I,620
  STR I,2,304
  LCA P,$PASMAI#
- INC A,3488                  ;  Å                  
+ INC A,3848                  ;  Å                  
  LOD H,1,452                 ; OPCODE              
  IXA 3
  LDA 2,308
@@ -10990,7 +10990,7 @@ L20 LAB
  LDC I,19
  CSP WRS,192
  LCA P,$PASMAI#
- INC A,3488                  ;                     
+ INC A,3848                  ;                     
  LOD H,1,452                 ; OPCODE              
  IXA 3
  LDC I,3
@@ -11182,7 +11182,7 @@ L6 LAB
  LOC 18686
  LDA 1,460                   ; P_OPCODE            
  LCA P,$PASMAI#
- INC A,3488                  ;                     
+ INC A,3848                  ;                     
  LOD H,1,452                 ; OPCODE              
  IXA 3
  MOV 3
@@ -11217,7 +11217,7 @@ L9 LAB
  LOC 18692
  LDA 1,460                   ; P_OPCODE            
  LCA P,$PASMAI#
- INC A,3800                  ;                     
+ INC A,4160                  ;                     
  LOD H,1,456                 ; CSP                 
  IXA 3
  MOV 3

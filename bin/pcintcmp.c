@@ -82,7 +82,7 @@ static int copy_string (void *vgs,
 {
    global_store *gs = vgs;
 
-   char buffer [4096];
+   char buffer [33000];
    char *cptsave;
 
    int len = 0;
@@ -524,10 +524,10 @@ static void load (void *vgs,
    int alloc_alt;
    cst_section *pcst;
    ent_section *pent;
-   char buffer [257];
    int len_string;
    int diff;
    int len_oper;
+   char buffer [33000];
 
    /**********************************************************/
    /*   PCODE-Instruktion in den Speicher, vorher            */
@@ -1504,6 +1504,16 @@ static void load (void *vgs,
                if (*cp != '\'' && *cp != 'B' && *cp != 'X')
                {
                   len_string = atoi (cp);
+
+                  if (len_string > 32000)
+                  {
+                     fprintf (stderr,
+                              "DFC length too large - "
+                              "32k is the limit\n");
+
+                     len_string = 32000;
+                  }
+
                   while (*cp != ',')
                      cp ++;
                   if (*cp == ',')
@@ -1690,53 +1700,70 @@ static void load (void *vgs,
 
          // printf ("name %s loaded ... \n", pent -> name_long);
 
-         while (*cp != ',' && *cp != 0x00)
-            cp ++;
-         while (*cp == ',' && *cp != 0x00)
-            cp ++;
-         if (*cp == 0x00)
-            break;
-         pent -> flag1 = (*cp != 'F');
+         //*****************************************************
+         // --20220419--
+         // do needed here to make sure that the
+         // strcpy to pent -> sourcename is done;
+         // empty sourcenames in pent prohibited debugging
+         //*****************************************************
 
-         while (*cp != ',' && *cp != 0x00)
-            cp ++;
-         while (*cp == ',' && *cp != 0x00)
-            cp ++;
-         if (*cp == 0x00)
-            break;
-         pent -> flag2 = (*cp != 'F');
+         do
+         {
+            while (*cp != ',' && *cp != 0x00)
+               cp ++;
+            while (*cp == ',' && *cp != 0x00)
+               cp ++;
+            if (*cp == 0x00)
+               break;
+            pent -> flag1 = (*cp != 'F');
 
-         while (*cp != ',' && *cp != 0x00)
-            cp ++;
-         while (*cp == ',' && *cp != 0x00)
-            cp ++;
-         if (*cp == 0x00)
-            break;
-         pent -> flag3 = (*cp != 'F');
+            while (*cp != ',' && *cp != 0x00)
+               cp ++;
+            while (*cp == ',' && *cp != 0x00)
+               cp ++;
+            if (*cp == 0x00)
+               break;
+            pent -> flag2 = (*cp != 'F');
 
-         while (*cp != ',' && *cp != 0x00)
-            cp ++;
-         while (*cp == ',' && *cp != 0x00)
-            cp ++;
-         if (*cp == 0x00)
-            break;
-         pent -> flag4 = (*cp != 'F');
+            while (*cp != ',' && *cp != 0x00)
+               cp ++;
+            while (*cp == ',' && *cp != 0x00)
+               cp ++;
+            if (*cp == 0x00)
+               break;
+            pent -> flag3 = (*cp != 'F');
 
-         while (*cp != ',' && *cp != 0x00)
-            cp ++;
-         while (*cp == ',' && *cp != 0x00)
-            cp ++;
-         if (*cp == 0x00)
-            break;
-         pent -> numb1 = atoi (cp);
+            while (*cp != ',' && *cp != 0x00)
+               cp ++;
+            while (*cp == ',' && *cp != 0x00)
+               cp ++;
+            if (*cp == 0x00)
+               break;
+            pent -> flag4 = (*cp != 'F');
 
-         while (*cp != ',' && *cp != 0x00)
-            cp ++;
-         while (*cp == ',' && *cp != 0x00)
-            cp ++;
-         if (*cp == 0x00)
-            break;
-         pent -> numb2 = atoi (cp);
+            while (*cp != ',' && *cp != 0x00)
+               cp ++;
+            while (*cp == ',' && *cp != 0x00)
+               cp ++;
+            if (*cp == 0x00)
+               break;
+            pent -> numb1 = atoi (cp);
+
+            while (*cp != ',' && *cp != 0x00)
+               cp ++;
+            while (*cp == ',' && *cp != 0x00)
+               cp ++;
+            if (*cp == 0x00)
+               break;
+            pent -> numb2 = atoi (cp);
+         }
+         while (0);
+
+         //*****************************************************
+         // --20220419--
+         // this strcpy was not done in all cases
+         // before 19.04.2022 :-((
+         //*****************************************************
 
          strcpy (pent -> sourcename, gs -> sourcename);
 
@@ -2259,6 +2286,7 @@ void translate2 (global_store *gs)
             if (pent == NULL)
             {
                if (memcmp (plabel, "DSIN    ", 8) == 0 ||
+                   memcmp (plabel, "DCOS    ", 8) == 0 ||
                    memcmp (plabel, "DEXP    ", 8) == 0 ||
                    memcmp (plabel, "DSQRT   ", 8) == 0)
                {
@@ -2764,8 +2792,10 @@ void read_pascal (global_store *gs, char *pasfilename)
       len1 = sizeof (source_key);
       len2 = sizeof (source_data);
 
-      // printf ("put cache: %s %d %s\n",
-      //          sk.sourcename, sk.loc, sd.zeile);
+#if 0
+      printf ("put cache: %s %d %s\n",
+               sk.sourcename, sk.loc, sd.zeile);
+#endif
 
       rc = oiscach ("PUT", gs -> sourcecache, NULL,
                     (char **) &psk, &len1,

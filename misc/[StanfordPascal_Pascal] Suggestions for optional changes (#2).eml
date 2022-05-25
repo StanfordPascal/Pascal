@@ -1,0 +1,139 @@
+Return-Path: <bounces+848413-608a-bernd.oppolzer=t-online.de@sgmail.github.com>
+Received: from mailin76.aul.t-online.de ([172.20.26.74])
+	by ehead19a13.aul.t-online.de with LMTP
+	id Dw5KIaBdVmFQrwAAY0RUHA
+	(envelope-from <bounces+848413-608a-bernd.oppolzer=t-online.de@sgmail.github.com>); Fri, 01 Oct 2021 03:00:16 +0200
+Received: from o8.sgmail.github.com ([167.89.101.199]) by mailin76.aul.t-online.de
+	with (TLSv1.2:ECDHE-RSA-AES256-GCM-SHA384 encrypted)
+	esmtp id 1mW6uK-1J2CaP0; Fri, 1 Oct 2021 03:00:12 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=github.com;
+	h=from:subject:mime-version:content-type:content-transfer-encoding:
+	list-id:list-archive:list-post:list-unsubscribe:reply-to:to:cc;
+	s=smtpapi; bh=5gpSP1G+xbdDQezd0K7+ihBHIhMTE2ZJWWFfRuVJZpU=;
+	b=FQtxWw3wSPwhfnscfhslsFE9ouU+g1kXm/sdTGw/cIcAeqdUjDypsBPe3veewEYjC7Ph
+	toHwcuZMXWIfuuguF2z49xqqpkIfwtVSwVObbdbwQ1gRIlUaOrvlJ+Ynz6h7QryhBV+NCK
+	d1UpmwT2mimWL6J4zRG9DC4g1h9xhcgtw=
+Received: by filterdrecv-79ddb697c4-kqzqx with SMTP id filterdrecv-79ddb697c4-kqzqx-1-61565D9B-2D
+        2021-10-01 01:00:11.43420838 +0000 UTC m=+1472570.657329087
+Received: from smtp.github.com (unknown)
+	by geopod-ismtpd-6-1 (SG)
+	with ESMTP id 1oiJeDn5Tq64-o4jLCGbkA
+	for <bernd.oppolzer@t-online.de>;
+	Fri, 01 Oct 2021 01:00:11.393 +0000 (UTC)
+Received: from github-lowworker-d93c4b6.va3-iad.github.net (github-lowworker-d93c4b6.va3-iad.github.net [10.48.17.47])
+	by smtp.github.com (Postfix) with ESMTP id 8CF98840798
+	for <bernd.oppolzer@t-online.de>; Thu, 30 Sep 2021 18:00:10 -0700 (PDT)
+Date: Fri, 01 Oct 2021 01:00:11 +0000 (UTC)
+From: Paul Robinson <notifications@github.com>
+Message-ID: <StanfordPascal/Pascal/issues/2@github.com>
+Subject: [StanfordPascal/Pascal] Suggestions for optional changes (#2)
+Mime-Version: 1.0
+Content-Type: multipart/alternative;
+ boundary="--==_mimepart_61565d9a7ee53_7a88c7601272e4";
+ charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Precedence: list
+X-GitHub-Sender: electric-socket
+X-GitHub-Recipient: StanfordPascal
+X-GitHub-Reason: subscribed
+List-ID: StanfordPascal/Pascal <Pascal.StanfordPascal.github.com>
+List-Archive: https://github.com/StanfordPascal/Pascal
+List-Post: <mailto:reply+AIBIXTDGCCWGZQB32H64AL57MI7JVEVBNHHDYXMNM4@reply.github.com>
+List-Unsubscribe: <mailto:unsub+AIBIXTDGCCWGZQB32H64AL57MI7JVEVBNHHDYXMNM4@reply.github.com>,
+ <https://github.com/notifications/unsubscribe/AIBIXTH6AQQRGEJHQBWQNSLUEUBZVANCNFSM5FDRM2AA>
+X-Auto-Response-Suppress: All
+X-GitHub-Recipient-Address: bernd.oppolzer@t-online.de
+Reply-To: StanfordPascal/Pascal
+	<reply+AIBIXTDGCCWGZQB32H64AL57MI7JVEVBNHHDYXMNM4@reply.github.com>
+X-SG-EID: 
+ =?us-ascii?Q?0nNFDNdcMqs5mQTurZGp3+y7ukxpn3nrPQBmGrx60JnBGZ73PbhT3ouMQpeoBH?=
+ =?us-ascii?Q?r6M0V7gbcawJlU5lZqcljsc4h191ob0qM3ehsxc?=
+ =?us-ascii?Q?75YNk6xjwW0mzg4EH2WaSmW=2FEiwUOhPeextVWbS?=
+ =?us-ascii?Q?qzmncWUUAiU6bY79OyCnr2QeYK0yQ5YBllDvE3=2F?=
+ =?us-ascii?Q?mQVu8YYbpnzqSMraU=2F0WGkeX6AOXerNCjma3U86?=
+ =?us-ascii?Q?QjLpjc=2FK88yAuFU6xLechiEru2oVFhtdWwe8I1e?=
+ =?us-ascii?Q?cFLp5usVD+xgC2QhFQp+A=3D=3D?=
+To: StanfordPascal/Pascal <Pascal@noreply.github.com>
+Cc: Subscribed <subscribed@noreply.github.com>
+X-Entity-ID: /f+S0XqulHHajbNb6hGdxg==
+X-TOI-VIRUSSCAN: unchecked
+X-TOI-EXPURGATEID: 149288::1633050013-0000CE82-78E278D9/9/51361 BULK NORMAL
+X-TOI-MSGID: 6cd11540-690a-499f-b7bc-85b5b65246ca
+X-ENVELOPE-TO: <bernd.oppolzer@t-online.de>
+Authentication-Results: mailin76.aul.t-online.de;
+	dkim=pass (1024-bit key) header.d=github.com header.i=@github.com header.b=FQtxWw3w
+
+
+----==_mimepart_61565d9a7ee53_7a88c7601272e4
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+
+Hi, my name is Paul. I have a suggestion. Or maybe more than one.
+
+I have been thinking about this for several months (actually, probably more than a year). I, too, have been working on a small self-hosing pascal compiler called XDPascal. It, unfortunately, only generates code for IA32/AMD32 processors running on Windows. But it is self-hosting, and can generate programs that can do some actual work and solve some problems, if a text-only interface is acceptable.
+
+In my opinion, "small" Pascal compilers like XDPascal (about 15,000 lines) or New Stanford Pascal Compiler, Oppolzer Version "NSPCOV" (44,452 lines) are more of a teaching tool than a serious, World-Class system capable of creating current applications. I mean, seriously, if someone wants a "full-service, World Class Pascal Compiler" they'd almost certainly use Free Pascal (about 250,000 lines of code, plus tens of thousands of lines  of run-time libraries), since it targets about a dozen different architectures and operating systems. Given that to be the case, if a compiler such as mine or yours is used, it is almost certainly done for pedagogical use, for learning about how compilers work, and how someone can add a feature (or bug fix) and see what happens. 
+
+Programs like XDPascal and NSCPOV provide an accessible platform - something where a single person can have either an understanding of the whole application, or at least understand the part they want to change -    for learning about the internals of a compiler, and maybe have some fun with it. (I'm presuming you enjoyed the challenge of adding features to and squashing bugs in NSPCOV; I know I had a lot of fun working on XDPascal.)
+
+So now there are some suggestions I'd like to offer for the New Stanford Pascal Compiler, Oppolzer Version. I'll put them in order of (what I think is) importance.
+* Consider, instead of generating specialized P-Code for a fictional machine no one uses, as a means to generate machine independent code, to generating LLVM Intermediate Representation code. LLVM has become the standard in compiler architecture. Both Free Pascal and Free Basic compilers offer optional LLVM IR code output. For a lot of people, understanding LLVM IR is relatively difficult. This might be a way to also make that accessible to more people. If you learn more about this, it might even give you ideas, and you might learn something, even if you decide not to go this route. Note that LLVM does have a translator from IR to 370 object modules, in addition to more popular targets like x86 or x64. <br/><br/>
+I once considered doing a port of Free Pascal to the 370 architecture. The system is very modular, so that different architectures and operating systems, but it is so complex I figure it would take probably two years full-time work to come up to speed on it and then be able to figure out how to add S/379 code generation, plus developing run-time libraries for various mainframe operating systems. On the other hand, I was able to make my first update to XDPascal within two weeks of looking at the source code.<br/><br/> 
+Actually, until I found XDPascal and the smaller size (with only slightly different features), I was going to look at making Stanford Pascal more useful as a pedagogical tool, perhaps by creating an alternative code generator that creates code other than P-code, or provide more information about how code is generated., such as flags that can be turned on or off to show the various procedures and functions used in compiling a piece of code.
+* Continue accepting (* *), { } and /* */ for block comments, but don't use /* */ in the compiler. That makes it possible to compile the compiler on other compilers that don't support C-style block comments. Makes ortng it 
+* I'm not sure how many statistics are generated by NSCPOV, beyond number of lines, and compilation time. XDPascal reports compile time (usually in seconds or fractions of a second), lines compiled per second, number of procedures, functions and units compiled. It also separates procedures and functions in units vs. those in the main program, and number of variables used. At least, that's what I thought of collecting.
+* Potentially add a different parser to also handle the current standard method of Pascal Compilers like XDPascal, Free Pascal, and Delphi, where the PROGRAM statement is optional, MODULE is UNIT, and a program or module USES other modules. This may be unrealistic, but I figure I should be inclusive.
+
+In any event, thank you for reading this, and whether or not you consider any of my suggestions, i wish you continued success in whatever work you do on your compiler.
+
+Sincerely,
+Paul Robinson
+
+
+-- 
+You are receiving this because you are subscribed to this thread.
+Reply to this email directly or view it on GitHub:
+https://github.com/StanfordPascal/Pascal/issues/2
+----==_mimepart_61565d9a7ee53_7a88c7601272e4
+Content-Type: text/html; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+
+<p></p>
+<p>Hi, my name is Paul. I have a suggestion. Or maybe more than one.</p>
+<p>I have been thinking about this for several months (actually, probably more than a year). I, too, have been working on a small self-hosing pascal compiler called XDPascal. It, unfortunately, only generates code for IA32/AMD32 processors running on Windows. But it is self-hosting, and can generate programs that can do some actual work and solve some problems, if a text-only interface is acceptable.</p>
+<p>In my opinion, "small" Pascal compilers like XDPascal (about 15,000 lines) or New Stanford Pascal Compiler, Oppolzer Version "NSPCOV" (44,452 lines) are more of a teaching tool than a serious, World-Class system capable of creating current applications. I mean, seriously, if someone wants a "full-service, World Class Pascal Compiler" they'd almost certainly use Free Pascal (about 250,000 lines of code, plus tens of thousands of lines  of run-time libraries), since it targets about a dozen different architectures and operating systems. Given that to be the case, if a compiler such as mine or yours is used, it is almost certainly done for pedagogical use, for learning about how compilers work, and how someone can add a feature (or bug fix) and see what happens.</p>
+<p>Programs like XDPascal and NSCPOV provide an accessible platform - something where a single person can have either an understanding of the whole application, or at least understand the part they want to change -    for learning about the internals of a compiler, and maybe have some fun with it. (I'm presuming you enjoyed the challenge of adding features to and squashing bugs in NSPCOV; I know I had a lot of fun working on XDPascal.)</p>
+<p>So now there are some suggestions I'd like to offer for the New Stanford Pascal Compiler, Oppolzer Version. I'll put them in order of (what I think is) importance.</p>
+<ul>
+<li>Consider, instead of generating specialized P-Code for a fictional machine no one uses, as a means to generate machine independent code, to generating LLVM Intermediate Representation code. LLVM has become the standard in compiler architecture. Both Free Pascal and Free Basic compilers offer optional LLVM IR code output. For a lot of people, understanding LLVM IR is relatively difficult. This might be a way to also make that accessible to more people. If you learn more about this, it might even give you ideas, and you might learn something, even if you decide not to go this route. Note that LLVM does have a translator from IR to 370 object modules, in addition to more popular targets like x86 or x64. <br><br><br>
+I once considered doing a port of Free Pascal to the 370 architecture. The system is very modular, so that different architectures and operating systems, but it is so complex I figure it would take probably two years full-time work to come up to speed on it and then be able to figure out how to add S/379 code generation, plus developing run-time libraries for various mainframe operating systems. On the other hand, I was able to make my first update to XDPascal within two weeks of looking at the source code.<br><br><br>
+Actually, until I found XDPascal and the smaller size (with only slightly different features), I was going to look at making Stanford Pascal more useful as a pedagogical tool, perhaps by creating an alternative code generator that creates code other than P-code, or provide more information about how code is generated., such as flags that can be turned on or off to show the various procedures and functions used in compiling a piece of code.</li>
+<li>Continue accepting (* <em>), { } and /</em> <em>/ for block comments, but don't use /</em> */ in the compiler. That makes it possible to compile the compiler on other compilers that don't support C-style block comments. Makes ortng it</li>
+<li>I'm not sure how many statistics are generated by NSCPOV, beyond number of lines, and compilation time. XDPascal reports compile time (usually in seconds or fractions of a second), lines compiled per second, number of procedures, functions and units compiled. It also separates procedures and functions in units vs. those in the main program, and number of variables used. At least, that's what I thought of collecting.</li>
+<li>Potentially add a different parser to also handle the current standard method of Pascal Compilers like XDPascal, Free Pascal, and Delphi, where the PROGRAM statement is optional, MODULE is UNIT, and a program or module USES other modules. This may be unrealistic, but I figure I should be inclusive.</li>
+</ul>
+<p>In any event, thank you for reading this, and whether or not you consider any of my suggestions, i wish you continued success in whatever work you do on your compiler.</p>
+<p>Sincerely,<br>
+Paul Robinson</p>
+
+<p style="font-size:small;-webkit-text-size-adjust:none;color:#666;">&mdash;<br />You are receiving this because you are subscribed to this thread.<br />Reply to this email directly, <a href="https://github.com/StanfordPascal/Pascal/issues/2">view it on GitHub</a>, or <a href="https://github.com/notifications/unsubscribe-auth/AIBIXTF5OHRGYWFEHQYU3XDUEUBZVANCNFSM5FDRM2AA">unsubscribe</a>.<br />Triage notifications on the go with GitHub Mobile for <a href="https://apps.apple.com/app/apple-store/id1477376905?ct=notification-email&amp;mt=8&amp;pt=524675">iOS</a> or <a href="https://play.google.com/store/apps/details?id=com.github.android&amp;referrer=utm_campaign%3Dnotification-email%26utm_medium%3Demail%26utm_source%3Dgithub">Android</a>.
+<img src="https://github.com/notifications/beacon/AIBIXTDFVGXZTMPOC7S35QDUEUBZVA5CNFSM5FDRM2AKYY3PNVWWK3TUL52HS4DFUVEXG43VMWVGG33NNVSW45C7NFSM4PC5RVTQ.gif" height="1" width="1" alt="" /></p>
+<script type="application/ld+json">[
+{
+"@context": "http://schema.org",
+"@type": "EmailMessage",
+"potentialAction": {
+"@type": "ViewAction",
+"target": "https://github.com/StanfordPascal/Pascal/issues/2",
+"url": "https://github.com/StanfordPascal/Pascal/issues/2",
+"name": "View Issue"
+},
+"description": "View this Issue on GitHub",
+"publisher": {
+"@type": "Organization",
+"name": "GitHub",
+"url": "https://github.com"
+}
+}
+]</script>
+----==_mimepart_61565d9a7ee53_7a88c7601272e4--

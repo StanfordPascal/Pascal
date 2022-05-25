@@ -672,9 +672,9 @@ program PCODE_TRANSLATOR ( PCODE , PCODE1 , PCODE2 , PCODE3 , OUTPUT ,
 
 
 
-const VERSION = '2022.04' ;        // Version for display message
-      VERSION2 = 0x2204 ;          // Version for load module
-      VERSION3 = 'XL2''2204''' ;   // Version for LIST002 listing
+const VERSION = '2021.03' ;        // Version for display message
+      VERSION2 = 0x2103 ;          // Version for load module
+      VERSION3 = 'XL2''2103''' ;   // Version for LIST002 listing
       MXADR = 65535 ;
       SHRTINT = 4095 ;
       HALFINT = 32700 ;

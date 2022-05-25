@@ -1,4 +1,17 @@
 
+2021.09:
+
+- WRITESTR Funktionen
+- STATIC FILEs in Modules zulassen?
+- USE und INTERFACES (wurde in GitHub vorgeschlagen)
+- nur noch bestimmte Kommentare im Compiler (siehe GitHub)
+* $PASRDB und $PASRSB funktionieren schon (READ/READSTR Boolean)
+* $PASRDX komplettieren (Binaere Suche hat noch gefehlt)
+* Implementierung skalare Typen musste erweitert werden
+* $PASRSX (READSTR von Skalaren)
+
+=======================================================================================
+
 2021.03:
 
 * Fehler reparieren bei Modulen
@@ -18,19 +31,20 @@
 - weiter bei Themen von 2021.01
 
 Strategische Entscheidung: PASCAL2 stirbt mittelfristig / PASCAL3 wird neu erstellt
-Fehler in PASCAL2 werden nur nocb behoben, wenn zwingend noetig
+Fehler in PASCAL2 werden nur noch behoben, wenn zwingend noetig
 
 =======================================================================================
 
 2021.01:
 
+* Neue Funktion $PASRDX zum Lesen von Skalaren
+* WRITE-Funktionen (insbesondere WRR) neu
+* WRITESTR Funktionen - vertagt auf 2021.09
+* WRITESTR usw. als Pascal-Funktion
+* Neue Funktion zum Lesen von Skalaren aus Strings - vertagt auf 2021.09
 - DCOS und DLOG in PCINT aufnehmen
-- Neue Funktion $PASRDX zum Lesen von Skalaren
 - New Stanford Pascal Sprachbeschreibung erstellen
 - Fehler bei CONST-Parameter mit Struktur
-- Neue Funktion zum Lesen von Skalaren aus Strings
-- WRITE-Funktionen (insbesondere WRR) neu
-- WRITESTR Funktionen
 - Undefined String bei MODIFY2 (UPPER(FN))
 - Fehler bei COMPERR4 untersuchen und klaeren
 - AVLCACHE START
@@ -39,7 +53,6 @@ Fehler in PASCAL2 werden nur nocb behoben, wenn zwingend noetig
 - Write bei Skalar mit korrekter Laenge (Mainframe)
 - Write fuer Skalar mit Laenge nur, wenn Skalar in dieser Laenge eindeutig
 - Parameterposition bei Unterfunktionen am Statement-Ende wieder zurueck
-- WRITESTR usw. als Pascal-Funktion
 - wenn neuer Compiler eingesetzt ist, Pascal-Runtime abruesten
 - Fehler (PASCAL1-Abbruch) bei falschem IF - siehe COMPERR1
 - Fehler (PASCAL1-Abbruch) bei falschem Funktionsnamen - siehe COMPERR2

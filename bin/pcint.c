@@ -63,7 +63,10 @@
 /*  13.11.2020 ! Oppolzer    ! implementing SQI and SQR (missing!)    */
 /*  14.02.2021 ! Oppolzer    ! Comparisons with Type Indic. 1 and 2   */
 /*  11.04.2021 ! Oppolzer    ! New PCODE inst IAC (Ind Acc w. Copy)   */
-/*  .......... ! ........    ! .....................................  */
+/*  19.04.2022 ! Oppolzer    ! Fixed error in Assembly of ENT pcode   */
+/*             !             ! which led to empty sourcenames         */
+/*             !             ! which inhibited debugging in PCINT     */
+/*             !             ! see comment --20220419-- in PCINTCMP   */
 /*  .......... ! ........    ! .....................................  */
 /*  .......... ! ........    ! .....................................  */
 /*  .......... ! ........    ! .....................................  */
@@ -4060,6 +4063,7 @@ static int alloc_string (global_store *gs, int newsize)
 #define FTN_DSIN             0
 #define FTN_DSQRT            1
 #define FTN_DEXP             2
+#define FTN_DCOS             3
 
 
 
@@ -4097,6 +4101,31 @@ static void int_ftn (global_store *gs,
          doublep = ADDRSTOR (*intp);
          // printf ("int_ftn: double arg = %10.2f\n", *doublep);
          dres = sin (*doublep);
+         // printf ("int_ftn: double res = %10.2f\n", dres);
+
+         //****************************************************
+         //* LOD real result onto stack
+         //****************************************************
+
+         (gs -> sp) += 4;
+         stackp = ADDRSTACK (gs -> sp);
+         doublep = (double *) stackp;
+         *doublep = dres;
+         (gs -> sp) += 4;
+         STACKTYPE (gs -> sp) = 'R';
+
+         break;
+
+      case FTN_DCOS:
+
+         disp = gs -> display [gs -> level];
+         addr = disp + pcode -> x;
+         intp = ADDRSTOR (addr);
+
+         // printf ("int_ftn: *intp = %d\n", *intp);
+         doublep = ADDRSTOR (*intp);
+         // printf ("int_ftn: double arg = %10.2f\n", *doublep);
+         dres = cos (*doublep);
          // printf ("int_ftn: double res = %10.2f\n", dres);
 
          //****************************************************
@@ -4197,6 +4226,12 @@ static char *check_fortran (global_store *gs,
    if (memcmp (funcname, "DSIN    ", 8) == 0)
    {
       int_ftn (gs, FTN_DSIN, funcname);
+      return NULL;
+   }
+
+   if (memcmp (funcname, "DCOS    ", 8) == 0)
+   {
+      int_ftn (gs, FTN_DCOS, funcname);
       return NULL;
    }
 
@@ -9055,6 +9090,17 @@ static void interpreter (global_store *gs)
                strcmp (cmd, "T") == 0 ||
                strcmp (cmd, "TP") == 0)
       {
+         //*****************************************************
+         // T  = alles tracen
+         // TP = nur ENT und RET tracen
+         // X  = nichts tracen
+         // X  = nichts tracen
+         //*****************************************************
+         // RET und R = bis zum RET auf gleicher Ebene
+         // F=xxxx    = bis zur Funktion xxxx
+         // L=xxxx    = bis zur Zeile xxxx (LOC)
+         //*****************************************************
+
          sc_code *pcoden;
          ent_section *pent;
          int show_nur_pascal;

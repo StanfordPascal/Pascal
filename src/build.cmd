@@ -9,3 +9,6 @@
     call pascal pascal1
     call pascal pascal2
 
+    cd ..
+    call copybin
+

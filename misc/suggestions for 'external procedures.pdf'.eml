@@ -1,0 +1,107 @@
+Received: from 10.197.33.75
+ by atlas114.free.mail.bf1.yahoo.com with HTTPS; Sat, 21 Aug 2021 03:20:49 +0000
+Return-Path: <mark.s.waterbury@bellsouth.net>
+X-Originating-Ip: [74.6.128.87]
+Received-SPF: none (domain of bellsouth.net does not designate permitted sender hosts)
+Authentication-Results: atlas114.free.mail.bf1.yahoo.com;
+ dkim=pass header.i=@bellsouth.net header.s=s2048;
+ spf=none smtp.mailfrom=bellsouth.net;
+ dmarc=unknown header.from=bellsouth.net;
+X-Apparently-To: berndoppolzer@yahoo.com; Sat, 21 Aug 2021 03:20:49 +0000
+X-YMailISG: f.Gs0ukWLDvtKYTnHlC_ksIB1xLm4_16a2stSbBKoMreD2bB
+ cGUCEu75P2wd6Zxd85Waqm.FXuPO1MnHRzUKJseMRqdE4QHTHIj_TNwkBziG
+ dOw1wX4ohGhSvrLxSZ1P6yTUXubxa97LkiEvxNH6V6sCWlOuuM1KRYz_jHYh
+ WlwmmIO.VtSkX8kP61gaMKRyy7IGbjfV845mhj81TC74bp0zB3ip2i3wKhWy
+ V0oRpK5p2rYVJW8M5aeBCpMetKkjoK100.E1.xHWUj1O1QuXmJL0E1N5t4_j
+ oLgDxtZHq6aWiCqRBb7SrrdsitvKu0jKD_zfloafRaLSBlX5P97T8XqGU_mG
+ OTkBLWvxcM_gRRR_S5ek0CvVKgFPb5zsApdBeQj_uR9gMJp9bnW6z674cmqt
+ cB62pKOSprJUfv4P_aLWePhHxrxCiJ8SVpqd3kSvCbYzBqAUMIIoTHwfVvwJ
+ XpW2u8WAVNarztqg7Jopvp1lNhVhsKquVHpa67b8A7HjLlSEL3irIBhdeBg0
+ 82UN9dPOUgLO2G.bR6f1iRLgbOsn1yDhtW2PEajRoabIRLK0Mv4RFGtClwPj
+ 2tehJBCYMm5i6LxNipHbpqrArd7S8DyNqTpivRYMS3DkS47VsOI0RZCEpFBR
+ 3Gl3t.pcg_w9yHiUTFegjY.ogdBWKB5gUZwl8ow_3WB46BMg0ifFhHr9p.dA
+ bjqlclOutGSfHfbiK3z3rd0...ofGN.L7jwcNolBEeJrhnX6wWSfHT8Wzu7q
+ sYpJ9cgDEDk8_NVA.KboXlmdHSJRF8BtJsB8SmzGgVoTJncAOm0r6tK_wAuQ
+ Mqu_4ZHB2Fa9FLBvVjZvgnIvUKadaY9JAB0mrQ8fRjSxcq_uP0il_42gbvWG
+ DrZuO84cI975E8OFDPpJX4ZD4lkZr8FHFMgp.9APYXr.01pwhC93xiviu7.t
+ m3ZLb2C5hLloZdW8qJs7O.fQWzt1U8gJgYPbm63nwfmWcm.htGJ563gV2QEp
+ a6ipBYFlrVmssne1ce9owEEdpCZwLjcjdbx_rpS5AR120l4PC6JFZF2R7Du0
+ yRLh6FxCQmVvmu3va4cKzuUnYx1OV8gXno8hDVGguCK6XJQg1kB9.mB3stey
+ MQApyinmOBtLRjj3MxjxWH_fZWhzyd1Vr7OFsZ8YS06x99EYFMVAZF6W818m
+ dsEX2lPq5II0GXWPUuC9xA--
+Received: from 74.6.128.87 (EHLO sonic312-25.consmr.mail.bf2.yahoo.com)
+ by 10.197.33.75 with SMTPs
+ (version=TLS1_2 cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256);
+ Sat, 21 Aug 2021 03:20:49 +0000
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bellsouth.net; s=s2048; t=1629516049; bh=32cYUmQWSYmfjjwtYY2OU6eXCPFBnebtBPGeBt9P+a8=; h=Date:From:To:Cc:Subject:References:From:Subject:Reply-To; b=QPH86ubC7FhVwWhaLSbH2I6CLpCDqmdFLP9YNwlFhzWcOobJqjiibH4lRFvTXY3+6XTHXVRI7nGMy0EB+329zthj/VgDGhmwp9Www7KK1kfV1xQ44/0IB4uhqHptxA5QtomM+sNHnKx3UbpWxEWzZqzjver8K+zxWs9MEqQmN5IBMsUH7TPG0my0BEP0zxm8kwtHx5kaZOyXdOwAuOjnci62zdoAGYY+33B5d6gVsm6SDiJq1ooV4K7KaF8/TEAr8o8nAkUZSQQ7pbWW+3i9dDB3atyD+VUy+MlNjOlkhheIdTMEmfC0AjpbaoEq/2+FOdrv+dQLjpBIyButm4QLug==
+X-SONIC-DKIM-SIGN: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s2048; t=1629516049; bh=k19n8i8bJZMJqw4OcerKVVjXYFnOM/Xk+ENbebk1az+=; h=X-Sonic-MF:Date:From:To:Subject:From:Subject; b=t2STZMIRTUJML1BVyn+GZQi1RRZ3NOo7Z89LottMvu6VuKlylSXO5UfGP1vZoKpKag4eVv+/qsdhK7VCWZj9l7k/CvUZrOPvMkIShGrqgyCCIwiY4XnRmpky+P47da8W+YwYpWhtEtH0bEDRp5e43bzouYz5imuuJ56O+kmizB+8jZJbmbc2Bu5kHvd93tgTZMpE4rLolfJ2fhWH8IQRO+nA79Wo+W6Sb24P8Nq3AsSZ8GJilPk601hnQRkpZLvkpnNNGdRhlKgtf0q/Z02pyF9yLb8pUvFOXfCUxUGWbcfZSdLO8pKRU0QVGL7xD+clgOAxd02clqilwgECzCZaGw==
+X-YMail-OSG: Wp4F1tMVM1kRTP96OpEgAf4GH4GVRP.RO.PZ10sAkMPDka1KBBvOQAkhFxQPucX
+ 64qxOB3ocwIyt9v5J324ZRyi25fEmKM8L1dZgZSY_SoWMmHqJBGJ89iQR0niHy6V9IWBnQ4yIyR8
+ teW47.pXMVTlgVYkyOrTSdLEdoMsbmHejr34.eCxwDbafPFTdfIvSw_9gpJ6iAvEclMYMVru76.3
+ 36pX21u36Bt5bP2pov0_UjzN4T_TlGbxYUqiDrf.6gTsrsuQoXHsAWdRMKQB5KTBVSDnomVWdxZQ
+ 4U83y9HDeUF9f3z9n04ehfnW48fSZp14hEMHRAE50RQXAVYSPwk.0x6.mlQUIMzrfWbGs5r9xRMG
+ SJIYx6OszMhrIs8F1DuGGJ9az3LIQ_8DEaPBMk2Lw0KKxKtAfn8DrqpemUxmqu1oMFx0KHISS.3P
+ DPawi9RRmPkuvxXMjsyOmg1_ANbgxqVYzzZ_uCFOK5tKx1hrMZq7kOuIaIFOs7chJVG8GRE562f6
+ no1l7WAsysDRT6l2QuYR3Z_OKvq3DWLuAZmpHAD.kv2HgXOgtIItEFgB97v54FCAA7uiKwetu6SC
+ RQo3zEHQlqgO6M_UqtIG673W9FfAbmyJwao_lHTFyM25T0Sju3MD2Heav1sx.MIEIBpLP0x3h84A
+ 1tqaAdalDPHvSsqvHkDQ5CNLct_8p34f_QxhJFBDTuhEVxx8K7JmnQjOlPwnjjM.Iy3b47csiDw3
+ CeftW7gIK__tN8Mmcxt4V5_CSE.JW8RnskA7Yxlh_kXvUijmWLZCiWB_o8wrdigrE7P4TU8VGHA5
+ I1VRrvdnktQpgh7aYpiL_zYiob9ZlXArtZYrJKGWRGLqnFNSGv09IhxNeCddiK0wmuAcVekoUups
+ Qq1nDjtai8PiqVRnIdtLCvHOdeGkXIVF8TQ47QvBidF_6gffqeO0C6TnVpWUhaXsPLhrDqLTDSLy
+ nhxqN9RTIToEod2VSPf44KynfIiwrjFUPNMoFgcn2AHdxN7tUkUrnj75Ew3xuPWdz0TodQ0YCp.w
+ ZorYWfuY8N_fcWRTsK_bq1uy1sLTTFzrApZlaRC5trbchGS6o5LaQQJhS31L6jyz30X_qshcfwms
+ B44rxhzBUfLnYwLIDQlF181IHzEsIIeuZ1rZBRyHG_UMd0acw246AsZsouuLpvpmeBIXFS6YWzMW
+ TQlR_aZywdSjnzy4rmXFZ2QYtslybJJpG94pf7GTyB.kUIRfiddhmdRtoG.KVVEoayTwWbDuua2A
+ a9XNI4PHFtpVp6IQ9Fq6SaHWSjtHPfUbm7JuQ_vhUkxCdndOuMdXDo26ut9_t_3CsiDYSEzHZ8rk
+ zasvOvNVahknzIJtNtywCilISk0G9PxifWxSEjAjN6RpddkHDilW1tSGErSE26fesXhdvJaSs2fS
+ 7eD.XVmdGQlNEuFTUJSl1.X_SRvRKCpTcClwg4Q0W6A9N42bkmExlREvpkhopO_pOCAFbfU86Sjb
+ jaeiXepnm.oO1nZPU35SkYOyVWn48sNjk.FATl0wez5oFQKg21WEOemfNd59U9PiDGExU0zY5QjH
+ oHCdEOHtxEKhN4o4bsvb25TPpLXzOK_zjySxs62ihpXBiIW1FWCrysx1w2zlV3FsjOudUeK5MKus
+ lbQY4IxbJF4HGFffBkaOBIbQj8UZh3kppT3O6X82pWDj1V_NW5_w3x8ViW86nM8gSU9iKCeiHS_.
+ AZo0OPwk9te0GE.0l5AN.NKtrzVt0aaXbXRzxIbP0Jo4T8b9C5U6.EP_cdSGAT1XaDZHC3gpiV3S
+ LjLBpDuzIw7k._dEVAWsTG.eGrm6QoiTT8ltedJeddn9dIIyln..e7JGpK7ATBDJg_EaR10maxyP
+ 2uw6W7OyvI1vJ86KFupyjm3fn7Ns2eo8Kh_7IrDA7fFy8au7T4lwJbexs5QakLKQKMdWsI4iFfgB
+ tbj5W4lp36amiDn6DNXpKmhVqXvilhxA88XLqL_DXGZpLViT.8WE2jc_E2nllz4A01a7jjcVt5lI
+ EOyA8XVprWhAafpwFD7c93EUrX_IbQBMBH3UOb4pdkMTEgi.gh43QY64u4XFr9XhyvmJAG9kF.NJ
+ OcSPBn16kAPsUSV7U9jE.CXQqdc5b0RWo7mBOScH44ScGhGn140PiHDMDNctijlPQGnrni935HiP
+ YTKAweBzLEvZ53G5owLKe25oDfU_1T8Wsu_8C7kA172SG3QzIPXejREoNTuFZuYTrWgi7a2QnWJb
+ SS5piJKz_clHgequiwfNjaMcUFodPQOxgJNrz_8HX.kirVDg9ohi76_MZSUyiL4xnG9.Q0SOQ6mk
+ 8nJbESDc_Qg--
+X-Sonic-MF: <mark.s.waterbury@bellsouth.net>
+Received: from sonic.gate.mail.ne1.yahoo.com by sonic312.consmr.mail.bf2.yahoo.com with HTTP; Sat, 21 Aug 2021 03:20:49 +0000
+Date: Sat, 21 Aug 2021 03:20:45 +0000 (UTC)
+From: Mark Waterbury <mark.s.waterbury@bellsouth.net>
+To: Bernd Oppolzer <bernd.oppolzer@t-online.de>
+Cc: "berndoppolzer@yahoo.com" <berndoppolzer@yahoo.com>
+Message-ID: <2111278453.415027.1629516045341@mail.yahoo.com>
+Subject: suggestions for "external procedures.pdf"
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+References: <2111278453.415027.1629516045341.ref@mail.yahoo.com>
+X-Mailer: WebService/1.1.18850 YMailNorrin
+Content-Length: 912
+
+Hi, Bernd,
+
+I thought of a way to simplify the return of R0 with a function value ...
+
+Just store the new function return value into the save area at the offset f=
+or R0, and then, when you do the normal=C2=A0 =C2=A0LM 14,12,12(13)=C2=A0 j=
+ust prior to the BR 14, it will restore the "new" function return value.
+
+This just needs to be "documented."=C2=A0 It also means the user does not n=
+eed to ensure the value is in the "real" register 0, just ensure that the f=
+unction stores it in the right place in the save area.
+
+
+If you recall from looking at the Pascal/VS manuals, they provided very nic=
+e PROLOG and EPILOG macros that made it even easier to write assembler subr=
+outines to be link-edited and called from Pascal/VS.
+
+Perhaps you may want to consider doing something similar for your excellent=
+ "New Stanford Pascal" compiler, at least for the S/3x0 platforms?
+
+All the best,
+
+Mark S. Waterbury

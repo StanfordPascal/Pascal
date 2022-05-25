@@ -1,0 +1,113 @@
+
+zwei Vorschlaege von Paul Robinson:
+
+- Kommentare lt. C und PL/1 aus Compiler raus
+- nur Pascal- oder C++ Style
+
+und wichtiger:
+
+Erweiterung UNIT / USES / INTERFACE / IMPLEMENTATION
+
+Folgende Ueberlegung:
+
+ist diese Erweiterung kompatibel moeglich?
+Setzt sie %INCLUDE voraus und kann das moeglicherweise gleich mit
+erledigt werden?
+
+==================================================================
+
+Idee dazu:
+
+UNIT a ;
+INTERFACE
+USES b, c, d;
+type ...;
+const ...;
+procedure ...;
+IMPLEMENTATION
+USES b, c, d;
+...
+end.
+
+wird uebersetzt wie ein MODULE.
+Die Prozeduren im INTERFACE erhalten implizit das FORWARD-Attribut
+und muessen daher danach in der IMPLEMENTATION ausformuliert werden.
+
+Das weiteren wird ein (gleichnamiger) Include-File erzeugt,
+in dem folgendes steht:
+
+- die Typen, Constanten und Prozeduren aus der Interface-Deklaration;
+die Prozedurkoepfe aus dem Interface erhalten nicht das FORWARD,
+sondern das EXTERNAL-Attribut.
+
+... eigentlich braucht man keinen Include-File, sondern der Compiler
+kann als Folge von USES direkt die UNIT lesen, allerdings nur
+bis zur IMPLEMENTATION
+
+USES kann in Units stehen, aber auch in "normalen" Modulen,
+und ist im Prinzip ein %INCLUDE auf den entsprechenden Include-File.
+
+USES in Programmen nur ganz vorne (direkt nach dem Program-Statement)
+und nur einmal
+
+USES in Units zweimal, einmal im Interface (wodurch sie weiter nach
+aussen propagiert werden) und einmal in der Implementation (dann
+bleiben sie lokal)
+
+==================================================================
+
+also folgende Schritte:
+
+- der Compiler muss die Keywords UNIT / USES / INTERFACE und IMPLEMENTATION
+  verstehen
+
+- UNIT = weitere Alternative zu PROGRAM und MODULE
+
+- wenn UNIT, dann muessen im Programm INTERFACE und IMPLEMENTATION folgen
+
+- UNIT:
+  nach der Unit muss direkt INTERFACE folgen !!
+  nach INTERFACE nur CONST, TYPE und PROC / FUNC
+  alle PROC / FUNC nach INTERFACE muessen einen leeren Body
+  (implizit FORWARD) haben
+  nach IMPLEMENTATION ist alles normal
+  kein Hauptprogramm !!
+
+- USES:
+
+  Voraussetzung:
+  der Compiler muss in der Lage sein, Include-Files zu verarbeiten
+  (%INCLUDE member)
+  Standard-Methode pro Betriebssystem, wie die Member gefunden werden
+
+  USES ist eine Variante des Include-Files;
+  die genannte UNIT wird gelesen,
+  aber nur bis zur Implementation.
+  Fehler, wenn es keine UNIT ist !
+  Die Definitionen werden uebernommen (wie bei %INCLUDE),
+  allerdings erhalten alle PROC / FUNC implizit ein EXTERNAL-Attribut
+
+  USES (siehe oben) nur an zwei Stellen in UNITs bzw. an einer Stelle
+  im normalen Programm
+
+  es ist die Frage, ob diese Einschraenkung noetig ist und ob
+  USES nicht ueberall erlaubt sein kann, wo Definitionen auf
+  Ebene Null moeglich sind.
+
+- Dateinamen:
+
+  USES a, b, c;
+
+  liest die Dateien A.PAS, B.PAS, C.PAS
+  (Windows/Unix: Verzeichnisse lt. ENV-Variable PASUSE;
+   CMS: xxx PASCAL auf allen Disks;
+   MVS: Member xxx auf DD:PASUSE)
+
+  %INCLUDE avlcache;
+  %INCLUDE avlcache.inc;
+
+  liest AVLCACHE.INC ... INC ist die Default-Extension
+  (Windows/Unix: Verzeichnisse lt. ENV-Variable PASINC;
+   CMS: AVLCACHE PASINC auf allen Disks
+   MVS: Member AVLCACHE auf DD:PASINC)
+

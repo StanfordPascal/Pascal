@@ -1,0 +1,93 @@
+Return-Path: <mark.s.waterbury@bellsouth.net>
+Received: from mailin79.aul.t-online.de ([172.20.26.78])
+	by ehead19a13.aul.t-online.de with LMTP
+	id o2qFFSqQHmHRTQAAY0RUHA
+	(envelope-from <mark.s.waterbury@bellsouth.net>); Thu, 19 Aug 2021 19:08:58 +0200
+Received: from sonic308-5.consmr.mail.bf2.yahoo.com ([74.6.130.44]) by mailin79.aul.t-online.de
+	with (TLSv1.2:ECDHE-RSA-AES256-GCM-SHA384 encrypted)
+	esmtp id 1mGlXD-2rHryT0; Thu, 19 Aug 2021 19:08:56 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bellsouth.net; s=s2048; t=1629392934; bh=Bq6lGC+OS+36UKrccjrzQoVb3aDtxyNZiYRHgqEJLds=; h=Date:From:To:In-Reply-To:References:Subject:From:Subject:Reply-To; b=Ybqpp50wkMMKEO6e/fRTCQI6k8xeIY10tZvhc/poiLxTkc3lMquOSxH/iEl0aNQA7D6Q3o5tftose1D/ybaQoqS1TFXcNNo3QbtnRefgCWwSitLU5pXh8HHp2H8Urw7T0DplhSiNxWXeiLzFldmXkqEh0sj79uq3femR2W0XWMsU//XrpJt8IU4VndI1+1OGQYx+2OC1MqatO/50XDpx5097YXTfF0+pO1mgvohMu1xatFYX8WTWgwM7xsq+jo8Ac5WuJ65a1CTFJXOWK/bN3liR2vXuLJ+DjzHmxLCI6SM3vVcZfIJ1cAXjiem+sBYk/+Kw8SLaTQWQblQmj/L1tg==
+X-SONIC-DKIM-SIGN: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s2048; t=1629392934; bh=hLJ5eCrGil+WOCDETltYc7xqmm7SKXoe1Wq7LA52EOw=; h=X-Sonic-MF:Date:From:To:Subject:From:Subject; b=mNXiqWPQ7jsBEjK8ueYjt3VWw1nfAnQd7TZJXwdDoD20LGjky4Klu1XdwrKHfYQlYpx/mFJOYox+wa9ZYxg4PZAK8FnYM5SBOxJ97rqgJXkHL73JuZTwW1gAOT+5N0kQwIg4H+VXHk9ZwvodH1tpSHr7F7/QHNZL4nL+s+YltXiH7mkgzZnPr/pRf95WPyJcnQ48cCjC1XVOLE6Mvhb3JiyLXUtlJZGhVeko8P1Vr/JvFMeoQc9D5hzrZr7nMB7n/M6jFwnzEvo8lqMhoIg7ZYTDQHn+7Bo5A8PB1I25h5cHoF9tHSQdNO6dYzMfQzsHIh3l2SxI0ae0Z3GVFLNmqA==
+X-YMail-OSG: rhs2R_AVM1mGdNhnfxQKkzVPdIh3aT8pVl9mjEGpObHlAESOJMJBsrzXjmMwNLS
+ ha4W6r2k4GWQl3SFGWtHnK2wXPrvoioKnVJpZvz_waMjHKGtgb2ukPQms6uQXaO6CINsSMfndQik
+ CETd1U6vb6078jMCuV.xjGaDfhQ49v.AaogKfmU.7zh4Lh8RqgMUhfyCqyidS_6OfkjGO1ENXNA8
+ KpwfTPup3H.gxss8Xiayi0bzmfQLDxdgN_jikqRjfTwoX.9Ry48_iY.0aSAKetWlMvq90nbe4Rqg
+ gQfvJzVf4CQrmUFfTrjHJJA1R4oG0jgJOf6TqJqGe6cffa0tXslFTq1H5R9ZvfZ6fqtu.SaKtTdk
+ gYLjtDDdIGazIc.hnSUI4pKi9wCF3y34VxBQZ_dGpKXcNH8uG6CEriTOQ0g.G2Z31f23goIQxvID
+ 6C4fgOcfen_YErP0KD14Lc5tl4YC1c2BDJVn7p4DmCABh_KGlDdj0_WRTMVt52BpHXnLdgrX5j7D
+ G_sXalzOgKoxZYKV2YLbml0s3SCXM11ysKPeK6CacI1W4l88rMJ8qDLCdkk2FqvE._Nhfqx344EL
+ f7C.9hsEk2mhlg.MFvTVed_t5QNyRwFtpFmj3AF09nsGytUQU3iiaYDD0.HdZacLFO3844tW.w52
+ OaXvwnq_NuSGfGgS9v31AlCIc9u4b.yq95Hmu1LyCIxJQSTdEyU8vkVxbrXxwgyTq8Ocosh2FxCZ
+ L2fXJii6xUgfWf1.QyOYpSefjJOG_Jlkh2wg00spyq1P.8PAyky.wT6X8LijZaETs80.l175hVK0
+ 7BYBYR_P7K8vqBHo7KTVoAwApjIG9akAUPXIHj1T2pAuepWLAfkfrcENLtpF0fk5D4ayUz7dSh6c
+ PGyWsZXNM3nk8RlwaqC8QXcrmnrwLK1CVSfGIlke40pO..XYPhRRLjoRDM1VLy3WWfghXeoxkpUm
+ dEu26UvuVDjDmjUV4kBx6wV3f0tv6awDTtteFp6GtVCQIOBvf80fa4O2cQhtMEOXBxaOZt49l9pc
+ 0HBy6al3YtvHKXNY.bnMhC5Y97EMlrsr710wM2QVKlOqomH_VDFkJivUlLdSxA7cr1P61Y07gnL5
+ 4M2LXXy6vJU7T4e3EMObsM.mProJFZL3NDCVtg.o4W6YMObOk853mQuWQArXuUNOEpcC8p9VIEsG
+ MY0DxP3co5.p5aMQXdWwmC4OSJ8t0qRE1eA.zLZKjeOv4fWX_sC6jn10m78cZx_uafWj6EWzoMXK
+ lRxl3HoLX7or9oGfvoFF1NSvqul8VnaqxpKtBzX8IYlmXrNG0GSxHwpa7itI3NbAMuxOYiOeKQDa
+ 8UEhY9dQbkCnQCenDsJbZNgygXtGzlplym8mktZmbsW71u8KzPU5cPHKHoaDuMDlZLpT0h1pUSSe
+ cuwcNLFx2aqMW5GyZ3ETDjFw8YAv3X8WeVmxXRh377u4FIpw88C9PjUGzL1pMrYT_RQ4WaUygI1v
+ x1AXejiI6Ooc1D0G6I3o_Es8Q5QhqBGk._mrWTpzHcXCUHJ0vug1cHv8Vjybg3FGW_EMK1mtQeBM
+ nBfY9jKgh81mZ4QfY8X50rcQgp2JkC_GMhKXi7WLtZ11ucGkBa71FqoJgOWfe0xupxeetXisUxYk
+ evrov4eOeypkp.9Rz.5Omtk4ooixdCCxesQ7WQuml9BKkkG7QuYqubpfRd.pIiEoPncyTDDut2Gg
+ lzYXxCKhckovaTGIlAYn1ZraO5yxqODKx3p8LoV9F0LB9.t9mXIPNpicOl.r9v52Gf0GnHukUIFz
+ hwiEgXfKT709B.zTodH8jpBa.EjPfhRXCF7fsMJmUWNKhZFJn90vbnSsHzIpvgh1rx2qZm5JBk2v
+ CkV96rA3NW8Ax92M4puRu3PKLyObIcNKdyieW6OruC3K_GBOmGUb0OqyBx7myNwp2Ix3A6DAEjLJ
+ HO3nrw3ljM.xee0tfHJDqrx0tWhoG3IXz0cXUR7EfK.OHFQIdkjOVe68GvXsuovoUvPQ0iavdUT.
+ yhSKGVtSKcBP8QPj1ZN3vXJ1QZsIuqo5F8svSSDghgnIIdhULjZ.TXop5HLMbPOhAFT7A0YFX.bK
+ UNmHF6WCWjQQQdWmc2zACM0ZASB3ylbWk5e4Tk6Uw53OoAih_NLRmaD1csYL.L95EDrHSdv4u686
+ hOEfw3Y50FAPK9NdBj.WFfYttuOO.jA.WjySrwwjS3Pgm0hXrzhlz7IEyPxzymlZdRbnCRJwQHOP
+ LyO.SXE6m2pUMZChH_XVfh6zbWsEDgkfIvkP4UVcKcFli773bQgE4lDiX0z0mI7becCIIpa.5QXT
+ KJRbJe_nBzRIdb209eHD5Myo-
+X-Sonic-MF: <mark.s.waterbury@bellsouth.net>
+Received: from sonic.gate.mail.ne1.yahoo.com by sonic308.consmr.mail.bf2.yahoo.com with HTTP; Thu, 19 Aug 2021 17:08:54 +0000
+Date: Thu, 19 Aug 2021 17:08:51 +0000 (UTC)
+From: Mark Waterbury <mark.s.waterbury@bellsouth.net>
+To: Bernd Oppolzer <bernd.oppolzer@t-online.de>
+Message-ID: <1171600252.152831.1629392931240@mail.yahoo.com>
+In-Reply-To: <b410db2b-9b65-9dcf-4687-ed879656a12c@t-online.de>
+References: <2137870430.2316290.1616355857725.ref@mail.yahoo.com> <2137870430.2316290.1616355857725@mail.yahoo.com> <b410db2b-9b65-9dcf-4687-ed879656a12c@t-online.de>
+Subject: follow up questions on your New Stanford Pascal compiler
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+X-Mailer: WebService/1.1.18850 YMailNorrin
+Content-Length: 1137
+X-TOI-VIRUSSCAN: unchecked
+X-TOI-EXPURGATEID: 149288::1629392936-00006064-15EBA3FB/0/0 CLEAN NORMAL
+X-TOI-MSGID: a8968b16-1314-4f3c-ba49-6f80ed2b7cf0
+X-ENVELOPE-TO: <bernd.oppolzer@t-online.de>
+Authentication-Results: mailin79.aul.t-online.de;
+	dkim=pass (2048-bit key) header.d=bellsouth.net header.i=@bellsouth.net header.b=Ybqpp50w
+
+Hi, Bernd,
+
+I hope all is well with you and yours ...
+
+I noticed that the way the New Stanford Pascal is packaged for installation=
+ and for use under MVS 3.8J, a 3350 DASD type was selected -- that is a goo=
+d choice... but full-track blocking at 19040 bytes per block was chosen; th=
+is limits the ability to "port" or move the datasets to other device types,=
+ such as 3330.
+
+You may want to consider, the next time you create a new version of the New=
+ Stanford Pascal compiler, using the IBM Installation Productivity Option (=
+IPO) recommended "portable" block sizes, e.g.:
+
+=C2=A0 =C2=A0 For source and object text decks:=C2=A0
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 RECFM=3DFB,LRECL=3D80,BLKSIZE=3D3120
+
+=C2=A0 =C2=A0 For load module PDS libraries:
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 RECFM=3DU,BLKSIZE=3D6144
+
+This represents a reasonably good compromise and works well on all DASD dev=
+ice types.
+
+Just a "suggestion"...=C2=A0 :-)
+
+All the best,
+
+Mark S. Waterbury=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=C2=A0
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=C2=A0

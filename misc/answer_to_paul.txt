@@ -1,0 +1,85 @@
+Hello Paul, 
+thank you for your message and your suggestions. I will try to answer briefly; see below. 
+
+> 
+> 
+> Hi, my name is Paul. I have a suggestion. Or maybe more than one.
+> 
+> I have been thinking about this for several months (actually, probably more than a year). I, too, have been working on a small self-hosing pascal compiler called XDPascal. It, unfortunately, only generates code for IA32/AMD32 processors running on Windows. But it is self-hosting, and can generate programs that can do some actual work and solve some problems, if a text-only interface is acceptable.
+> 
+> In my opinion, "small" Pascal compilers like XDPascal (about 15,000 lines) or New Stanford Pascal Compiler, Oppolzer Version "NSPCOV" (44,452 lines) are more of a teaching tool than a serious, World-Class system capable of creating current applications. I mean, seriously, if someone wants a "full-service, World Class Pascal Compiler" they'd almost certainly use Free Pascal (about 250,000 lines of code, plus tens of thousands of lines of run-time libraries), since it targets about a dozen different architectures and operating systems. Given that to be the case, if a compiler such as mine or yours is used, it is almost certainly done for pedagogical use, for learning about how compilers work, and how someone can add a feature (or bug fix) and see what happens.
+> 
+
+In fact, I am using my compiler to do some significant work for my customer; 
+but indeed not for continuing production work, but instead for one-time analytical 
+programs, which are fast to write and easy to test. 
+
+> Programs like XDPascal and NSCPOV provide an accessible platform - something where a single person can have either an understanding of the whole application, or at least understand the part they want to change - for learning about the internals of a compiler, and maybe have some fun with it. (I'm presuming you enjoyed the challenge of adding features to and squashing bugs in NSPCOV; I know I had a lot of fun working on XDPascal.)
+> 
+
+Me too with Stanford Pascal :-) 
+I'm doing this since 2011 and in a significant manner since 2016, 
+when I managed to port the mainframe-only Stanford compiler to Windows etc. 
+
+> So now there are some suggestions I'd like to offer for the New Stanford Pascal Compiler, Oppolzer Version. I'll put them in order of (what I think is) importance.
+> 
+>     * Consider, instead of generating specialized P-Code for a fictional machine no one uses, as a means to generate machine independent code, to generating LLVM Intermediate Representation code. LLVM has become the standard in compiler architecture. Both Free Pascal and Free Basic compilers offer optional LLVM IR code output. For a lot of people, understanding LLVM IR is relatively difficult. This might be a way to also make that accessible to more people. If you learn more about this, it might even give you ideas, and you might learn something, even if you decide not to go this route. Note that LLVM does have a translator from IR to 370 object modules, in addition to more popular targets like x86 or x64. 
+>       I once considered doing a port of Free Pascal to the 370 architecture. The system is very modular, so that different architectures and operating systems, but it is so complex I figure it would take probably two years full-time work to come up to speed on it and then be able to figure out how to add S/379 code generation, plus developing run-time libraries for various mainframe operating systems. On the other hand, I was able to make my first update to XDPascal within two weeks of looking at the source code.
+>       Actually, until I found XDPascal and the smaller size (with only slightly different features), I was going to look at making Stanford Pascal more useful as a pedagogical tool, perhaps by creating an alternative code generator that creates code other than P-code, or provide more information about how code is generated., such as flags that can be turned on or off to show the various procedures and functions used in compiling a piece of code.
+> 
+
+I looked at LLVM, but I had indeed the problem that there was no easy way (for me) 
+to understand the LLVM IR language and how I could get started generating such code 
+from my Pascal variant. In constrast, I did significant extensions and corrections to 
+the P-Code language  which is completely different now from the 1982 P-Code language, 
+and I am trying to write a new "stage 2" translator, which maybe understands 
+a slightly different P-Code. To me, P-Code is much more readable than LLVM. 
+
+Some history: UCSD Pascal did the same (extending the classical P-Code to 
+something called U-Code) and, as I found out recently, IBMs Pascal/VS was 
+created by first defining another internal representation based on P-Code 
+and then using Stanford Pascal as bootstrap to compile the new 
+Pascal/VS compiler (which is self-hosted, too). So in some sence, 
+Pascal/VS is an offspring of Stanford Pascal, too, with a different flavor 
+of P-Code. 
+
+BTW: I also thought about adding S/370 support to FreePascal first, but soon 
+realized that there was a strong relation to ASCII code in the FreePascal source 
+scanners etc., and there was no interest in the FreePascal community for such 
+support. Some time after that experience, I discovered Stanford Pascal and 
+took my own route :-) 
+
+>     * Continue accepting (* _), { } and /_ _/ for block comments, but don't use /_ */ in the compiler. That makes it possible to compile the compiler on other compilers that don't support C-style block comments. Makes porting it potently easier.
+> 
+
+This is a very interesting suggestion which is easy to to, 
+and I will try to do this in the near future. 
+
+>     * I'm not sure how many statistics are generated by NSCPOV, beyond number of lines, and compilation time. XDPascal reports compile time (usually in seconds or fractions of a second), lines compiled per second, number of procedures, functions and units compiled. It also separates procedures and functions in units vs. those in the main program, and number of variables used. At least, that's what I thought of collecting.
+> 
+
+The compiler has all sort of information at hand, 
+and it would be easy to provide such information. 
+For me, a big plus was when I added the warnings for unused variables, 
+procedures etc. 
+
+>     * Potentially add a different parser to also handle the current standard method of Pascal Compilers like XDPascal, Free Pascal, and Delphi, where the PROGRAM statement is optional, MODULE is UNIT, and a program or module USES other modules. This may be unrealistic, but I figure I should be inclusive.
+> 
+
+Interesting. I must admit that I don't know much about the syntax of other 
+Pascal variants; my first priority in this area is to add %INCLUDE statements
+(a simple macro processor); this is the IBM Pascal/VS heritage. 
+Include members should contain EXTERNAL definitions, like in C. 
+But maybe I should look first what USES does. 
+
+> 
+> In any event, thank you for reading this, and whether or not you consider any of my suggestions, i wish you continued success in whatever work you do on your compiler.
+
+Thank you very much. Same to you and your efforts. 
+
+> 
+> Sincerely, Paul Robinson
+
+Kind regards
+
+Bernd Oppolzer

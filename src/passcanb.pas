@@ -1,44 +1,44 @@
 module PASSCAN ;
 
-//******************************************************************
-//$D-,N+,A-                                                         
-//******************************************************************
-//                                                                  
-//         S T A N F O R D   P A S C A L   C O M P I L E R          
-//                                                                  
-//              OPPOLZER VERSION                                    
-//                                                                  
-//******************************************************************
-//                                                                  
-//   This module is the new Source Program Scanner,                 
-//   which is not written by hand, but instead it is generated      
-//   by a tool which was written by some students of the            
-//   Stuttgart University (including myself) in 1980. I had         
-//   to enhance it in 1996 to make a usable product out of          
-//   this students' work.                                           
-//                                                                  
-//   The input to this tool is a large enhanced regular             
-//   expression, which defines all symbols known to the             
-//   compiler.                                                      
-//                                                                  
-//   In other situations when I used this tool, I defined the       
-//   whole syntax to this tool, including comments. This time       
-//   I decided only to define the comment starting symbols and      
-//   to handle the comments by hand-written logic inserted into     
-//   the skeleton file of the generator.                            
-//                                                                  
-//   I enhanced the tool a little bit, so that it was usable        
-//   for the purposes of the Pascal compiler:                       
-//                                                                  
-//   a) now Pascal can be generated, not only C                     
-//                                                                  
-//   b) the features to generate listings while scanning the        
-//      source are enhanced, so that the method fits better         
-//      to the needs of the Pascal compiler                         
-//                                                                  
-//   Bernd Oppolzer / September 2017                                
-//                                                                  
-//******************************************************************
+(********************************************************************)
+(*$D-,N+,A-                                                         *)
+(********************************************************************)
+(*                                                                  *)
+(*         S T A N F O R D   P A S C A L   C O M P I L E R          *)
+(*                                                                  *)
+(*              OPPOLZER VERSION                                    *)
+(*                                                                  *)
+(********************************************************************)
+(*                                                                  *)
+(*   This module is the new Source Program Scanner,                 *)
+(*   which is not written by hand, but instead it is generated      *)
+(*   by a tool which was written by some students of the            *)
+(*   Stuttgart University (including myself) in 1980. I had         *)
+(*   to enhance it in 1996 to make a usable product out of          *)
+(*   this students' work.                                           *)
+(*                                                                  *)
+(*   The input to this tool is a large enhanced regular             *)
+(*   expression, which defines all symbols known to the             *)
+(*   compiler.                                                      *)
+(*                                                                  *)
+(*   In other situations when I used this tool, I defined the       *)
+(*   whole syntax to this tool, including comments. This time       *)
+(*   I decided only to define the comment starting symbols and      *)
+(*   to handle the comments by hand-written logic inserted into     *)
+(*   the skeleton file of the generator.                            *)
+(*                                                                  *)
+(*   I enhanced the tool a little bit, so that it was usable        *)
+(*   for the purposes of the Pascal compiler:                       *)
+(*                                                                  *)
+(*   a) now Pascal can be generated, not only C                     *)
+(*                                                                  *)
+(*   b) the features to generate listings while scanning the        *)
+(*      source are enhanced, so that the method fits better         *)
+(*      to the needs of the Pascal compiler                         *)
+(*                                                                  *)
+(*   Bernd Oppolzer / September 2017                                *)
+(*                                                                  *)
+(********************************************************************)
 
 
 
@@ -48,13 +48,13 @@ const MAXLSIZE = 120 ;
 
 type CHARPTR = -> CHAR ;
 
-     //*********************************
-     // vom Scanner-Generator erzeugt:  
-     // skalarer Typ fuer Symbole       
-     //*********************************
-     // muss mit Def. beim Compiler     
-     // uebereinstimmen                 
-     //*********************************
+     /***********************************/
+     /* vom Scanner-Generator erzeugt:  */
+     /* skalarer Typ fuer Symbole       */
+     /***********************************/
+     /* muss mit Def. beim Compiler     */
+     /* uebereinstimmen                 */
+     /***********************************/
 
      SYMB = ( SYMB_EOF , SYMB_UNKNOWN , EOLCHAR , SEPARATOR , COMMENT1
             , COMMENT2 , COMMENT3 , COMMENT4 , COMMENT5 , STRINGCONST ,
@@ -65,9 +65,9 @@ type CHARPTR = -> CHAR ;
             SYSLASH , SYEQOP , SYNEOP , SYGTOP , SYLTOP , SYGEOP ,
             SYLEOP , SYOROP , SYANDOP , SYASSIGN , SYCONCAT ) ;
 
-     //*********************************
-     // Ende generierte Deklaration     
-     //*********************************
+     /***********************************/
+     /* Ende generierte Deklaration     */
+     /***********************************/
 
      CHAR32 = array [ 1 .. 32 ] of CHAR ;
      CHAR64 = array [ 1 .. 64 ] of CHAR ;
@@ -75,9 +75,9 @@ type CHARPTR = -> CHAR ;
      SCAN_CODETAB = array [ CHAR ] of CHAR ;
      SCAN_SETCHAR = set of CHAR ;
 
-     //*********************************
-     // fuer Fehlertexte                
-     //*********************************
+     /***********************************/
+     /* fuer Fehlertexte                */
+     /***********************************/
 
      SCANFT_PTR = -> SCAN_FTTAB1 ;
      SCAN_ERRCLASS = 'A' .. 'Z' ;
@@ -88,12 +88,12 @@ type CHARPTR = -> CHAR ;
      SCAN_FTTAB2 = array [ 1 .. MAXERRNO ] of SCAN_FTEXT ;
      SCAN_FTTAB1 = array [ SCAN_ERRCLASS ] of SCAN_FTTAB2 ;
 
-     //****************************************
-     // Liste der Fehler pro Source-Zeile usw. 
-     //****************************************
-     // muss mit Def. beim Compiler            
-     // uebereinstimmen                        
-     //****************************************
+     /******************************************/
+     /* Liste der Fehler pro Source-Zeile usw. */
+     /******************************************/
+     /* muss mit Def. beim Compiler            */
+     /* uebereinstimmen                        */
+     /******************************************/
 
      SCANF_PTR = -> SCAN_FEHLER ;
      SCAN_FEHLER = record
@@ -108,12 +108,12 @@ type CHARPTR = -> CHAR ;
                      POS_SKIP : INTEGER ;    // position skip
                    end ;
 
-     //*********************************
-     // zentraler Scan-Block            
-     //*********************************
-     // muss mit Def. beim Compiler     
-     // uebereinstimmen                 
-     //*********************************
+     /***********************************/
+     /* zentraler Scan-Block            */
+     /***********************************/
+     /* muss mit Def. beim Compiler     */
+     /* uebereinstimmen                 */
+     /***********************************/
 
      OPTIONS_PTR = -> COMP_OPTIONS ;
      SCAN_BLOCK = record
@@ -142,9 +142,9 @@ type CHARPTR = -> CHAR ;
                     OPTLINE : SOURCELINE ;   // options line
                     POPT : OPTIONS_PTR ;     // ptr to opt struct
 
-     //****************************************
-     // felder fuer sofortige Protokollausgabe 
-     //****************************************
+     /******************************************/
+     /* felder fuer sofortige Protokollausgabe */
+     /******************************************/
 
                     PROTOUT : BOOLEAN ;        // switch for prot out
                     TERMOUT : BOOLEAN ;        // switch for term out
@@ -152,9 +152,9 @@ type CHARPTR = -> CHAR ;
                     LINEINFO : CHAR32 ;        // line information
                     LINEINFO_SIZE : INTEGER ;  // size of lineinfo
 
-     //****************************************
-     // felder fuer ueberschrift               
-     //****************************************
+     /******************************************/
+     /* felder fuer ueberschrift               */
+     /******************************************/
 
                     LINECOUNT : INTEGER ;      // linecount f. heading
                     HEADLINE : SOURCELINE ;    // header line
@@ -162,12 +162,12 @@ type CHARPTR = -> CHAR ;
                     PAGENR : INTEGER ;         // page number
                   end ;
 
-     //*********************************
-     // Optionen fuer Compiler          
-     //*********************************
-     // muss mit Def. beim Compiler     
-     // uebereinstimmen                 
-     //*********************************
+     /***********************************/
+     /* Optionen fuer Compiler          */
+     /***********************************/
+     /* muss mit Def. beim Compiler     */
+     /* uebereinstimmen                 */
+     /***********************************/
 
      COMP_OPTIONS = record
                       LMARGIN : INTEGER ;    // left margin
@@ -201,11 +201,11 @@ const C_ZIFFER : SCAN_SETCHAR =
 static SCANNER_INIT : INTEGER ;
        SCAN_CODE : SCAN_CODETAB ;
 
-       //********************************************
-       // Tabelle SCAN_CODE wird beim ersten Aufruf  
-       // des Scanners umgebungsabhaengig korrekt    
-       // gefuellt                                   
-       //********************************************
+       /**********************************************/
+       /* Tabelle SCAN_CODE wird beim ersten Aufruf  */
+       /* des Scanners umgebungsabhaengig korrekt    */
+       /* gefuellt                                   */
+       /**********************************************/
 
 
 
@@ -259,18 +259,18 @@ local procedure INIT_SCAN_CODE ;
          ( 0X00 , 0X01 , 0X02 , 0X03 , 0XEC , 0X09 , 0XCA , 0X7F , 0XE2
            , 0XD2 , 0XD3 , 0X0B , 0X0C , 0X0D , 0X0E , 0XA9 ,
 
-         //****************************************************
-         //   Beim Host: \n = 0x15 => 0x0a                     
-         //****************************************************
-         //   0x10, 0x11, 0x12, 0x13, 0xef, 0xc5, 0x08, 0xcb,  
-         //****************************************************
+         /******************************************************/
+         /*   Beim Host: \n = 0x15 => 0x0a                     */
+         /******************************************************/
+         /*   0x10, 0x11, 0x12, 0x13, 0xef, 0xc5, 0x08, 0xcb,  */
+         /******************************************************/
 
            0X10 , 0X11 , 0X12 , 0X13 , 0XEF , 0X0A , 0X08 , 0XCB , 0X18
            , 0X19 , 0XDC , 0XD8 , 0X1C , 0X1D , 0X1E , 0X1F ,
 
-         //****************************************************
-         //   0xb7, 0xb8, 0xb9, 0xbb, 0xc4, 0x0a, 0x17, 0x1b,  
-         //****************************************************
+         /******************************************************/
+         /*   0xb7, 0xb8, 0xb9, 0xbb, 0xc4, 0x0a, 0x17, 0x1b,  */
+         /******************************************************/
 
            0XB7 , 0XB8 , 0XB9 , 0XBB , 0XC4 , 0XC5 , 0X17 , 0X1B , 0XCC
            , 0XCD , 0XCF , 0XD0 , 0XD1 , 0X05 , 0X06 , 0X07 , 0XD9 ,
@@ -374,10 +374,10 @@ local procedure SCAN_FEHLER_AUSGEBEN ( var SCANOUT : TEXT ; var SCB :
      if SCB . FTTABA <> NIL then
        begin
 
-     //***********************************************
-     //   look for message text in application        
-     //   message table                               
-     //***********************************************
+     (*************************************************)
+     (*   look for message text in application        *)
+     (*   message table                               *)
+     (*************************************************)
 
          FTEXT_REC := SCB . FTTABA -> [ ERRCLASS ] [ NUMMER ] ;
          if FTEXT_REC . FTEXT <> NIL then
@@ -388,9 +388,9 @@ local procedure SCAN_FEHLER_AUSGEBEN ( var SCANOUT : TEXT ; var SCB :
              FTEXT := ' ' ;
              MEMCPY ( ADDR ( FTEXT ) , FTEXT_REC . FTEXT , L ) ;
 
-     //***********************************************
-     //   look for % and set info_pos, if found       
-     //***********************************************
+     (*************************************************)
+     (*   look for % and set info_pos, if found       *)
+     (*************************************************)
 
              INFO_POS := - 1 ;
              for I := 1 to L do
@@ -400,9 +400,9 @@ local procedure SCAN_FEHLER_AUSGEBEN ( var SCANOUT : TEXT ; var SCB :
                    break
                  end (* then *) ;
 
-     //***********************************************
-     //   if ftext contains %, insert error info      
-     //***********************************************
+     (*************************************************)
+     (*   if ftext contains %, insert error info      *)
+     (*************************************************)
 
              if INFO_POS >= 0 then
                begin
@@ -426,10 +426,10 @@ local procedure SCAN_FEHLER_AUSGEBEN ( var SCANOUT : TEXT ; var SCB :
      if SCB . FTTAB <> NIL then
        begin
 
-     //***********************************************
-     //   look for message text in system             
-     //   message table                               
-     //***********************************************
+     (*************************************************)
+     (*   look for message text in system             *)
+     (*   message table                               *)
+     (*************************************************)
 
          FTEXT_REC := SCB . FTTAB -> [ ERRCLASS ] [ NUMMER ] ;
          if FTEXT_REC . FTEXT <> NIL then
@@ -440,9 +440,9 @@ local procedure SCAN_FEHLER_AUSGEBEN ( var SCANOUT : TEXT ; var SCB :
              FTEXT := ' ' ;
              MEMCPY ( ADDR ( FTEXT ) , FTEXT_REC . FTEXT , L ) ;
 
-     //***********************************************
-     //   look for % and set info_pos, if found       
-     //***********************************************
+     (*************************************************)
+     (*   look for % and set info_pos, if found       *)
+     (*************************************************)
 
              INFO_POS := - 1 ;
              for I := 1 to L do
@@ -452,9 +452,9 @@ local procedure SCAN_FEHLER_AUSGEBEN ( var SCANOUT : TEXT ; var SCB :
                    break
                  end (* then *) ;
 
-     //***********************************************
-     //   if ftext contains %, insert error info      
-     //***********************************************
+     (*************************************************)
+     (*   if ftext contains %, insert error info      *)
+     (*************************************************)
 
              if INFO_POS >= 0 then
                begin
@@ -602,11 +602,11 @@ local procedure PROT_ZEILE_AUSG ( var SCANOUT : TEXT ; var SCB :
 
 procedure PASSCANS ( var SCANOUT : TEXT ; var SCB : SCAN_BLOCK ) ;
 
-//**********************************************
-//                                              
-//   Summary ausgeben                           
-//                                              
-//**********************************************
+(************************************************)
+(*                                              *)
+(*   Summary ausgeben                           *)
+(*                                              *)
+(************************************************)
 
 
    var ERSTAUSG : BOOLEAN ;
@@ -675,21 +675,21 @@ procedure PASSCANS ( var SCANOUT : TEXT ; var SCB : SCAN_BLOCK ) ;
 procedure PASSCANL ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB
                    : SCAN_BLOCK ; ALLES : BOOLEAN ) ;
 
-//**********************************************
-//                                              
-//   source_listing beruht auf der alten        
-//   Funktion fehlerausgabe.                    
-//                                              
-//   Die Eingabedatei wird nochmal gelesen      
-//   und ausgegeben; die Fehler werden          
-//   ueber den ganzen Compile-Lauf hinweg       
-//   in der Fehlerliste gesammelt und hier      
-//   in den Source-Text eingestreut.            
-//                                              
-//   Schalter alles gibt an, ob auch Zeilen     
-//   ohne Fehler ausgegeben werden sollen       
-//                                              
-//**********************************************
+(************************************************)
+(*                                              *)
+(*   source_listing beruht auf der alten        *)
+(*   Funktion fehlerausgabe.                    *)
+(*                                              *)
+(*   Die Eingabedatei wird nochmal gelesen      *)
+(*   und ausgegeben; die Fehler werden          *)
+(*   ueber den ganzen Compile-Lauf hinweg       *)
+(*   in der Fehlerliste gesammelt und hier      *)
+(*   in den Source-Text eingestreut.            *)
+(*                                              *)
+(*   Schalter alles gibt an, ob auch Zeilen     *)
+(*   ohne Fehler ausgegeben werden sollen       *)
+(*                                              *)
+(************************************************)
 
 
    var PO : OPTIONS_PTR ;
@@ -719,17 +719,17 @@ function PASSCANE ( var SCB : SCAN_BLOCK ; ERRLEVEL : CHAR ; ERRCLASS :
                   CHAR ; I : INTEGER ; INFO : CHAR64 ; ZEILNR : INTEGER
                   ; PLATZ : INTEGER ) : SCANF_PTR ;
 
-//*********************************************************
-//                                                         
-// Fehler vom Compiler melden                              
-//                                                         
-// ERRLEVEL gibt die Schwere des Fehlers an                
-// ERRCLASS und I (FehlerNr) identifizieren den Fehler     
-// ZEILNR und PLATZ geben die Fehlerstelle im Source an    
-// Mit INFO kann man zusaetzliche Info mitgeben            
-// (Ausbaustufe)                                           
-//                                                         
-//*********************************************************
+(***********************************************************)
+(*                                                         *)
+(* Fehler vom Compiler melden                              *)
+(*                                                         *)
+(* ERRLEVEL gibt die Schwere des Fehlers an                *)
+(* ERRCLASS und I (FehlerNr) identifizieren den Fehler     *)
+(* ZEILNR und PLATZ geben die Fehlerstelle im Source an    *)
+(* Mit INFO kann man zusaetzliche Info mitgeben            *)
+(* (Ausbaustufe)                                           *)
+(*                                                         *)
+(***********************************************************)
 
 
    var PWORK : SCANF_PTR ;
@@ -737,9 +737,9 @@ function PASSCANE ( var SCB : SCAN_BLOCK ; ERRLEVEL : CHAR ; ERRCLASS :
 
    begin (* PASSCANE *)
 
-     //***************************************************
-     //   Fehlerelement in die Fehlerkette einfuegen      
-     //***************************************************
+     /*****************************************************/
+     /*   Fehlerelement in die Fehlerkette einfuegen      */
+     /*****************************************************/
 
      case ERRLEVEL of
        'S' : SCB . SFZAHL := SCB . SFZAHL + 1 ;
@@ -755,9 +755,9 @@ function PASSCANE ( var SCB : SCAN_BLOCK ; ERRLEVEL : CHAR ; ERRCLASS :
      if SCB . FEANFANG = NIL then
        begin
 
-     //***************************************************
-     //   Fehlerliste leer, erstes Element einfuegen      
-     //***************************************************
+     /*****************************************************/
+     /*   Fehlerliste leer, erstes Element einfuegen      */
+     /*****************************************************/
 
          SCB . FEANFANG := ALLOC ( SIZEOF ( SCAN_FEHLER ) ) ;
          SCB . FEAKT := SCB . FEANFANG ;
@@ -771,9 +771,9 @@ function PASSCANE ( var SCB : SCAN_BLOCK ; ERRLEVEL : CHAR ; ERRCLASS :
          ) then
            begin
 
-     //***************************************************
-     //   neues Element ganz hinten einfuegen             
-     //***************************************************
+     /*****************************************************/
+     /*   neues Element ganz hinten einfuegen             */
+     /*****************************************************/
 
              SCB . FEAKT -> . NAECHST := ALLOC ( SIZEOF ( SCAN_FEHLER )
                                          ) ;
@@ -788,9 +788,9 @@ function PASSCANE ( var SCB : SCAN_BLOCK ; ERRLEVEL : CHAR ; ERRCLASS :
              = ZEILNR ) and ( PWORK -> . POSITION <= PLATZ ) ) then
                begin
 
-     //***************************************************
-     //   Element irgendwo in der Mitte einfuegen         
-     //***************************************************
+     /*****************************************************/
+     /*   Element irgendwo in der Mitte einfuegen         */
+     /*****************************************************/
 
                  PWORK := SCB . FEANFANG ;
                  while ( PWORK -> . NAECHST -> . ZEILNR < ZEILNR ) or (
@@ -805,9 +805,9 @@ function PASSCANE ( var SCB : SCAN_BLOCK ; ERRLEVEL : CHAR ; ERRCLASS :
              else
                begin
 
-     //***************************************************
-     //   neues Element ganz vorne einfuegen              
-     //***************************************************
+     /*****************************************************/
+     /*   neues Element ganz vorne einfuegen              */
+     /*****************************************************/
 
                  PSAVE := SCB . FEANFANG ;
                  PWORK := ALLOC ( SIZEOF ( SCAN_FEHLER ) ) ;
@@ -816,10 +816,10 @@ function PASSCANE ( var SCB : SCAN_BLOCK ; ERRLEVEL : CHAR ; ERRCLASS :
            end (* else *)
        end (* else *) ;
 
-     //***************************************************
-     //   Element mit Werten belegen und                  
-     //   Pointer als Funktionsergebnis zurueckgeben      
-     //***************************************************
+     /*****************************************************/
+     /*   Element mit Werten belegen und                  */
+     /*   Pointer als Funktionsergebnis zurueckgeben      */
+     /*****************************************************/
 
      PWORK -> . ERRLEVEL := ERRLEVEL ;
      PWORK -> . ERRCLASS := ERRCLASS ;
@@ -858,9 +858,9 @@ procedure PASSCANR ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB
              return ;
            end (* then *) ;
 
-     //****************************************
-     // letzte zeile ausgeben, wenn gewuenscht 
-     //****************************************
+     /******************************************/
+     /* letzte zeile ausgeben, wenn gewuenscht */
+     /******************************************/
 
          if SCB . LINENR > 0 then
            begin
@@ -897,9 +897,9 @@ procedure PASSCANR ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB
                PROT_ZEILE_AUSG ( OUTPUT , SCB , FALSE , TRUE ) ;
            end (* then *) ;
 
-     //****************************************
-     // neue Zeile einlesen                    
-     //****************************************
+     /******************************************/
+     /* neue Zeile einlesen                    */
+     /******************************************/
 
          if EOF ( SCANINP ) then
            begin
@@ -934,9 +934,9 @@ local function OPTIONS ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var
                        SCB : SCAN_BLOCK ; COMMENTTYPE : INTEGER ) :
                        BOOLEAN ;
 
-//*********************************
-//   CCH = COMMENT TERMINATOR CH   
-//*********************************
+(***********************************)
+(*   CCH = COMMENT TERMINATOR CH   *)
+(***********************************)
 
 
    type SET_CHAR = set of CHAR ;
@@ -1115,9 +1115,9 @@ local function OPTIONS ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var
 local procedure COMMENT ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var
                         SCB : SCAN_BLOCK ; COMMENTTYPE : INTEGER ) ;
 
-//*********************************
-//   CCH = COMMENT TERMINATOR CH   
-//*********************************
+(***********************************)
+(*   CCH = COMMENT TERMINATOR CH   *)
+(***********************************)
 
 
    var TERMCH : CHAR ;
@@ -1158,10 +1158,10 @@ local procedure COMMENT ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var
            end (* tag/ca *) ;
      end (* case *) ;
 
-     //***************************************
-     //   SET TERMCH - EXPECTED COMMENT       
-     //   TERMINATING CHARACTER               
-     //***************************************
+     (*****************************************)
+     (*   SET TERMCH - EXPECTED COMMENT       *)
+     (*   TERMINATING CHARACTER               *)
+     (*****************************************)
 
      SCANCH := SCB . LOOKAHEAD ;
      while TRUE do
@@ -1188,10 +1188,10 @@ local procedure COMMENT ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var
              break ;
            end (* then *) ;
 
-     //***************************************
-     //   ONLY ALLOW NESTING OF COMMENTS      
-     //   OF SAME TYPE                        
-     //***************************************
+     (*****************************************)
+     (*   ONLY ALLOW NESTING OF COMMENTS      *)
+     (*   OF SAME TYPE                        *)
+     (*****************************************)
 
          if SCB . POPT -> . NESTCOMM then
            case COMMENTTYPE of
@@ -1247,18 +1247,18 @@ procedure PASSCANF ( var SCB : SCAN_BLOCK ; WHICHTABLE : CHAR ;
                    ERRCLASS : SCAN_ERRCLASS ; ERRNUM : INTEGER ; ERRMSG
                    : SOURCELINE ; ERRMSGSIZE : INTEGER ) ;
 
-//*********************************************************
-//                                                         
-// Uebergabe eines Fehlertextes zum Eintrag                
-// in eine der internen Fehlertext-Tabellen, die           
-// am Scan-Block haengen                                   
-//                                                         
-// SCB = Scan Block                                        
-// WHICHTABLE = S(ystem) or A(nwendung)                    
-// ERRCLASS und ERRNUM = Keys fuer den Fehlertext          
-// ERRMSG und ERRMSGSIZE = der Fehlertext                  
-//                                                         
-//*********************************************************
+(***********************************************************)
+(*                                                         *)
+(* Uebergabe eines Fehlertextes zum Eintrag                *)
+(* in eine der internen Fehlertext-Tabellen, die           *)
+(* am Scan-Block haengen                                   *)
+(*                                                         *)
+(* SCB = Scan Block                                        *)
+(* WHICHTABLE = S(ystem) or A(nwendung)                    *)
+(* ERRCLASS und ERRNUM = Keys fuer den Fehlertext          *)
+(* ERRMSG und ERRMSGSIZE = der Fehlertext                  *)
+(*                                                         *)
+(***********************************************************)
 
 
    var PFTAB : SCANFT_PTR ;
@@ -1306,11 +1306,11 @@ procedure PASSCANF ( var SCB : SCAN_BLOCK ; WHICHTABLE : CHAR ;
 procedure PASSCAN ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB :
                   SCAN_BLOCK ; DO_COMMENT : BOOLEAN ) ;
 
-//*********************************************************
-//                                                         
-// die eigentliche Scanner-Prozedur                        
-//                                                         
-//*********************************************************
+(***********************************************************)
+(*                                                         *)
+(* die eigentliche Scanner-Prozedur                        *)
+(*                                                         *)
+(***********************************************************)
 
 
    var ALTZUST : INTEGER ;
@@ -1325,9 +1325,9 @@ procedure PASSCAN ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB :
 
       begin (* SCANNER2 *)
 
-        //*************************************************
-        //   Symbol setzen abh. vom Endzustand             
-        //*************************************************
+        /***************************************************/
+        /*   Symbol setzen abh. vom Endzustand             */
+        /***************************************************/
 
         if SCB . DATEIENDE <> 0 then
           SCB . SYMBOLNR := SYMB_EOF
@@ -1401,23 +1401,23 @@ procedure PASSCAN ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB :
           WRITELN ( 'zust = ' , ALTZUST , ' symb = ' , SCB . SYMBOLNR :
                     20 , ' ' , SCB . SYMBOL : SCB . LSYMBOL ) ;
 
-        //*************************************************
-        //   Umsetzen in Grossbuchstaben, wo gefordert     
-        //*************************************************
+        /***************************************************/
+        /*   Umsetzen in Grossbuchstaben, wo gefordert     */
+        /***************************************************/
 
         case SCB . SYMBOLNR of
         end (* case *) ;
 
-        //*************************************************
-        //   Uebersetzen Keywords                          
-        //*************************************************
+        /***************************************************/
+        /*   Uebersetzen Keywords                          */
+        /***************************************************/
 
         case SCB . SYMBOLNR of
         end (* case *) ;
 
-        //***************************************
-        // ausgabe fuer -H- zunaechst ausgesetzt 
-        //***************************************
+        /*****************************************/
+        /* ausgabe fuer -H- zunaechst ausgesetzt */
+        /*****************************************/
 
       end (* SCANNER2 *) ;
 
@@ -2377,10 +2377,10 @@ procedure PASSCAN ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB :
        begin
          SCANNER_INIT := 1 ;
 
-     //*******************************************
-     // einmalige initialisierungs aktivitaeten   
-     // wenn statischer schalter null ist         
-     //*******************************************
+     /*********************************************/
+     /* einmalige initialisierungs aktivitaeten   */
+     /* wenn statischer schalter null ist         */
+     /*********************************************/
 
          INIT ( SCB ) ;
          INIT_SCAN_CODE ;

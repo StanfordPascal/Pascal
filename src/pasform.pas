@@ -1,144 +1,144 @@
 program PASFORM ( OUTPUT , EINGABE , LISTING , AUSGABE , TRACEF ) ;
 
-(********************************************************************)
-(*$D+,U-                                                            *)
-(********************************************************************)
-(*                                                                  *)
-(*   PASCAL-FORMATIERER                                             *)
-(*                                                                  *)
-(*   STAND: JULI 1990                                               *)
-(*   AUTOR: BERND OPPOLZER                                          *)
-(*                                                                  *)
-(*   UNTERSCHIEDE PASCAL/VS ZU TURBO/3:                             *)
-(*                                                                  *)
-(*   INSYMBOL MUSS AUSSER BLANKS BEI TURBO/3                        *)
-(*   AUCH CHR(10) UND CHR(13) UEBERLESEN.                           *)
-(*   TERMIN/TERMOUT BEI PASCAL/VS.                                  *)
-(*   ASSIGN/CLOSE BEI TURBO/3.                                      *)
-(*                                                                  *)
-(********************************************************************)
-(*   Historie zeitlich absteigend ...                               *)
-(********************************************************************)
-(*                                                                  *)
-(*   Neue Version im August 2019                                    *)
-(*                                                                  *)
-(*   - Kommentare am Zeilenende (ohne Kasten) immer mit //          *)
-(*                                                                  *)
-(*   - durch mindestens ein Blank absetzen                          *)
-(*                                                                  *)
-(*   - wenn der Kommentar ueber Spalte 72 hinausreicht,             *)
-(*     in naechster Zeile an gleicher Position fortsetzen           *)
-(*                                                                  *)
-(*   - wenn in derselben Zeile noch etwas kommt, dann               *)
-(*     auf jeden Fall in neuer Zeile beginnen                       *)
-(*                                                                  *)
-(*   (inspiriert durch den Versuch, den P5-Source zu bearbeiten)    *)
-(*                                                                  *)
-(********************************************************************)
-(*                                                                  *)
-(*   Neue Version im November 2017                                  *)
-(*                                                                  *)
-(*   - Verwendung des Scanners PASSCAN (analog Compiler)            *)
-(*                                                                  *)
-(*   - zusaetzlich werden hier die Symbole SQLBEGIN, SQLEND,        *)
-(*     SQLVAR und OVERLAY verarbeitet                               *)
-(*                                                                  *)
-(*   - Kommentarbearbeitung (fast) wie vorher                       *)
-(*                                                                  *)
-(*   - neu: C++ Kommentare werden unterstuetzt                      *)
-(*                                                                  *)
-(*   - neu: Korrekturen bei Kommentaren ueber mehrere Zeilen        *)
-(*                                                                  *)
-(*   - Ausgabe von Protokoll auf Datei LISTING                      *)
-(*                                                                  *)
-(*   - Korrektur: Blank eingefuegt bei Symbol INTDOTDOT             *)
-(*                                                                  *)
-(*   - neu: Kommentare hinter Definitionen usw. bleiben stehen      *)
-(*     d.h.: Kommentare, denen in derselben Zeile ein anderes       *)
-(*     Symbol (ausser Separator) vorangeht, werden anders           *)
-(*     behandelt als bisher. Sie behalten idealerweise ihre         *)
-(*     Position. Wenn von der letzten Zeile her ein solcher         *)
-(*     Kommentar bereits vorhanden ist, wird versucht, den          *)
-(*     neuen Kommentar ebenfalls an dieser Position                 *)
-(*     auszurichten                                                 *)
-(*                                                                  *)
-(*   - kein Abbruch bei Fehler, idealerweise keine Endlos-          *)
-(*     schleife, sondern Diagnose wie beim Compiler und             *)
-(*     weiterarbeiten                                               *)
-(*                                                                  *)
-(********************************************************************)
-(*                                                                  *)
-(*   ANPASSUNGEN am 31.08.2016                                      *)
-(*                                                                  *)
-(*   Kommentare anders eingerueckt                                  *)
-(*   Neuzeile bei komplexen consts (Stanford-Erweiterung)           *)
-(*                                                                  *)
-(********************************************************************)
-(*                                                                  *)
-(*   ANPASSUNGEN FUER FPC AM 05.10.2013:                            *)
-(*                                                                  *)
-(*   ARRAY-KLAMMERN IMMER ALS [ ] AUSGEBEN                          *)
-(*                                                                  *)
-(*   POINTER-SYMBOLE IMMER ALS ^                                    *)
-(*                                                                  *)
-(*   CHARACTER-RANGE MIT RUECKSICHT AUF EBCDIC ...                  *)
-(*                                                                  *)
-(********************************************************************)
-(*                                                                  *)
-(*   -- NEUE VERSION VON INSYMBOL, DIE AN STANFORD PASCAL           *)
-(*      ANGEPASST IST                                               *)
-(*                                                                  *)
-(*   -- KOMMENTARE BESSER ABHANDELN WIE FOLGT:                      *)
-(*                                                                  *)
-(*   A) ZUNAECHST GIBT ES VIER SORTEN - ODER FUENF:                 *)
-(*      1) # SIND ZU UEBERLESEN                                     *)
-(*      2) SOLCHE MIT "..."                                         *)
-(*      3) DANN DIE DREI UEBLICHEN                                  *)
-(*                                                                  *)
-(*   B) KOMMENTARE INNERHALB VON STATEMENTS BEHALTEN WIR BEI        *)
-(*                                                                  *)
-(*   C) KOMMENTARE AUSSERHALB KASTELN WIR EIN                       *)
-(*                                                                  *)
-(*   D) WICHTIG: AUCH SOLCHE, DIE UEBER MEHRERE ZEILEN GEHEN        *)
-(*                                                                  *)
-(*   E) REKURSIVE KOMMENTARE MUESSEN MOEGLICH SEIN                  *)
-(*                                                                  *)
-(*   F) ANDERE LOGIK BEI CASE                                       *)
-(*                                                                  *)
-(*   G) HINTER ZEILE 50 NICHT WEITER EINRUECKEN !!                  *)
-(*                                                                  *)
-(********************************************************************)
-(*                                                                  *)
-(*   OFFEN:                                                         *)
-(*                                                                  *)
-(*   * WO BLEIBEN DIE LEERZEILEN HINTER DEN KOMMENTARKAESTEN        *)
-(*                                                                  *)
-(*   * ANDERS EINRUECKEN BEI VARIANTEN RECORDS                      *)
-(*                                                                  *)
-(*   * NICHT ALLE KOMMENTARE UEBERLESEN HINTER BEGIN/END USW.       *)
-(*                                                                  *)
-(*   * HINTER ZEILE 50 NICHT WEITER EINRUECKEN !!!                  *)
-(*                                                                  *)
-(*   * FEHLER BEI PASCAL2, WAS IST DA LOS ??                        *)
-(*     KOMMENTAR NACH BEGIN WIRD UEBERLESEN, ABER DA WIRD           *)
-(*     NUR DER ERSTE TEIL EINGELESEN; DER REST WIRD DANN            *)
-(*     ALS NORMALES STATEMENT INTERPRETIERT ...                     *)
-(*     KOMMC.UEBERLESEN USW. BESSER MACHEN ...                      *)
-(*   * BEI KURZEN KOMMENTAREN STIMMEN DIE KAESTCHEN NICHT           *)
-(*                                                                  *)
-(*   * KLEINBUCHSTABEN AUCH KLEIN LASSEN                            *)
-(*                                                                  *)
-(*   * EINLESEN LAENGERE RECORDS, MINDESTENS 80, VERMUTLICH 120     *)
-(*                                                                  *)
-(*   * REKURSIVE KOMMENTARE, KOMMENTARKAESTEN UEBERHAUPT            *)
-(*                                                                  *)
-(*   * CONST FUER STRUKTUREN NACH VAR WIRD NICHT AKZEPTIERT         *)
-(*                                                                  *)
-(*   * KOMMENTARE VOLLSTAENDIG AUSGEBEN UND AUFTEILEN               *)
-(*                                                                  *)
-(*   * " KOMMENTARE MIT LAENGE KLEINER VIER KOMPLETT IGNORIEREN     *)
-(*                                                                  *)
-(********************************************************************)
+//******************************************************************
+//$D+,U-                                                            
+//******************************************************************
+//                                                                  
+//   PASCAL-FORMATIERER                                             
+//                                                                  
+//   STAND: JULI 1990                                               
+//   AUTOR: BERND OPPOLZER                                          
+//                                                                  
+//   UNTERSCHIEDE PASCAL/VS ZU TURBO/3:                             
+//                                                                  
+//   INSYMBOL MUSS AUSSER BLANKS BEI TURBO/3                        
+//   AUCH CHR(10) UND CHR(13) UEBERLESEN.                           
+//   TERMIN/TERMOUT BEI PASCAL/VS.                                  
+//   ASSIGN/CLOSE BEI TURBO/3.                                      
+//                                                                  
+//******************************************************************
+//   Historie zeitlich absteigend ...                               
+//******************************************************************
+//                                                                  
+//   Neue Version im August 2019                                    
+//                                                                  
+//   - Kommentare am Zeilenende (ohne Kasten) immer mit //          
+//                                                                  
+//   - durch mindestens ein Blank absetzen                          
+//                                                                  
+//   - wenn der Kommentar ueber Spalte 72 hinausreicht,             
+//     in naechster Zeile an gleicher Position fortsetzen           
+//                                                                  
+//   - wenn in derselben Zeile noch etwas kommt, dann               
+//     auf jeden Fall in neuer Zeile beginnen                       
+//                                                                  
+//   (inspiriert durch den Versuch, den P5-Source zu bearbeiten)    
+//                                                                  
+//******************************************************************
+//                                                                  
+//   Neue Version im November 2017                                  
+//                                                                  
+//   - Verwendung des Scanners PASSCAN (analog Compiler)            
+//                                                                  
+//   - zusaetzlich werden hier die Symbole SQLBEGIN, SQLEND,        
+//     SQLVAR und OVERLAY verarbeitet                               
+//                                                                  
+//   - Kommentarbearbeitung (fast) wie vorher                       
+//                                                                  
+//   - neu: C++ Kommentare werden unterstuetzt                      
+//                                                                  
+//   - neu: Korrekturen bei Kommentaren ueber mehrere Zeilen        
+//                                                                  
+//   - Ausgabe von Protokoll auf Datei LISTING                      
+//                                                                  
+//   - Korrektur: Blank eingefuegt bei Symbol INTDOTDOT             
+//                                                                  
+//   - neu: Kommentare hinter Definitionen usw. bleiben stehen      
+//     d.h.: Kommentare, denen in derselben Zeile ein anderes       
+//     Symbol (ausser Separator) vorangeht, werden anders           
+//     behandelt als bisher. Sie behalten idealerweise ihre         
+//     Position. Wenn von der letzten Zeile her ein solcher         
+//     Kommentar bereits vorhanden ist, wird versucht, den          
+//     neuen Kommentar ebenfalls an dieser Position                 
+//     auszurichten                                                 
+//                                                                  
+//   - kein Abbruch bei Fehler, idealerweise keine Endlos-          
+//     schleife, sondern Diagnose wie beim Compiler und             
+//     weiterarbeiten                                               
+//                                                                  
+//******************************************************************
+//                                                                  
+//   ANPASSUNGEN am 31.08.2016                                      
+//                                                                  
+//   Kommentare anders eingerueckt                                  
+//   Neuzeile bei komplexen consts (Stanford-Erweiterung)           
+//                                                                  
+//******************************************************************
+//                                                                  
+//   ANPASSUNGEN FUER FPC AM 05.10.2013:                            
+//                                                                  
+//   ARRAY-KLAMMERN IMMER ALS [ ] AUSGEBEN                          
+//                                                                  
+//   POINTER-SYMBOLE IMMER ALS ^                                    
+//                                                                  
+//   CHARACTER-RANGE MIT RUECKSICHT AUF EBCDIC ...                  
+//                                                                  
+//******************************************************************
+//                                                                  
+//   -- NEUE VERSION VON INSYMBOL, DIE AN STANFORD PASCAL           
+//      ANGEPASST IST                                               
+//                                                                  
+//   -- KOMMENTARE BESSER ABHANDELN WIE FOLGT:                      
+//                                                                  
+//   A) ZUNAECHST GIBT ES VIER SORTEN - ODER FUENF:                 
+//      1) # SIND ZU UEBERLESEN                                     
+//      2) SOLCHE MIT "..."                                         
+//      3) DANN DIE DREI UEBLICHEN                                  
+//                                                                  
+//   B) KOMMENTARE INNERHALB VON STATEMENTS BEHALTEN WIR BEI        
+//                                                                  
+//   C) KOMMENTARE AUSSERHALB KASTELN WIR EIN                       
+//                                                                  
+//   D) WICHTIG: AUCH SOLCHE, DIE UEBER MEHRERE ZEILEN GEHEN        
+//                                                                  
+//   E) REKURSIVE KOMMENTARE MUESSEN MOEGLICH SEIN                  
+//                                                                  
+//   F) ANDERE LOGIK BEI CASE                                       
+//                                                                  
+//   G) HINTER ZEILE 50 NICHT WEITER EINRUECKEN !!                  
+//                                                                  
+//******************************************************************
+//                                                                  
+//   OFFEN:                                                         
+//                                                                  
+//   * WO BLEIBEN DIE LEERZEILEN HINTER DEN KOMMENTARKAESTEN        
+//                                                                  
+//   * ANDERS EINRUECKEN BEI VARIANTEN RECORDS                      
+//                                                                  
+//   * NICHT ALLE KOMMENTARE UEBERLESEN HINTER BEGIN/END USW.       
+//                                                                  
+//   * HINTER ZEILE 50 NICHT WEITER EINRUECKEN !!!                  
+//                                                                  
+//   * FEHLER BEI PASCAL2, WAS IST DA LOS ??                        
+//     KOMMENTAR NACH BEGIN WIRD UEBERLESEN, ABER DA WIRD           
+//     NUR DER ERSTE TEIL EINGELESEN; DER REST WIRD DANN            
+//     ALS NORMALES STATEMENT INTERPRETIERT ...                     
+//     KOMMC.UEBERLESEN USW. BESSER MACHEN ...                      
+//   * BEI KURZEN KOMMENTAREN STIMMEN DIE KAESTCHEN NICHT           
+//                                                                  
+//   * KLEINBUCHSTABEN AUCH KLEIN LASSEN                            
+//                                                                  
+//   * EINLESEN LAENGERE RECORDS, MINDESTENS 80, VERMUTLICH 120     
+//                                                                  
+//   * REKURSIVE KOMMENTARE, KOMMENTARKAESTEN UEBERHAUPT            
+//                                                                  
+//   * CONST FUER STRUKTUREN NACH VAR WIRD NICHT AKZEPTIERT         
+//                                                                  
+//   * KOMMENTARE VOLLSTAENDIG AUSGEBEN UND AUFTEILEN               
+//                                                                  
+//   * " KOMMENTARE MIT LAENGE KLEINER VIER KOMPLETT IGNORIEREN     
+//                                                                  
+//******************************************************************
 
 
 
@@ -301,9 +301,9 @@ type WORT = array [ 1 .. 100 ] of CHAR ;
                     OPTLINE : SOURCELINE ;   // options line
                     POPT : OPTIONS_PTR ;     // ptr to opt struct
 
-     /******************************************/
-     /* felder fuer sofortige Protokollausgabe */
-     /******************************************/
+     //****************************************
+     // felder fuer sofortige Protokollausgabe 
+     //****************************************
 
                     PROTOUT : BOOLEAN ;        // switch for prot out
                     TERMOUT : BOOLEAN ;        // switch for term out
@@ -311,9 +311,9 @@ type WORT = array [ 1 .. 100 ] of CHAR ;
                     LINEINFO : CHAR32 ;        // line information
                     LINEINFO_SIZE : INTEGER ;  // size of lineinfo
 
-     /******************************************/
-     /* felder fuer ueberschrift               */
-     /******************************************/
+     //****************************************
+     // felder fuer ueberschrift               
+     //****************************************
 
                     LINECOUNT : INTEGER ;      // linecount f. heading
                     HEADLINE : SOURCELINE ;    // header line
@@ -358,22 +358,22 @@ var EINGABE : TEXT ;
     MXINT16 : INTEGER ;
     ZZAUS : INTEGER ;
 
-    /*********************************************/
-    /* compiler options in new opt structure     */
-    /*********************************************/
+    //*******************************************
+    // compiler options in new opt structure     
+    //*******************************************
 
     OPT : COMP_OPTIONS ;
     SCB : SCAN_BLOCK ;
 
-    (*******************************************************)
-    (* RETURNED BY SOURCE PROGRAM SCANNER = PASSCAN        *)
-    (*                                                     *)
-    (* SY       - symbol read                              *)
-    (* SYLENGTH - length of symbol or constant             *)
-    (* VAL      - constant (if symbol was constant)        *)
-    (*                                                     *)
-    (* more symbols computed by insymbol locally           *)
-    (*******************************************************)
+    //*****************************************************
+    // RETURNED BY SOURCE PROGRAM SCANNER = PASSCAN        
+    //                                                     
+    // SY       - symbol read                              
+    // SYLENGTH - length of symbol or constant             
+    // VAL      - constant (if symbol was constant)        
+    //                                                     
+    // more symbols computed by insymbol locally           
+    //*****************************************************
 
     SY : SYMB ;
     SYLENGTH : INTEGER ;
@@ -381,19 +381,19 @@ var EINGABE : TEXT ;
     LINECNT : INTEGER ;
     ID : ALPHA ;
 
-    (*******************************************************)
-    (* weitere rueckgabe von insymbol:                     *)
-    (* w1 und w1ende - fuer outsymbol usw.                 *)
-    (* nullstate     - false fuer empty stmt kontrolle     *)
-    (*******************************************************)
+    //*****************************************************
+    // weitere rueckgabe von insymbol:                     
+    // w1 und w1ende - fuer outsymbol usw.                 
+    // nullstate     - false fuer empty stmt kontrolle     
+    //*****************************************************
 
     W1 : WORT ;
     W1ENDE : INTEGER ;
     NULLSTATE : BOOLEAN ;
 
-    (*******************************************************)
-    (* symbol sets                                         *)
-    (*******************************************************)
+    //*****************************************************
+    // symbol sets                                         
+    //*****************************************************
 
     BLANKSYMBOLE : set of SYMB ;
     STERMSYMBOLE : set of SYMB ;
@@ -419,11 +419,17 @@ var EINGABE : TEXT ;
     SQLHOSTV : BOOLEAN ;
     TRACEF : TEXT ;
 
-    (*******************************************************)
-    (*  KOMMC: AUFZEICHNEN DES LAUFENDEN KOMMENTAR-STATUS  *)
-    (*******************************************************)
+    //*****************************************************
+    //  KOMMC: AUFZEICHNEN DES LAUFENDEN KOMMENTAR-STATUS  
+    //*****************************************************
 
     KOMMC : KOMM_CONT ;
+
+    //*****************************************************
+    //  options set by osparm                              
+    //*****************************************************
+
+    FORCE_COMMENTTYPE : CHAR ;
 
 
 const BLANKID : ALPHA = '            ' ;
@@ -468,16 +474,16 @@ const BLANKID : ALPHA = '            ' ;
       EXPROPS : SYMSET =
       [ SYEQOP , SYNEOP , SYGTOP , SYLTOP , SYGEOP , SYLEOP , SYIN ] ;
 
-      (*********************************************************)
-      (*   table of reserved symbols                           *)
-      (*********************************************************)
+      //*******************************************************
+      //   table of reserved symbols                           
+      //*******************************************************
 
       RW : array [ 1 .. MAXRW ] of ALPHA =
 
-      (*********************************************************)
-      (*   new reserved symbols in the 2011 version:           *)
-      (*   break, return, continue                             *)
-      (*********************************************************)
+      //*******************************************************
+      //   new reserved symbols in the 2011 version:           
+      //   break, return, continue                             
+      //*******************************************************
 
       ( 'IF          ' , 'DO          ' , 'OF          ' ,
         'TO          ' , 'IN          ' , 'OR          ' ,
@@ -501,15 +507,15 @@ const BLANKID : ALPHA = '            ' ;
         '            ' , '            ' , '            ' ) ;
       FRW : array [ 1 .. 12 ] of 1 .. MAXRW =
 
-      (**********************************************************)
-      (*  1  2  3    4    5    6    7    8    9   10   11   12  *)
-      (**********************************************************)
+      //********************************************************
+      //  1  2  3    4    5    6    7    8    9   10   11   12  
+      //********************************************************
 
       ( 1 , 1 , 7 , 16 , 23 , 31 , 40 , 44 , 48 , 50 , - 1 , - 1 ) ;
 
-      (*********************************************************)
-      (*   symbole zu RW Tabelle                               *)
-      (*********************************************************)
+      //*******************************************************
+      //   symbole zu RW Tabelle                               
+      //*******************************************************
 
       RSY : array [ 1 .. MAXRW ] of SYMB =
       ( SYIF , SYDO , SYOF , SYTO , SYIN , SYOR , SYEND , SYFOR , SYVAR
@@ -656,12 +662,12 @@ procedure NEUZEILEKOMM ( EIN : INTEGER ) ;
 
 
 
-procedure KOMMSTERNZEILE ;
+procedure KOMMSTERNZEILE ( KOMMTYPE : CHAR ; KOMM_WIDTH : INTEGER ) ;
 
    var I : INTEGER ;
 
    begin (* KOMMSTERNZEILE *)
-     case KOMMC . KOMMTYPE of
+     case KOMMTYPE of
        ')' : WRITE ( AUSGABE , '(*' ) ;
        '/' : if EINRKOMM = 0 then
                WRITE ( AUSGABE , '(*' )
@@ -671,11 +677,11 @@ procedure KOMMSTERNZEILE ;
        '"' : WRITE ( AUSGABE , '"' ) ;
        '+' : WRITE ( AUSGABE , '//' ) ;
      end (* case *) ;
-     for I := 1 to KOMMC . KOMM_WIDTH do
+     for I := 1 to KOMM_WIDTH do
        WRITE ( AUSGABE , '*' ) ;
-     if KOMMC . KOMMTYPE in [ '"' , '+' ] then
+     if KOMMTYPE in [ '"' , '+' ] then
        WRITE ( AUSGABE , '**' ) ;
-     case KOMMC . KOMMTYPE of
+     case KOMMTYPE of
        ')' : WRITE ( AUSGABE , '*)' ) ;
        '/' : if EINRKOMM = 0 then
                WRITE ( AUSGABE , '*)' )
@@ -1000,8 +1006,12 @@ procedure WRITEKOMM ( var KOMMC : KOMM_CONT ) ;
        REST : INTEGER ;
        ENDEKASTEN : BOOLEAN ;
        LENKOMM : INTEGER ;
+       WORK_KOMMTYPE : CHAR ;
 
    begin (* WRITEKOMM *)
+     WORK_KOMMTYPE := KOMMC . KOMMTYPE ;
+     if FORCE_COMMENTTYPE <> ' ' then
+       WORK_KOMMTYPE := FORCE_COMMENTTYPE ;
 
      //************************************************************
      // zunaechst mal die maximale breite der                      
@@ -1018,7 +1028,7 @@ procedure WRITEKOMM ( var KOMMC : KOMM_CONT ) ;
            KOMMC . KOMM_WIDTH := BREITE ;
          KLINE := KLINE -> . NEXT ;
        end (* while *) ;
-     case KOMMC . KOMMTYPE of
+     case WORK_KOMMTYPE of
        ')' : KOMMC . KOMM_WIDTH_BR := KOMMC . KOMM_WIDTH + 4 ;
        '/' : KOMMC . KOMM_WIDTH_BR := KOMMC . KOMM_WIDTH + 4 ;
        '}' : KOMMC . KOMM_WIDTH_BR := KOMMC . KOMM_WIDTH + 4 ;
@@ -1046,6 +1056,8 @@ procedure WRITEKOMM ( var KOMMC : KOMM_CONT ) ;
          WRITELN ( TRACEF , 'scb.endofline = ' , SCB . ENDOFLINE ) ;
          WRITELN ( TRACEF , 'outpointer    = ' , OUTPOINTER ) ;
          WRITELN ( TRACEF , 'kommtype      = ' , KOMMC . KOMMTYPE ) ;
+         WRITELN ( TRACEF , 'kommtype (F)  = ' , FORCE_COMMENTTYPE ) ;
+         WRITELN ( TRACEF , 'kommtype (W)  = ' , WORK_KOMMTYPE ) ;
          WRITELN ( TRACEF , 'komm_nlines   = ' , KOMMC . KOMM_NLINES )
                    ;
          WRITELN ( TRACEF , 'komm_width    = ' , KOMMC . KOMM_WIDTH ) ;
@@ -1099,7 +1111,7 @@ procedure WRITEKOMM ( var KOMMC : KOMM_CONT ) ;
              NEUZEILEKOMM ( 0 ) ;
              ENDEKASTEN := TRUE ;
              NEUZEILEKOMM ( EINRKOMM ) ;
-             KOMMSTERNZEILE ;
+             KOMMSTERNZEILE ( WORK_KOMMTYPE , KOMMC . KOMM_WIDTH ) ;
              NEUZEILEKOMM ( EINRKOMM ) ;
            end (* then *)
          else
@@ -1168,7 +1180,7 @@ procedure WRITEKOMM ( var KOMMC : KOMM_CONT ) ;
          with KLINE -> do
            begin
              OUTPOINTER := OUTPOINTER + 2 ;
-             case KOMMC . KOMMTYPE of
+             case WORK_KOMMTYPE of
                ')' : WRITE ( AUSGABE , '(*' ) ;
                '/' : WRITE ( AUSGABE , '/*' ) ;
                '}' : WRITE ( AUSGABE , '(*' ) ;
@@ -1184,7 +1196,7 @@ procedure WRITEKOMM ( var KOMMC : KOMM_CONT ) ;
              if REST > 0 then
                WRITE ( AUSGABE , ' ' : REST ) ;
              OUTPOINTER := OUTPOINTER + 2 ;
-             case KOMMC . KOMMTYPE of
+             case WORK_KOMMTYPE of
                ')' : WRITE ( AUSGABE , '*)' ) ;
                '/' : WRITE ( AUSGABE , '*/' ) ;
                '}' : WRITE ( AUSGABE , '*)' ) ;
@@ -1213,7 +1225,7 @@ procedure WRITEKOMM ( var KOMMC : KOMM_CONT ) ;
      if ENDEKASTEN then
        begin
          NEUZEILEKOMM ( EINRKOMM ) ;
-         KOMMSTERNZEILE ;
+         KOMMSTERNZEILE ( WORK_KOMMTYPE , KOMMC . KOMM_WIDTH ) ;
        end (* then *) ;
 
      //************************************************************
@@ -1237,11 +1249,11 @@ procedure WRITEKOMM ( var KOMMC : KOMM_CONT ) ;
 
 procedure WORK_KOMMENTAR ( var KOMMC : KOMM_CONT ) ;
 
-(********************************************************************)
-(*                                                                  *)
-(*   August 2019 - KOMMENTARLOGIK komplett neu                      *)
-(*                                                                  *)
-(********************************************************************)
+//******************************************************************
+//                                                                  
+//   August 2019 - KOMMENTARLOGIK komplett neu                      
+//                                                                  
+//******************************************************************
 
 
    begin (* WORK_KOMMENTAR *)
@@ -1274,25 +1286,25 @@ procedure WORK_KOMMENTAR ( var KOMMC : KOMM_CONT ) ;
 
 procedure INSYMBOL ;
 
-(**************************************************************)
-(*                                                            *)
-(*   READ NEXT BASIS SYMB OF SOURCE PROGRAM AND RETURN        *)
-(*   ITS DESCRIPTION IN THE GLOBAL VARIABLES                  *)
-(*   SY, OP, ID, VAL AND SYLENGTH                             *)
-(*                                                            *)
-(*------------------------------------------------------------*)
-(*                                                            *)
-(*   REWORKED 24.10.2011 - BERND OPPOLZER                     *)
-(*                                                            *)
-(*   ADDED THE FOLLOWING SYMB SPELLINGS:                      *)
-(*                                                            *)
-(*   (. AND .) AS ANOTHER POSSIBILITY FOR [ ] AND (/ /)       *)
-(*                                                            *)
-(*   -> AS AN ALTERNATIVE FOR @                               *)
-(*                                                            *)
-(*   COMMENTS ALSO LIKE THIS: /* ... COMMENT ... */           *)
-(*                                                            *)
-(**************************************************************)
+//************************************************************
+//                                                            
+//   READ NEXT BASIS SYMB OF SOURCE PROGRAM AND RETURN        
+//   ITS DESCRIPTION IN THE GLOBAL VARIABLES                  
+//   SY, OP, ID, VAL AND SYLENGTH                             
+//                                                            
+//------------------------------------------------------------
+//                                                            
+//   REWORKED 24.10.2011 - BERND OPPOLZER                     
+//                                                            
+//   ADDED THE FOLLOWING SYMB SPELLINGS:                      
+//                                                            
+//   (. AND .) AS ANOTHER POSSIBILITY FOR [ ] AND (/ /)       
+//                                                            
+//   -> AS AN ALTERNATIVE FOR @                               
+//                                                            
+//   COMMENTS ALSO LIKE THIS: /* ... COMMENT ... */           
+//                                                            
+//************************************************************
 
 
    var I , K : INTEGER ;
@@ -1346,9 +1358,9 @@ procedure INSYMBOL ;
                 end (* tag/ca *) ;
           'B' : begin
 
-        /**********************/
-        /* remove underscores */
-        /**********************/
+        //********************
+        // remove underscores 
+        //********************
 
                   LNEU := 0 ;
                   for X := 1 to L do
@@ -1360,16 +1372,16 @@ procedure INSYMBOL ;
                       end (* then *) ;
                   L := LNEU ;
 
-        /**************************************/
-        /* l = new length without underscores */
-        /**************************************/
+        //************************************
+        // l = new length without underscores 
+        //************************************
 
                   IX := 1 ;
                   LNEU := ( L + 7 ) DIV 8 ;
 
-        /********************************************/
-        /* lneu = length of converted target string */
-        /********************************************/
+        //******************************************
+        // lneu = length of converted target string 
+        //******************************************
 
                   L1 := L MOD 8 ;
                   if L1 = 0 then
@@ -1400,16 +1412,16 @@ procedure INSYMBOL ;
                       end (* then *) ;
                   L := LNEU ;
 
-        /**************************************/
-        /* l = new length without underscores */
-        /**************************************/
+        //************************************
+        // l = new length without underscores 
+        //************************************
 
                   IX := 1 ;
                   LNEU := ( L + 1 ) DIV 2 ;
 
-        /********************************************/
-        /* lneu = length of converted target string */
-        /********************************************/
+        //******************************************
+        // lneu = length of converted target string 
+        //******************************************
 
                   L1 := L MOD 2 ;
                   if L1 = 0 then
@@ -1488,22 +1500,22 @@ procedure INSYMBOL ;
      KOMMC . KLINE_ANKER := NIL ;
      KOMMC . KLINE_AKT := NIL ;
 
-     (**********************************************************)
-     (*   schleife, z.b. wg. blanks und kommentaren            *)
-     (**********************************************************)
+     //********************************************************
+     //   schleife, z.b. wg. blanks und kommentaren            
+     //********************************************************
 
      while TRUE do
        begin
 
-     (**********************************************************)
-     (*   scanner aufrufen (externes modul)                    *)
-     (**********************************************************)
+     //********************************************************
+     //   scanner aufrufen (externes modul)                    
+     //********************************************************
 
          PASSCAN ( EINGABE , LISTING , SCB , FALSE ) ;
 
-     (**********************************************************)
-     (*   variablen sy und sylength setzen (rueckg. scanner)   *)
-     (**********************************************************)
+     //********************************************************
+     //   variablen sy und sylength setzen (rueckg. scanner)   
+     //********************************************************
 
          SY := SCB . SYMBOLNR ;
          SYLENGTH := SCB . LSYMBOL ;
@@ -1532,16 +1544,16 @@ procedure INSYMBOL ;
              KOMMC . SYMB_VOR_KOMM := TRUE ;
            end (* then *) ;
 
-     (*****************************************************)
-     (*   look what has to be done depending on symbol    *)
-     (*   (some symbols need additional work)             *)
-     (*****************************************************)
+     //***************************************************
+     //   look what has to be done depending on symbol    
+     //   (some symbols need additional work)             
+     //***************************************************
 
          case SY of
 
-     (**********************************************************)
-     (*   separator und kommentare ignorieren und nochmal      *)
-     (**********************************************************)
+     //********************************************************
+     //   separator und kommentare ignorieren und nochmal      
+     //********************************************************
 
            SEPARATOR :
              continue ;
@@ -1591,10 +1603,10 @@ procedure INSYMBOL ;
                continue ;
              end (* tag/ca *) ;
 
-     (**********************************************************)
-     (*   ident in grossbuchstaben und gegen tabelle der       *)
-     (*   reservierten worte abchecken                         *)
-     (**********************************************************)
+     //********************************************************
+     //   ident in grossbuchstaben und gegen tabelle der       
+     //   reservierten worte abchecken                         
+     //********************************************************
 
            IDENT : begin
                      ID := ' ' ;
@@ -1608,10 +1620,10 @@ procedure INSYMBOL ;
                      MEMCPY ( ADDR ( SCB . SYMBOL ) , ADDR ( ID ) , K )
                               ;
 
-     (**********************************************************)
-     (*   maxrwlen = laenge des laengsten reservierten wortes  *)
-     (*   die tabelle frw ist nur so lang                      *)
-     (**********************************************************)
+     //********************************************************
+     //   maxrwlen = laenge des laengsten reservierten wortes  
+     //   die tabelle frw ist nur so lang                      
+     //********************************************************
 
                      if K <= MAXRWLEN then
                        for I := FRW [ K ] to FRW [ K + 1 ] - 1 do
@@ -1622,10 +1634,10 @@ procedure INSYMBOL ;
                            end (* then *) ;
                    end (* tag/ca *) ;
 
-     (**********************************************************)
-     (*   stringconst nacharbeiten wg. doppelter               *)
-     (*   hochkommas z.B.                                      *)
-     (**********************************************************)
+     //********************************************************
+     //   stringconst nacharbeiten wg. doppelter               
+     //   hochkommas z.B.                                      
+     //********************************************************
 
            STRINGCONST :
              begin
@@ -1654,9 +1666,9 @@ procedure INSYMBOL ;
                    end (* else *)
              end (* tag/ca *) ;
 
-     (**********************************************************)
-     (*   hex stringconst umcodieren                           *)
-     (**********************************************************)
+     //********************************************************
+     //   hex stringconst umcodieren                           
+     //********************************************************
 
            HEXSTRINGCONST :
              begin
@@ -1689,9 +1701,9 @@ procedure INSYMBOL ;
                SY := STRINGCONST ;
              end (* tag/ca *) ;
 
-     (**********************************************************)
-     (*   bin stringconst umcodieren                           *)
-     (**********************************************************)
+     //********************************************************
+     //   bin stringconst umcodieren                           
+     //********************************************************
 
            BINSTRINGCONST :
              begin
@@ -1724,9 +1736,9 @@ procedure INSYMBOL ;
                SY := STRINGCONST ;
              end (* tag/ca *) ;
 
-     (**********************************************************)
-     (*   intconst kann hex oder binaer sein ...               *)
-     (**********************************************************)
+     //********************************************************
+     //   intconst kann hex oder binaer sein ...               
+     //********************************************************
 
            INTCONST , INTDOTDOT :
              begin
@@ -1739,9 +1751,9 @@ procedure INSYMBOL ;
                MEMCPY ( ADDR ( DIGIT ) , ADDR ( SCB . SYMBOL ) , K ) ;
                VAL . IVAL := 0 ;
 
-     (***********************************************)
-     (*   if hex const, translate to integer / ival *)
-     (***********************************************)
+     //*********************************************
+     //   if hex const, translate to integer / ival 
+     //*********************************************
 
                if ( DIGIT [ 2 ] = 'X' ) or ( DIGIT [ 2 ] = 'x' ) then
                  begin
@@ -1769,9 +1781,9 @@ procedure INSYMBOL ;
                  end (* then *)
                else
 
-     (***********************************************)
-     (*   if bin const, translate to integer / ival *)
-     (***********************************************)
+     //*********************************************
+     //   if bin const, translate to integer / ival 
+     //*********************************************
 
                  if ( DIGIT [ 2 ] = 'B' ) or ( DIGIT [ 2 ] = 'b' ) then
                    begin
@@ -1793,9 +1805,9 @@ procedure INSYMBOL ;
                  else
                    begin
 
-     (*************************)
-     (*   normal int constant *)
-     (*************************)
+     //***********************
+     //   normal int constant 
+     //***********************
 
                      with VAL do
                        for I := 1 to K do
@@ -1812,9 +1824,9 @@ procedure INSYMBOL ;
                    end (* else *)
              end (* tag/ca *) ;
 
-     (**********************************)
-     (*   realconst ...                *)
-     (**********************************)
+     //********************************
+     //   realconst ...                
+     //********************************
 
            REALCONST :
              begin
@@ -1837,18 +1849,18 @@ procedure INSYMBOL ;
              
          end (* case *) ;
 
-     (**********************************************************)
-     (*   endlosschleife jetzt beenden - wenn nicht vorher     *)
-     (*   schon mit continue eine wiederholung angefordert     *)
-     (*   wurde                                                *)
-     (**********************************************************)
+     //********************************************************
+     //   endlosschleife jetzt beenden - wenn nicht vorher     
+     //   schon mit continue eine wiederholung angefordert     
+     //   wurde                                                
+     //********************************************************
 
          break ;
        end (* while *) ;
 
-     (**********************************************************)
-     (*   debug trace                                          *)
-     (**********************************************************)
+     //********************************************************
+     //   debug trace                                          
+     //********************************************************
 
      if FALSE then
        begin
@@ -1858,16 +1870,16 @@ procedure INSYMBOL ;
          WRITELN ( TRACEF , 'sylength = ' , SYLENGTH : 1 ) ;
        end (* then *) ;
 
-     (**********************************************************)
-     (*   hier kommentare ausgeben                             *)
-     (**********************************************************)
+     //********************************************************
+     //   hier kommentare ausgeben                             
+     //********************************************************
 
      if KOMMC . KOMM_NLINES > 0 then
        WORK_KOMMENTAR ( KOMMC ) ;
 
-     (**********************************************************)
-     (*   unexpected eof is a fatal error                      *)
-     (**********************************************************)
+     //********************************************************
+     //   unexpected eof is a fatal error                      
+     //********************************************************
 
      KOMMC . UEBERLESEN := 0 ;
      NULLSTATE := FALSE ;
@@ -1882,9 +1894,9 @@ procedure INSYMBOL ;
          if SY = INTDOTDOT then
            begin
 
-     (************************************************************)
-     (*   insert blank into int ..                               *)
-     (************************************************************)
+     //**********************************************************
+     //   insert blank into int ..                               
+     //**********************************************************
 
              W1ENDE := W1ENDE + 1 ;
              W1 [ W1ENDE - 2 ] := ' ' ;
@@ -1971,9 +1983,9 @@ procedure OUTSYMBOL ( S : SYMB ) ;
          KOMMC . NEUZEILE_VORM := FALSE ;
        end (* then *) ;
 
-     (*****************************)
-     (* SYMBOLE GGF. MODIFIZIEREN *)
-     (*****************************)
+     //***************************
+     // SYMBOLE GGF. MODIFIZIEREN 
+     //***************************
 
      case S of
        SYARROW :
@@ -2112,10 +2124,10 @@ procedure SQLSTATE ;
        if RESWRDSQL then
          begin
 
-     (************************************************)
-     (*   W1ENDE ENTHAELT DIE ANZAHL DER ZEICHEN     *)
-     (*   DES ZULETZT GELESENEN WORTES.              *)
-     (************************************************)
+     //**********************************************
+     //   W1ENDE ENTHAELT DIE ANZAHL DER ZEICHEN     
+     //   DES ZULETZT GELESENEN WORTES.              
+     //**********************************************
 
            EINR := EINRZWEI ;
            NEUZEILE ( TRUE ) ;
@@ -2364,9 +2376,9 @@ procedure CSTATE ( FSYS : SYMSET ; AUFNEUEZEILE : BOOLEAN ; KENNUNG :
      if AUFNEUEZEILE then
        NEUZEILE ( TRUE ) ;
 
-     (*********************************)
-     (* leeres statement              *)
-     (*********************************)
+     //*******************************
+     // leeres statement              
+     //*******************************
 
      if S = SYSEMICOLON then
        begin
@@ -2376,9 +2388,9 @@ procedure CSTATE ( FSYS : SYMSET ; AUFNEUEZEILE : BOOLEAN ; KENNUNG :
          return
        end (* then *) ;
 
-     (*********************************)
-     (* prozeduraufruf                *)
-     (*********************************)
+     //*******************************
+     // prozeduraufruf                
+     //*******************************
 
      if S = IDENT then
        begin
@@ -2386,9 +2398,9 @@ procedure CSTATE ( FSYS : SYMSET ; AUFNEUEZEILE : BOOLEAN ; KENNUNG :
          return
        end (* then *) ;
 
-     (*********************************)
-     (* break (neu)                   *)
-     (*********************************)
+     //*******************************
+     // break (neu)                   
+     //*******************************
 
      if S = SYBREAK then
        begin
@@ -2396,9 +2408,9 @@ procedure CSTATE ( FSYS : SYMSET ; AUFNEUEZEILE : BOOLEAN ; KENNUNG :
          return
        end (* then *) ;
 
-     (*********************************)
-     (* continue (neu)                *)
-     (*********************************)
+     //*******************************
+     // continue (neu)                
+     //*******************************
 
      if S = SYCONTINUE then
        begin
@@ -2406,9 +2418,9 @@ procedure CSTATE ( FSYS : SYMSET ; AUFNEUEZEILE : BOOLEAN ; KENNUNG :
          return
        end (* then *) ;
 
-     (*********************************)
-     (* return (neu)                  *)
-     (*********************************)
+     //*******************************
+     // return (neu)                  
+     //*******************************
 
      if S = SYRETURN then
        begin
@@ -2416,9 +2428,9 @@ procedure CSTATE ( FSYS : SYMSET ; AUFNEUEZEILE : BOOLEAN ; KENNUNG :
          return
        end (* then *) ;
 
-     (*********************************)
-     (* sql-Einschub                  *)
-     (*********************************)
+     //*******************************
+     // sql-Einschub                  
+     //*******************************
 
      if S = SYSQLBEGIN then
        begin
@@ -2426,9 +2438,9 @@ procedure CSTATE ( FSYS : SYMSET ; AUFNEUEZEILE : BOOLEAN ; KENNUNG :
          return
        end (* then *) ;
 
-     (*********************************)
-     (* Statement mit label           *)
-     (*********************************)
+     //*******************************
+     // Statement mit label           
+     //*******************************
 
      if S = INTCONST then
        begin
@@ -2444,9 +2456,9 @@ procedure CSTATE ( FSYS : SYMSET ; AUFNEUEZEILE : BOOLEAN ; KENNUNG :
          return
        end (* then *) ;
 
-     (*********************************)
-     (* andere, je nach typ           *)
-     (*********************************)
+     //*******************************
+     // andere, je nach typ           
+     //*******************************
 
      if S = SYBEGIN then
        begin
@@ -3235,24 +3247,24 @@ procedure VORBESETZEN ;
      WTABSQL [ 15 ] := 'WHERE     ' ;
      ANZSQLWORTE := 15 ;
 
-     (***************************************)
-     (*   useful initializations            *)
-     (***************************************)
+     //*************************************
+     //   useful initializations            
+     //*************************************
 
      for CH := CHR ( 0 ) to CHR ( ORDCHMAX ) do
        UPSHIFT [ CH ] := CH ;
 
-     (***************************************)
-     (*   an old comment told about some    *)
-     (*   troubles with upshift, because    *)
-     (*   some meaningful chars (to pascal) *)
-     (*   are in the letter range 'a' to    *)
-     (*   'z', but are no letters ...       *)
-     (*   see the EBCDIC letter gaps.       *)
-     (*   I avoided those problems by       *)
-     (*   the three loops below             *)
-     (*   - bernd oppolzer (2016)           *)
-     (***************************************)
+     //*************************************
+     //   an old comment told about some    
+     //   troubles with upshift, because    
+     //   some meaningful chars (to pascal) 
+     //   are in the letter range 'a' to    
+     //   'z', but are no letters ...       
+     //   see the EBCDIC letter gaps.       
+     //   I avoided those problems by       
+     //   the three loops below             
+     //   - bernd oppolzer (2016)           
+     //*************************************
 
      for CH := 'a' to 'i' do
        begin
@@ -3270,9 +3282,9 @@ procedure VORBESETZEN ;
                            ) ;
        end (* for *) ;
 
-     (***************************************)
-     (*   useful initializations            *)
-     (***************************************)
+     //*************************************
+     //   useful initializations            
+     //*************************************
 
      MXINT2 := MAXINT DIV 2 ;
      MXINT10 := MAXINT DIV 10 ;
@@ -3293,10 +3305,10 @@ procedure INIT_SCANNER ;
 
    begin (* INIT_SCANNER *)
 
-     (****************************************)
-     (* default values for compiler options  *)
-     (* and: init control blocks for scanner *)
-     (****************************************)
+     //**************************************
+     // default values for compiler options  
+     // and: init control blocks for scanner 
+     //**************************************
 
      MEMSET ( ADDR ( SCB ) , CHR ( 0 ) , SIZEOF ( SCB ) ) ;
      MEMSET ( ADDR ( OPT ) , CHR ( 0 ) , SIZEOF ( OPT ) ) ;
@@ -3332,13 +3344,13 @@ procedure INIT_SCANNER ;
      SCB . FEAKT := NIL ;
      SCB . FEAKT_ALT := NIL ;
 
-     (********************************************)
-     (* listing is printed by scanner, too       *)
-     (* so all needed information has to be      *)
-     (* provided in the scanner control block    *)
-     (********************************************)
-     (* and terminal output in case of error     *)
-     (********************************************)
+     //******************************************
+     // listing is printed by scanner, too       
+     // so all needed information has to be      
+     // provided in the scanner control block    
+     //******************************************
+     // and terminal output in case of error     
+     //******************************************
 
      SCB . PROTOUT := TRUE ;
      SCB . TERMOUT := TRUE ;
@@ -3353,18 +3365,69 @@ procedure INIT_SCANNER ;
      MEMCPY ( ADDR ( SCB . HEADLINE [ 78 ] ) , ADDR ( DATE ) , 10 ) ;
      SCB . HEADLINE_SIZE := 100 ;
 
-     (****************************************)
-     (* linecount high to force heading      *)
-     (* on first insymbol call               *)
-     (****************************************)
+     //**************************************
+     // linecount high to force heading      
+     // on first insymbol call               
+     //**************************************
 
      SCB . LINECOUNT := 100 ;
    end (* INIT_SCANNER *) ;
 
 
 
+procedure CHECK_OSPARM ;
+
+//*******************************************************
+// read options from osparm                              
+//-----------------------------------------------------  
+// force_commenttype = commenttype used on output        
+//*******************************************************
+
+
+   var PX : INTEGER ;
+
+   begin (* CHECK_OSPARM *)
+     if OSPARM = NIL then
+       begin
+         FORCE_COMMENTTYPE := ' ' ;
+       end (* then *)
+     else
+       with OSPARM -> do
+         begin
+           PX := 1 ;
+           while PX <= PLENGTH do
+             begin
+               case PSTRING [ PX ] of
+                 'C' : begin
+                         PX := PX + 1 ;
+                         if PX <= PLENGTH then
+                           begin
+                             case PSTRING [ PX ] of
+                               ')' : FORCE_COMMENTTYPE := ')' ;
+                               '/' : FORCE_COMMENTTYPE := '/' ;
+                               '}' : FORCE_COMMENTTYPE := '}' ;
+                               '"' : FORCE_COMMENTTYPE := '"' ;
+                               '+' : FORCE_COMMENTTYPE := '+' ;
+                               otherwise
+                                 
+                             end (* case *) ;
+                             PX := PX + 1 ;
+                           end (* then *)
+                       end (* tag/ca *) ;
+                 otherwise
+                   begin
+                     PX := PX + 1
+                   end (* otherw *)
+               end (* case *)
+             end (* while *)
+         end (* with *) ;
+   end (* CHECK_OSPARM *) ;
+
+
+
 begin (* HAUPTPROGRAMM *)
   REWRITE ( TRACEF ) ;
+  CHECK_OSPARM ;
   VERARB_MODUS := 4 ;
   KOMMC . LASTSCBLINE := - 1 ;
   KOMMC . KOMMTYPE := ' ' ;
@@ -3377,11 +3440,11 @@ begin (* HAUPTPROGRAMM *)
   KOMMC . KLINE_AKT := NIL ;
   KOMMC . NEUZEILE_VORM := FALSE ;
 
-  (***********************************************)
-  (*   HIER UNTERSCHIED PASCAL/VS ZU TURBO/3     *)
-  (*   TERMIN (INPUT) ; TERMOUT (OUTPUT) ;       *)
-  (*   WIRD BENOETIGT BEI PASCAL/VS              *)
-  (***********************************************)
+  //*********************************************
+  //   HIER UNTERSCHIED PASCAL/VS ZU TURBO/3     
+  //   TERMIN (INPUT) ; TERMOUT (OUTPUT) ;       
+  //   WIRD BENOETIGT BEI PASCAL/VS              
+  //*********************************************
 
   COMPOUNDNZ := TRUE ;
   if VERARB_MODUS > 4 then
@@ -3440,11 +3503,11 @@ begin (* HAUPTPROGRAMM *)
     CHANGE ( BLOCKBEGSYS + STATBEGSYS - [ SYCASE ] ) ;
   WRITELN ( AUSGABE ) ;
 
-  (***********************************************)
-  (*   HIER UNTERSCHIED PASCAL/VS ZU TURBO/3     *)
-  (*   CLOSE (EINGABE) ; CLOSE (AUSGABE) ;       *)
-  (*   WIRD BENOETIGT BEI TURBO/3                *)
-  (***********************************************)
+  //*********************************************
+  //   HIER UNTERSCHIED PASCAL/VS ZU TURBO/3     
+  //   CLOSE (EINGABE) ; CLOSE (AUSGABE) ;       
+  //   WIRD BENOETIGT BEI TURBO/3                
+  //*********************************************
 
   WRITELN ( ZZAUS + 1 : 6 , ' Zeilen ausgegeben.' ) ;
 end (* HAUPTPROGRAMM *) .

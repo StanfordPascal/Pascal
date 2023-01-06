@@ -59,37 +59,6 @@ program PASCALCOMPILER ( INPUT , OUTPUT , PCODE , PCODE1 , PCODE2 ,
 (*                                                                  *)
 (********************************************************************)
 (*                                                                  *)
-(*  May 2022 - Extensions to the Compiler by Bernd Oppolzer         *)
-(*             (berndoppolzer@yahoo.com)                            *)
-(*                                                                  *)
-(*  - WRITESTR completed for integer expressions                    *)
-(*  - WRITESTR completed for single char expressions                *)
-(*  - WRITESTR completed for char arrays                            *)
-(*  - WRITESTR completed for strings                                *)
-(*  - WRITESTR completed for boolean expressions                    *)
-(*  - WRITESTR completed for real expressions                       *)
-(*                                                                  *)
-(*  to be done:                                                     *)
-(*                                                                  *)
-(*  - WRITESTR for pointers                                         *)
-(*  - WRITESTR for scalars                                          *)
-(*                                                                  *)
-(********************************************************************)
-(*                                                                  *)
-(*  May 2022 - Extensions to the Compiler by Bernd Oppolzer         *)
-(*             (berndoppolzer@yahoo.com)                            *)
-(*                                                                  *)
-(*  - Some errors fixed. For example: syntax error 342 on           *)
-(*    certain string functions, when a string variable was          *)
-(*    not declared. Check for TYPTR = NIL inserted.                 *)
-(*                                                                  *)
-(*  - Error fixed in PCINT, when experimenting with generic         *)
-(*    Quicksort procedure (see Facebook)                            *)
-(*                                                                  *)
-(*  - READSTR completed                                             *)
-(*                                                                  *)
-(********************************************************************)
-(*                                                                  *)
 (*  Mar 2021 - Extensions to the Compiler by Bernd Oppolzer         *)
 (*             (berndoppolzer@yahoo.com)                            *)
 (*                                                                  *)
@@ -1366,7 +1335,7 @@ program PASCALCOMPILER ( INPUT , OUTPUT , PCODE , PCODE1 , PCODE2 ,
 
 
 
-const VERSION = '2022.04' ;
+const VERSION = '2021.03' ;
       MAXLSIZE = 120 ;
       MAXERRNO = 999 ;
 
@@ -5569,6 +5538,8 @@ function COMPTYPES ( FSP1 , FSP2 : TTP ) : INTEGER ;
      if ( FSP1 = NIL ) or ( FSP2 = NIL ) then
        begin
          COMPTYPES := 1 ;
+         if FALSE then
+           WRITELN ( TRACEF , 'comptypes: fsp both nil' ) ;
          return
        end (* then *) ;
 
@@ -7976,7 +7947,6 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
          type P_SCALAR_ID = -> SCALAR_ID ;
               SCALAR_ID = record
                             SIDP : IDP ;
-                            INTERN_VALUE : INTEGER ;
                             SCAL_OFFS : INTEGER ;
                             NEXT : P_SCALAR_ID
                           end ;
@@ -7994,11 +7964,10 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
              S_VOR : P_SCALAR_ID ;
              OLDID , NEWID : ALPHA ;
              FC : INTEGER ;
-             IV : INTEGER ;
 
 
-         procedure S_APPEND ( LCP : IDP ; SCAL_O : INTEGER ; IVALUE :
-                            INTEGER ; var S_ANKER : P_SCALAR_ID ) ;
+         procedure S_APPEND ( LCP : IDP ; SCAL_O : INTEGER ; var
+                            S_ANKER : P_SCALAR_ID ) ;
 
             var S_LAUF : P_SCALAR_ID ;
                 S_VOR : P_SCALAR_ID ;
@@ -8027,7 +7996,6 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                 begin
                   SIDP := LCP ;
                   SCAL_OFFS := SCAL_O ;
-                  INTERN_VALUE := IVALUE ;
                   NEXT := S_LAUF
                 end (* with *) ;
             end (* S_APPEND *) ;
@@ -8070,16 +8038,14 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
            LCP1 := LSP -> . FCONST ;
            MAXIDLEN := 0 ;
            ELEMCOUNT := LCP1 -> . VALUES . IVAL + 1 ;
-           SCAL_OFFS := 8 + ELEMCOUNT * 10 ;
+           SCAL_OFFS := 8 + ELEMCOUNT * 8 ;
            S_ANKER := NIL ;
-           IV := ELEMCOUNT - 1 ;
            while LCP1 <> NIL do
              begin
                IDL := GETIDLEN ( LCP1 -> . NAME ) ;
                if MAXIDLEN < IDL then
                  MAXIDLEN := IDL ;
-               S_APPEND ( LCP1 , SCAL_OFFS , IV , S_ANKER ) ;
-               IV := IV - 1 ;
+               S_APPEND ( LCP1 , SCAL_OFFS , S_ANKER ) ;
                SCAL_OFFS := SCAL_OFFS + IDL + 1 ;
                LCP1 := LCP1 -> . NEXT ;
              end (* while *) ;
@@ -8157,7 +8123,7 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
            //***************************************************
 
            LCP1 := LSP -> . FCONST ;
-           SCAL_OFFS := 8 + ELEMCOUNT * 10 ;
+           SCAL_OFFS := 8 + ELEMCOUNT * 8 ;
            while LCP1 <> NIL do
              begin
                VALX . CONSTCLASS := XINT ;
@@ -8180,11 +8146,6 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
            //  now build the vector of offsets and lengths,     
            //  ordered by element name                          
            //***************************************************
-           //  01.2022: this vector needs the internal value    
-           //  of the scalar as 3rd component, so that          
-           //  $pasrdx can easily translate the scalar id       
-           //  to the internal value                            
-           //***************************************************
 
            S_LAUF := S_ANKER ;
            while S_LAUF <> NIL do
@@ -8197,12 +8158,6 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                CONSTLCOUNTER := CONSTLCOUNTER + 2 ;
                VALX . CONSTCLASS := XINT ;
                VALX . IVAL := GETIDLEN ( S_LAUF -> . SIDP -> . NAME ) ;
-               VALX . STRTYPE := ' ' ;
-               WRITEDFC ( PCODEP , CONSTLCOUNTER , PTYPE_INT , 2 , VALX
-                          , FALSE ) ;
-               CONSTLCOUNTER := CONSTLCOUNTER + 2 ;
-               VALX . CONSTCLASS := XINT ;
-               VALX . IVAL := S_LAUF -> . INTERN_VALUE ;
                VALX . STRTYPE := ' ' ;
                WRITEDFC ( PCODEP , CONSTLCOUNTER , PTYPE_INT , 2 , VALX
                           , FALSE ) ;
@@ -15187,6 +15142,8 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
 
                     (************************************)
                     (* write cstring vars and constants *)
+                    (* not complete ... use true length *)
+                    (* not defined maxlength !!!        *)
                     (************************************)
 
                     if LSP -> . FORM = CSTRING then
@@ -16480,43 +16437,42 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                  // do conversions, if needed          
                  //************************************
 
-                 if GATTR . TYPTR <> NIL then
-                   if GATTR . TYPTR -> . FORM = CSTRING then
-                     begin
-                       if GATTR . KIND <> EXPR then
+                 if GATTR . TYPTR -> . FORM = CSTRING then
+                   begin
+                     if GATTR . KIND <> EXPR then
+                       begin
+                         LOADADDRESS_NEU ( PCODEP , GATTR ) ;
+                         GEN2 ( PCODE_VLD , 1 , GATTR . TYPTR -> . SIZE
+                                - 4 ) ;
+                       end (* then *) ;
+                     CTLS . VPO1_NEEDED := TRUE ;
+                     GATTR . KIND := EXPR ;
+                   end (* then *)
+                 else
+                   begin
+                     CT_RESULT := COMPTYPES ( PTYPE_VARCHAR , GATTR .
+                                  TYPTR ) ;
+                     case CT_RESULT of
+                       4 : begin
+                             LOAD_NEU ( PCODEP , GATTR , VAR_REF ) ;
+                             CTLS . VPO1_NEEDED := TRUE ;
+                             GEN0 ( PCODE_VC1 ) ;
+                           end (* tag/ca *) ;
+                       5 : begin
+                             LOADADDRESS_NEU ( PCODEP , GATTR ) ;
+                             CTLS . VPO1_NEEDED := TRUE ;
+                             GEN1 ( PCODE_VC2 , GATTR . TYPTR -> . SIZE
+                                    ) ;
+                           end (* tag/ca *) ;
+                       otherwise
                          begin
-                           LOADADDRESS_NEU ( PCODEP , GATTR ) ;
-                           GEN2 ( PCODE_VLD , 1 , GATTR . TYPTR -> .
-                                  SIZE - 4 ) ;
-                         end (* then *) ;
-                       CTLS . VPO1_NEEDED := TRUE ;
-                       GATTR . KIND := EXPR ;
-                     end (* then *)
-                   else
-                     begin
-                       CT_RESULT := COMPTYPES ( PTYPE_VARCHAR , GATTR .
-                                    TYPTR ) ;
-                       case CT_RESULT of
-                         4 : begin
-                               LOAD_NEU ( PCODEP , GATTR , VAR_REF ) ;
-                               CTLS . VPO1_NEEDED := TRUE ;
-                               GEN0 ( PCODE_VC1 ) ;
-                             end (* tag/ca *) ;
-                         5 : begin
-                               LOADADDRESS_NEU ( PCODEP , GATTR ) ;
-                               CTLS . VPO1_NEEDED := TRUE ;
-                               GEN1 ( PCODE_VC2 , GATTR . TYPTR -> .
-                                      SIZE ) ;
-                             end (* tag/ca *) ;
-                         otherwise
-                           begin
-                             SET_ERROR ( 342 ) ;
-                             GATTR . TYPTR := NIL
-                           end (* otherw *)
-                       end (* case *) ;
-                       GATTR . TYPTR := PTYPE_VARCHAR ;
-                       GATTR . KIND := EXPR ;
-                     end (* else *) ;
+                           SET_ERROR ( 342 ) ;
+                           GATTR . TYPTR := NIL
+                         end (* otherw *)
+                     end (* case *) ;
+                     GATTR . TYPTR := PTYPE_VARCHAR ;
+                     GATTR . KIND := EXPR ;
+                   end (* else *) ;
 
                  //************************************
                  // next symbol must be comma          
@@ -16581,43 +16537,42 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                  //************************************
 
                  EXPRESSION ( FSYS + [ SYCOMMA , SYRPARENT ] ) ;
-                 if GATTR . TYPTR <> NIL then
-                   if GATTR . TYPTR -> . FORM = CSTRING then
-                     begin
-                       if GATTR . KIND <> EXPR then
+                 if GATTR . TYPTR -> . FORM = CSTRING then
+                   begin
+                     if GATTR . KIND <> EXPR then
+                       begin
+                         LOADADDRESS_NEU ( PCODEP , GATTR ) ;
+                         GEN2 ( PCODE_VLD , 1 , GATTR . TYPTR -> . SIZE
+                                - 4 ) ;
+                       end (* then *) ;
+                     CTLS . VPO1_NEEDED := TRUE ;
+                     GATTR . KIND := EXPR ;
+                   end (* then *)
+                 else
+                   begin
+                     CT_RESULT := COMPTYPES ( PTYPE_VARCHAR , GATTR .
+                                  TYPTR ) ;
+                     case CT_RESULT of
+                       4 : begin
+                             LOAD_NEU ( PCODEP , GATTR , VAR_REF ) ;
+                             CTLS . VPO1_NEEDED := TRUE ;
+                             GEN0 ( PCODE_VC1 ) ;
+                           end (* tag/ca *) ;
+                       5 : begin
+                             LOADADDRESS_NEU ( PCODEP , GATTR ) ;
+                             CTLS . VPO1_NEEDED := TRUE ;
+                             GEN1 ( PCODE_VC2 , GATTR . TYPTR -> . SIZE
+                                    ) ;
+                           end (* tag/ca *) ;
+                       otherwise
                          begin
-                           LOADADDRESS_NEU ( PCODEP , GATTR ) ;
-                           GEN2 ( PCODE_VLD , 1 , GATTR . TYPTR -> .
-                                  SIZE - 4 ) ;
-                         end (* then *) ;
-                       CTLS . VPO1_NEEDED := TRUE ;
-                       GATTR . KIND := EXPR ;
-                     end (* then *)
-                   else
-                     begin
-                       CT_RESULT := COMPTYPES ( PTYPE_VARCHAR , GATTR .
-                                    TYPTR ) ;
-                       case CT_RESULT of
-                         4 : begin
-                               LOAD_NEU ( PCODEP , GATTR , VAR_REF ) ;
-                               CTLS . VPO1_NEEDED := TRUE ;
-                               GEN0 ( PCODE_VC1 ) ;
-                             end (* tag/ca *) ;
-                         5 : begin
-                               LOADADDRESS_NEU ( PCODEP , GATTR ) ;
-                               CTLS . VPO1_NEEDED := TRUE ;
-                               GEN1 ( PCODE_VC2 , GATTR . TYPTR -> .
-                                      SIZE ) ;
-                             end (* tag/ca *) ;
-                         otherwise
-                           begin
-                             SET_ERROR ( 342 ) ;
-                             GATTR . TYPTR := NIL
-                           end (* otherw *)
-                       end (* case *) ;
-                       GATTR . TYPTR := PTYPE_VARCHAR ;
-                       GATTR . KIND := EXPR ;
-                     end (* else *) ;
+                           SET_ERROR ( 342 ) ;
+                           GATTR . TYPTR := NIL
+                         end (* otherw *)
+                     end (* case *) ;
+                     GATTR . TYPTR := PTYPE_VARCHAR ;
+                     GATTR . KIND := EXPR ;
+                   end (* else *) ;
 
                  //************************************
                  // this lib function has a work area  
@@ -16713,43 +16668,42 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                  //************************************
 
                  EXPRESSION ( FSYS + [ SYCOMMA , SYRPARENT ] ) ;
-                 if GATTR . TYPTR <> NIL then
-                   if GATTR . TYPTR -> . FORM = CSTRING then
-                     begin
-                       if GATTR . KIND <> EXPR then
+                 if GATTR . TYPTR -> . FORM = CSTRING then
+                   begin
+                     if GATTR . KIND <> EXPR then
+                       begin
+                         LOADADDRESS_NEU ( PCODEP , GATTR ) ;
+                         GEN2 ( PCODE_VLD , 1 , GATTR . TYPTR -> . SIZE
+                                - 4 ) ;
+                       end (* then *) ;
+                     CTLS . VPO1_NEEDED := TRUE ;
+                     GATTR . KIND := EXPR ;
+                   end (* then *)
+                 else
+                   begin
+                     CT_RESULT := COMPTYPES ( PTYPE_VARCHAR , GATTR .
+                                  TYPTR ) ;
+                     case CT_RESULT of
+                       4 : begin
+                             LOAD_NEU ( PCODEP , GATTR , VAR_REF ) ;
+                             CTLS . VPO1_NEEDED := TRUE ;
+                             GEN0 ( PCODE_VC1 ) ;
+                           end (* tag/ca *) ;
+                       5 : begin
+                             LOADADDRESS_NEU ( PCODEP , GATTR ) ;
+                             CTLS . VPO1_NEEDED := TRUE ;
+                             GEN1 ( PCODE_VC2 , GATTR . TYPTR -> . SIZE
+                                    ) ;
+                           end (* tag/ca *) ;
+                       otherwise
                          begin
-                           LOADADDRESS_NEU ( PCODEP , GATTR ) ;
-                           GEN2 ( PCODE_VLD , 1 , GATTR . TYPTR -> .
-                                  SIZE - 4 ) ;
-                         end (* then *) ;
-                       CTLS . VPO1_NEEDED := TRUE ;
-                       GATTR . KIND := EXPR ;
-                     end (* then *)
-                   else
-                     begin
-                       CT_RESULT := COMPTYPES ( PTYPE_VARCHAR , GATTR .
-                                    TYPTR ) ;
-                       case CT_RESULT of
-                         4 : begin
-                               LOAD_NEU ( PCODEP , GATTR , VAR_REF ) ;
-                               CTLS . VPO1_NEEDED := TRUE ;
-                               GEN0 ( PCODE_VC1 ) ;
-                             end (* tag/ca *) ;
-                         5 : begin
-                               LOADADDRESS_NEU ( PCODEP , GATTR ) ;
-                               CTLS . VPO1_NEEDED := TRUE ;
-                               GEN1 ( PCODE_VC2 , GATTR . TYPTR -> .
-                                      SIZE ) ;
-                             end (* tag/ca *) ;
-                         otherwise
-                           begin
-                             SET_ERROR ( 342 ) ;
-                             GATTR . TYPTR := NIL
-                           end (* otherw *)
-                       end (* case *) ;
-                       GATTR . TYPTR := PTYPE_VARCHAR ;
-                       GATTR . KIND := EXPR ;
-                     end (* else *) ;
+                           SET_ERROR ( 342 ) ;
+                           GATTR . TYPTR := NIL
+                         end (* otherw *)
+                     end (* case *) ;
+                     GATTR . TYPTR := PTYPE_VARCHAR ;
+                     GATTR . KIND := EXPR ;
+                   end (* else *) ;
 
                  //************************************
                  // this lib function has a work area  
@@ -16817,43 +16771,42 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                  //************************************
 
                  EXPRESSION ( FSYS + [ SYCOMMA , SYRPARENT ] ) ;
-                 if GATTR . TYPTR <> NIL then
-                   if GATTR . TYPTR -> . FORM = CSTRING then
-                     begin
-                       if GATTR . KIND <> EXPR then
+                 if GATTR . TYPTR -> . FORM = CSTRING then
+                   begin
+                     if GATTR . KIND <> EXPR then
+                       begin
+                         LOADADDRESS_NEU ( PCODEP , GATTR ) ;
+                         GEN2 ( PCODE_VLD , 1 , GATTR . TYPTR -> . SIZE
+                                - 4 ) ;
+                       end (* then *) ;
+                     CTLS . VPO1_NEEDED := TRUE ;
+                     GATTR . KIND := EXPR ;
+                   end (* then *)
+                 else
+                   begin
+                     CT_RESULT := COMPTYPES ( PTYPE_VARCHAR , GATTR .
+                                  TYPTR ) ;
+                     case CT_RESULT of
+                       4 : begin
+                             LOAD_NEU ( PCODEP , GATTR , VAR_REF ) ;
+                             CTLS . VPO1_NEEDED := TRUE ;
+                             GEN0 ( PCODE_VC1 ) ;
+                           end (* tag/ca *) ;
+                       5 : begin
+                             LOADADDRESS_NEU ( PCODEP , GATTR ) ;
+                             CTLS . VPO1_NEEDED := TRUE ;
+                             GEN1 ( PCODE_VC2 , GATTR . TYPTR -> . SIZE
+                                    ) ;
+                           end (* tag/ca *) ;
+                       otherwise
                          begin
-                           LOADADDRESS_NEU ( PCODEP , GATTR ) ;
-                           GEN2 ( PCODE_VLD , 1 , GATTR . TYPTR -> .
-                                  SIZE - 4 ) ;
-                         end (* then *) ;
-                       CTLS . VPO1_NEEDED := TRUE ;
-                       GATTR . KIND := EXPR ;
-                     end (* then *)
-                   else
-                     begin
-                       CT_RESULT := COMPTYPES ( PTYPE_VARCHAR , GATTR .
-                                    TYPTR ) ;
-                       case CT_RESULT of
-                         4 : begin
-                               LOAD_NEU ( PCODEP , GATTR , VAR_REF ) ;
-                               CTLS . VPO1_NEEDED := TRUE ;
-                               GEN0 ( PCODE_VC1 ) ;
-                             end (* tag/ca *) ;
-                         5 : begin
-                               LOADADDRESS_NEU ( PCODEP , GATTR ) ;
-                               CTLS . VPO1_NEEDED := TRUE ;
-                               GEN1 ( PCODE_VC2 , GATTR . TYPTR -> .
-                                      SIZE ) ;
-                             end (* tag/ca *) ;
-                         otherwise
-                           begin
-                             SET_ERROR ( 342 ) ;
-                             GATTR . TYPTR := NIL
-                           end (* otherw *)
-                       end (* case *) ;
-                       GATTR . TYPTR := PTYPE_VARCHAR ;
-                       GATTR . KIND := EXPR ;
-                     end (* else *) ;
+                           SET_ERROR ( 342 ) ;
+                           GATTR . TYPTR := NIL
+                         end (* otherw *)
+                     end (* case *) ;
+                     GATTR . TYPTR := PTYPE_VARCHAR ;
+                     GATTR . KIND := EXPR ;
+                   end (* else *) ;
 
                  //************************************
                  // this lib function has a work area  
@@ -16921,43 +16874,42 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                  //************************************
 
                  EXPRESSION ( FSYS + [ SYCOMMA , SYRPARENT ] ) ;
-                 if GATTR . TYPTR <> NIL then
-                   if GATTR . TYPTR -> . FORM = CSTRING then
-                     begin
-                       if GATTR . KIND <> EXPR then
+                 if GATTR . TYPTR -> . FORM = CSTRING then
+                   begin
+                     if GATTR . KIND <> EXPR then
+                       begin
+                         LOADADDRESS_NEU ( PCODEP , GATTR ) ;
+                         GEN2 ( PCODE_VLD , 1 , GATTR . TYPTR -> . SIZE
+                                - 4 ) ;
+                       end (* then *) ;
+                     CTLS . VPO1_NEEDED := TRUE ;
+                     GATTR . KIND := EXPR ;
+                   end (* then *)
+                 else
+                   begin
+                     CT_RESULT := COMPTYPES ( PTYPE_VARCHAR , GATTR .
+                                  TYPTR ) ;
+                     case CT_RESULT of
+                       4 : begin
+                             LOAD_NEU ( PCODEP , GATTR , VAR_REF ) ;
+                             CTLS . VPO1_NEEDED := TRUE ;
+                             GEN0 ( PCODE_VC1 ) ;
+                           end (* tag/ca *) ;
+                       5 : begin
+                             LOADADDRESS_NEU ( PCODEP , GATTR ) ;
+                             CTLS . VPO1_NEEDED := TRUE ;
+                             GEN1 ( PCODE_VC2 , GATTR . TYPTR -> . SIZE
+                                    ) ;
+                           end (* tag/ca *) ;
+                       otherwise
                          begin
-                           LOADADDRESS_NEU ( PCODEP , GATTR ) ;
-                           GEN2 ( PCODE_VLD , 1 , GATTR . TYPTR -> .
-                                  SIZE - 4 ) ;
-                         end (* then *) ;
-                       CTLS . VPO1_NEEDED := TRUE ;
-                       GATTR . KIND := EXPR ;
-                     end (* then *)
-                   else
-                     begin
-                       CT_RESULT := COMPTYPES ( PTYPE_VARCHAR , GATTR .
-                                    TYPTR ) ;
-                       case CT_RESULT of
-                         4 : begin
-                               LOAD_NEU ( PCODEP , GATTR , VAR_REF ) ;
-                               CTLS . VPO1_NEEDED := TRUE ;
-                               GEN0 ( PCODE_VC1 ) ;
-                             end (* tag/ca *) ;
-                         5 : begin
-                               LOADADDRESS_NEU ( PCODEP , GATTR ) ;
-                               CTLS . VPO1_NEEDED := TRUE ;
-                               GEN1 ( PCODE_VC2 , GATTR . TYPTR -> .
-                                      SIZE ) ;
-                             end (* tag/ca *) ;
-                         otherwise
-                           begin
-                             SET_ERROR ( 342 ) ;
-                             GATTR . TYPTR := NIL
-                           end (* otherw *)
-                       end (* case *) ;
-                       GATTR . TYPTR := PTYPE_VARCHAR ;
-                       GATTR . KIND := EXPR ;
-                     end (* else *) ;
+                           SET_ERROR ( 342 ) ;
+                           GATTR . TYPTR := NIL
+                         end (* otherw *)
+                     end (* case *) ;
+                     GATTR . TYPTR := PTYPE_VARCHAR ;
+                     GATTR . KIND := EXPR ;
+                   end (* else *) ;
 
                  //************************************
                  // this lib function has a work area  
@@ -17049,43 +17001,42 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                  //************************************
 
                  EXPRESSION ( FSYS + [ SYRPARENT ] ) ;
-                 if GATTR . TYPTR <> NIL then
-                   if GATTR . TYPTR -> . FORM = CSTRING then
-                     begin
-                       if GATTR . KIND <> EXPR then
+                 if GATTR . TYPTR -> . FORM = CSTRING then
+                   begin
+                     if GATTR . KIND <> EXPR then
+                       begin
+                         LOADADDRESS_NEU ( PCODEP , GATTR ) ;
+                         GEN2 ( PCODE_VLD , 1 , GATTR . TYPTR -> . SIZE
+                                - 4 ) ;
+                       end (* then *) ;
+                     CTLS . VPO1_NEEDED := TRUE ;
+                     GATTR . KIND := EXPR ;
+                   end (* then *)
+                 else
+                   begin
+                     CT_RESULT := COMPTYPES ( PTYPE_VARCHAR , GATTR .
+                                  TYPTR ) ;
+                     case CT_RESULT of
+                       4 : begin
+                             LOAD_NEU ( PCODEP , GATTR , VAR_REF ) ;
+                             CTLS . VPO1_NEEDED := TRUE ;
+                             GEN0 ( PCODE_VC1 ) ;
+                           end (* tag/ca *) ;
+                       5 : begin
+                             LOADADDRESS_NEU ( PCODEP , GATTR ) ;
+                             CTLS . VPO1_NEEDED := TRUE ;
+                             GEN1 ( PCODE_VC2 , GATTR . TYPTR -> . SIZE
+                                    ) ;
+                           end (* tag/ca *) ;
+                       otherwise
                          begin
-                           LOADADDRESS_NEU ( PCODEP , GATTR ) ;
-                           GEN2 ( PCODE_VLD , 1 , GATTR . TYPTR -> .
-                                  SIZE - 4 ) ;
-                         end (* then *) ;
-                       CTLS . VPO1_NEEDED := TRUE ;
-                       GATTR . KIND := EXPR ;
-                     end (* then *)
-                   else
-                     begin
-                       CT_RESULT := COMPTYPES ( PTYPE_VARCHAR , GATTR .
-                                    TYPTR ) ;
-                       case CT_RESULT of
-                         4 : begin
-                               LOAD_NEU ( PCODEP , GATTR , VAR_REF ) ;
-                               CTLS . VPO1_NEEDED := TRUE ;
-                               GEN0 ( PCODE_VC1 ) ;
-                             end (* tag/ca *) ;
-                         5 : begin
-                               LOADADDRESS_NEU ( PCODEP , GATTR ) ;
-                               CTLS . VPO1_NEEDED := TRUE ;
-                               GEN1 ( PCODE_VC2 , GATTR . TYPTR -> .
-                                      SIZE ) ;
-                             end (* tag/ca *) ;
-                         otherwise
-                           begin
-                             SET_ERROR ( 342 ) ;
-                             GATTR . TYPTR := NIL
-                           end (* otherw *)
-                       end (* case *) ;
-                       GATTR . TYPTR := PTYPE_VARCHAR ;
-                       GATTR . KIND := EXPR ;
-                     end (* else *) ;
+                           SET_ERROR ( 342 ) ;
+                           GATTR . TYPTR := NIL
+                         end (* otherw *)
+                     end (* case *) ;
+                     GATTR . TYPTR := PTYPE_VARCHAR ;
+                     GATTR . KIND := EXPR ;
+                   end (* else *) ;
 
                  //************************************
                  // this lib function has a work area  
@@ -17123,43 +17074,42 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                  //************************************
 
                  EXPRESSION ( FSYS + [ SYRPARENT ] ) ;
-                 if GATTR . TYPTR <> NIL then
-                   if GATTR . TYPTR -> . FORM = CSTRING then
-                     begin
-                       if GATTR . KIND <> EXPR then
+                 if GATTR . TYPTR -> . FORM = CSTRING then
+                   begin
+                     if GATTR . KIND <> EXPR then
+                       begin
+                         LOADADDRESS_NEU ( PCODEP , GATTR ) ;
+                         GEN2 ( PCODE_VLD , 1 , GATTR . TYPTR -> . SIZE
+                                - 4 ) ;
+                       end (* then *) ;
+                     CTLS . VPO1_NEEDED := TRUE ;
+                     GATTR . KIND := EXPR ;
+                   end (* then *)
+                 else
+                   begin
+                     CT_RESULT := COMPTYPES ( PTYPE_VARCHAR , GATTR .
+                                  TYPTR ) ;
+                     case CT_RESULT of
+                       4 : begin
+                             LOAD_NEU ( PCODEP , GATTR , VAR_REF ) ;
+                             CTLS . VPO1_NEEDED := TRUE ;
+                             GEN0 ( PCODE_VC1 ) ;
+                           end (* tag/ca *) ;
+                       5 : begin
+                             LOADADDRESS_NEU ( PCODEP , GATTR ) ;
+                             CTLS . VPO1_NEEDED := TRUE ;
+                             GEN1 ( PCODE_VC2 , GATTR . TYPTR -> . SIZE
+                                    ) ;
+                           end (* tag/ca *) ;
+                       otherwise
                          begin
-                           LOADADDRESS_NEU ( PCODEP , GATTR ) ;
-                           GEN2 ( PCODE_VLD , 1 , GATTR . TYPTR -> .
-                                  SIZE - 4 ) ;
-                         end (* then *) ;
-                       CTLS . VPO1_NEEDED := TRUE ;
-                       GATTR . KIND := EXPR ;
-                     end (* then *)
-                   else
-                     begin
-                       CT_RESULT := COMPTYPES ( PTYPE_VARCHAR , GATTR .
-                                    TYPTR ) ;
-                       case CT_RESULT of
-                         4 : begin
-                               LOAD_NEU ( PCODEP , GATTR , VAR_REF ) ;
-                               CTLS . VPO1_NEEDED := TRUE ;
-                               GEN0 ( PCODE_VC1 ) ;
-                             end (* tag/ca *) ;
-                         5 : begin
-                               LOADADDRESS_NEU ( PCODEP , GATTR ) ;
-                               CTLS . VPO1_NEEDED := TRUE ;
-                               GEN1 ( PCODE_VC2 , GATTR . TYPTR -> .
-                                      SIZE ) ;
-                             end (* tag/ca *) ;
-                         otherwise
-                           begin
-                             SET_ERROR ( 342 ) ;
-                             GATTR . TYPTR := NIL
-                           end (* otherw *)
-                       end (* case *) ;
-                       GATTR . TYPTR := PTYPE_VARCHAR ;
-                       GATTR . KIND := EXPR ;
-                     end (* else *) ;
+                           SET_ERROR ( 342 ) ;
+                           GATTR . TYPTR := NIL
+                         end (* otherw *)
+                     end (* case *) ;
+                     GATTR . TYPTR := PTYPE_VARCHAR ;
+                     GATTR . KIND := EXPR ;
+                   end (* else *) ;
 
                  //************************************
                  // this lib function has a work area  
@@ -17197,43 +17147,42 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                  //************************************
 
                  EXPRESSION ( FSYS + [ SYRPARENT ] ) ;
-                 if GATTR . TYPTR <> NIL then
-                   if GATTR . TYPTR -> . FORM = CSTRING then
-                     begin
-                       if GATTR . KIND <> EXPR then
+                 if GATTR . TYPTR -> . FORM = CSTRING then
+                   begin
+                     if GATTR . KIND <> EXPR then
+                       begin
+                         LOADADDRESS_NEU ( PCODEP , GATTR ) ;
+                         GEN2 ( PCODE_VLD , 1 , GATTR . TYPTR -> . SIZE
+                                - 4 ) ;
+                       end (* then *) ;
+                     CTLS . VPO1_NEEDED := TRUE ;
+                     GATTR . KIND := EXPR ;
+                   end (* then *)
+                 else
+                   begin
+                     CT_RESULT := COMPTYPES ( PTYPE_VARCHAR , GATTR .
+                                  TYPTR ) ;
+                     case CT_RESULT of
+                       4 : begin
+                             LOAD_NEU ( PCODEP , GATTR , VAR_REF ) ;
+                             CTLS . VPO1_NEEDED := TRUE ;
+                             GEN0 ( PCODE_VC1 ) ;
+                           end (* tag/ca *) ;
+                       5 : begin
+                             LOADADDRESS_NEU ( PCODEP , GATTR ) ;
+                             CTLS . VPO1_NEEDED := TRUE ;
+                             GEN1 ( PCODE_VC2 , GATTR . TYPTR -> . SIZE
+                                    ) ;
+                           end (* tag/ca *) ;
+                       otherwise
                          begin
-                           LOADADDRESS_NEU ( PCODEP , GATTR ) ;
-                           GEN2 ( PCODE_VLD , 1 , GATTR . TYPTR -> .
-                                  SIZE - 4 ) ;
-                         end (* then *) ;
-                       CTLS . VPO1_NEEDED := TRUE ;
-                       GATTR . KIND := EXPR ;
-                     end (* then *)
-                   else
-                     begin
-                       CT_RESULT := COMPTYPES ( PTYPE_VARCHAR , GATTR .
-                                    TYPTR ) ;
-                       case CT_RESULT of
-                         4 : begin
-                               LOAD_NEU ( PCODEP , GATTR , VAR_REF ) ;
-                               CTLS . VPO1_NEEDED := TRUE ;
-                               GEN0 ( PCODE_VC1 ) ;
-                             end (* tag/ca *) ;
-                         5 : begin
-                               LOADADDRESS_NEU ( PCODEP , GATTR ) ;
-                               CTLS . VPO1_NEEDED := TRUE ;
-                               GEN1 ( PCODE_VC2 , GATTR . TYPTR -> .
-                                      SIZE ) ;
-                             end (* tag/ca *) ;
-                         otherwise
-                           begin
-                             SET_ERROR ( 342 ) ;
-                             GATTR . TYPTR := NIL
-                           end (* otherw *)
-                       end (* case *) ;
-                       GATTR . TYPTR := PTYPE_VARCHAR ;
-                       GATTR . KIND := EXPR ;
-                     end (* else *) ;
+                           SET_ERROR ( 342 ) ;
+                           GATTR . TYPTR := NIL
+                         end (* otherw *)
+                     end (* case *) ;
+                     GATTR . TYPTR := PTYPE_VARCHAR ;
+                     GATTR . KIND := EXPR ;
+                   end (* else *) ;
 
                  //************************************
                  // this lib function has a work area  
@@ -17271,43 +17220,42 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                  //************************************
 
                  EXPRESSION ( FSYS + [ SYRPARENT ] ) ;
-                 if GATTR . TYPTR <> NIL then
-                   if GATTR . TYPTR -> . FORM = CSTRING then
-                     begin
-                       if GATTR . KIND <> EXPR then
+                 if GATTR . TYPTR -> . FORM = CSTRING then
+                   begin
+                     if GATTR . KIND <> EXPR then
+                       begin
+                         LOADADDRESS_NEU ( PCODEP , GATTR ) ;
+                         GEN2 ( PCODE_VLD , 1 , GATTR . TYPTR -> . SIZE
+                                - 4 ) ;
+                       end (* then *) ;
+                     CTLS . VPO1_NEEDED := TRUE ;
+                     GATTR . KIND := EXPR ;
+                   end (* then *)
+                 else
+                   begin
+                     CT_RESULT := COMPTYPES ( PTYPE_VARCHAR , GATTR .
+                                  TYPTR ) ;
+                     case CT_RESULT of
+                       4 : begin
+                             LOAD_NEU ( PCODEP , GATTR , VAR_REF ) ;
+                             CTLS . VPO1_NEEDED := TRUE ;
+                             GEN0 ( PCODE_VC1 ) ;
+                           end (* tag/ca *) ;
+                       5 : begin
+                             LOADADDRESS_NEU ( PCODEP , GATTR ) ;
+                             CTLS . VPO1_NEEDED := TRUE ;
+                             GEN1 ( PCODE_VC2 , GATTR . TYPTR -> . SIZE
+                                    ) ;
+                           end (* tag/ca *) ;
+                       otherwise
                          begin
-                           LOADADDRESS_NEU ( PCODEP , GATTR ) ;
-                           GEN2 ( PCODE_VLD , 1 , GATTR . TYPTR -> .
-                                  SIZE - 4 ) ;
-                         end (* then *) ;
-                       CTLS . VPO1_NEEDED := TRUE ;
-                       GATTR . KIND := EXPR ;
-                     end (* then *)
-                   else
-                     begin
-                       CT_RESULT := COMPTYPES ( PTYPE_VARCHAR , GATTR .
-                                    TYPTR ) ;
-                       case CT_RESULT of
-                         4 : begin
-                               LOAD_NEU ( PCODEP , GATTR , VAR_REF ) ;
-                               CTLS . VPO1_NEEDED := TRUE ;
-                               GEN0 ( PCODE_VC1 ) ;
-                             end (* tag/ca *) ;
-                         5 : begin
-                               LOADADDRESS_NEU ( PCODEP , GATTR ) ;
-                               CTLS . VPO1_NEEDED := TRUE ;
-                               GEN1 ( PCODE_VC2 , GATTR . TYPTR -> .
-                                      SIZE ) ;
-                             end (* tag/ca *) ;
-                         otherwise
-                           begin
-                             SET_ERROR ( 342 ) ;
-                             GATTR . TYPTR := NIL
-                           end (* otherw *)
-                       end (* case *) ;
-                       GATTR . TYPTR := PTYPE_VARCHAR ;
-                       GATTR . KIND := EXPR ;
-                     end (* else *) ;
+                           SET_ERROR ( 342 ) ;
+                           GATTR . TYPTR := NIL
+                         end (* otherw *)
+                     end (* case *) ;
+                     GATTR . TYPTR := PTYPE_VARCHAR ;
+                     GATTR . KIND := EXPR ;
+                   end (* else *) ;
 
                  //************************************
                  // this lib function has a work area  
@@ -17347,43 +17295,42 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                  //************************************
 
                  EXPRESSION ( FSYS + [ SYCOMMA , SYRPARENT ] ) ;
-                 if GATTR . TYPTR <> NIL then
-                   if GATTR . TYPTR -> . FORM = CSTRING then
-                     begin
-                       if GATTR . KIND <> EXPR then
+                 if GATTR . TYPTR -> . FORM = CSTRING then
+                   begin
+                     if GATTR . KIND <> EXPR then
+                       begin
+                         LOADADDRESS_NEU ( PCODEP , GATTR ) ;
+                         GEN2 ( PCODE_VLD , 0 , GATTR . TYPTR -> . SIZE
+                                - 4 ) ;
+                       end (* then *) ;
+                     CTLS . VPO1_NEEDED := TRUE ;
+                     GATTR . KIND := EXPR ;
+                   end (* then *)
+                 else
+                   begin
+                     CT_RESULT := COMPTYPES ( PTYPE_VARCHAR , GATTR .
+                                  TYPTR ) ;
+                     case CT_RESULT of
+                       4 : begin
+                             LOAD_NEU ( PCODEP , GATTR , VAR_REF ) ;
+                             CTLS . VPO1_NEEDED := TRUE ;
+                             GEN0 ( PCODE_VC1 ) ;
+                           end (* tag/ca *) ;
+                       5 : begin
+                             LOADADDRESS_NEU ( PCODEP , GATTR ) ;
+                             CTLS . VPO1_NEEDED := TRUE ;
+                             GEN1 ( PCODE_VC2 , GATTR . TYPTR -> . SIZE
+                                    ) ;
+                           end (* tag/ca *) ;
+                       otherwise
                          begin
-                           LOADADDRESS_NEU ( PCODEP , GATTR ) ;
-                           GEN2 ( PCODE_VLD , 0 , GATTR . TYPTR -> .
-                                  SIZE - 4 ) ;
-                         end (* then *) ;
-                       CTLS . VPO1_NEEDED := TRUE ;
-                       GATTR . KIND := EXPR ;
-                     end (* then *)
-                   else
-                     begin
-                       CT_RESULT := COMPTYPES ( PTYPE_VARCHAR , GATTR .
-                                    TYPTR ) ;
-                       case CT_RESULT of
-                         4 : begin
-                               LOAD_NEU ( PCODEP , GATTR , VAR_REF ) ;
-                               CTLS . VPO1_NEEDED := TRUE ;
-                               GEN0 ( PCODE_VC1 ) ;
-                             end (* tag/ca *) ;
-                         5 : begin
-                               LOADADDRESS_NEU ( PCODEP , GATTR ) ;
-                               CTLS . VPO1_NEEDED := TRUE ;
-                               GEN1 ( PCODE_VC2 , GATTR . TYPTR -> .
-                                      SIZE ) ;
-                             end (* tag/ca *) ;
-                         otherwise
-                           begin
-                             SET_ERROR ( 342 ) ;
-                             GATTR . TYPTR := NIL
-                           end (* otherw *)
-                       end (* case *) ;
-                       GATTR . TYPTR := PTYPE_VARCHAR ;
-                       GATTR . KIND := EXPR ;
-                     end (* else *) ;
+                           SET_ERROR ( 342 ) ;
+                           GATTR . TYPTR := NIL
+                         end (* otherw *)
+                     end (* case *) ;
+                     GATTR . TYPTR := PTYPE_VARCHAR ;
+                     GATTR . KIND := EXPR ;
+                   end (* else *) ;
 
                  //************************************
                  // this lib function has a work area  
@@ -17412,43 +17359,42 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                  //************************************
 
                  EXPRESSION ( FSYS + [ SYRPARENT ] ) ;
-                 if GATTR . TYPTR <> NIL then
-                   if GATTR . TYPTR -> . FORM = CSTRING then
-                     begin
-                       if GATTR . KIND <> EXPR then
+                 if GATTR . TYPTR -> . FORM = CSTRING then
+                   begin
+                     if GATTR . KIND <> EXPR then
+                       begin
+                         LOADADDRESS_NEU ( PCODEP , GATTR ) ;
+                         GEN2 ( PCODE_VLD , 0 , GATTR . TYPTR -> . SIZE
+                                - 4 ) ;
+                       end (* then *) ;
+                     CTLS . VPO1_NEEDED := TRUE ;
+                     GATTR . KIND := EXPR ;
+                   end (* then *)
+                 else
+                   begin
+                     CT_RESULT := COMPTYPES ( PTYPE_VARCHAR , GATTR .
+                                  TYPTR ) ;
+                     case CT_RESULT of
+                       4 : begin
+                             LOAD_NEU ( PCODEP , GATTR , VAR_REF ) ;
+                             CTLS . VPO1_NEEDED := TRUE ;
+                             GEN0 ( PCODE_VC1 ) ;
+                           end (* tag/ca *) ;
+                       5 : begin
+                             LOADADDRESS_NEU ( PCODEP , GATTR ) ;
+                             CTLS . VPO1_NEEDED := TRUE ;
+                             GEN1 ( PCODE_VC2 , GATTR . TYPTR -> . SIZE
+                                    ) ;
+                           end (* tag/ca *) ;
+                       otherwise
                          begin
-                           LOADADDRESS_NEU ( PCODEP , GATTR ) ;
-                           GEN2 ( PCODE_VLD , 0 , GATTR . TYPTR -> .
-                                  SIZE - 4 ) ;
-                         end (* then *) ;
-                       CTLS . VPO1_NEEDED := TRUE ;
-                       GATTR . KIND := EXPR ;
-                     end (* then *)
-                   else
-                     begin
-                       CT_RESULT := COMPTYPES ( PTYPE_VARCHAR , GATTR .
-                                    TYPTR ) ;
-                       case CT_RESULT of
-                         4 : begin
-                               LOAD_NEU ( PCODEP , GATTR , VAR_REF ) ;
-                               CTLS . VPO1_NEEDED := TRUE ;
-                               GEN0 ( PCODE_VC1 ) ;
-                             end (* tag/ca *) ;
-                         5 : begin
-                               LOADADDRESS_NEU ( PCODEP , GATTR ) ;
-                               CTLS . VPO1_NEEDED := TRUE ;
-                               GEN1 ( PCODE_VC2 , GATTR . TYPTR -> .
-                                      SIZE ) ;
-                             end (* tag/ca *) ;
-                         otherwise
-                           begin
-                             SET_ERROR ( 342 ) ;
-                             GATTR . TYPTR := NIL
-                           end (* otherw *)
-                       end (* case *) ;
-                       GATTR . TYPTR := PTYPE_VARCHAR ;
-                       GATTR . KIND := EXPR ;
-                     end (* else *) ;
+                           SET_ERROR ( 342 ) ;
+                           GATTR . TYPTR := NIL
+                         end (* otherw *)
+                     end (* case *) ;
+                     GATTR . TYPTR := PTYPE_VARCHAR ;
+                     GATTR . KIND := EXPR ;
+                   end (* else *) ;
 
                  //************************************
                  // this lib function has a work area  
@@ -17488,43 +17434,42 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                  //************************************
 
                  EXPRESSION ( FSYS + [ SYCOMMA , SYRPARENT ] ) ;
-                 if GATTR . TYPTR <> NIL then
-                   if GATTR . TYPTR -> . FORM = CSTRING then
-                     begin
-                       if GATTR . KIND <> EXPR then
+                 if GATTR . TYPTR -> . FORM = CSTRING then
+                   begin
+                     if GATTR . KIND <> EXPR then
+                       begin
+                         LOADADDRESS_NEU ( PCODEP , GATTR ) ;
+                         GEN2 ( PCODE_VLD , 0 , GATTR . TYPTR -> . SIZE
+                                - 4 ) ;
+                       end (* then *) ;
+                     CTLS . VPO1_NEEDED := TRUE ;
+                     GATTR . KIND := EXPR ;
+                   end (* then *)
+                 else
+                   begin
+                     CT_RESULT := COMPTYPES ( PTYPE_VARCHAR , GATTR .
+                                  TYPTR ) ;
+                     case CT_RESULT of
+                       4 : begin
+                             LOAD_NEU ( PCODEP , GATTR , VAR_REF ) ;
+                             CTLS . VPO1_NEEDED := TRUE ;
+                             GEN0 ( PCODE_VC1 ) ;
+                           end (* tag/ca *) ;
+                       5 : begin
+                             LOADADDRESS_NEU ( PCODEP , GATTR ) ;
+                             CTLS . VPO1_NEEDED := TRUE ;
+                             GEN1 ( PCODE_VC2 , GATTR . TYPTR -> . SIZE
+                                    ) ;
+                           end (* tag/ca *) ;
+                       otherwise
                          begin
-                           LOADADDRESS_NEU ( PCODEP , GATTR ) ;
-                           GEN2 ( PCODE_VLD , 0 , GATTR . TYPTR -> .
-                                  SIZE - 4 ) ;
-                         end (* then *) ;
-                       CTLS . VPO1_NEEDED := TRUE ;
-                       GATTR . KIND := EXPR ;
-                     end (* then *)
-                   else
-                     begin
-                       CT_RESULT := COMPTYPES ( PTYPE_VARCHAR , GATTR .
-                                    TYPTR ) ;
-                       case CT_RESULT of
-                         4 : begin
-                               LOAD_NEU ( PCODEP , GATTR , VAR_REF ) ;
-                               CTLS . VPO1_NEEDED := TRUE ;
-                               GEN0 ( PCODE_VC1 ) ;
-                             end (* tag/ca *) ;
-                         5 : begin
-                               LOADADDRESS_NEU ( PCODEP , GATTR ) ;
-                               CTLS . VPO1_NEEDED := TRUE ;
-                               GEN1 ( PCODE_VC2 , GATTR . TYPTR -> .
-                                      SIZE ) ;
-                             end (* tag/ca *) ;
-                         otherwise
-                           begin
-                             SET_ERROR ( 342 ) ;
-                             GATTR . TYPTR := NIL
-                           end (* otherw *)
-                       end (* case *) ;
-                       GATTR . TYPTR := PTYPE_VARCHAR ;
-                       GATTR . KIND := EXPR ;
-                     end (* else *) ;
+                           SET_ERROR ( 342 ) ;
+                           GATTR . TYPTR := NIL
+                         end (* otherw *)
+                     end (* case *) ;
+                     GATTR . TYPTR := PTYPE_VARCHAR ;
+                     GATTR . KIND := EXPR ;
+                   end (* else *) ;
 
                  //************************************
                  // this lib function has a work area  
@@ -17553,43 +17498,42 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                  //************************************
 
                  EXPRESSION ( FSYS + [ SYRPARENT ] ) ;
-                 if GATTR . TYPTR <> NIL then
-                   if GATTR . TYPTR -> . FORM = CSTRING then
-                     begin
-                       if GATTR . KIND <> EXPR then
+                 if GATTR . TYPTR -> . FORM = CSTRING then
+                   begin
+                     if GATTR . KIND <> EXPR then
+                       begin
+                         LOADADDRESS_NEU ( PCODEP , GATTR ) ;
+                         GEN2 ( PCODE_VLD , 0 , GATTR . TYPTR -> . SIZE
+                                - 4 ) ;
+                       end (* then *) ;
+                     CTLS . VPO1_NEEDED := TRUE ;
+                     GATTR . KIND := EXPR ;
+                   end (* then *)
+                 else
+                   begin
+                     CT_RESULT := COMPTYPES ( PTYPE_VARCHAR , GATTR .
+                                  TYPTR ) ;
+                     case CT_RESULT of
+                       4 : begin
+                             LOAD_NEU ( PCODEP , GATTR , VAR_REF ) ;
+                             CTLS . VPO1_NEEDED := TRUE ;
+                             GEN0 ( PCODE_VC1 ) ;
+                           end (* tag/ca *) ;
+                       5 : begin
+                             LOADADDRESS_NEU ( PCODEP , GATTR ) ;
+                             CTLS . VPO1_NEEDED := TRUE ;
+                             GEN1 ( PCODE_VC2 , GATTR . TYPTR -> . SIZE
+                                    ) ;
+                           end (* tag/ca *) ;
+                       otherwise
                          begin
-                           LOADADDRESS_NEU ( PCODEP , GATTR ) ;
-                           GEN2 ( PCODE_VLD , 0 , GATTR . TYPTR -> .
-                                  SIZE - 4 ) ;
-                         end (* then *) ;
-                       CTLS . VPO1_NEEDED := TRUE ;
-                       GATTR . KIND := EXPR ;
-                     end (* then *)
-                   else
-                     begin
-                       CT_RESULT := COMPTYPES ( PTYPE_VARCHAR , GATTR .
-                                    TYPTR ) ;
-                       case CT_RESULT of
-                         4 : begin
-                               LOAD_NEU ( PCODEP , GATTR , VAR_REF ) ;
-                               CTLS . VPO1_NEEDED := TRUE ;
-                               GEN0 ( PCODE_VC1 ) ;
-                             end (* tag/ca *) ;
-                         5 : begin
-                               LOADADDRESS_NEU ( PCODEP , GATTR ) ;
-                               CTLS . VPO1_NEEDED := TRUE ;
-                               GEN1 ( PCODE_VC2 , GATTR . TYPTR -> .
-                                      SIZE ) ;
-                             end (* tag/ca *) ;
-                         otherwise
-                           begin
-                             SET_ERROR ( 342 ) ;
-                             GATTR . TYPTR := NIL
-                           end (* otherw *)
-                       end (* case *) ;
-                       GATTR . TYPTR := PTYPE_VARCHAR ;
-                       GATTR . KIND := EXPR ;
-                     end (* else *) ;
+                           SET_ERROR ( 342 ) ;
+                           GATTR . TYPTR := NIL
+                         end (* otherw *)
+                     end (* case *) ;
+                     GATTR . TYPTR := PTYPE_VARCHAR ;
+                     GATTR . KIND := EXPR ;
+                   end (* else *) ;
 
                  //************************************
                  // this lib function has a work area  
@@ -17629,43 +17573,42 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                  //************************************
 
                  EXPRESSION ( FSYS + [ SYCOMMA , SYRPARENT ] ) ;
-                 if GATTR . TYPTR <> NIL then
-                   if GATTR . TYPTR -> . FORM = CSTRING then
-                     begin
-                       if GATTR . KIND <> EXPR then
+                 if GATTR . TYPTR -> . FORM = CSTRING then
+                   begin
+                     if GATTR . KIND <> EXPR then
+                       begin
+                         LOADADDRESS_NEU ( PCODEP , GATTR ) ;
+                         GEN2 ( PCODE_VLD , 0 , GATTR . TYPTR -> . SIZE
+                                - 4 ) ;
+                       end (* then *) ;
+                     CTLS . VPO1_NEEDED := TRUE ;
+                     GATTR . KIND := EXPR ;
+                   end (* then *)
+                 else
+                   begin
+                     CT_RESULT := COMPTYPES ( PTYPE_VARCHAR , GATTR .
+                                  TYPTR ) ;
+                     case CT_RESULT of
+                       4 : begin
+                             LOAD_NEU ( PCODEP , GATTR , VAR_REF ) ;
+                             CTLS . VPO1_NEEDED := TRUE ;
+                             GEN0 ( PCODE_VC1 ) ;
+                           end (* tag/ca *) ;
+                       5 : begin
+                             LOADADDRESS_NEU ( PCODEP , GATTR ) ;
+                             CTLS . VPO1_NEEDED := TRUE ;
+                             GEN1 ( PCODE_VC2 , GATTR . TYPTR -> . SIZE
+                                    ) ;
+                           end (* tag/ca *) ;
+                       otherwise
                          begin
-                           LOADADDRESS_NEU ( PCODEP , GATTR ) ;
-                           GEN2 ( PCODE_VLD , 0 , GATTR . TYPTR -> .
-                                  SIZE - 4 ) ;
-                         end (* then *) ;
-                       CTLS . VPO1_NEEDED := TRUE ;
-                       GATTR . KIND := EXPR ;
-                     end (* then *)
-                   else
-                     begin
-                       CT_RESULT := COMPTYPES ( PTYPE_VARCHAR , GATTR .
-                                    TYPTR ) ;
-                       case CT_RESULT of
-                         4 : begin
-                               LOAD_NEU ( PCODEP , GATTR , VAR_REF ) ;
-                               CTLS . VPO1_NEEDED := TRUE ;
-                               GEN0 ( PCODE_VC1 ) ;
-                             end (* tag/ca *) ;
-                         5 : begin
-                               LOADADDRESS_NEU ( PCODEP , GATTR ) ;
-                               CTLS . VPO1_NEEDED := TRUE ;
-                               GEN1 ( PCODE_VC2 , GATTR . TYPTR -> .
-                                      SIZE ) ;
-                             end (* tag/ca *) ;
-                         otherwise
-                           begin
-                             SET_ERROR ( 342 ) ;
-                             GATTR . TYPTR := NIL
-                           end (* otherw *)
-                       end (* case *) ;
-                       GATTR . TYPTR := PTYPE_VARCHAR ;
-                       GATTR . KIND := EXPR ;
-                     end (* else *) ;
+                           SET_ERROR ( 342 ) ;
+                           GATTR . TYPTR := NIL
+                         end (* otherw *)
+                     end (* case *) ;
+                     GATTR . TYPTR := PTYPE_VARCHAR ;
+                     GATTR . KIND := EXPR ;
+                   end (* else *) ;
 
                  //************************************
                  // this lib function has a work area  
@@ -17694,43 +17637,42 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                  //************************************
 
                  EXPRESSION ( FSYS + [ SYRPARENT ] ) ;
-                 if GATTR . TYPTR <> NIL then
-                   if GATTR . TYPTR -> . FORM = CSTRING then
-                     begin
-                       if GATTR . KIND <> EXPR then
+                 if GATTR . TYPTR -> . FORM = CSTRING then
+                   begin
+                     if GATTR . KIND <> EXPR then
+                       begin
+                         LOADADDRESS_NEU ( PCODEP , GATTR ) ;
+                         GEN2 ( PCODE_VLD , 0 , GATTR . TYPTR -> . SIZE
+                                - 4 ) ;
+                       end (* then *) ;
+                     CTLS . VPO1_NEEDED := TRUE ;
+                     GATTR . KIND := EXPR ;
+                   end (* then *)
+                 else
+                   begin
+                     CT_RESULT := COMPTYPES ( PTYPE_VARCHAR , GATTR .
+                                  TYPTR ) ;
+                     case CT_RESULT of
+                       4 : begin
+                             LOAD_NEU ( PCODEP , GATTR , VAR_REF ) ;
+                             CTLS . VPO1_NEEDED := TRUE ;
+                             GEN0 ( PCODE_VC1 ) ;
+                           end (* tag/ca *) ;
+                       5 : begin
+                             LOADADDRESS_NEU ( PCODEP , GATTR ) ;
+                             CTLS . VPO1_NEEDED := TRUE ;
+                             GEN1 ( PCODE_VC2 , GATTR . TYPTR -> . SIZE
+                                    ) ;
+                           end (* tag/ca *) ;
+                       otherwise
                          begin
-                           LOADADDRESS_NEU ( PCODEP , GATTR ) ;
-                           GEN2 ( PCODE_VLD , 0 , GATTR . TYPTR -> .
-                                  SIZE - 4 ) ;
-                         end (* then *) ;
-                       CTLS . VPO1_NEEDED := TRUE ;
-                       GATTR . KIND := EXPR ;
-                     end (* then *)
-                   else
-                     begin
-                       CT_RESULT := COMPTYPES ( PTYPE_VARCHAR , GATTR .
-                                    TYPTR ) ;
-                       case CT_RESULT of
-                         4 : begin
-                               LOAD_NEU ( PCODEP , GATTR , VAR_REF ) ;
-                               CTLS . VPO1_NEEDED := TRUE ;
-                               GEN0 ( PCODE_VC1 ) ;
-                             end (* tag/ca *) ;
-                         5 : begin
-                               LOADADDRESS_NEU ( PCODEP , GATTR ) ;
-                               CTLS . VPO1_NEEDED := TRUE ;
-                               GEN1 ( PCODE_VC2 , GATTR . TYPTR -> .
-                                      SIZE ) ;
-                             end (* tag/ca *) ;
-                         otherwise
-                           begin
-                             SET_ERROR ( 342 ) ;
-                             GATTR . TYPTR := NIL
-                           end (* otherw *)
-                       end (* case *) ;
-                       GATTR . TYPTR := PTYPE_VARCHAR ;
-                       GATTR . KIND := EXPR ;
-                     end (* else *) ;
+                           SET_ERROR ( 342 ) ;
+                           GATTR . TYPTR := NIL
+                         end (* otherw *)
+                     end (* case *) ;
+                     GATTR . TYPTR := PTYPE_VARCHAR ;
+                     GATTR . KIND := EXPR ;
+                   end (* else *) ;
 
                  //************************************
                  // this lib function has a work area  
@@ -17772,43 +17714,42 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                  //************************************
 
                  EXPRESSION ( FSYS + [ SYCOMMA , SYRPARENT ] ) ;
-                 if GATTR . TYPTR <> NIL then
-                   if GATTR . TYPTR -> . FORM = CSTRING then
-                     begin
-                       if GATTR . KIND <> EXPR then
+                 if GATTR . TYPTR -> . FORM = CSTRING then
+                   begin
+                     if GATTR . KIND <> EXPR then
+                       begin
+                         LOADADDRESS_NEU ( PCODEP , GATTR ) ;
+                         GEN2 ( PCODE_VLD , 1 , GATTR . TYPTR -> . SIZE
+                                - 4 ) ;
+                       end (* then *) ;
+                     CTLS . VPO1_NEEDED := TRUE ;
+                     GATTR . KIND := EXPR ;
+                   end (* then *)
+                 else
+                   begin
+                     CT_RESULT := COMPTYPES ( PTYPE_VARCHAR , GATTR .
+                                  TYPTR ) ;
+                     case CT_RESULT of
+                       4 : begin
+                             LOAD_NEU ( PCODEP , GATTR , VAR_REF ) ;
+                             CTLS . VPO1_NEEDED := TRUE ;
+                             GEN0 ( PCODE_VC1 ) ;
+                           end (* tag/ca *) ;
+                       5 : begin
+                             LOADADDRESS_NEU ( PCODEP , GATTR ) ;
+                             CTLS . VPO1_NEEDED := TRUE ;
+                             GEN1 ( PCODE_VC2 , GATTR . TYPTR -> . SIZE
+                                    ) ;
+                           end (* tag/ca *) ;
+                       otherwise
                          begin
-                           LOADADDRESS_NEU ( PCODEP , GATTR ) ;
-                           GEN2 ( PCODE_VLD , 1 , GATTR . TYPTR -> .
-                                  SIZE - 4 ) ;
-                         end (* then *) ;
-                       CTLS . VPO1_NEEDED := TRUE ;
-                       GATTR . KIND := EXPR ;
-                     end (* then *)
-                   else
-                     begin
-                       CT_RESULT := COMPTYPES ( PTYPE_VARCHAR , GATTR .
-                                    TYPTR ) ;
-                       case CT_RESULT of
-                         4 : begin
-                               LOAD_NEU ( PCODEP , GATTR , VAR_REF ) ;
-                               CTLS . VPO1_NEEDED := TRUE ;
-                               GEN0 ( PCODE_VC1 ) ;
-                             end (* tag/ca *) ;
-                         5 : begin
-                               LOADADDRESS_NEU ( PCODEP , GATTR ) ;
-                               CTLS . VPO1_NEEDED := TRUE ;
-                               GEN1 ( PCODE_VC2 , GATTR . TYPTR -> .
-                                      SIZE ) ;
-                             end (* tag/ca *) ;
-                         otherwise
-                           begin
-                             SET_ERROR ( 342 ) ;
-                             GATTR . TYPTR := NIL
-                           end (* otherw *)
-                       end (* case *) ;
-                       GATTR . TYPTR := PTYPE_VARCHAR ;
-                       GATTR . KIND := EXPR ;
-                     end (* else *) ;
+                           SET_ERROR ( 342 ) ;
+                           GATTR . TYPTR := NIL
+                         end (* otherw *)
+                     end (* case *) ;
+                     GATTR . TYPTR := PTYPE_VARCHAR ;
+                     GATTR . KIND := EXPR ;
+                   end (* else *) ;
 
                  //************************************
                  // this lib function has a work area  
@@ -17837,43 +17778,42 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                  //************************************
 
                  EXPRESSION ( FSYS + [ SYCOMMA , SYRPARENT ] ) ;
-                 if GATTR . TYPTR <> NIL then
-                   if GATTR . TYPTR -> . FORM = CSTRING then
-                     begin
-                       if GATTR . KIND <> EXPR then
+                 if GATTR . TYPTR -> . FORM = CSTRING then
+                   begin
+                     if GATTR . KIND <> EXPR then
+                       begin
+                         LOADADDRESS_NEU ( PCODEP , GATTR ) ;
+                         GEN2 ( PCODE_VLD , 0 , GATTR . TYPTR -> . SIZE
+                                - 4 ) ;
+                       end (* then *) ;
+                     CTLS . VPO1_NEEDED := TRUE ;
+                     GATTR . KIND := EXPR ;
+                   end (* then *)
+                 else
+                   begin
+                     CT_RESULT := COMPTYPES ( PTYPE_VARCHAR , GATTR .
+                                  TYPTR ) ;
+                     case CT_RESULT of
+                       4 : begin
+                             LOAD_NEU ( PCODEP , GATTR , VAR_REF ) ;
+                             CTLS . VPO1_NEEDED := TRUE ;
+                             GEN0 ( PCODE_VC1 ) ;
+                           end (* tag/ca *) ;
+                       5 : begin
+                             LOADADDRESS_NEU ( PCODEP , GATTR ) ;
+                             CTLS . VPO1_NEEDED := TRUE ;
+                             GEN1 ( PCODE_VC2 , GATTR . TYPTR -> . SIZE
+                                    ) ;
+                           end (* tag/ca *) ;
+                       otherwise
                          begin
-                           LOADADDRESS_NEU ( PCODEP , GATTR ) ;
-                           GEN2 ( PCODE_VLD , 0 , GATTR . TYPTR -> .
-                                  SIZE - 4 ) ;
-                         end (* then *) ;
-                       CTLS . VPO1_NEEDED := TRUE ;
-                       GATTR . KIND := EXPR ;
-                     end (* then *)
-                   else
-                     begin
-                       CT_RESULT := COMPTYPES ( PTYPE_VARCHAR , GATTR .
-                                    TYPTR ) ;
-                       case CT_RESULT of
-                         4 : begin
-                               LOAD_NEU ( PCODEP , GATTR , VAR_REF ) ;
-                               CTLS . VPO1_NEEDED := TRUE ;
-                               GEN0 ( PCODE_VC1 ) ;
-                             end (* tag/ca *) ;
-                         5 : begin
-                               LOADADDRESS_NEU ( PCODEP , GATTR ) ;
-                               CTLS . VPO1_NEEDED := TRUE ;
-                               GEN1 ( PCODE_VC2 , GATTR . TYPTR -> .
-                                      SIZE ) ;
-                             end (* tag/ca *) ;
-                         otherwise
-                           begin
-                             SET_ERROR ( 342 ) ;
-                             GATTR . TYPTR := NIL
-                           end (* otherw *)
-                       end (* case *) ;
-                       GATTR . TYPTR := PTYPE_VARCHAR ;
-                       GATTR . KIND := EXPR ;
-                     end (* else *) ;
+                           SET_ERROR ( 342 ) ;
+                           GATTR . TYPTR := NIL
+                         end (* otherw *)
+                     end (* case *) ;
+                     GATTR . TYPTR := PTYPE_VARCHAR ;
+                     GATTR . KIND := EXPR ;
+                   end (* else *) ;
 
                  //************************************
                  // this lib function has a work area  
@@ -17916,43 +17856,42 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                  //************************************
 
                  EXPRESSION ( FSYS + [ SYRPARENT ] ) ;
-                 if GATTR . TYPTR <> NIL then
-                   if GATTR . TYPTR -> . FORM = CSTRING then
-                     begin
-                       if GATTR . KIND <> EXPR then
+                 if GATTR . TYPTR -> . FORM = CSTRING then
+                   begin
+                     if GATTR . KIND <> EXPR then
+                       begin
+                         LOADADDRESS_NEU ( PCODEP , GATTR ) ;
+                         GEN2 ( PCODE_VLD , 0 , GATTR . TYPTR -> . SIZE
+                                - 4 ) ;
+                       end (* then *) ;
+                     CTLS . VPO1_NEEDED := TRUE ;
+                     GATTR . KIND := EXPR ;
+                   end (* then *)
+                 else
+                   begin
+                     CT_RESULT := COMPTYPES ( PTYPE_VARCHAR , GATTR .
+                                  TYPTR ) ;
+                     case CT_RESULT of
+                       4 : begin
+                             LOAD_NEU ( PCODEP , GATTR , VAR_REF ) ;
+                             CTLS . VPO1_NEEDED := TRUE ;
+                             GEN0 ( PCODE_VC1 ) ;
+                           end (* tag/ca *) ;
+                       5 : begin
+                             LOADADDRESS_NEU ( PCODEP , GATTR ) ;
+                             CTLS . VPO1_NEEDED := TRUE ;
+                             GEN1 ( PCODE_VC2 , GATTR . TYPTR -> . SIZE
+                                    ) ;
+                           end (* tag/ca *) ;
+                       otherwise
                          begin
-                           LOADADDRESS_NEU ( PCODEP , GATTR ) ;
-                           GEN2 ( PCODE_VLD , 0 , GATTR . TYPTR -> .
-                                  SIZE - 4 ) ;
-                         end (* then *) ;
-                       CTLS . VPO1_NEEDED := TRUE ;
-                       GATTR . KIND := EXPR ;
-                     end (* then *)
-                   else
-                     begin
-                       CT_RESULT := COMPTYPES ( PTYPE_VARCHAR , GATTR .
-                                    TYPTR ) ;
-                       case CT_RESULT of
-                         4 : begin
-                               LOAD_NEU ( PCODEP , GATTR , VAR_REF ) ;
-                               CTLS . VPO1_NEEDED := TRUE ;
-                               GEN0 ( PCODE_VC1 ) ;
-                             end (* tag/ca *) ;
-                         5 : begin
-                               LOADADDRESS_NEU ( PCODEP , GATTR ) ;
-                               CTLS . VPO1_NEEDED := TRUE ;
-                               GEN1 ( PCODE_VC2 , GATTR . TYPTR -> .
-                                      SIZE ) ;
-                             end (* tag/ca *) ;
-                         otherwise
-                           begin
-                             SET_ERROR ( 342 ) ;
-                             GATTR . TYPTR := NIL
-                           end (* otherw *)
-                       end (* case *) ;
-                       GATTR . TYPTR := PTYPE_VARCHAR ;
-                       GATTR . KIND := EXPR ;
-                     end (* else *) ;
+                           SET_ERROR ( 342 ) ;
+                           GATTR . TYPTR := NIL
+                         end (* otherw *)
+                     end (* case *) ;
+                     GATTR . TYPTR := PTYPE_VARCHAR ;
+                     GATTR . KIND := EXPR ;
+                   end (* else *) ;
 
                  //************************************
                  // this lib function has a work area  
@@ -17967,379 +17906,6 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                  CALLLIBRARYFUNC ( FCP , LCCALLER ) ;
                  GATTR . TYPTR := PTYPE_VARCHAR ;
                end (* TRANSLATE1 *) ;
-
-
-            procedure WRITESTR1 ;
-
-            //***************************************************
-            // this procedure implements the WRITESTR statement  
-            // colon_ok : true if colon and length are synt. ok  
-            // gen_length : true if length parm must be genned   
-            //***************************************************
-
-
-               var LSP : TTP ;
-                   PARMCOUNT : INTEGER ;
-                   DEFAULT , DEFAULT1 : BOOLEAN ;
-                   LEN : ADDRRANGE ;
-                   XCSP : CSPTYPE ;
-                   PASWRITE_NAME : CHAR ( 8 ) ;
-                   GATTR_STRING : ATTR ;
-                   GATTR_WORK : ATTR ;
-                   FIRST : BOOLEAN ;
-
-
-               procedure WRITESTR2 ;
-
-                  var XPARM : ADDRRANGE ;
-
-                  begin (* WRITESTR2 *)
-                    if LSP = NIL then
-                      return ;
-
-                    //*********************************************
-                    // parameters start after string addr and bool 
-                    //*********************************************
-
-                    XPARM := LCPARM + PTRSIZE + INTSIZE ;
-
-                    //**********************
-                    // write integer values 
-                    //**********************
-
-                    if LSP = PTYPE_INT then
-                      begin
-                        PASWRITE_NAME := '$PASWSI' ;
-                        PARMCOUNT := 4 ;
-                        if DEFAULT then
-                          GEN2 ( PCODE_LDC , 1 , 12 ) ;
-                        GEN3 ( PCODE_STR , ORD ( 'I' ) , LEVEL , XPARM
-                               + INTSIZE ) ;
-                        GEN3 ( PCODE_STR , ORD ( 'I' ) , LEVEL , XPARM
-                               ) ;
-                        return
-                      end (* then *) ;
-
-                    //*******************
-                    // write real values 
-                    //*******************
-
-                    if IS_STDTYPE ( LSP , 'R' ) then
-                      begin
-                        PASWRITE_NAME := '$PASWSR' ;
-                        PARMCOUNT := 5 ;
-                        if LSP -> . STDPARM1 > 0 then
-                          begin
-
-                    //**************************************************
-                    // if decimal (stdparm1 > 0) then                   
-                    // get width etc. from type parameters              
-                    //**************************************************
-
-                            if DEFAULT then
-                              GEN2 ( PCODE_LDC , 1 , LSP -> . STDPARM1
-                                     + 3 ) ;
-                            if DEFAULT1 then
-                              GEN2 ( PCODE_LDC , 1 , LSP -> . STDPARM2
-                                     ) ;
-                          end (* then *)
-                        else
-                          begin
-                            if DEFAULT then
-                              GEN2 ( PCODE_LDC , 1 , 14 ) ;
-                            if DEFAULT1 then
-                              GEN2 ( PCODE_LDC , 1 , - 1 ) ;
-                          end (* else *) ;
-                        GEN3 ( PCODE_STR , ORD ( 'I' ) , LEVEL , XPARM
-                               + REALSIZE + INTSIZE ) ;
-                        GEN3 ( PCODE_STR , ORD ( 'I' ) , LEVEL , XPARM
-                               + REALSIZE ) ;
-                        GEN3 ( PCODE_STR , ORD ( 'R' ) , LEVEL , XPARM
-                               ) ;
-                        return
-                      end (* then *) ;
-
-                    //*******************
-                    // write char values 
-                    //*******************
-
-                    if LSP = PTYPE_CHAR then
-                      begin
-                        PASWRITE_NAME := '$PASWSC' ;
-                        PARMCOUNT := 4 ;
-                        if DEFAULT then
-                          GEN2 ( PCODE_LDC , 1 , 1 ) ;
-                        GEN3 ( PCODE_STR , ORD ( 'I' ) , LEVEL , XPARM
-                               + INTSIZE ) ;
-                        GEN3 ( PCODE_STR , ORD ( 'I' ) , LEVEL , XPARM
-                               ) ;
-                        return
-                      end (* then *) ;
-
-                    //**********************
-                    // write boolean values 
-                    //**********************
-
-                    if LSP = PTYPE_BOOL then
-                      begin
-                        PASWRITE_NAME := '$PASWSB' ;
-                        PARMCOUNT := 4 ;
-                        if DEFAULT then
-                          GEN2 ( PCODE_LDC , 1 , 5 ) ;
-                        GEN3 ( PCODE_STR , ORD ( 'I' ) , LEVEL , XPARM
-                               + INTSIZE ) ;
-                        GEN3 ( PCODE_STR , ORD ( 'I' ) , LEVEL , XPARM
-                               ) ;
-                        return
-                      end (* then *) ;
-
-                    //**********************
-                    // write pointer values 
-                    //**********************
-
-                    if LSP -> . FORM = POINTER then
-                      begin
-                        PASWRITE_NAME := '$PASWSP' ;
-                        PARMCOUNT := 4 ;
-                        if DEFAULT then
-                          GEN2 ( PCODE_LDC , 1 , 8 ) ;
-                        return
-                      end (* then *) ;
-
-                    //*********************
-                    // write scalar values 
-                    //*********************
-
-                    if LSP -> . FORM = SCALAR then
-                      begin
-
-                    //************************************
-                    // sample coding:                     
-                    //************************************
-                    // STR A,1,544           - store FCB  
-                    // LDA 1,400             - target addr
-                    // LDC I,1               - colon parm 
-                    // NGI                                
-                    // STR I,1,548           - store      
-                    // CUP I,5,$PASRDI ,432  - call func  
-                    // STO I                 - store res  
-                    //                         indirect   
-                    //************************************
-
-                        PASWRITE_NAME := '$PASWSX' ;
-                        PARMCOUNT := 4 ;
-                        if DEFAULT then
-                          GEN2 ( PCODE_LDC , 1 , - 1 ) ;
-                        GEN3 ( PCODE_STR , ORD ( 'I' ) , LEVEL , LCPARM
-                               + INTSIZE ) ;
-                        GEN3 ( PCODE_STR , ORD ( 'I' ) , LEVEL , LCPARM
-                               ) ;
-                        LCPARM := LCPARM + 2 * INTSIZE ;
-
-                    //**********************************
-                    // LCA P for static csect of consts 
-                    //**********************************
-
-                        GEN_LCA_P ( LSP -> . CSTNAME ) ;
-                        GEN2 ( PCODE_INC , ORD ( 'A' ) , LSP -> .
-                               METAOFFS ) ;
-                        GEN3 ( PCODE_STR , ORD ( 'I' ) , LEVEL , LCPARM
-                               ) ;
-                        LCPARM := LCPARM + INTSIZE ;
-                        return
-                      end (* then *) ;
-
-                    //**********************************
-                    // write string vars and constants  
-                    //**********************************
-
-                    if IS_CARRAY ( LSP ) then
-                      begin
-                        PASWRITE_NAME := '$PASWSS' ;
-                        PARMCOUNT := 5 ;
-                        LEN := LSP -> . SIZE ;
-                        if DEFAULT then
-                          GEN2 ( PCODE_LDC , 1 , LEN ) ;
-                        GEN2 ( PCODE_LDC , 1 , LEN ) ;
-                        GEN3 ( PCODE_STR , ORD ( 'I' ) , LEVEL , XPARM
-                               + 2 * INTSIZE ) ;
-                        GEN3 ( PCODE_STR , ORD ( 'I' ) , LEVEL , XPARM
-                               + INTSIZE ) ;
-                        GEN3 ( PCODE_STR , ORD ( 'A' ) , LEVEL , XPARM
-                               ) ;
-                        return
-                      end (* then *) ;
-
-                    //**********************************  
-                    // write cstring vars and constants   
-                    // with cstring, we need an additional
-                    // work area of 8 bytes               
-                    //**********************************  
-
-                    if LSP -> . FORM = CSTRING then
-                      begin
-                        PASWRITE_NAME := '$PASWSV' ;
-                        PARMCOUNT := 4 ;
-                        if DEFAULT then
-                          GEN2 ( PCODE_LDC , 1 , 0 ) ;
-                        GEN3 ( PCODE_STR , ORD ( 'I' ) , LEVEL , XPARM
-                               + INTSIZE ) ;
-                        GEN3 ( PCODE_STR , ORD ( 'A' ) , LEVEL , XPARM
-                               ) ;
-                        return
-                      end (* then *) ;
-
-                    //*********************
-                    // erroneous parameter 
-                    //*********************
-
-                    SET_ERROR ( 216 ) ;
-                    PASWRITE_NAME := '$PASWSI' ;
-                    PARMCOUNT := 3 ;
-                  end (* WRITESTR2 *) ;
-
-
-               begin (* WRITESTR1 *)
-                 VARIABLE ( FSYS + [ SYCOMMA , SYRPARENT ] , TRUE ) ;
-
-                 //*****************************************************
-                 // the first variable in writestr is the string        
-                 // where the following arguments must be written into  
-                 //*****************************************************
-
-                 if GATTR . TYPTR -> . FORM <> CSTRING then
-                   begin
-                     SET_ERROR_SKIP ( 551 , FSYS ) ;
-                     return
-                   end (* then *) ;
-                 if GATTR . KIND <> VARBL then
-                   begin
-                     SET_ERROR_SKIP ( 552 , FSYS ) ;
-                     return
-                   end (* then *) ;
-
-                 //****************************************
-                 // save string attributs in gattr_string  
-                 //****************************************
-
-                 GATTR_STRING := GATTR ;
-                 if SY <> SYCOMMA then
-                   begin
-                     SET_ERROR_SKIP ( 553 , FSYS + [ SYCOMMA ,
-                                      SYRPARENT ] ) ;
-                   end (* then *) ;
-                 if SY <> SYCOMMA then
-                   return ;
-                 INSYMBOL ;
-                 FIRST := TRUE ;
-                 while TRUE do
-                   begin
-
-                 //***************************************************
-                 // copy string attributs to gattr_work               
-                 // gattr_string cannot be used here,                 
-                 // because loadaddress_neu changes the passed        
-                 // gattr struct                                      
-                 // the address of the string has to be passed        
-                 // similar to a string var parameter                 
-                 // (conformant string)                               
-                 //***************************************************
-
-                     GATTR_WORK := GATTR_STRING ;
-                     LOADADDRESS_NEU ( PCODEP , GATTR_WORK ) ;
-                     GEN1 ( PCODE_VSM , GATTR_WORK . TYPTR -> . SIZE -
-                            4 ) ;
-                     PREPLIBRARYFUNC ( TRUE , 0 , LCCALLER , LCPARM ,
-                                       LCWORK ) ;
-                     GEN3 ( PCODE_STR , ORD ( 'A' ) , LEVEL , LCPARM )
-                            ;
-                     if FIRST then
-                       GEN2 ( PCODE_LDC , 3 , 1 )
-                     else
-                       GEN2 ( PCODE_LDC , 3 , 0 ) ;
-                     GEN3 ( PCODE_STR , ORD ( 'B' ) , LEVEL , LCPARM +
-                            PTRSIZE ) ;
-                     FIRST := FALSE ;
-                     XCSP := UNDEF_CSP ;
-                     PASWRITE_NAME := ' ' ;
-                     PARMCOUNT := 0 ;
-                     EXPRESSION ( FSYS + [ SYCOMMA , SYCOLON ,
-                                  SYRPARENT ] ) ;
-                     LSP := GATTR . TYPTR ;
-                     if LSP <> NIL then
-                       begin
-                         if LSP -> . FORM <= POINTER then
-                           LOAD_NEU ( PCODEP , GATTR , VAR_REF )
-                         else
-                           if LSP -> . FORM = CSTRING then
-                             begin
-                               if GATTR . KIND = VARBL then
-                                 LOADADDRESS_NEU ( PCODEP , GATTR )
-                               else
-                                 begin
-
-                 //*****************************************************
-                 // copy "string on stack" to scratchpos area           
-                 //*****************************************************
-
-                                   GEN2 ( PCODE_LDA , LEVEL ,
-                                          SCRATCHPOS ) ;
-                                   GEN2 ( PCODE_VST , 1 , - 1 ) ;
-                                 end (* else *)
-                             end (* then *)
-                           else
-                             LOADADDRESS_NEU ( PCODEP , GATTR ) ;
-                         DEFAULT := TRUE ;
-                         DEFAULT1 := TRUE ;
-                         if SY = SYCOLON then
-                           begin
-                             INSYMBOL ;
-                             EXPRESSION ( FSYS + [ SYCOMMA , SYCOLON ,
-                                          SYRPARENT ] ) ;
-                             LOAD_NEU ( PCODEP , GATTR , VAR_REF ) ;
-                             if GATTR . TYPTR <> NIL then
-                               if GATTR . TYPTR <> PTYPE_INT then
-                                 SET_ERROR ( 116 ) ;
-                             DEFAULT := FALSE ;
-                             if SY = SYCOLON then
-                               begin
-                                 INSYMBOL ;
-                                 EXPRESSION ( FSYS + [ SYCOMMA ,
-                                              SYRPARENT ] ) ;
-                                 LOAD_NEU ( PCODEP , GATTR , VAR_REF )
-                                            ;
-                                 if GATTR . TYPTR <> NIL then
-                                   if GATTR . TYPTR <> PTYPE_INT then
-                                     SET_ERROR ( 116 ) ;
-                                 if not IS_STDTYPE ( LSP , 'R' ) then
-                                   SET_ERROR ( 124 ) ;
-                                 DEFAULT1 := FALSE ;
-                               end (* then *) ;
-                           end (* then *) ;
-
-                 //*************************************
-                 // call write funcs depending on type  
-                 //*************************************
-
-                         WRITESTR2 ;
-                         if XCSP <> UNDEF_CSP then
-                           GEN1 ( PCODE_CSP , ORD ( XCSP ) ) ;
-                         if PASWRITE_NAME <> ' ' then
-                           CALLLIBFUNC_PARMS ( 'P' , PARMCOUNT ,
-                                               PASWRITE_NAME , LCCALLER
-                                               ) ;
-                       end (* then *) ;
-
-                 //**********************************
-                 // check if more parameters follow  
-                 //**********************************
-
-                     if SY = SYCOMMA then
-                       INSYMBOL
-                     else
-                       break
-                   end (* while *)
-               end (* WRITESTR1 *) ;
 
 
             procedure READSTR1 ;
@@ -18371,43 +17937,42 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                  //************************************
 
                  EXPRESSION ( FSYS + [ SYCOMMA , SYRPARENT ] ) ;
-                 if GATTR . TYPTR <> NIL then
-                   if GATTR . TYPTR -> . FORM = CSTRING then
-                     begin
-                       if GATTR . KIND <> EXPR then
+                 if GATTR . TYPTR -> . FORM = CSTRING then
+                   begin
+                     if GATTR . KIND <> EXPR then
+                       begin
+                         LOADADDRESS_NEU ( PCODEP , GATTR ) ;
+                         GEN2 ( PCODE_VLD , 1 , GATTR . TYPTR -> . SIZE
+                                - 4 ) ;
+                       end (* then *) ;
+                     CTLS . VPO1_NEEDED := TRUE ;
+                     GATTR . KIND := EXPR ;
+                   end (* then *)
+                 else
+                   begin
+                     CT_RESULT := COMPTYPES ( PTYPE_VARCHAR , GATTR .
+                                  TYPTR ) ;
+                     case CT_RESULT of
+                       4 : begin
+                             LOAD_NEU ( PCODEP , GATTR , VAR_REF ) ;
+                             CTLS . VPO1_NEEDED := TRUE ;
+                             GEN0 ( PCODE_VC1 ) ;
+                           end (* tag/ca *) ;
+                       5 : begin
+                             LOADADDRESS_NEU ( PCODEP , GATTR ) ;
+                             CTLS . VPO1_NEEDED := TRUE ;
+                             GEN1 ( PCODE_VC2 , GATTR . TYPTR -> . SIZE
+                                    ) ;
+                           end (* tag/ca *) ;
+                       otherwise
                          begin
-                           LOADADDRESS_NEU ( PCODEP , GATTR ) ;
-                           GEN2 ( PCODE_VLD , 1 , GATTR . TYPTR -> .
-                                  SIZE - 4 ) ;
-                         end (* then *) ;
-                       CTLS . VPO1_NEEDED := TRUE ;
-                       GATTR . KIND := EXPR ;
-                     end (* then *)
-                   else
-                     begin
-                       CT_RESULT := COMPTYPES ( PTYPE_VARCHAR , GATTR .
-                                    TYPTR ) ;
-                       case CT_RESULT of
-                         4 : begin
-                               LOAD_NEU ( PCODEP , GATTR , VAR_REF ) ;
-                               CTLS . VPO1_NEEDED := TRUE ;
-                               GEN0 ( PCODE_VC1 ) ;
-                             end (* tag/ca *) ;
-                         5 : begin
-                               LOADADDRESS_NEU ( PCODEP , GATTR ) ;
-                               CTLS . VPO1_NEEDED := TRUE ;
-                               GEN1 ( PCODE_VC2 , GATTR . TYPTR -> .
-                                      SIZE ) ;
-                             end (* tag/ca *) ;
-                         otherwise
-                           begin
-                             SET_ERROR ( 342 ) ;
-                             GATTR . TYPTR := NIL
-                           end (* otherw *)
-                       end (* case *) ;
-                       GATTR . TYPTR := PTYPE_VARCHAR ;
-                       GATTR . KIND := EXPR ;
-                     end (* else *) ;
+                           SET_ERROR ( 342 ) ;
+                           GATTR . TYPTR := NIL
+                         end (* otherw *)
+                     end (* case *) ;
+                     GATTR . TYPTR := PTYPE_VARCHAR ;
+                     GATTR . KIND := EXPR ;
+                   end (* else *) ;
 
                  //**************************************************
                  // this function needs a work area                  
@@ -18597,48 +18162,16 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                                GEN_LENGTH := TRUE ;
                                STORE_TYPE := 'B' ;
                                break
-                             end (* then *) ;
-
-                 //**************************************************
-                 // read scalar - new in compiler variant 2021.09    
-                 //**************************************************
-
-                           if GATTR . TYPTR -> . FORM = SCALAR then
-                             if GATTR . TYPTR -> . SCALKIND = DECLARED
-                             then
-                               begin
-                                 CHKTYPE := GATTR . TYPTR ;
-                                 PASREAD_NAME := '$PASRSX' ;
-                                 PARMCOUNT := 3 ;
-                                 LOADADDRESS_NEU ( PCODEP , GATTR ) ;
-
-                 (************************************)
-                 (* LCA P for static csect of consts *)
-                 (************************************)
-
-                                 GEN_LCA_P ( GATTR . TYPTR -> . CSTNAME
-                                             ) ;
-                                 GEN2 ( PCODE_INC , ORD ( 'A' ) , GATTR
-                                        . TYPTR -> . METAOFFS ) ;
-                                 LCPARM := LCPARM3 + INTSIZE ;
-                                 GEN3 ( PCODE_STR , ORD ( 'I' ) , LEVEL
-                                        , LCPARM ) ;
-                                 LCPARM := LCPARM + INTSIZE ;
-                                 GEN_LENGTH := TRUE ;
-                                 STORE_TYPE := 'H' ;
-                                 break
-                               end (* then *) ;
-
-                 //**************************************************
-                 // other types (not implemented)                    
-                 //**************************************************
-
-                           SET_ERROR ( 116 ) ;
-                           PASREAD_NAME := '$PASRSC' ;
-                           PARMCOUNT := 3 ;
-                           LOADADDRESS_NEU ( PCODEP , GATTR ) ;
-                           GEN_LENGTH := TRUE ;
-                           STORE_TYPE := 'C' ;
+                             end (* then *)
+                           else
+                             begin
+                               SET_ERROR ( 116 ) ;
+                               PASREAD_NAME := '$PASRSC' ;
+                               PARMCOUNT := 3 ;
+                               LOADADDRESS_NEU ( PCODEP , GATTR ) ;
+                               GEN_LENGTH := TRUE ;
+                               STORE_TYPE := 'C' ;
+                             end (* else *) ;
                          until TRUE ;
 
                  //***************************************
@@ -20385,7 +19918,6 @@ procedure BLOCK ( FSYS : SYMSET ; FSY : SYMB ; FPROCP : IDP ; var
                     101 : RIGHT1 ;
                     102 : $ERROR1 ;
                     103 : READSTR1 ;
-                    104 : WRITESTR1 ;
                   end (* case *) ;
                   if LKEY in [ 16 .. 26 , 28 , 29 , 33 , 38 , 39 , 40 ,
                   41 , 42 , 43 , 44 , 47 , 63 , 64 , 78 , 79 ] then

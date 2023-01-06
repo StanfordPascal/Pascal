@@ -1,8 +1,8 @@
 
-    call pasf passcan
-    call pasf paslibx
-    call pasf pascal1
-    call pasf pascal2
+    call pasfcc passcan
+    call pasfcc paslibx
+    call pasfcc pascal1
+    call pasfcc pascal2
 
     call pascal passcan
     call pascal paslibx
@@ -11,4 +11,5 @@
 
     cd ..
     call copybin
+    cd src
 

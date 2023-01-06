@@ -1,0 +1,186 @@
+
+PCINT (Build 1.0 Jun 15 2022 08:21:21)
+
+s nach writestr: >        45<
+write integer  : >        45<
+s nach writestr: >0000000045<
+write integer  : >0000000045<
+s nach writestr: >       -45<
+write integer  : >       -45<
+s nach writestr: >-000000045<
+write integer  : >-000000045<
+s nach writestr: >45<
+write integer  : >45<
+s nach writestr: >-45<
+write integer  : >-45<
+s nach writestr: >123456789<
+write integer  : >123456789<
+s nach writestr: >123456789<
+write integer  : >123456789<
+s nach writestr: >-123456789<
+write integer  : >-123456789<
+s nach writestr: >-123456789<
+write integer  : >-123456789<
+c.ptr ohne = >024d01cc<
+c.ptr 12   = >    024d01cc<
+c.ptr - 12 = ><
+c.ptr 1    = >024d01cc<
+s nach writestr: >c.ptr =      412<
+s nach writestr: >0.00<
+write mit real : >0.00<
+s nach writestr: >0.00<
+write mit real : >0.00<
+s nach writestr: >      0.00<
+write mit real : >      0.00<
+s nach writestr: >0000000.00<
+write mit real : >0000000.00<
+s nach writestr: >  0.000E+00<
+write mit real : >  0.000E+00<
+s nach writestr: >  0.000E+00<
+write mit real : >000.000E+00<
+s nach writestr: >  0.000000E+00<
+write mit real : >  0.000000E+00<
+s nach writestr: >                     0.00<
+write mit real : >                     0.00<
+s nach writestr: >0000000000000000000000.00<
+write mit real : >0000000000000000000000.00<
+s nach writestr: >        0.000000000000000<
+write mit real : >        0.000000000000000<
+s nach writestr: >000000000.000000000000000<
+write mit real : >000000000.000000000000000<
+s nach writestr: >  0.00000000000000000E+00<
+write mit real : >  0.00000000000000000E+00<
+s nach writestr: >  0.00000000000000000E+00<
+write mit real : >000.00000000000000000E+00<
+s nach writestr: >123.46<
+write mit real : >123.46<
+s nach writestr: >123.46<
+write mit real : >123.46<
+s nach writestr: >    123.46<
+write mit real : >    123.46<
+s nach writestr: >0000123.46<
+write mit real : >0000123.46<
+WSR: <123456000000000000> EXP = E+02
+s nach writestr: >  1.234E+02<
+write mit real : >  1.235E+02<
+WSR: <123456000000000000> EXP = E+02
+s nach writestr: >  1.234E+02<
+write mit real : >001.235E+02<
+WSR: <123456000000000000> EXP = E+02
+s nach writestr: >  1.234560E+02<
+write mit real : >  1.234560E+02<
+s nach writestr: >                   123.46<
+write mit real : >                   123.46<
+s nach writestr: >0000000000000000000123.46<
+write mit real : >0000000000000000000123.46<
+WSR: <123456000000000000> EXP = E+02
+s nach writestr: >  1.23456000000000000E+02<
+write mit real : >      123.456000000000031<
+WSR: <123456000000000000> EXP = E+02
+s nach writestr: >  1.23456000000000000E+02<
+write mit real : >000000123.456000000000031<
+WSR: <123456000000000000> EXP = E+02
+s nach writestr: >  1.23456000000000000E+02<
+write mit real : >  1.23456000000000003E+02<
+WSR: <123456000000000000> EXP = E+02
+s nach writestr: >  1.23456000000000000E+02<
+write mit real : >001.23456000000000003E+02<
+s nach writestr: >123456.79<
+write mit real : >123456.79<
+s nach writestr: >123456.79<
+write mit real : >123456.79<
+s nach writestr: > 123456.79<
+write mit real : > 123456.79<
+s nach writestr: >0123456.79<
+write mit real : >0123456.79<
+WSR: <123456789000000000> EXP = E+05
+s nach writestr: >  1.234E+05<
+write mit real : >  1.235E+05<
+WSR: <123456789000000000> EXP = E+05
+s nach writestr: >  1.234E+05<
+write mit real : >001.235E+05<
+WSR: <123456789000000000> EXP = E+05
+s nach writestr: >  1.234567E+05<
+write mit real : >  1.234568E+05<
+s nach writestr: >                123456.79<
+write mit real : >                123456.79<
+s nach writestr: >0000000000000000123456.79<
+write mit real : >0000000000000000123456.79<
+WSR: <123456789000000000> EXP = E+05
+s nach writestr: >  1.23456789000000000E+05<
+write mit real : >   123456.789000000033410<
+WSR: <123456789000000000> EXP = E+05
+s nach writestr: >  1.23456789000000000E+05<
+write mit real : >000123456.789000000033410<
+WSR: <123456789000000000> EXP = E+05
+s nach writestr: >  1.23456789000000000E+05<
+write mit real : >  1.23456789000000004E+05<
+WSR: <123456789000000000> EXP = E+05
+s nach writestr: >  1.23456789000000000E+05<
+write mit real : >001.23456789000000004E+05<
+s nach writestr: >-123.46<
+write mit real : >-123.46<
+s nach writestr: >-123.46<
+write mit real : >-123.46<
+s nach writestr: >   -123.46<
+write mit real : >   -123.46<
+s nach writestr: >-000123.46<
+write mit real : >-000123.46<
+WSR: <123456000000000000> EXP = E+02
+s nach writestr: > -1.234E+02<
+write mit real : > -1.235E+02<
+WSR: <123456000000000000> EXP = E+02
+s nach writestr: > -1.234E+02<
+write mit real : >-01.235E+02<
+WSR: <123456000000000000> EXP = E+02
+s nach writestr: > -1.234560E+02<
+write mit real : > -1.234560E+02<
+s nach writestr: >                  -123.46<
+write mit real : >                  -123.46<
+s nach writestr: >-000000000000000000123.46<
+write mit real : >-000000000000000000123.46<
+WSR: <123456000000000000> EXP = E+02
+s nach writestr: > -1.23456000000000000E+02<
+write mit real : >     -123.456000000000031<
+WSR: <123456000000000000> EXP = E+02
+s nach writestr: > -1.23456000000000000E+02<
+write mit real : >-00000123.456000000000031<
+WSR: <123456000000000000> EXP = E+02
+s nach writestr: > -1.23456000000000000E+02<
+write mit real : > -1.23456000000000003E+02<
+WSR: <123456000000000000> EXP = E+02
+s nach writestr: > -1.23456000000000000E+02<
+write mit real : >-01.23456000000000003E+02<
+s nach writestr: >-123456.79<
+write mit real : >-123456.79<
+s nach writestr: >-123456.79<
+write mit real : >-123456.79<
+s nach writestr: >-123456.79<
+write mit real : >-123456.79<
+s nach writestr: >-123456.79<
+write mit real : >-123456.79<
+WSR: <123456789000000000> EXP = E+05
+s nach writestr: > -1.234E+05<
+write mit real : > -1.235E+05<
+WSR: <123456789000000000> EXP = E+05
+s nach writestr: > -1.234E+05<
+write mit real : >-01.235E+05<
+WSR: <123456789000000000> EXP = E+05
+s nach writestr: > -1.234567E+05<
+write mit real : > -1.234568E+05<
+s nach writestr: >               -123456.79<
+write mit real : >               -123456.79<
+s nach writestr: >-000000000000000123456.79<
+write mit real : >-000000000000000123456.79<
+WSR: <123456789000000000> EXP = E+05
+s nach writestr: > -1.23456789000000000E+05<
+write mit real : >  -123456.789000000033410<
+WSR: <123456789000000000> EXP = E+05
+s nach writestr: > -1.23456789000000000E+05<
+write mit real : >-00123456.789000000033410<
+WSR: <123456789000000000> EXP = E+05
+s nach writestr: > -1.23456789000000000E+05<
+write mit real : > -1.23456789000000004E+05<
+WSR: <123456789000000000> EXP = E+05
+s nach writestr: > -1.23456789000000000E+05<
+write mit real : >-01.23456789000000004E+05<

@@ -10,7 +10,9 @@ module $PASLIBX ;
 (*                                                                  *)
 (*  contains                                                        *)
 (*                                                                  *)
-(*  - new storage management ALLOC and FREE (inspired by LE)        *)
+(*  - new storage management ALLOC and FREE (inspired by LE,        *)
+(*    that is IBM's Language Environment - runtime for the          *)
+(*    Mainframe compilers, like COBOL, PL/1, Mainframe C)           *)
 (*                                                                  *)
 (*  - (advanced) rounding function for double floats                *)
 (*                                                                  *)
@@ -46,6 +48,11 @@ module $PASLIBX ;
 (********************************************************************)
 (*                                                                  *)
 (*  History:                                                        *)
+(*                                                                  *)
+(*  25.05.2022: many new functions to support READSTR               *)
+(*  and WRITESTR ... the functions are called $PASRSx               *)
+(*  and $PASWSx ... the letter x corresponds to the type            *)
+(*  of the variable read or written                                 *)
 (*                                                                  *)
 (*  16.08.2020: new function $PASRDB - read boolean                 *)
 (*                                                                  *)
@@ -3612,7 +3619,7 @@ function $PASRDX ( var F : TEXT ; PMETA : ANYPTR ; WIDTH : INTEGER ) :
                  INTEGER ;
 
 //**********************************************************
-// function to scalar values from files                     
+// function to read scalar values from files                
 // this does not exist in Standard Pascal                   
 //**********************************************************
 // WIDTH parameter added to support fixed length integer    
@@ -3638,13 +3645,18 @@ function $PASRDX ( var F : TEXT ; PMETA : ANYPTR ; WIDTH : INTEGER ) :
        ELEMCOUNT : SHORT ;
        MAXIDLEN : SHORT ;
        MINIDLEN : SHORT ;
+       IMIN , IMAX , IMID : SHORT ;
+       PTABLE : PSHORT ;
+       PELEM : PSHORT ;
+       OFFS : SHORT ;
+       LEN : SHORT ;
+       PVAL : -> CHAR ;
+       MRES : INTEGER ;
+       IFOUND : SHORT ;
 
    begin (* $PASRDX *)
      if WIDTH = 0 then
-       begin
-         $PASRDX := 0 ;
-         return
-       end (* then *) ;
+       $ERROR ( 1216 ) ;
 
      //**********************************
      // access metadata for scalar type  
@@ -3676,11 +3688,8 @@ function $PASRDX ( var F : TEXT ; PMETA : ANYPTR ; WIDTH : INTEGER ) :
      if EOLN ( F ) then
        GET ( F ) ;
      if EOF ( F ) then
-       begin
-         $PASRDX := 0 ;
-         return
-       end (* then *) ;
-     RETVAL := 0 ;
+       $ERROR ( 1216 ) ;
+     RETVAL := - 1 ;
 
      //**********************
      // skip leading blanks  
@@ -3699,10 +3708,7 @@ function $PASRDX ( var F : TEXT ; PMETA : ANYPTR ; WIDTH : INTEGER ) :
            begin
              GET ( F ) ;
              if EOF ( F ) then
-               begin
-                 $PASRDX := RETVAL ;
-                 return
-               end (* then *)
+               $ERROR ( 1216 ) ;
            end (* else *)
        end (* while *) ;
 
@@ -3739,7 +3745,51 @@ function $PASRDX ( var F : TEXT ; PMETA : ANYPTR ; WIDTH : INTEGER ) :
      // do a binary search in the PMETA table     
      // to find the value of the scalar           
      //*******************************************
+     // The normal table of scalar type ids       
+     // (sorted by order of definition, that is   
+     // scalar value) starts at PMETA + 8.        
+     // The ordered table of scalar type ids      
+     // (sorted by name) starts at PMETA + 8      
+     // + ELEMCOUNT * 4.                          
+     // Every table element consists of a         
+     // 2 byte offset (from PMETA) and a 2 byte   
+     // length; the offset points to the beginning
+     // of the (upper case) scalar ID.            
+     // This is true for both tables, BTW.        
+     //*******************************************
 
+     IMAX := ELEMCOUNT - 1 ;
+     IMIN := 0 ;
+     PTABLE := PTRADD ( PMETA , 8 + ELEMCOUNT * 4 ) ;
+     while TRUE do
+       begin
+         if IMAX < IMIN then
+           begin
+             IFOUND := - 1 ;
+             break
+           end (* then *) ;
+         IMID := ( IMAX + IMIN ) DIV 2 ;
+         PELEM := PTRADD ( PTABLE , IMID * 6 ) ;
+         OFFS := PELEM -> ;
+         PELEM := PTRADD ( PELEM , 2 ) ;
+         LEN := PELEM -> ;
+         PVAL := PTRADD ( PMETA , OFFS ) ;
+         MRES := MEMCMP ( PVAL , ADDR ( BUFFER ) , IX ) ;
+         if MRES < 0 then
+           IMIN := IMID + 1
+         else
+           if MRES > 0 then
+             IMAX := IMID - 1
+           else
+             begin
+               PELEM := PTRADD ( PELEM , 2 ) ;
+               IFOUND := PELEM -> ;
+               break
+             end (* else *)
+       end (* while *) ;
+     if IFOUND < 0 then
+       $ERROR ( 1215 ) ;
+     RETVAL := IFOUND ;
 
      //*******************************************
      // set result                                
@@ -3916,10 +3966,7 @@ function $PASRSB ( const S : STRING ;     // source string
 
    begin (* $PASRSB *)
      if WIDTH = 0 then
-       begin
-         $PASRSB := FALSE ;
-         return
-       end (* then *) ;
+       $ERROR ( 1210 ) ;
      FORMATTED := TRUE ;
      if WIDTH < 0 then
        begin
@@ -3929,10 +3976,7 @@ function $PASRSB ( const S : STRING ;     // source string
      if RPOS <= 0 then
        RPOS := 1 ;
      if RPOS > LENGTH ( S ) then
-       begin
-         $PASRSB := FALSE ;
-         return
-       end (* then *) ;
+       $ERROR ( 1210 ) ;
      F := ADDR ( S [ RPOS ] ) ;
      RLEN := LENGTH ( S ) - RPOS + 1 ;
      RETVAL := FALSE ;
@@ -3950,8 +3994,7 @@ function $PASRSB ( const S : STRING ;     // source string
      if ( RLEN <= 0 ) or ( WIDTH <= 0 ) then
        begin
          RPOS := PTRDIFF ( F , ADDR ( S [ 1 ] ) ) + 1 ;
-         $PASRSB := RETVAL ;
-         return
+         $ERROR ( 1210 ) ;
        end (* then *) ;
 
      //************************************************
@@ -4057,6 +4100,196 @@ function $PASRSB ( const S : STRING ;     // source string
          end (* while *) ;
      RPOS := PTRDIFF ( F , ADDR ( S [ 1 ] ) ) + 1 ;
    end (* $PASRSB *) ;
+
+
+
+function $PASRSX ( const S : STRING ;     // source string
+                 var RPOS : INTEGER ;     // reading position
+                 WIDTH : INTEGER ;        // optional width
+                 PMETA : ANYPTR )         // meta table for scalar type
+                 : INTEGER ;              // result type
+
+//**********************************************************
+// this function implements READSTR for scalars             
+// s = the source string                                    
+// rpos = the reading position (counts from 1) - is updated 
+// width = the optional width (default -1)                  
+//**********************************************************
+// Bernd Oppolzer - New Stanford Pascal                     
+//**********************************************************
+
+
+   type SHORT = 0 .. 32000 ;
+        PSHORT = -> SHORT ;
+
+   var PS : PSHORT ;
+       RETVAL : INTEGER ;
+       FORMATTED : BOOLEAN ;
+       F : -> CHAR ;
+       RLEN : INTEGER ;
+       IX : INTEGER ;
+       BUFFER : CHAR ( 5 ) ;
+       WIDTHMAX : INTEGER ;
+       ELEMCOUNT : SHORT ;
+       MAXIDLEN : SHORT ;
+       MINIDLEN : SHORT ;
+       IMIN , IMAX , IMID : SHORT ;
+       PTABLE : PSHORT ;
+       PELEM : PSHORT ;
+       OFFS : SHORT ;
+       LEN : SHORT ;
+       PVAL : -> CHAR ;
+       MRES : INTEGER ;
+       IFOUND : SHORT ;
+
+   begin (* $PASRSX *)
+     if WIDTH = 0 then
+       $ERROR ( 1216 ) ;
+
+     //**********************************
+     // access metadata for scalar type  
+     //**********************************
+
+     PS := PMETA ;
+     if PS -> <> 0 then
+       $ERROR ( 1220 ) ;
+     PS := PTRADD ( PS , 2 ) ;
+     ELEMCOUNT := PS -> ;
+     PS := PTRADD ( PS , 2 ) ;
+     MAXIDLEN := PS -> ;
+     PS := PTRADD ( PS , 2 ) ;
+     MINIDLEN := PS -> ;
+     PS := PTRADD ( PS , 2 ) ;
+     FORMATTED := TRUE ;
+     if WIDTH < 0 then
+       begin
+         FORMATTED := FALSE ;
+         WIDTH := 999999999 ;
+       end (* then *) ;
+     if RPOS <= 0 then
+       RPOS := 1 ;
+     if RPOS > LENGTH ( S ) then
+       $ERROR ( 1216 ) ;
+     F := ADDR ( S [ RPOS ] ) ;
+     RLEN := LENGTH ( S ) - RPOS + 1 ;
+
+     //**********************
+     // skip leading blanks  
+     //**********************
+
+     while ( F -> = ' ' ) and ( WIDTH > 0 ) and ( RLEN > 0 ) do
+       begin
+         F := PTRADD ( F , 1 ) ;
+         RLEN := RLEN - 1 ;
+         WIDTH := WIDTH - 1 ;
+       end (* while *) ;
+     if ( RLEN <= 0 ) or ( WIDTH <= 0 ) then
+       begin
+         RPOS := PTRDIFF ( F , ADDR ( S [ 1 ] ) ) + 1 ;
+         $ERROR ( 1216 ) ;
+       end (* then *) ;
+
+     //************************************************
+     // symbol begins ...                              
+     //************************************************
+
+     if not ( F -> in IDCHARS ) then
+       $ERROR ( 1212 ) ;
+     BUFFER := ' ' ;
+     WIDTHMAX := WIDTH ;
+     if WIDTHMAX > 20 then
+       WIDTHMAX := 20 ;
+     if WIDTHMAX > MAXIDLEN then
+       WIDTHMAX := MAXIDLEN ;
+     IX := 1 ;
+     repeat
+       BUFFER [ IX ] := TOUPPER ( F -> ) ;
+       IX := IX + 1 ;
+       F := PTRADD ( F , 1 ) ;
+       RLEN := RLEN - 1 ;
+       WIDTH := WIDTH - 1
+     until ( IX > WIDTHMAX ) or ( not ( F -> in IDCHARS ) ) or ( WIDTH
+     <= 0 ) or ( RLEN <= 0 ) ;
+     IX := IX - 1 ;
+     if IX < MINIDLEN then
+       $ERROR ( 1214 ) ;
+
+     //*******************************************
+     // now the string in BUFFER is the scalar    
+     // identifier (maybe) and has a length       
+     // between MINIDLEN and MAXIDLEN;            
+     // do a binary search in the PMETA table     
+     // to find the value of the scalar           
+     //*******************************************
+     // The normal table of scalar type ids       
+     // (sorted by order of definition, that is   
+     // scalar value) starts at PMETA + 8.        
+     // The ordered table of scalar type ids      
+     // (sorted by name) starts at PMETA + 8      
+     // + ELEMCOUNT * 4.                          
+     // Every table element consists of a         
+     // 2 byte offset (from PMETA) and a 2 byte   
+     // length; the offset points to the beginning
+     // of the (upper case) scalar ID.            
+     // This is true for both tables, BTW.        
+     //*******************************************
+
+     IMAX := ELEMCOUNT - 1 ;
+     IMIN := 0 ;
+     PTABLE := PTRADD ( PMETA , 8 + ELEMCOUNT * 4 ) ;
+     while TRUE do
+       begin
+         if IMAX < IMIN then
+           begin
+             IFOUND := - 1 ;
+             break
+           end (* then *) ;
+         IMID := ( IMAX + IMIN ) DIV 2 ;
+         PELEM := PTRADD ( PTABLE , IMID * 6 ) ;
+         OFFS := PELEM -> ;
+         PELEM := PTRADD ( PELEM , 2 ) ;
+         LEN := PELEM -> ;
+         PVAL := PTRADD ( PMETA , OFFS ) ;
+         MRES := MEMCMP ( PVAL , ADDR ( BUFFER ) , IX ) ;
+         if MRES < 0 then
+           IMIN := IMID + 1
+         else
+           if MRES > 0 then
+             IMAX := IMID - 1
+           else
+             begin
+               PELEM := PTRADD ( PELEM , 2 ) ;
+               IFOUND := PELEM -> ;
+               break
+             end (* else *)
+       end (* while *) ;
+     if IFOUND < 0 then
+       $ERROR ( 1215 ) ;
+     RETVAL := IFOUND ;
+
+     //*******************************************
+     // compose final result                      
+     //*******************************************
+
+     $PASRSX := RETVAL ;
+
+     //*******************************************
+     // if width specified, skip remaining chars  
+     //*******************************************
+
+     if FORMATTED then
+       while TRUE do
+         begin
+           if ( RLEN <= 0 ) or ( WIDTH <= 0 ) then
+             break ;
+           if F -> <> ' ' then
+             $ERROR ( 1211 ) ;
+           F := PTRADD ( F , 1 ) ;
+           RLEN := RLEN - 1 ;
+           WIDTH := WIDTH - 1 ;
+         end (* while *) ;
+     RPOS := PTRDIFF ( F , ADDR ( S [ 1 ] ) ) + 1 ;
+   end (* $PASRSX *) ;
 
 
 
@@ -4705,7 +4938,6 @@ procedure $PASWRR ( var F : TEXT ; WIDTH : INTEGER ; SCALE : INTEGER ;
            end (* then *) ;
          FERTIG := FALSE ;
          EXPONENT := 0 ;
-         WRITELN ( 'v = ' , V : 12 : 6 , ' expo = ' , EXPONENT : 1 ) ;
          while not FERTIG do
            begin
              if V >= 100000000.0 then
@@ -4746,7 +4978,6 @@ procedure $PASWRR ( var F : TEXT ; WIDTH : INTEGER ; SCALE : INTEGER ;
                        else
                          FERTIG := TRUE
            end (* while *) ;
-         WRITELN ( 'v = ' , V : 12 : 6 , ' expo = ' , EXPONENT : 1 ) ;
        end (* else *) ;
 
      //*********************************
@@ -4874,6 +5105,652 @@ procedure $PASWRX ( var F : TEXT ; V : INTEGER ; WIDTH : INTEGER ;
      else
        WRITE ( F , SUBSTR ( BUFFER , 1 , LEN ) : - WIDTH )
    end (* $PASWRX *) ;
+
+
+
+procedure $PASWSI ( var S : STRING ; INIT : BOOLEAN ; WERT : INTEGER ;
+                  STELLEN : INTEGER ) ;
+
+//**********************************************************
+// write integer to string                                  
+//**********************************************************
+// Bernd Oppolzer - New Stanford Pascal                     
+//**********************************************************
+
+
+   var L : INTEGER ;
+       LA : INTEGER ;
+       ML : INTEGER ;
+       S_TEMP : CHAR ( 200 ) ;
+       MINUS : BOOLEAN := FALSE ;
+       ZEROES : BOOLEAN := FALSE ;
+       IX : INTEGER ;
+       FERTIG : BOOLEAN ;
+       CPT : -> CHAR ;
+       LIMIT : INTEGER ;
+
+   begin (* $PASWSI *)
+     if ABS ( STELLEN ) > 200 then
+       $ERROR ( 1225 ) ;
+     if STELLEN < 0 then
+       begin
+         ZEROES := TRUE ;
+         STELLEN := - STELLEN
+       end (* then *) ;
+     S_TEMP := '' ;
+     if WERT < 0 then
+       begin
+         MINUS := TRUE ;
+         WERT := - WERT
+       end (* then *) ;
+     IX := 200 ;
+     if MINUS then
+       LIMIT := 200 - STELLEN + 1
+     else
+       LIMIT := 200 - STELLEN ;
+     repeat
+       S_TEMP [ IX ] := CHR ( ORD ( '0' ) + WERT MOD 10 ) ;
+       WERT := WERT DIV 10 ;
+       IX := IX - 1 ;
+       if ZEROES then
+         FERTIG := ( WERT = 0 ) and ( IX <= LIMIT )
+       else
+         FERTIG := WERT = 0
+     until FERTIG ;
+     if MINUS then
+       begin
+         S_TEMP [ IX ] := '-' ;
+         IX := IX - 1
+       end (* then *) ;
+     L := 200 - IX ;
+     if L < STELLEN then
+       begin
+         L := STELLEN ;
+         IX := 200 - L
+       end (* then *) ;
+     ML := MAXLENGTH ( S ) ;
+     if INIT then
+       begin
+         if L > ML then
+           $ERROR ( 1226 ) ;
+         S := REPEATSTR ( ' ' , L ) ;
+         CPT := ADDR ( S [ 1 ] ) ;
+       end (* then *)
+     else
+       begin
+         LA := LENGTH ( S ) ;
+         if LA + L > ML then
+           $ERROR ( 1226 ) ;
+         S := S || REPEATSTR ( ' ' , L ) ;
+         CPT := ADDR ( S [ LA + 1 ] ) ;
+       end (* else *) ;
+     MEMCPY ( CPT , ADDR ( S_TEMP [ IX + 1 ] ) , L ) ;
+   end (* $PASWSI *) ;
+
+
+
+procedure $PASWSB ( var S : STRING ; INIT : BOOLEAN ; WERT : INTEGER ;
+                  STELLEN : INTEGER ) ;
+
+//**********************************************************
+// write boolean to string                                  
+//**********************************************************
+// Bernd Oppolzer - New Stanford Pascal                     
+//**********************************************************
+
+
+   var L : INTEGER ;
+       LA : INTEGER ;
+       ML : INTEGER ;
+       XLEFT : BOOLEAN := FALSE ;
+       XBOOL : CHAR ( 5 ) ;
+       CPT : -> CHAR ;
+       LTRANS : INTEGER ;
+       TOFFS : INTEGER ;
+
+   begin (* $PASWSB *)
+     if ABS ( STELLEN ) > 200 then
+       $ERROR ( 1225 ) ;
+     if STELLEN = 0 then
+       return ;
+     if STELLEN < 0 then
+       begin
+         XLEFT := TRUE ;
+         STELLEN := - STELLEN
+       end (* then *) ;
+     L := STELLEN ;
+     ML := MAXLENGTH ( S ) ;
+     if INIT then
+       begin
+         if L > ML then
+           $ERROR ( 1226 ) ;
+         S := REPEATSTR ( ' ' , L ) ;
+         CPT := ADDR ( S [ 1 ] ) ;
+       end (* then *)
+     else
+       begin
+         LA := LENGTH ( S ) ;
+         if LA + L > ML then
+           $ERROR ( 1226 ) ;
+         S := S || REPEATSTR ( ' ' , L ) ;
+         CPT := ADDR ( S [ LA + 1 ] ) ;
+       end (* else *) ;
+     if WERT <> 0 then
+       begin
+         XBOOL := 'TRUE' ;
+         LTRANS := 4 ;
+       end (* then *)
+     else
+       begin
+         XBOOL := 'FALSE' ;
+         LTRANS := 5 ;
+       end (* else *) ;
+     if LTRANS >= STELLEN then
+       begin
+         TOFFS := 0 ;
+         LTRANS := STELLEN
+       end (* then *)
+     else
+       if XLEFT then
+         TOFFS := 0
+       else
+         TOFFS := STELLEN - LTRANS ;
+     CPT := PTRADD ( CPT , TOFFS ) ;
+     MEMCPY ( CPT , ADDR ( XBOOL ) , LTRANS ) ;
+   end (* $PASWSB *) ;
+
+
+
+procedure $PASWSC ( var S : STRING ; INIT : BOOLEAN ; WERT : INTEGER ;
+                  STELLEN : INTEGER ) ;
+
+//**********************************************************
+// write char to string                                     
+//**********************************************************
+// Bernd Oppolzer - New Stanford Pascal                     
+//**********************************************************
+
+
+   var L : INTEGER ;
+       LA : INTEGER ;
+       ML : INTEGER ;
+
+   begin (* $PASWSC *)
+     if ABS ( STELLEN ) > 200 then
+       $ERROR ( 1225 ) ;
+     if STELLEN <= 0 then
+       return ;
+     L := STELLEN ;
+     ML := MAXLENGTH ( S ) ;
+     if INIT then
+       begin
+         if L > ML then
+           $ERROR ( 1226 ) ;
+         S := REPEATSTR ( ' ' , L ) ;
+         S [ L ] := CHR ( WERT )
+       end (* then *)
+     else
+       begin
+         LA := LENGTH ( S ) ;
+         if LA + L > ML then
+           $ERROR ( 1226 ) ;
+         S := S || REPEATSTR ( ' ' , L ) ;
+         S [ LA + L ] := CHR ( WERT )
+       end (* else *) ;
+   end (* $PASWSC *) ;
+
+
+
+procedure $PASWSS ( var S : STRING ; INIT : BOOLEAN ; PCHAR : -> CHAR ;
+                  STELLEN : INTEGER ; COUNT : INTEGER ) ;
+
+//**********************************************************
+// write char to string                                     
+//**********************************************************
+// Bernd Oppolzer - New Stanford Pascal                     
+//**********************************************************
+
+
+   var L : INTEGER ;
+       LA : INTEGER ;
+       ML : INTEGER ;
+       XLEFT : BOOLEAN := FALSE ;
+       CPT : -> CHAR ;
+       LTRANS : INTEGER ;
+       TOFFS : INTEGER ;
+
+   begin (* $PASWSS *)
+     if STELLEN = 0 then
+       return ;
+     if STELLEN < 0 then
+       begin
+         XLEFT := TRUE ;
+         STELLEN := - STELLEN
+       end (* then *) ;
+     L := STELLEN ;
+     ML := MAXLENGTH ( S ) ;
+     if INIT then
+       begin
+         if L > ML then
+           $ERROR ( 1226 ) ;
+         S := REPEATSTR ( ' ' , L ) ;
+         CPT := ADDR ( S [ 1 ] ) ;
+       end (* then *)
+     else
+       begin
+         LA := LENGTH ( S ) ;
+         if LA + L > ML then
+           $ERROR ( 1226 ) ;
+         S := S || REPEATSTR ( ' ' , L ) ;
+         CPT := ADDR ( S [ LA + 1 ] ) ;
+       end (* else *) ;
+     LTRANS := COUNT ;
+     if LTRANS >= STELLEN then
+       begin
+         TOFFS := 0 ;
+         LTRANS := STELLEN
+       end (* then *)
+     else
+       if XLEFT then
+         TOFFS := 0
+       else
+         TOFFS := STELLEN - LTRANS ;
+     CPT := PTRADD ( CPT , TOFFS ) ;
+     MEMCPY ( CPT , PCHAR , LTRANS ) ;
+   end (* $PASWSS *) ;
+
+
+
+procedure $PASWSV ( var S : STRING ; INIT : BOOLEAN ; const WERT :
+                  STRING ; STELLEN : INTEGER ) ;
+
+//**********************************************************
+// write string to string                                   
+//**********************************************************
+// Bernd Oppolzer - New Stanford Pascal                     
+//**********************************************************
+
+
+   var L : INTEGER ;
+       LA : INTEGER ;
+       ML : INTEGER ;
+       XLEFT : BOOLEAN := FALSE ;
+       CPT : -> CHAR ;
+       LTRANS : INTEGER ;
+       TOFFS : INTEGER ;
+       PCHAR : -> CHAR ;
+       COUNT : INTEGER ;
+
+   begin (* $PASWSV *)
+     COUNT := LENGTH ( WERT ) ;
+     if STELLEN < 0 then
+       begin
+         XLEFT := TRUE ;
+         STELLEN := - STELLEN
+       end (* then *) ;
+     if STELLEN = 0 then
+       STELLEN := COUNT ;
+     L := STELLEN ;
+     ML := MAXLENGTH ( S ) ;
+     if INIT then
+       begin
+         if L > ML then
+           $ERROR ( 1226 ) ;
+         S := REPEATSTR ( ' ' , L ) ;
+         CPT := ADDR ( S [ 1 ] ) ;
+       end (* then *)
+     else
+       begin
+         LA := LENGTH ( S ) ;
+         if LA + L > ML then
+           $ERROR ( 1226 ) ;
+         S := S || REPEATSTR ( ' ' , L ) ;
+         CPT := ADDR ( S [ LA + 1 ] ) ;
+       end (* else *) ;
+     LTRANS := COUNT ;
+     if LTRANS >= STELLEN then
+       begin
+         TOFFS := 0 ;
+         LTRANS := STELLEN
+       end (* then *)
+     else
+       if XLEFT then
+         TOFFS := 0
+       else
+         TOFFS := STELLEN - LTRANS ;
+     CPT := PTRADD ( CPT , TOFFS ) ;
+     PCHAR := ADDR ( WERT [ 1 ] ) ;
+     MEMCPY ( CPT , PCHAR , LTRANS ) ;
+   end (* $PASWSV *) ;
+
+
+
+procedure $PASWSR ( var S : STRING ; INIT : BOOLEAN ; V : REAL ; WIDTH
+                  : INTEGER ; SCALE : INTEGER ) ;
+
+//**********************************************************
+// write reals to files                                     
+// rewritten in Pascal - portable solution in 2020          
+//**********************************************************
+// Bernd Oppolzer - New Stanford Pascal                     
+//**********************************************************
+
+
+   const INTMAX = 1000000000 ;
+
+   var L : INTEGER ;
+       LA : INTEGER ;
+       ML : INTEGER ;
+       CPT : -> CHAR ;
+       CPB : -> CHAR ;
+       BUFFER : CHAR ( 100 ) ;
+       MINUS : BOOLEAN ;
+       LEADZ : BOOLEAN ;
+       LEN : INTEGER ;
+       DIG : INTEGER ;
+       EXPO : CHAR ( 4 ) ;
+       ZEROES : INTEGER ;
+       X : INTEGER ;
+       EXPONENT : INTEGER ;
+       FERTIG : BOOLEAN ;
+       VO : REAL ;
+       VNK : REAL ;
+       IVO : INTEGER ;
+       INK : INTEGER ;
+       SVO : STRING ( 10 ) ;
+       SNK : STRING ( 10 ) ;
+       SEXP : STRING ( 4 ) ;
+       SCALEKORR : INTEGER ;
+       SC : INTEGER ;
+       PLNACHK : INTEGER ;
+
+   begin (* $PASWSR *)
+
+     //*************************
+     // check size parameters   
+     //*************************
+
+     if WIDTH = 0 then
+       return ;
+     if SCALE > 16 then
+       $ERROR ( 1207 ) ;
+     LEADZ := FALSE ;
+     if WIDTH < 0 then
+       begin
+         LEADZ := TRUE ;
+         WIDTH := - WIDTH
+       end (* then *) ;
+
+     //*************************
+     // append blanks to string 
+     //*************************
+
+     L := WIDTH ;
+     ML := MAXLENGTH ( S ) ;
+     if INIT then
+       begin
+         if L > ML then
+           $ERROR ( 1226 ) ;
+         S := REPEATSTR ( ' ' , L ) ;
+         CPT := ADDR ( S [ 1 ] ) ;
+       end (* then *)
+     else
+       begin
+         LA := LENGTH ( S ) ;
+         if LA + L > ML then
+           $ERROR ( 1226 ) ;
+         S := S || REPEATSTR ( ' ' , L ) ;
+         CPT := ADDR ( S [ LA + 1 ] ) ;
+       end (* else *) ;
+
+     //*******************************
+     // now convert real to string    
+     //*******************************
+
+     MINUS := FALSE ;
+     BUFFER := ' ' ;
+
+     //*************************
+     // output real value zero  
+     //*************************
+
+     if V = 0.0 then
+       if SCALE < 0 then
+
+     //*************************
+     // write zero in E-Format  
+     //*************************
+
+         begin
+           if WIDTH < 9 then
+             begin
+               BUFFER := '0.0E+00' ;
+               LEN := 7 ;
+               WIDTH := LEN + 1 ;
+               LEADZ := FALSE ;
+             end (* then *)
+           else
+             begin
+               DIG := WIDTH - 7 ;
+               if DIG > 16 then
+                 DIG := 16 ;
+               BUFFER := '0.' ;
+               MEMSET ( ADDR ( BUFFER [ 3 ] ) , '0' , DIG ) ;
+               EXPO := 'E+00' ;
+               MEMCPY ( ADDR ( BUFFER [ 3 + DIG ] ) , ADDR ( EXPO ) , 4
+                        ) ;
+               LEN := DIG + 6 ;
+               LEADZ := FALSE ;
+             end (* else *)
+         end (* then *)
+       else
+
+     //*********************************
+     // write zero in F-Format          
+     // no decimal point, if scale = 0  
+     //*********************************
+
+         if SCALE = 0 then
+           begin
+             BUFFER [ 1 ] := '0' ;
+             LEN := 1 ;
+           end (* then *)
+         else
+           begin
+             MEMSET ( ADDR ( BUFFER ) , '0' , SCALE + 2 ) ;
+             BUFFER [ 2 ] := '.' ;
+             LEN := SCALE + 2 ;
+           end (* else *)
+
+     //*************************
+     // output non-zero value   
+     //*************************
+
+     else
+       begin
+         if V < 0.0 then
+           begin
+             MINUS := TRUE ;
+             V := - V
+           end (* then *) ;
+
+     //*****************************************************
+     // if value is between certain limits then             
+     // convert integer and fractional part to integers     
+     // and build output                                    
+     //*****************************************************
+
+         FERTIG := FALSE ;
+         VO := V ;
+         if ( VO < INTMAX ) and ( SCALE <= 9 ) then
+           begin
+             IVO := TRUNC ( VO ) ;
+             VNK := VO - IVO ;
+             VNK := VNK * INTMAX ;
+             VNK := ROUNDX ( VNK , 0 ) ;
+             INK := TRUNC ( VNK ) ;
+             if SCALE < 9 then
+               begin
+                 SCALEKORR := 5 ;
+                 for SC := SCALE + 2 to 9 do
+                   SCALEKORR := SCALEKORR * 10 ;
+                 INK := INK + SCALEKORR ;
+               end (* then *) ;
+             $PASWSI ( SVO , TRUE , IVO , 1 ) ;
+             $PASWSI ( SNK , TRUE , INK , - 9 ) ;
+             if SCALE = 0 then
+               begin
+                 BUFFER := SVO ;
+                 LEN := LENGTH ( SVO ) ;
+                 FERTIG := TRUE
+               end (* then *)
+             else
+               if SCALE > 0 then
+                 begin
+                   BUFFER := SVO || '.' || SNK ;
+                   LEN := LENGTH ( SVO ) + 1 + SCALE ;
+                   FERTIG := TRUE
+                 end (* then *)
+           end (* then *) ;
+
+     //*****************************************************
+     // if output has not been built, compute exponent      
+     //*****************************************************
+
+         if not FERTIG then
+           begin
+             LEADZ := FALSE ;
+             FERTIG := FALSE ;
+             EXPONENT := 9 ;
+             while not FERTIG do
+               begin
+                 if V >= 1000000000.0 then
+                   begin
+                     V := V / 1000000000.0 ;
+                     EXPONENT := EXPONENT + 9
+                   end (* then *)
+                 else
+                   if V < 1.0 then
+                     begin
+                       V := V * 1000000000.0 ;
+                       EXPONENT := EXPONENT - 9
+                     end (* then *)
+                   else
+                     if V < 10000.0 then
+                       begin
+                         V := V * 100000.0 ;
+                         EXPONENT := EXPONENT - 5
+                       end (* then *)
+                     else
+                       if V < 1000000.0 then
+                         begin
+                           V := V * 1000.0 ;
+                           EXPONENT := EXPONENT - 3
+                         end (* then *)
+                       else
+                         if V < 10000000.0 then
+                           begin
+                             V := V * 100.0 ;
+                             EXPONENT := EXPONENT - 2
+                           end (* then *)
+                         else
+                           if V < 100000000.0 then
+                             begin
+                               V := V * 10.0 ;
+                               EXPONENT := EXPONENT - 1
+                             end (* then *)
+                           else
+                             FERTIG := TRUE
+               end (* while *) ;
+             IVO := TRUNC ( V ) ;
+             VNK := V - IVO ;
+             VNK := VNK * INTMAX ;
+             VNK := ROUNDX ( VNK , 0 ) ;
+             INK := TRUNC ( VNK ) ;
+             $PASWSI ( SVO , TRUE , IVO , 1 ) ;
+             $PASWSI ( SNK , TRUE , INK , - 9 ) ;
+             $PASWSI ( SEXP , TRUE , EXPONENT - 1 , - 4 ) ;
+             if SEXP [ 1 ] = '-' then
+               SEXP [ 2 ] := '-'
+             else
+               SEXP [ 2 ] := '+' ;
+             SEXP [ 1 ] := 'E' ;
+
+     //***************************************
+     // Platz fuer Nachkomma = Width minus 3  
+     // (Vorz + 1. Ziffer + Punkt)            
+     // minus 4 Zeichen fuer Exponent         
+     // mindestens eine Nachkommastelle       
+     //***************************************
+
+             PLNACHK := WIDTH - 7 ;
+             if PLNACHK < 1 then
+               PLNACHK := 1 ;
+             if PLNACHK > 17 then
+               PLNACHK := 17 ;
+             LEN := 2 + PLNACHK + 4 ;
+             BUFFER [ 1 ] := SVO [ 1 ] ;
+             BUFFER [ 2 ] := '.' ;
+             CPB := ADDR ( BUFFER [ 3 ] ) ;
+             if PLNACHK > 8 then
+               begin
+                 MEMCPY ( CPB , ADDR ( SVO [ 2 ] ) , 8 ) ;
+                 CPB := PTRADD ( CPB , 8 ) ;
+                 MEMCPY ( CPB , ADDR ( SNK [ 1 ] ) , PLNACHK - 8 ) ;
+                 CPB := PTRADD ( CPB , PLNACHK - 8 ) ;
+               end (* then *)
+             else
+               begin
+                 MEMCPY ( CPB , ADDR ( SVO [ 2 ] ) , PLNACHK ) ;
+                 CPB := PTRADD ( CPB , PLNACHK ) ;
+               end (* else *) ;
+             MEMCPY ( CPB , ADDR ( SEXP [ 1 ] ) , 4 ) ;
+           end (* then *)
+       end (* else *) ;
+
+     //*********************************
+     // add leading zeroes or blanks    
+     // like in the integer procedure   
+     //*********************************
+
+     if MINUS then
+       LEN := LEN + 1 ;
+     if LEN < WIDTH then
+       begin
+         ZEROES := WIDTH - LEN ;
+         if LEADZ then
+           begin
+             if MINUS then
+               begin
+                 CPT -> := '-' ;
+                 CPT := PTRADD ( CPT , 1 )
+               end (* then *) ;
+             for X := 1 to ZEROES do
+               begin
+                 CPT -> := '0' ;
+                 CPT := PTRADD ( CPT , 1 )
+               end (* for *) ;
+             if MINUS then
+               MEMCPY ( CPT , ADDR ( BUFFER ) , LEN - 1 )
+             else
+               MEMCPY ( CPT , ADDR ( BUFFER ) , LEN )
+           end (* then *)
+         else
+           begin
+             CPT := PTRADD ( CPT , ZEROES ) ;
+             if MINUS then
+               begin
+                 CPT -> := '-' ;
+                 CPT := PTRADD ( CPT , 1 ) ;
+                 MEMCPY ( CPT , ADDR ( BUFFER ) , LEN - 1 )
+               end (* then *)
+             else
+               MEMCPY ( CPT , ADDR ( BUFFER ) , LEN )
+           end (* else *)
+       end (* then *)
+     else
+       $ERROR ( 1208 )
+   end (* $PASWSR *) ;
 
 
 

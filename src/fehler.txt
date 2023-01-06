@@ -1,0 +1,17 @@
+
+TESTTYP bricht am Mainframe ab, laeuft am PC korrekt durch
+TESTTYP2 laueft auf beiden Plattformen korrekt
+
+Das Problem ist die falsche Verwendung eines Literals in PASCAL2
+Details folgen bzw. werden nachgereicht
+Die Loesung besteht darin, die Literal-Logik von PASCAL2 komplett
+neu zu machen
+
+Siehe Konstante
+
+      USE_NEW_LITERALS = FALSE ;
+
+wenn TRUE, werden die neuen Literal-Funktionen genutzt.
+
+Leider haben diese noch einen Bug (Stand: 04.01.2023)
+

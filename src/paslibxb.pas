@@ -1,79 +1,72 @@
 module $PASLIBX ;
 
-//******************************************************************
-//$D+,A+                                                            
-//******************************************************************
-//                                                                  
-//  Stanford Pascal runtime / Pascal parts                          
-//                                                                  
-//  created 10.2016 - bernd.oppolzer@yahoo.com                      
-//                                                                  
-//  contains                                                        
-//                                                                  
-//  - new storage management ALLOC and FREE (inspired by LE,        
-//    that is IBM's Language Environment - runtime for the          
-//    Mainframe compilers, like COBOL, PL/1, Mainframe C)           
-//                                                                  
-//  - (advanced) rounding function for double floats                
-//                                                                  
-//  - string handling functions (from Pascal/VS)                    
-//                                                                  
-//  - new READ functions for integers and reals                     
-//                                                                  
-//  - other fancy stuff                                             
-//                                                                  
-//  only top level functions and procedures which don't have        
-//  the local specification are seen by the linkage editor          
-//                                                                  
-//  caution: the functions and procedures beginning with $PAS       
-//  are normally used by the compiler (that is, the compiler        
-//  generates calls to them in the open code), they should          
-//  only be changed with care                                       
-//                                                                  
-//******************************************************************
-//                                                                  
-//  Writing parts of the runtime in Pascal could seem critical,     
-//  especially because the language is still interpreted on         
-//  non-Mainframe platforms. But anyway I decided often to go       
-//  this path, because this way the solution is portable from       
-//  the start, and it is much easier to apply changes (only in      
-//  one place). If there are performance problems (which is         
-//  not the case at the moment), I would try to generate            
-//  real machine code even on non-Mainframe platforms               
-//                                                                  
-//******************************************************************
-//                                                                  
-//  uses static variables - see static definitions                  
-//                                                                  
-//******************************************************************
-//                                                                  
-//  History:                                                        
-//                                                                  
-//  25.05.2022: many new functions to support READSTR               
-//  and WRITESTR ... the functions are called $PASRSx               
-//  and $PASWSx ... the letter x corresponds to the type            
-//  of the variable read or written                                 
-//                                                                  
-//  16.08.2020: new function $PASRDB - read boolean                 
-//                                                                  
-//  12.01.2020: new function $PASRDR - read reals                   
-//                                                                  
-//  11.01.2020: all former EXIT calls replaced by $ERROR calls      
-//  $ERROR calls will trigger error recovery from runtime           
-//  for example stack trace etc. (symbolic dump on the mainframe    
-//  if compiled with the DEBUG option, which is the default)        
-//                                                                  
-//  10.01.2020: new function $PASRDI - read integers                
-//  replaces platform specific implementations of CSPs RDI, RDH     
-//  and RDY (read integers of length 4, 2 and 1).                   
-//  Compiler uses $PASRDI only, old implementations will be         
-//  phased out ...                                                  
-//                                                                  
-//  17.02.2019: found critical error in MODIFY_TREE                 
-//  near the call of SUCHE_HFRE (look at the variable               
-//  VMODUS2 and inserting the new HFRE when same length)            
-//                                                                  
-//******************************************************************
+(********************************************************************)
+(*$D+,A+                                                            *)
+(********************************************************************)
+(*                                                                  *)
+(*  Stanford Pascal runtime / Pascal parts                          *)
+(*                                                                  *)
+(*  created 10.2016 - bernd.oppolzer@yahoo.com                      *)
+(*                                                                  *)
+(*  contains                                                        *)
+(*                                                                  *)
+(*  - new storage management ALLOC and FREE (inspired by LE)        *)
+(*                                                                  *)
+(*  - (advanced) rounding function for double floats                *)
+(*                                                                  *)
+(*  - string handling functions (from Pascal/VS)                    *)
+(*                                                                  *)
+(*  - new READ functions for integers and reals                     *)
+(*                                                                  *)
+(*  - other fancy stuff                                             *)
+(*                                                                  *)
+(*  only top level functions and procedures which don't have        *)
+(*  the local specification are seen by the linkage editor          *)
+(*                                                                  *)
+(*  caution: the functions and procedures beginning with $PAS       *)
+(*  are normally used by the compiler (that is, the compiler        *)
+(*  generates calls to them in the open code), they should          *)
+(*  only be changed with care                                       *)
+(*                                                                  *)
+(********************************************************************)
+(*                                                                  *)
+(*  Writing parts of the runtime in Pascal could seem critical,     *)
+(*  especially because the language is still interpreted on         *)
+(*  non-Mainframe platforms. But anyway I decided often to go       *)
+(*  this path, because this way the solution is portable from       *)
+(*  the start, and it is much easier to apply changes (only in      *)
+(*  one place). If there are performance problems (which is         *)
+(*  not the case at the moment), I would try to generate            *)
+(*  real machine code even on non-Mainframe platforms               *)
+(*                                                                  *)
+(********************************************************************)
+(*                                                                  *)
+(*  uses static variables - see static definitions                  *)
+(*                                                                  *)
+(********************************************************************)
+(*                                                                  *)
+(*  History:                                                        *)
+(*                                                                  *)
+(*  16.08.2020: new function $PASRDB - read boolean                 *)
+(*                                                                  *)
+(*  12.01.2020: new function $PASRDR - read reals                   *)
+(*                                                                  *)
+(*  11.01.2020: all former EXIT calls replaced by $ERROR calls      *)
+(*  $ERROR calls will trigger error recovery from runtime           *)
+(*  for example stack trace etc. (symbolic dump on the mainframe    *)
+(*  if compiled with the DEBUG option, which is the default)        *)
+(*                                                                  *)
+(*  10.01.2020: new function $PASRDI - read integers                *)
+(*  replaces platform specific implementations of CSPs RDI, RDH     *)
+(*  and RDY (read integers of length 4, 2 and 1).                   *)
+(*  Compiler uses $PASRDI only, old implementations will be         *)
+(*  phased out ...                                                  *)
+(*                                                                  *)
+(*  17.02.2019: found critical error in MODIFY_TREE                 *)
+(*  near the call of SUCHE_HFRE (look at the variable               *)
+(*  VMODUS2 and inserting the new HFRE when same length)            *)
+(*                                                                  *)
+(********************************************************************)
 
 
 
@@ -95,9 +88,9 @@ type CHARPTR = -> CHAR ;
      TOKEN = array [ 1 .. 8 ] of CHAR ;
      CHAR4 = array [ 1 .. 4 ] of CHAR ;
 
-     //**************************************************
-     //  HFRE: Free Element innerhalb HANC               
-     //**************************************************
+     (****************************************************)
+     (*  HFRE: Free Element innerhalb HANC               *)
+     (****************************************************)
 
      PHFRE = -> HFRE ;
      HFRE = record
@@ -107,9 +100,9 @@ type CHARPTR = -> CHAR ;
               LEN_FREEEQ : INTEGER ;
             end ;
 
-     //**************************************************
-     //  HANC: Heap Element                              
-     //**************************************************
+     (****************************************************)
+     (*  HANC: Heap Element                              *)
+     (****************************************************)
 
      PHANC = -> HANC ;
      HANC = record
@@ -123,9 +116,9 @@ type CHARPTR = -> CHAR ;
               LEN_FREE1 : INTEGER ;
             end ;
 
-     //**************************************************
-     //  Active Element                                  
-     //**************************************************
+     (****************************************************)
+     (*  Active Element                                  *)
+     (****************************************************)
 
      PACT = -> ACTIVE ;
      ACTIVE = record
@@ -133,9 +126,9 @@ type CHARPTR = -> CHAR ;
                 XSIZE : INTEGER ;
               end ;
 
-     //**************************************************
-     //  HPCB: Heap Control Block                        
-     //**************************************************
+     (****************************************************)
+     (*  HPCB: Heap Control Block                        *)
+     (****************************************************)
 
      PHPCB = -> HPCB ;
      HPCB = record
@@ -150,12 +143,12 @@ static PLATF : PLATFORM ;
        HEAPCB : HPCB ;
        PHEAP : PHPCB ;
 
-       //**************************************************
-       //  statische Variablen:                            
-       //  heap control block                              
-       //  zeiger auf heap control block (anfangs nil)     
-       //  anzahl-felder fuer allocs und frees             
-       //**************************************************
+       (****************************************************)
+       (*  statische Variablen:                            *)
+       (*  heap control block                              *)
+       (*  zeiger auf heap control block (anfangs nil)     *)
+       (*  anzahl-felder fuer allocs und frees             *)
+       (****************************************************)
 
        ANZ_ALLOCS : INTEGER ;
        ANZ_FREES : INTEGER ;
@@ -164,11 +157,11 @@ static PLATF : PLATFORM ;
 
 function $PASSYS ( FUNCCODE : INTEGER ; X : VOIDPTR ) : VOIDPTR ;
 
-//**************************************************
-//  ist in PASMONN.ASS implementiert und            
-//  realisiert Basis-Storage-Dienste wie            
-//  GETMAIN und FREEMAIN                            
-//**************************************************
+(****************************************************)
+(*  ist in PASMONN.ASS implementiert und            *)
+(*  realisiert Basis-Storage-Dienste wie            *)
+(*  GETMAIN und FREEMAIN                            *)
+(****************************************************)
 
 
    EXTERNAL ;
@@ -188,10 +181,10 @@ local procedure CHECK_PLATFORM ;
 
 local function ALLOC_AREAX ( SIZE : INTEGER ) : VOIDPTR ;
 
-//**************************************************************
-//  works much the same as C malloc                             
-//  calls the OPSYS service (aka GETMAIN) directly              
-//**************************************************************
+(****************************************************************)
+(*  works much the same as C malloc                             *)
+(*  calls the OPSYS service (aka GETMAIN) directly              *)
+(****************************************************************)
 
 
    type INT2PTR = record
@@ -213,10 +206,10 @@ local function ALLOC_AREAX ( SIZE : INTEGER ) : VOIDPTR ;
 
 local procedure DUMP ( PVON : VOIDPTR ; PBIS : VOIDPTR ) ;
 
-//*******************************************************
-//  Speicherbereich von PVON bis PBIS hexadezimal        
-//  ausgeben                                             
-//*******************************************************
+(*********************************************************)
+(*  Speicherbereich von PVON bis PBIS hexadezimal        *)
+(*  ausgeben                                             *)
+(*********************************************************)
 
 
    var P1 : VOIDPTR ;
@@ -341,10 +334,10 @@ local procedure DUMP ( PVON : VOIDPTR ; PBIS : VOIDPTR ) ;
 
 local procedure LISTE_DER_LUECKEN ( HANC : PHANC ) ;
 
-//*******************************************************
-//  diese Funktion zeigt alle Luecken an, die im         
-//  HANC-Baum organisiert sind                           
-//*******************************************************
+(*********************************************************)
+(*  diese Funktion zeigt alle Luecken an, die im         *)
+(*  HANC-Baum organisiert sind                           *)
+(*********************************************************)
 
 
    var PLAUF : PHFRE ;
@@ -530,15 +523,15 @@ local procedure MODIFY_TREE ( MODUS : CHAR ; HANC_ACT : PHANC ; SIZE :
                             INTEGER ; var PLAUF : PHFRE ; PLAUFACT :
                             PACT ) ;
 
-//**************************************************************
-//  baum bearbeiten, zunaechst beim allokieren eines bereichs   
-//                                                              
-//  modus     = was ist zu tun ?                                
-//  hanc_act  = heap-Segment, in dem etwas zu tun ist           
-//  size      = Groesse des zu bearbeitenden Bereichs           
-//  plauf     = ggf. benachbarte Luecke                         
-//  plaufact  = ggf. freizugebender Bereich                     
-//**************************************************************
+(****************************************************************)
+(*  baum bearbeiten, zunaechst beim allokieren eines bereichs   *)
+(*                                                              *)
+(*  modus     = was ist zu tun ?                                *)
+(*  hanc_act  = heap-Segment, in dem etwas zu tun ist           *)
+(*  size      = Groesse des zu bearbeitenden Bereichs           *)
+(*  plauf     = ggf. benachbarte Luecke                         *)
+(*  plaufact  = ggf. freizugebender Bereich                     *)
+(****************************************************************)
 
 
    var PNACHB : PHFRE ;
@@ -621,10 +614,10 @@ local procedure MODIFY_TREE ( MODUS : CHAR ; HANC_ACT : PHANC ; SIZE :
                             PFIRST : PHFRE ; PLAUFALT : PHFRE ;
                             VORG_MODUS : CHAR ) ;
 
-   //***********************************************
-   //   einfuegen eines neuen free-elements         
-   //   in einer liste von gleichlangen elementen   
-   //***********************************************
+   /*************************************************/
+   /*   einfuegen eines neuen free-elements         */
+   /*   in einer liste von gleichlangen elementen   */
+   /*************************************************/
 
 
       var PLAUFF : PHFRE ;
@@ -633,9 +626,9 @@ local procedure MODIFY_TREE ( MODUS : CHAR ; HANC_ACT : PHANC ; SIZE :
         if PTRDIFF ( PFREEN , PFIRST ) < 0 then
           begin
 
-        //*****************
-        // vorne einfuegen 
-        //*****************
+        /*******************/
+        /* vorne einfuegen */
+        /*******************/
 
             COPY_HFRE ( PFIRST , PFREEN , SIZE_FREE ) ;
             PFREEN -> . FREEEQ := PFIRST ;
@@ -650,9 +643,9 @@ local procedure MODIFY_TREE ( MODUS : CHAR ; HANC_ACT : PHANC ; SIZE :
         else
           begin
 
-        //*************************
-        // weiter hinten einfuegen 
-        //*************************
+        /***************************/
+        /* weiter hinten einfuegen */
+        /***************************/
 
             PLAUFF := PFIRST ;
             while TRUE do
@@ -709,17 +702,17 @@ local procedure MODIFY_TREE ( MODUS : CHAR ; HANC_ACT : PHANC ; SIZE :
 
       begin (* SUCHE_HFRE_NACH_GROE *)
 
-        //*****************************************************
-        // die nun folgende Schleife positioniert PLAUF auf    
-        // das kleinste Free Element, das noch passt -         
-        // bei ALLOC muss es eines geben aufgrund der          
-        // Anfangsbedingung; bei FREE evtl. auch nicht         
-        // Vorg_Modus N, d.h. nichts gefunden                  
-        // Vorg_Modus T = top, d.h. der Vorgaenger             
-        // der Luecke ist der HANC                             
-        // Vorg_Modus V = vertikal, d.h. der Vorgaenger        
-        // der Luecke ist ein anderer HFRE                     
-        //*****************************************************
+        /*******************************************************/
+        /* die nun folgende Schleife positioniert PLAUF auf    */
+        /* das kleinste Free Element, das noch passt -         */
+        /* bei ALLOC muss es eines geben aufgrund der          */
+        /* Anfangsbedingung; bei FREE evtl. auch nicht         */
+        /* Vorg_Modus N, d.h. nichts gefunden                  */
+        /* Vorg_Modus T = top, d.h. der Vorgaenger             */
+        /* der Luecke ist der HANC                             */
+        /* Vorg_Modus V = vertikal, d.h. der Vorgaenger        */
+        /* der Luecke ist ein anderer HFRE                     */
+        /*******************************************************/
 
         VORG_MODUS := 'T' ;
         PLAUFALT := NIL ;
@@ -801,19 +794,19 @@ local procedure MODIFY_TREE ( MODUS : CHAR ; HANC_ACT : PHANC ; SIZE :
 
       begin (* SUCHE_HFRE_NACH_ADRE *)
 
-        //*****************************************************
-        // die nun folgende Schleife positioniert PLAUF auf    
-        // das passende Free Element                           
-        // muss vorhanden sein aufgrund der                    
-        // Anfangsbedingung; SIZE und Adresse muessen passen   
-        //*****************************************************
+        /*******************************************************/
+        /* die nun folgende Schleife positioniert PLAUF auf    */
+        /* das passende Free Element                           */
+        /* muss vorhanden sein aufgrund der                    */
+        /* Anfangsbedingung; SIZE und Adresse muessen passen   */
+        /*******************************************************/
 
         GEFUNDEN := FALSE ;
         VORG_MODUS := 'T' ;
 
-        //***************************************
-        // T = Top, d.h. HANC ist Vorgaenger     
-        //***************************************
+        /*****************************************/
+        /* T = Top, d.h. HANC ist Vorgaenger     */
+        /*****************************************/
 
         PLAUFALT := NIL ;
         SIZE_FREE := HANC_ACT -> . LEN_FREE1 ;
@@ -834,9 +827,9 @@ local procedure MODIFY_TREE ( MODUS : CHAR ; HANC_ACT : PHANC ; SIZE :
                       if FREEEQ = NIL then
                         break ;
 
-        //***************************************
-        // H = horizontaler Vorgaenger           
-        //***************************************
+        /*****************************************/
+        /* H = horizontaler Vorgaenger           */
+        /*****************************************/
 
                       VORG_MODUS := 'H' ;
                       PLAUFALT := PLAUF ;
@@ -851,9 +844,9 @@ local procedure MODIFY_TREE ( MODUS : CHAR ; HANC_ACT : PHANC ; SIZE :
               if LEN_FREELOW < SIZE then
                 break ;
 
-        //***************************************
-        // V = vertikaler Vorgaenger             
-        //***************************************
+        /*****************************************/
+        /* V = vertikaler Vorgaenger             */
+        /*****************************************/
 
               VORG_MODUS := 'V' ;
               PLAUFALT := PLAUF ;
@@ -866,18 +859,18 @@ local procedure MODIFY_TREE ( MODUS : CHAR ; HANC_ACT : PHANC ; SIZE :
 
    procedure INSERT_HFRE ;
 
-   //***********************************************
-   //   bereich pfreen und size in baum einfuegen   
-   //***********************************************
+   /*************************************************/
+   /*   bereich pfreen und size in baum einfuegen   */
+   /*************************************************/
 
 
       begin (* INSERT_HFRE *)
         SUCHE_HFRE_NACH_GROESSE ;
 
-        //**************************************
-        // bei gleicher laenge:                 
-        // einsortieren nach adressen           
-        //**************************************
+        /****************************************/
+        /* bei gleicher laenge:                 */
+        /* einsortieren nach adressen           */
+        /****************************************/
 
         if SIZE = SIZE_FREE then
           begin
@@ -886,11 +879,11 @@ local procedure MODIFY_TREE ( MODUS : CHAR ; HANC_ACT : PHANC ; SIZE :
             return ;
           end (* then *) ;
 
-        //**************************************
-        // andernfalls: der neue bereich        
-        // muss ueber dem gefundenen            
-        // einsortiert werden (neue laenge)     
-        //**************************************
+        /****************************************/
+        /* andernfalls: der neue bereich        */
+        /* muss ueber dem gefundenen            */
+        /* einsortiert werden (neue laenge)     */
+        /****************************************/
 
         INS_HFRE_ABOVE ( PFREEN , SIZE , HANC_ACT , PLAUF , VORG_MODUS
                          ) ;
@@ -907,31 +900,31 @@ local procedure MODIFY_TREE ( MODUS : CHAR ; HANC_ACT : PHANC ; SIZE :
          WRITELN ( 'modify_tree: plauf = ' , PLAUF ) ;
        end (* then *) ;
 
-     //*****************************************************
-     // Fallunterscheidung je nach Verarbeitungsmodus       
-     //*****************************************************
+     /*******************************************************/
+     /* Fallunterscheidung je nach Verarbeitungsmodus       */
+     /*******************************************************/
 
      case MODUS of
 
-     //*****************************************************
-     // A = Alloc, d.h. neuen Bereich einfuegen (von        
-     // Luecke wegnehmen); es ist schon klar, dass das      
-     // klappen muss                                        
-     //*****************************************************
+     /*******************************************************/
+     /* A = Alloc, d.h. neuen Bereich einfuegen (von        */
+     /* Luecke wegnehmen); es ist schon klar, dass das      */
+     /* klappen muss                                        */
+     /*******************************************************/
 
        'A' : begin
                SUCHE_HFRE_NACH_GROESSE ;
 
-     //***************************************
-     // Size des gefundenen Elements reduz.   
-     //***************************************
+     /*****************************************/
+     /* Size des gefundenen Elements reduz.   */
+     /*****************************************/
 
                SIZE_FREE := SIZE_FREE - SIZE ;
 
-     //***************************************
-     // Element passt, jetzt muss der Baum    
-     // evtl. modifiziert werden              
-     //***************************************
+     /*****************************************/
+     /* Element passt, jetzt muss der Baum    */
+     /* evtl. modifiziert werden              */
+     /*****************************************/
 
                if TRLEVEL >= 3 then
                  begin
@@ -949,40 +942,40 @@ local procedure MODIFY_TREE ( MODUS : CHAR ; HANC_ACT : PHANC ; SIZE :
                              ) ;
                  end (* then *) ;
 
-     //**************************************************
-     //  modus = T(op) oder V(ertikal)                   
-     //  top, wenn der HANC direkt auf das benutzte      
-     //  free element zeigt, sonst vertikal              
-     //  HANC_ACT = zeiger auf den aktuellen HANC        
-     //  plaufalt = vorgaenger free element oder nil     
-     //  plauf = das aktuelle (benutzte) free element    
-     //  size_free = neue groesse (kann auch null        
-     //              oder 8 sein)                        
-     //**************************************************
+     /****************************************************/
+     /*  modus = T(op) oder V(ertikal)                   */
+     /*  top, wenn der HANC direkt auf das benutzte      */
+     /*  free element zeigt, sonst vertikal              */
+     /*  HANC_ACT = zeiger auf den aktuellen HANC        */
+     /*  plaufalt = vorgaenger free element oder nil     */
+     /*  plauf = das aktuelle (benutzte) free element    */
+     /*  size_free = neue groesse (kann auch null        */
+     /*              oder 8 sein)                        */
+     /****************************************************/
 
                if PLAUF -> . LEN_FREELOW < SIZE_FREE then
                  begin
                    if TRLEVEL >= 3 then
                      WRITELN ( 'modify_tree: fall 1' ) ;
 
-     //****************************************
-     // sonderfall: free element ist immer     
-     // noch groesser als das naechst tiefere  
-     // ist auch dann der fall, wenn es        
-     // gar kein tieferes element mehr gibt    
-     //****************************************
+     /******************************************/
+     /* sonderfall: free element ist immer     */
+     /* noch groesser als das naechst tiefere  */
+     /* ist auch dann der fall, wenn es        */
+     /* gar kein tieferes element mehr gibt    */
+     /******************************************/
 
                    if PLAUF -> . FREEEQ = NIL then
                      begin
                        if TRLEVEL >= 3 then
                          WRITELN ( 'modify_tree: fall 1.1' ) ;
 
-     //*********************************
-     // es gibt auch keine nachbarn mit 
-     // derselben laenge, d.h. das      
-     // element aendert seinen platz    
-     // ueberhaupt nicht                
-     //*********************************
+     /***********************************/
+     /* es gibt auch keine nachbarn mit */
+     /* derselben laenge, d.h. das      */
+     /* element aendert seinen platz    */
+     /* ueberhaupt nicht                */
+     /***********************************/
 
                        PFREEN := PTRADD ( PLAUF , SIZE ) ;
                        COPY_HFRE ( PLAUF , PFREEN , SIZE_FREE ) ;
@@ -994,12 +987,12 @@ local procedure MODIFY_TREE ( MODUS : CHAR ; HANC_ACT : PHANC ; SIZE :
                        if TRLEVEL >= 3 then
                          WRITELN ( 'modify_tree: fall 1.2' ) ;
 
-     //************************************
-     // leider gibt es nachbarn; also      
-     // rechten nachbarn nach vorne holen  
-     // und das geaenderte element eine    
-     // ebene tiefer einsortieren          
-     //************************************
+     /**************************************/
+     /* leider gibt es nachbarn; also      */
+     /* rechten nachbarn nach vorne holen  */
+     /* und das geaenderte element eine    */
+     /* ebene tiefer einsortieren          */
+     /**************************************/
 
                        PNACHB := PLAUF -> . FREEEQ ;
                        CHAIN_PRIOR ( PNACHB , VORG_MODUS , HANC_ACT ,
@@ -1024,14 +1017,14 @@ local procedure MODIFY_TREE ( MODUS : CHAR ; HANC_ACT : PHANC ; SIZE :
                    return
                  end (* then *) ;
 
-     //**************************************
-     // die neue laenge des elements ist     
-     // kleiner oder gleich der laenge des   
-     // elements eine ebene tiefer           
-     //**************************************
-     // zuerst wird das element am aktuellen 
-     // platz entfernt                       
-     //**************************************
+     /****************************************/
+     /* die neue laenge des elements ist     */
+     /* kleiner oder gleich der laenge des   */
+     /* elements eine ebene tiefer           */
+     /****************************************/
+     /* zuerst wird das element am aktuellen */
+     /* platz entfernt                       */
+     /****************************************/
 
                if PLAUF -> . FREEEQ <> NIL then
                  begin
@@ -1052,24 +1045,24 @@ local procedure MODIFY_TREE ( MODUS : CHAR ; HANC_ACT : PHANC ; SIZE :
                                  PLAUFALT , PLAUF -> . LEN_FREELOW ) ;
                  end (* else *) ;
 
-     //**************************************
-     // wenn die neue groesse null ist,      
-     // sind wir schon fertig                
-     //**************************************
+     /****************************************/
+     /* wenn die neue groesse null ist,      */
+     /* sind wir schon fertig                */
+     /****************************************/
 
                if SIZE_FREE = 0 then
                  return ;
 
-     //**************************************
-     // andernfalls muss das neue element    
-     // an der passenden stelle wieder       
-     // eingefuegt werden                    
-     //**************************************
-     // plaufalt ist entweder nil, dann      
-     // stehen wir noch ganz oben, oder      
-     // plaufalt ist der vorgaenger          
-     // von pfreen ...                       
-     //**************************************
+     /****************************************/
+     /* andernfalls muss das neue element    */
+     /* an der passenden stelle wieder       */
+     /* eingefuegt werden                    */
+     /****************************************/
+     /* plaufalt ist entweder nil, dann      */
+     /* stehen wir noch ganz oben, oder      */
+     /* plaufalt ist der vorgaenger          */
+     /* von pfreen ...                       */
+     /****************************************/
 
                if TRLEVEL >= 3 then
                  begin
@@ -1104,30 +1097,30 @@ local procedure MODIFY_TREE ( MODUS : CHAR ; HANC_ACT : PHANC ; SIZE :
                    WRITELN ( 'modify_tree: vmodus2 = ' , VMODUS2 ) ;
                  end (* then *) ;
 
-     //**************************************
-     // bei allen elementen vorher war       
-     // LEN_FREELOW groesser; jetzt ist      
-     // erstmals LEN_FREELOW kleiner gleich  
-     // oder FREELOW nil                     
-     //**************************************
-     // bei gleicher laenge:                 
-     // einsortieren nach adressen           
-     // in genau dieser liste                
-     //**************************************
-     // bei kleinerer laenge:                
-     // neue liste aufbauen vor der          
-     // gefundenen liste                     
-     //**************************************
-     // in beiden faellen ist vmodus2        
-     // zu beachten (d.h. das gefundene      
-     // plaufalt koennte direkt am           
-     // hanc dranhaengen)                    
-     //**************************************
-     // das ist m.E. die einzige Stelle,     
-     // wo uebrigbleibende Luecken der       
-     // Laenge 8 entstehen koennen; diese    
-     // werden auch nie mehr recyclet        
-     //**************************************
+     /****************************************/
+     /* bei allen elementen vorher war       */
+     /* LEN_FREELOW groesser; jetzt ist      */
+     /* erstmals LEN_FREELOW kleiner gleich  */
+     /* oder FREELOW nil                     */
+     /****************************************/
+     /* bei gleicher laenge:                 */
+     /* einsortieren nach adressen           */
+     /* in genau dieser liste                */
+     /****************************************/
+     /* bei kleinerer laenge:                */
+     /* neue liste aufbauen vor der          */
+     /* gefundenen liste                     */
+     /****************************************/
+     /* in beiden faellen ist vmodus2        */
+     /* zu beachten (d.h. das gefundene      */
+     /* plaufalt koennte direkt am           */
+     /* hanc dranhaengen)                    */
+     /****************************************/
+     /* das ist m.E. die einzige Stelle,     */
+     /* wo uebrigbleibende Luecken der       */
+     /* Laenge 8 entstehen koennen; diese    */
+     /* werden auch nie mehr recyclet        */
+     /****************************************/
 
                if SIZE_ALT = SIZE_FREE then
                  begin
@@ -1138,11 +1131,11 @@ local procedure MODIFY_TREE ( MODUS : CHAR ; HANC_ACT : PHANC ; SIZE :
                    return ;
                  end (* then *) ;
 
-     //**************************************
-     // andernfalls: der neue bereich        
-     // muss ueber dem gefundenen            
-     // einsortiert werden (neue laenge)     
-     //**************************************
+     /****************************************/
+     /* andernfalls: der neue bereich        */
+     /* muss ueber dem gefundenen            */
+     /* einsortiert werden (neue laenge)     */
+     /****************************************/
 
                PFREEN := PTRADD ( PLAUF , SIZE ) ;
                COPY_HFRE ( PLAUF , PFREEN , SIZE_FREE ) ;
@@ -1150,21 +1143,21 @@ local procedure MODIFY_TREE ( MODUS : CHAR ; HANC_ACT : PHANC ; SIZE :
                                 VMODUS2 ) ;
              end (* tag/ca *) ;
 
-     //*****************************************************
-     // F = Free, d.h. Bereich freigeben                    
-     // ohne Zusammenlegen (neue Luecke)                    
-     //*****************************************************
+     /*******************************************************/
+     /* F = Free, d.h. Bereich freigeben                    */
+     /* ohne Zusammenlegen (neue Luecke)                    */
+     /*******************************************************/
 
        'F' : begin
                PFREEN := PTRCAST ( PLAUFACT ) ;
                INSERT_HFRE ;
              end (* tag/ca *) ;
 
-     //*****************************************************
-     // Zusammenlegen von Bereichen;                        
-     // Vorgabe von alter Adresse, neuer Adresse und        
-     // neuer Laenge                                        
-     //*****************************************************
+     /*******************************************************/
+     /* Zusammenlegen von Bereichen;                        */
+     /* Vorgabe von alter Adresse, neuer Adresse und        */
+     /* neuer Laenge                                        */
+     /*******************************************************/
 
        'Z' : begin
                SIZE_NEU := SIZE ;
@@ -1185,22 +1178,22 @@ local procedure MODIFY_TREE ( MODUS : CHAR ; HANC_ACT : PHANC ; SIZE :
                if PLAUF <> PLAUF_SUCH then
                  $ERROR ( 1100 ) ;
 
-     //*****************************************************
-     // der neu freizugebende Bereich liegt links           
-     // am bestehenden Bereich; plauf suchen und            
-     // bereich entsprechend verlaengern. adrdiff ist       
-     // die bestehende groesse des bereichs - aber negativ  
-     //*****************************************************
+     /*******************************************************/
+     /* der neu freizugebende Bereich liegt links           */
+     /* am bestehenden Bereich; plauf suchen und            */
+     /* bereich entsprechend verlaengern. adrdiff ist       */
+     /* die bestehende groesse des bereichs - aber negativ  */
+     /*******************************************************/
 
                if ( ( VORG_MODUS = 'T' ) and ( PLAUF -> . FREEEQ = NIL
                ) ) or ( ( VORG_MODUS = 'V' ) and ( PLAUF -> . FREEEQ =
                NIL ) and ( SIZE_NEU < SIZE_ALT ) ) then
                  begin
 
-     //*****************************************************
-     // Sonderfall: Bereich kann an dieser Stelle           
-     // bleiben                                             
-     //*****************************************************
+     /*******************************************************/
+     /* Sonderfall: Bereich kann an dieser Stelle           */
+     /* bleiben                                             */
+     /*******************************************************/
 
                    if TRLEVEL >= 3 then
                      begin
@@ -1214,9 +1207,9 @@ local procedure MODIFY_TREE ( MODUS : CHAR ; HANC_ACT : PHANC ; SIZE :
                else
                  begin
 
-     //***************
-     // raus und rein 
-     //***************
+     /*****************/
+     /* raus und rein */
+     /*****************/
 
                    if TRLEVEL >= 3 then
                      begin
@@ -1240,9 +1233,9 @@ local procedure MODIFY_TREE ( MODUS : CHAR ; HANC_ACT : PHANC ; SIZE :
                  end (* else *)
              end (* tag/ca *) ;
 
-     //*****************************************************
-     // andere Faelle gibt's nicht                          
-     //*****************************************************
+     /*******************************************************/
+     /* andere Faelle gibt's nicht                          */
+     /*******************************************************/
 
        otherwise
          begin
@@ -1255,9 +1248,9 @@ local procedure MODIFY_TREE ( MODUS : CHAR ; HANC_ACT : PHANC ; SIZE :
 
 local function ALLOC_AREA ( SIZE : INTEGER ) : VOIDPTR ;
 
-//**************************************************************
-//  works much the same as C malloc                             
-//**************************************************************
+(****************************************************************)
+(*  works much the same as C malloc                             *)
+(****************************************************************)
 
 
    var SIZEX : INTEGER ;
@@ -1274,15 +1267,15 @@ local function ALLOC_AREA ( SIZE : INTEGER ) : VOIDPTR ;
 
    begin (* ALLOC_AREA *)
 
-     //**************************************************
-     //  Size aufrunden auf durch 8 teilbar              
-     //**************************************************
+     (****************************************************)
+     (*  Size aufrunden auf durch 8 teilbar              *)
+     (****************************************************)
 
      SIZE := ( ( SIZE + 7 ) DIV 8 ) * 8 + 8 ;
 
-     //**************************************************
-     //  Pointer auf Heap Control Block besorgen         
-     //**************************************************
+     (****************************************************)
+     (*  Pointer auf Heap Control Block besorgen         *)
+     (****************************************************)
 
      if PHEAP = NIL then
        begin
@@ -1294,10 +1287,10 @@ local function ALLOC_AREA ( SIZE : INTEGER ) : VOIDPTR ;
        end (* then *) ;
      PHEAPC := PHEAP ;
 
-     //******************************************
-     // traceausgaben und ggf.                   
-     // existierende hancs ueberpruefen          
-     //******************************************
+     /********************************************/
+     /* traceausgaben und ggf.                   */
+     /* existierende hancs ueberpruefen          */
+     /********************************************/
 
      if TRLEVEL >= 1 then
        begin
@@ -1308,16 +1301,16 @@ local function ALLOC_AREA ( SIZE : INTEGER ) : VOIDPTR ;
            LISTE_ALLER_HANCS ( PHEAPC , FALSE ) ;
        end (* then *) ;
 
-     //**************************************************
-     //  Suchen in der Liste der vorhandenen HANCs,      
-     //  ob es einen mit einer passenden Luecke gibt;    
-     //  Start mit PHEAPCC ->. LAST                      
-     //                                                  
-     //**************************************************
-     //  wenn passender HANC gefunden, wird dieser       
-     //  an das Ende der Liste geholt (damit voll        
-     //  belegte HANCs diesen Platz freimachen)          
-     //**************************************************
+     (****************************************************)
+     (*  Suchen in der Liste der vorhandenen HANCs,      *)
+     (*  ob es einen mit einer passenden Luecke gibt;    *)
+     (*  Start mit PHEAPCC ->. LAST                      *)
+     (*                                                  *)
+     (****************************************************)
+     (*  wenn passender HANC gefunden, wird dieser       *)
+     (*  an das Ende der Liste geholt (damit voll        *)
+     (*  belegte HANCs diesen Platz freimachen)          *)
+     (****************************************************)
 
      HANC_ACT := NIL ;
      HANC_CHK := PHEAPC -> . LAST ;
@@ -1361,21 +1354,21 @@ local function ALLOC_AREA ( SIZE : INTEGER ) : VOIDPTR ;
              end (* while *)
          end (* else *) ;
 
-     //**************************************************
-     //  wenn HANC_ACT hier ungleich NIL ist,            
-     //  passt er auch (d.h. Luecke gross genug)         
-     //**************************************************
+     (****************************************************)
+     (*  wenn HANC_ACT hier ungleich NIL ist,            *)
+     (*  passt er auch (d.h. Luecke gross genug)         *)
+     (****************************************************)
 
      if HANC_ACT <> NIL then
        begin
          with HANC_ACT -> do
            begin
 
-     //***********************************************
-     // XP = PLAUF = Anfangsadresse des neuen         
-     // Bereichs; der Rest wird als neuer freier      
-     // Bereich in den Baum einsortiert               
-     //***********************************************
+     /*************************************************/
+     /* XP = PLAUF = Anfangsadresse des neuen         */
+     /* Bereichs; der Rest wird als neuer freier      */
+     /* Bereich in den Baum einsortiert               */
+     /*************************************************/
 
              if TRLEVEL >= 3 then
                begin
@@ -1418,10 +1411,10 @@ local function ALLOC_AREA ( SIZE : INTEGER ) : VOIDPTR ;
            end (* with *) ;
        end (* then *) ;
 
-     //**************************************************
-     //  wenn wir hier ankommen, brauchen wir auf        
-     //  jeden Fall einen neuen HANC                     
-     //**************************************************
+     (****************************************************)
+     (*  wenn wir hier ankommen, brauchen wir auf        *)
+     (*  jeden Fall einen neuen HANC                     *)
+     (****************************************************)
 
      SIZEX := HANCSIZE ;
      if SIZEX < SIZE + 32 then
@@ -1430,9 +1423,9 @@ local function ALLOC_AREA ( SIZE : INTEGER ) : VOIDPTR ;
      if HANC_NEW = NIL then
        $ERROR ( 1104 ) ;
 
-     //********************************
-     //  hanc mit werten belegen       
-     //********************************
+     (**********************************)
+     (*  hanc mit werten belegen       *)
+     (**********************************)
 
      with HANC_NEW -> do
        begin
@@ -1446,9 +1439,9 @@ local function ALLOC_AREA ( SIZE : INTEGER ) : VOIDPTR ;
            begin
              FREE1 := PTRADD ( AREA1 , SIZE ) ;
 
-     //*************************************
-     //  hfre element entsprechend anlegen  
-     //*************************************
+     (***************************************)
+     (*  hfre element entsprechend anlegen  *)
+     (***************************************)
 
              PLAUF := FREE1 ;
              with PLAUF -> do
@@ -1467,9 +1460,9 @@ local function ALLOC_AREA ( SIZE : INTEGER ) : VOIDPTR ;
          LEN_AREA1 := SIZEX - 32 ;
        end (* with *) ;
 
-     //********************************
-     //  hanc verpointern              
-     //********************************
+     (**********************************)
+     (*  hanc verpointern              *)
+     (**********************************)
 
      if PHEAPC -> . LAST = NIL then
        begin
@@ -1486,9 +1479,9 @@ local function ALLOC_AREA ( SIZE : INTEGER ) : VOIDPTR ;
          PHEAPC -> . LAST := HANC_NEW ;
        end (* else *) ;
 
-     //********************************
-     //  rueckgabe der adressen        
-     //********************************
+     (**********************************)
+     (*  rueckgabe der adressen        *)
+     (**********************************)
 
      if TRLEVEL >= 2 then
        begin
@@ -1523,10 +1516,10 @@ local function ALLOC_AREA ( SIZE : INTEGER ) : VOIDPTR ;
 
 local procedure FREE_AREAX ( PTR : VOIDPTR ) ;
 
-//**************************************************************
-//  works much the same as C free                               
-//  calls the OPSYS service (aka FREEMAIN) directly             
-//**************************************************************
+(****************************************************************)
+(*  works much the same as C free                               *)
+(*  calls the OPSYS service (aka FREEMAIN) directly             *)
+(****************************************************************)
 
 
    var X : VOIDPTR ;
@@ -1539,9 +1532,9 @@ local procedure FREE_AREAX ( PTR : VOIDPTR ) ;
 
 local function CHECK_AREA_ALLOC ( PTR : VOIDPTR ) : VOIDPTR ;
 
-//**************************************************************
-//  checks, if ptr points to a alloc area                       
-//**************************************************************
+(****************************************************************)
+(*  checks, if ptr points to a alloc area                       *)
+(****************************************************************)
 
 
    var SIZEX : INTEGER ;
@@ -1556,9 +1549,9 @@ local function CHECK_AREA_ALLOC ( PTR : VOIDPTR ) : VOIDPTR ;
    begin (* CHECK_AREA_ALLOC *)
      ERG := NIL ;
 
-     //**************************************************
-     //  Pointer auf Heap Control Block besorgen         
-     //**************************************************
+     (****************************************************)
+     (*  Pointer auf Heap Control Block besorgen         *)
+     (****************************************************)
 
      if PHEAP = NIL then
        begin
@@ -1570,10 +1563,10 @@ local function CHECK_AREA_ALLOC ( PTR : VOIDPTR ) : VOIDPTR ;
        end (* then *) ;
      PHEAPC := PHEAP ;
 
-     //******************************************
-     // traceausgaben und ggf.                   
-     // existierende hancs ueberpruefen          
-     //******************************************
+     /********************************************/
+     /* traceausgaben und ggf.                   */
+     /* existierende hancs ueberpruefen          */
+     /********************************************/
 
      if TRLEVEL >= 1 then
        begin
@@ -1587,10 +1580,10 @@ local function CHECK_AREA_ALLOC ( PTR : VOIDPTR ) : VOIDPTR ;
        end (* then *) ;
      repeat
 
-     //******************************************
-     // checken, ob die adresse in einem         
-     // der hancs liegt                          
-     //******************************************
+     /********************************************/
+     /* checken, ob die adresse in einem         */
+     /* der hancs liegt                          */
+     /********************************************/
 
        HANC_CHK := PHEAPC -> . FIRST ;
        if HANC_CHK = NIL then
@@ -1610,10 +1603,10 @@ local function CHECK_AREA_ALLOC ( PTR : VOIDPTR ) : VOIDPTR ;
        if not GEFUNDEN then
          break ;
 
-     //******************************************
-     // pruefen, ob adresse anfang eines         
-     // alloc-bereiches                          
-     //******************************************
+     /********************************************/
+     /* pruefen, ob adresse anfang eines         */
+     /* alloc-bereiches                          */
+     /********************************************/
 
        XP := PTRADD ( PTR , - 8 ) ;
        HANC_ACT := XP -> . XHANC ;
@@ -1638,11 +1631,11 @@ local function CHECK_AREA_ALLOC ( PTR : VOIDPTR ) : VOIDPTR ;
                          AREA1 , LEN_AREA1 ) ) ;
              end (* then *) ;
 
-     //******************************************
-     // nur, wenn wir einen hanc finden und      
-     // der freizugebende bereich innerhalb      
-     // der hanc grenzen ist                     
-     //******************************************
+     /********************************************/
+     /* nur, wenn wir einen hanc finden und      */
+     /* der freizugebende bereich innerhalb      */
+     /* der hanc grenzen ist                     */
+     /********************************************/
 
            if EYECATCH <> 'HANC' then
              break ;
@@ -1661,9 +1654,9 @@ local function CHECK_AREA_ALLOC ( PTR : VOIDPTR ) : VOIDPTR ;
 
 local procedure FREE_AREA ( PTR : VOIDPTR ) ;
 
-//**************************************************************
-//  works much the same as C free                               
-//**************************************************************
+(****************************************************************)
+(*  works much the same as C free                               *)
+(****************************************************************)
 
 
    var SIZEX : INTEGER ;
@@ -1688,9 +1681,9 @@ local procedure FREE_AREA ( PTR : VOIDPTR ) ;
    begin (* FREE_AREA *)
      PDUMMY := NIL ;
 
-     //**************************************************
-     //  Pointer auf Heap Control Block besorgen         
-     //**************************************************
+     (****************************************************)
+     (*  Pointer auf Heap Control Block besorgen         *)
+     (****************************************************)
 
      if PHEAP = NIL then
        begin
@@ -1702,10 +1695,10 @@ local procedure FREE_AREA ( PTR : VOIDPTR ) ;
        end (* then *) ;
      PHEAPC := PHEAP ;
 
-     //******************************************
-     // traceausgaben und ggf.                   
-     // existierende hancs ueberpruefen          
-     //******************************************
+     /********************************************/
+     /* traceausgaben und ggf.                   */
+     /* existierende hancs ueberpruefen          */
+     /********************************************/
 
      if ( TRLEVEL >= 1 ) or FALSE then
        begin
@@ -1718,10 +1711,10 @@ local procedure FREE_AREA ( PTR : VOIDPTR ) ;
            end (* then *)
        end (* then *) ;
 
-     //******************************************
-     // wir checken erst mal, ob eine freigabe   
-     // ueberhaupt funktionieren kann            
-     //******************************************
+     /********************************************/
+     /* wir checken erst mal, ob eine freigabe   */
+     /* ueberhaupt funktionieren kann            */
+     /********************************************/
 
      XP := PTRADD ( PTR , - 8 ) ;
      HANC_ACT := XP -> . XHANC ;
@@ -1740,11 +1733,11 @@ local procedure FREE_AREA ( PTR : VOIDPTR ) ;
                        LEN_AREA1 ) ) ;
            end (* then *) ;
 
-     //******************************************
-     // nur, wenn wir einen hanc finden und      
-     // der freizugebende bereich innerhalb      
-     // der hanc grenzen ist                     
-     //******************************************
+     /********************************************/
+     /* nur, wenn wir einen hanc finden und      */
+     /* der freizugebende bereich innerhalb      */
+     /* der hanc grenzen ist                     */
+     /********************************************/
 
          if EYECATCH <> 'HANC' then
            $ERROR ( 1107 ) ;
@@ -1754,12 +1747,12 @@ local procedure FREE_AREA ( PTR : VOIDPTR ) ;
          if PTRDIFF ( AREA1 , XP ) > 0 then
            $ERROR ( 1109 ) ;
 
-     //******************************************
-     // wir schauen jetzt alle freien bereiche   
-     // an. wenn der freizugebende bereich       
-     // die bestehenden luecken ueberlappt,      
-     // haben wir ein problem                    
-     //******************************************
+     /********************************************/
+     /* wir schauen jetzt alle freien bereiche   */
+     /* an. wenn der freizugebende bereich       */
+     /* die bestehenden luecken ueberlappt,      */
+     /* haben wir ein problem                    */
+     /********************************************/
 
          PLINKS_VOR := NIL ;
          PRECHTS_VOR := NIL ;
@@ -1780,30 +1773,30 @@ local procedure FREE_AREA ( PTR : VOIDPTR ) ;
                    begin
                      PFREE2_ENDE := PTRADD ( PFREE2 , SIZE_FREE ) ;
 
-     //******************************************
-     // pruefen, ob luecke ueberlappt oder       
-     // an bestehende luecke vorne oder          
-     // hinten angrenzt                          
-     //******************************************
+     /********************************************/
+     /* pruefen, ob luecke ueberlappt oder       */
+     /* an bestehende luecke vorne oder          */
+     /* hinten angrenzt                          */
+     /********************************************/
 
                      if ( PTRDIFF ( PFREE2 , PTR_ENDE ) < 0 ) and (
                      PTRDIFF ( XP , PFREE2_ENDE ) < 0 ) then
                        $ERROR ( 1110 ) ;
 
-     //******************************************
-     // wenn pfree2 > ptr_ende, kann man raus    
-     // weil die ptr in der queue aufsteigend    
-     // sortiert sind                            
-     //******************************************
+     /********************************************/
+     /* wenn pfree2 > ptr_ende, kann man raus    */
+     /* weil die ptr in der queue aufsteigend    */
+     /* sortiert sind                            */
+     /********************************************/
 
                      if PTRDIFF ( PFREE2 , PTR_ENDE ) > 0 then
                        break ;
 
-     //******************************************
-     // pruefen, ob luecke ueberlappt oder       
-     // an bestehende luecke vorne oder          
-     // hinten angrenzt                          
-     //******************************************
+     /********************************************/
+     /* pruefen, ob luecke ueberlappt oder       */
+     /* an bestehende luecke vorne oder          */
+     /* hinten angrenzt                          */
+     /********************************************/
 
                      if ( PTRCAST ( PFREE2 ) = PTR_ENDE ) then
                        begin
@@ -1817,9 +1810,9 @@ local procedure FREE_AREA ( PTR : VOIDPTR ) ;
                          SIZE_LINKS := SIZE_FREE
                        end (* then *) ;
 
-     //******************************************
-     // weiter zur naechsten luecke horizontal   
-     //******************************************
+     /********************************************/
+     /* weiter zur naechsten luecke horizontal   */
+     /********************************************/
 
                      if PRECHTS = NIL then
                        begin
@@ -1834,9 +1827,9 @@ local procedure FREE_AREA ( PTR : VOIDPTR ) ;
                      PFREE2 := FREEEQ ;
                    end (* with *) ;
 
-     //******************************************
-     // weiter zur naechsten luecke vertikal     
-     //******************************************
+     /********************************************/
+     /* weiter zur naechsten luecke vertikal     */
+     /********************************************/
 
                if PRECHTS = NIL then
                  begin
@@ -1856,11 +1849,11 @@ local procedure FREE_AREA ( PTR : VOIDPTR ) ;
                PFREE := FREELOW ;
              end (* with *) ;
 
-     //******************************************
-     // jetzt kann man die neue luecke           
-     // einfuegen, ggf. zusammengelegt mit       
-     // Plinks und Prechts                       
-     //******************************************
+     /********************************************/
+     /* jetzt kann man die neue luecke           */
+     /* einfuegen, ggf. zusammengelegt mit       */
+     /* Plinks und Prechts                       */
+     /********************************************/
 
          if TRLEVEL >= 3 then
            begin
@@ -1870,28 +1863,28 @@ local procedure FREE_AREA ( PTR : VOIDPTR ) ;
              WRITELN ( 'free_area: size_rechts = ' , SIZE_RECHTS )
            end (* then *) ;
 
-     //******************************************
-     // Fallunterscheidung wg. Zusammenlegung    
-     //******************************************
+     /********************************************/
+     /* Fallunterscheidung wg. Zusammenlegung    */
+     /********************************************/
 
          if PLINKS = NIL then
            if PRECHTS = NIL then
              begin
 
-     //***********************************************
-     // nur neuen Bereich einfuegen, keine Zus.legung 
-     //***********************************************
+     /*************************************************/
+     /* nur neuen Bereich einfuegen, keine Zus.legung */
+     /*************************************************/
 
                MODIFY_TREE ( 'F' , HANC_ACT , SIZEX , PDUMMY , XP ) ;
              end (* then *)
            else
              begin
 
-     //***************************************************
-     // neuer Bereich mit daranhaengendem rechten Bereich 
-     // d.h. Bereich PRECHTS suchen und nach links        
-     // verlaengern                                       
-     //***************************************************
+     /*****************************************************/
+     /* neuer Bereich mit daranhaengendem rechten Bereich */
+     /* d.h. Bereich PRECHTS suchen und nach links        */
+     /* verlaengern                                       */
+     /*****************************************************/
 
                MODIFY_TREE ( 'Z' , HANC_ACT , SIZEX + SIZE_RECHTS ,
                              PRECHTS , XP ) ;
@@ -1900,12 +1893,12 @@ local procedure FREE_AREA ( PTR : VOIDPTR ) ;
            if PRECHTS = NIL then
              begin
 
-     //****************************************************
-     // neuer Bereich haengt an bereits vorhandener Luecke 
-     // diese vergroessert sich                            
-     // d.h. Bereich PLINKS suchen und nach rechts         
-     // verlaengern                                        
-     //****************************************************
+     /******************************************************/
+     /* neuer Bereich haengt an bereits vorhandener Luecke */
+     /* diese vergroessert sich                            */
+     /* d.h. Bereich PLINKS suchen und nach rechts         */
+     /* verlaengern                                        */
+     /******************************************************/
 
                MODIFY_TREE ( 'Z' , HANC_ACT , SIZEX + SIZE_LINKS ,
                              PLINKS , XP ) ;
@@ -1913,14 +1906,14 @@ local procedure FREE_AREA ( PTR : VOIDPTR ) ;
            else
              begin
 
-     //****************************************************
-     // neuer Bereich liegt zwischen zwei Luecken          
-     // alle drei zusammenfuegen                           
-     //****************************************************
-     // zunaechst luecke rechts aus baum entfernen         
-     // dann Bereich PLINKS suchen und nach rechts         
-     // verlaengern                                        
-     //****************************************************
+     /******************************************************/
+     /* neuer Bereich liegt zwischen zwei Luecken          */
+     /* alle drei zusammenfuegen                           */
+     /******************************************************/
+     /* zunaechst luecke rechts aus baum entfernen         */
+     /* dann Bereich PLINKS suchen und nach rechts         */
+     /* verlaengern                                        */
+     /******************************************************/
 
                REMOVE_HFRE ( VRECHTS , PRECHTS , PRECHTS_VOR , HANC_ACT
                              , SIZE_RECHTS ) ;
@@ -1948,34 +1941,34 @@ local procedure FREE_AREA ( PTR : VOIDPTR ) ;
 
 function $PASMEM ( FUNCCODE : INTEGER ; X : VOIDPTR ) : VOIDPTR ;
 
-//************************************
-//  Verteiler fuer Memory-Funktionen  
-//************************************
+(**************************************)
+(*  Verteiler fuer Memory-Funktionen  *)
+(**************************************)
 
 
    begin (* $PASMEM *)
      case FUNCCODE of
 
-     //**************************
-     // alloc lt. le mechanismus 
-     //**************************
+     /****************************/
+     /* alloc lt. le mechanismus */
+     /****************************/
 
        1 : begin
              ANZ_ALLOCS := ANZ_ALLOCS + 1 ;
              $PASMEM := ALLOC_AREA ( PTR2INT ( X ) ) ;
            end (* tag/ca *) ;
 
-     //********************************
-     // allocx, d.h. alloc via getmain 
-     //********************************
+     /**********************************/
+     /* allocx, d.h. alloc via getmain */
+     /**********************************/
 
        2 : begin
              $PASMEM := ALLOC_AREAX ( PTR2INT ( X ) ) ;
            end (* tag/ca *) ;
 
-     //*************************
-     // free lt. le mechanismus 
-     //*************************
+     /***************************/
+     /* free lt. le mechanismus */
+     /***************************/
 
        3 : begin
              ANZ_FREES := ANZ_FREES + 1 ;
@@ -1983,18 +1976,18 @@ function $PASMEM ( FUNCCODE : INTEGER ; X : VOIDPTR ) : VOIDPTR ;
              $PASMEM := NIL
            end (* tag/ca *) ;
 
-     //**********************
-     // freex, d.h. freemain 
-     //**********************
+     /************************/
+     /* freex, d.h. freemain */
+     /************************/
 
        4 : begin
              FREE_AREAX ( X ) ;
              $PASMEM := NIL
            end (* tag/ca *) ;
 
-     //*******************************
-     // liste und checken aller hancs 
-     //*******************************
+     /*********************************/
+     /* liste und checken aller hancs */
+     /*********************************/
 
        5 : begin
              WRITELN ( '*** Start CHKHEAP ***' ) ;
@@ -2006,26 +1999,26 @@ function $PASMEM ( FUNCCODE : INTEGER ; X : VOIDPTR ) : VOIDPTR ;
              $PASMEM := NIL
            end (* tag/ca *) ;
 
-     //*****************************************
-     // checkalloc = pruefen, ob Adresse ok ist 
-     //*****************************************
+     /*******************************************/
+     /* checkalloc = pruefen, ob Adresse ok ist */
+     /*******************************************/
 
        6 : begin
              $PASMEM := CHECK_AREA_ALLOC ( X ) ;
            end (* tag/ca *) ;
 
-     //****************************************************
-     // zu einem file den pascal-fcb inkl. dcb herausgeben 
-     //****************************************************
+     /******************************************************/
+     /* zu einem file den pascal-fcb inkl. dcb herausgeben */
+     /******************************************************/
 
        7 : begin
              X := PTRCAST ( $PASSYS ( 10 , X ) ) ;
              $PASMEM := X ;
            end (* tag/ca *) ;
 
-     //*******************************
-     // dispose does nothing          
-     //*******************************
+     /*********************************/
+     /* dispose does nothing          */
+     /*********************************/
 
        8 : begin
              WRITELN ( '*** DISPOSE has been called ***' ) ;
@@ -2042,40 +2035,40 @@ function $PASMEM ( FUNCCODE : INTEGER ; X : VOIDPTR ) : VOIDPTR ;
 
 
 
-//********************************************************
-//$D-,A+                                                  
-//********************************************************
-//                                                        
-//  Mathematik-Funktionen fuer Pascal                     
-//                                                        
-//  02.2017 - bernd.oppolzer@yahoo.com                    
-//                                                        
-//********************************************************
-//                                                        
-//  ROUNDX                                                
-//                                                        
-//********************************************************
+(**********************************************************)
+(*$D-,A+                                                  *)
+(**********************************************************)
+(*                                                        *)
+(*  Mathematik-Funktionen fuer Pascal                     *)
+(*                                                        *)
+(*  02.2017 - bernd.oppolzer@yahoo.com                    *)
+(*                                                        *)
+(**********************************************************)
+(*                                                        *)
+(*  ROUNDX                                                *)
+(*                                                        *)
+(**********************************************************)
 
 
 
 
 local function ROUNDX1 ( WERT : REAL ; BEREICH : INTEGER ) : REAL ;
 
-//********************************************************
-//                                                        
-//   roundx.c                                             
-//                                                        
-//   Rundungsfunktion neu mit geaenderter Logik;          
-//   die Korrekturkonstante wird anhand der Groessen-     
-//   ordnung des Ausgangswertes bestimmt (Ausgangs-       
-//   wert durch (16 hoch 13); damit wird bei beiden       
-//   Plattformen mindestens eine 1 an der letzten         
-//   Ziffernposition dazuaddiert).                        
-//                                                        
-//   Autor: Bernd Oppolzer                                
-//          April 1995                                    
-//                                                        
-//********************************************************
+(**********************************************************)
+(*                                                        *)
+(*   roundx.c                                             *)
+(*                                                        *)
+(*   Rundungsfunktion neu mit geaenderter Logik;          *)
+(*   die Korrekturkonstante wird anhand der Groessen-     *)
+(*   ordnung des Ausgangswertes bestimmt (Ausgangs-       *)
+(*   wert durch (16 hoch 13); damit wird bei beiden       *)
+(*   Plattformen mindestens eine 1 an der letzten         *)
+(*   Ziffernposition dazuaddiert).                        *)
+(*                                                        *)
+(*   Autor: Bernd Oppolzer                                *)
+(*          April 1995                                    *)
+(*                                                        *)
+(**********************************************************)
 
 
    var FAKTOR : REAL ;
@@ -2101,14 +2094,14 @@ local function ROUNDX1 ( WERT : REAL ; BEREICH : INTEGER ) : REAL ;
          return
        end (* then *) ;
 
-     //**********************************************
-     //                                              
-     //   4 * (16 hoch 12)  =  1125899906842624.0    
-     //   8 * (16 hoch 12)  =  2251799813685248.0    
-     //  12 * (16 hoch 12)  =  3377699720527872.0    
-     //        16 hoch 13   =  4503599627370496.0    
-     //                                              
-     //**********************************************
+     /************************************************/
+     /*                                              */
+     /*   4 * (16 hoch 12)  =  1125899906842624.0    */
+     /*   8 * (16 hoch 12)  =  2251799813685248.0    */
+     /*  12 * (16 hoch 12)  =  3377699720527872.0    */
+     /*        16 hoch 13   =  4503599627370496.0    */
+     /*                                              */
+     /************************************************/
 
      RUNDKONST := TEST / 1125899906842624.0 ;
      if BEREICH < 0 then
@@ -2146,17 +2139,17 @@ local function ROUNDX1 ( WERT : REAL ; BEREICH : INTEGER ) : REAL ;
 function $PASMAT ( FUNCCODE : INTEGER ; I : INTEGER ; X : REAL ) : REAL
                  ;
 
-//***********************************
-//  Verteiler fuer Mathe-Funktionen  
-//***********************************
+(*************************************)
+(*  Verteiler fuer Mathe-Funktionen  *)
+(*************************************)
 
 
    begin (* $PASMAT *)
      case FUNCCODE of
 
-     //*******************************
-     // roundx                        
-     //*******************************
+     /*********************************/
+     /* roundx                        */
+     /*********************************/
 
        1 : begin
              $PASMAT := ROUNDX1 ( X , I ) ;
@@ -2170,13 +2163,13 @@ function $PASMAT ( FUNCCODE : INTEGER ; I : INTEGER ; X : REAL ) : REAL
 
 
 
-//*************************************************************
-//                                                             
-//  Interface to Operating System Commands                     
-//                                                             
-//  CMSX and WINX                                              
-//                                                             
-//*************************************************************
+(***************************************************************)
+(*                                                             *)
+(*  Interface to Operating System Commands                     *)
+(*                                                             *)
+(*  CMSX and WINX                                              *)
+(*                                                             *)
+(***************************************************************)
 
 
 
@@ -2197,24 +2190,24 @@ procedure CMSX ( CMD : CHARPTR ; var RETCODE : INTEGER ) ;
      CMSCMD := ' ' ;
      repeat
 
-     //*******************
-     // blanks ueberlesen 
-     //*******************
+     /*********************/
+     /* blanks ueberlesen */
+     /*********************/
 
        while ( CP -> = ' ' ) and ( CP -> <> CMDEND ) and ( CP -> <> CHR
        ( 0 ) ) do
          CP := PTRADD ( CP , 1 ) ;
 
-     //********************************
-     // wenn nichts mehr da, dann raus 
-     //********************************
+     /**********************************/
+     /* wenn nichts mehr da, dann raus */
+     /**********************************/
 
        if ( CP -> = CMDEND ) or ( CP -> = CHR ( 0 ) ) then
          break ;
 
-     //****************************************
-     // wenn klammer auf, dann separates token 
-     //****************************************
+     /******************************************/
+     /* wenn klammer auf, dann separates token */
+     /******************************************/
 
        if CP -> = '(' then
          begin
@@ -2222,9 +2215,9 @@ procedure CMSX ( CMD : CHARPTR ; var RETCODE : INTEGER ) ;
            CP := PTRADD ( CP , 1 ) ;
          end (* then *)
 
-     //***********************************************
-     // andernfalls token, bis trennzeichen erscheint 
-     //***********************************************
+     /*************************************************/
+     /* andernfalls token, bis trennzeichen erscheint */
+     /*************************************************/
 
        else
          begin
@@ -2242,9 +2235,9 @@ procedure CMSX ( CMD : CHARPTR ; var RETCODE : INTEGER ) ;
              end (* while *)
          end (* else *) ;
 
-     //**********************************************
-     // token in cmscmd uebertragen, wenn noch platz 
-     //**********************************************
+     /************************************************/
+     /* token in cmscmd uebertragen, wenn noch platz */
+     /************************************************/
 
        if PTRDIFF ( CPT , ADDR ( CMSCMD ) ) < SIZEOF ( CMSCMD ) - 8
        then
@@ -2254,15 +2247,15 @@ procedure CMSX ( CMD : CHARPTR ; var RETCODE : INTEGER ) ;
          end (* then *)
      until FALSE ;
 
-     //**********************************************
-     // Ende-Kennung dahinter                        
-     //**********************************************
+     /************************************************/
+     /* Ende-Kennung dahinter                        */
+     /************************************************/
 
      MEMSET ( CPT , CHR ( 255 ) , 8 ) ;
 
-     //**********************************************
-     // CMS-Kommando aufrufen via $PASSYS / 11       
-     //**********************************************
+     /************************************************/
+     /* CMS-Kommando aufrufen via $PASSYS / 11       */
+     /************************************************/
 
      if FALSE then
        WRITELN ( 'test cmsx: <' , CMSCMD , '>' ) ;
@@ -2286,9 +2279,9 @@ procedure WINX ( CMD : CHARPTR ; var RETCODE : INTEGER ) ;
      CP := CMD ;
      CMSCMD := ' ' ;
 
-     //*******************
-     // blanks ueberlesen 
-     //*******************
+     /*********************/
+     /* blanks ueberlesen */
+     /*********************/
 
      while ( CP -> = ' ' ) and ( CP -> <> CMDEND ) and ( CP -> <> CHR (
      0 ) ) do
@@ -2302,9 +2295,9 @@ procedure WINX ( CMD : CHARPTR ; var RETCODE : INTEGER ) ;
      MEMCPY ( ADDR ( CMSCMD ) , CPSTART , ILEN ) ;
      CMSCMD [ ILEN ] := CHR ( 0 ) ;
 
-     //**********************************************
-     // CMS-Kommando aufrufen via $PASSYS / 12       
-     //**********************************************
+     /************************************************/
+     /* CMS-Kommando aufrufen via $PASSYS / 12       */
+     /************************************************/
 
      if FALSE then
        WRITELN ( 'test winx: <' , CMSCMD , '>' ) ;
@@ -2317,34 +2310,34 @@ procedure WINX ( CMD : CHARPTR ; var RETCODE : INTEGER ) ;
 
 
 
-//*************************************************************
-//$D-,A+                                                       
-//*************************************************************
-//                                                             
-//  String-Handling Funktionen fuer Pascal                     
-//                                                             
-//  11.2016 - bernd.oppolzer@yahoo.com                         
-//                                                             
-//*************************************************************
-//                                                             
-//  see the table in the Pascal compiler Pass 1 (PASCAL1);     
-//  this table maps the function names to the procedure        
-//  entries and subfunction numbers here                       
-//                                                             
-//  'SUBSTR   ' , 86 , FUNC , '$PASSTR1' , 1 , 3 , 'V' , 1     
-//  'DELETE   ' , 87 , FUNC , '$PASSTR1' , 2 , 3 , 'V' , 1     
-//  'RTRIM    ' , 88 , FUNC , '$PASSTR1' , 3 , 1 , 'V' , 1     
-//  'LTRIM    ' , 89 , FUNC , '$PASSTR1' , 4 , 1 , 'V' , 1     
-//  'TRIM     ' , 90 , FUNC , '$PASSTR1' , 5 , 1 , 'V' , 1     
-//  'COMPRESS ' , 91 , FUNC , '$PASSTR1' , 6 , 1 , 'V' , 1     
-//  'INDEX    ' , 93 , FUNC , '$PASSTR2' , 1 , 2 , 'I' , 2     
-//  'VERIFY   ' , 94 , FUNC , '$PASSTR2' , 2 , 2 , 'I' , 2     
-//  'TRANSLATE' , 95 , FUNC , '$PASSTR3' , 1 , 3 , 'V' , 3     
-//  'LASTINDEX' , 99 , FUNC , '$PASSTR2' , 3 , 2 , 'I' , 2     
-//  'LEFT    ' , 100 , FUNC , '$PASSTR1' , 7 , 2 , 'V' , 1     
-//  'RIGHT   ' , 101 , FUNC , '$PASSTR1' , 8 , 2 , 'V' , 1     
-//                                                             
-//*************************************************************
+(***************************************************************)
+(*$D-,A+                                                       *)
+(***************************************************************)
+(*                                                             *)
+(*  String-Handling Funktionen fuer Pascal                     *)
+(*                                                             *)
+(*  11.2016 - bernd.oppolzer@yahoo.com                         *)
+(*                                                             *)
+(***************************************************************)
+(*                                                             *)
+(*  see the table in the Pascal compiler Pass 1 (PASCAL1);     *)
+(*  this table maps the function names to the procedure        *)
+(*  entries and subfunction numbers here                       *)
+(*                                                             *)
+(*  'SUBSTR   ' , 86 , FUNC , '$PASSTR1' , 1 , 3 , 'V' , 1     *)
+(*  'DELETE   ' , 87 , FUNC , '$PASSTR1' , 2 , 3 , 'V' , 1     *)
+(*  'RTRIM    ' , 88 , FUNC , '$PASSTR1' , 3 , 1 , 'V' , 1     *)
+(*  'LTRIM    ' , 89 , FUNC , '$PASSTR1' , 4 , 1 , 'V' , 1     *)
+(*  'TRIM     ' , 90 , FUNC , '$PASSTR1' , 5 , 1 , 'V' , 1     *)
+(*  'COMPRESS ' , 91 , FUNC , '$PASSTR1' , 6 , 1 , 'V' , 1     *)
+(*  'INDEX    ' , 93 , FUNC , '$PASSTR2' , 1 , 2 , 'I' , 2     *)
+(*  'VERIFY   ' , 94 , FUNC , '$PASSTR2' , 2 , 2 , 'I' , 2     *)
+(*  'TRANSLATE' , 95 , FUNC , '$PASSTR3' , 1 , 3 , 'V' , 3     *)
+(*  'LASTINDEX' , 99 , FUNC , '$PASSTR2' , 3 , 2 , 'I' , 2     *)
+(*  'LEFT    ' , 100 , FUNC , '$PASSTR1' , 7 , 2 , 'V' , 1     *)
+(*  'RIGHT   ' , 101 , FUNC , '$PASSTR1' , 8 , 2 , 'V' , 1     *)
+(*                                                             *)
+(***************************************************************)
 
 
 
@@ -2371,9 +2364,9 @@ function $PASSTR1 ( FUNCCODE : INTEGER ; const S1 : STRING ; I1 :
    begin (* $PASSTR1 *)
      case FUNCCODE of
 
-     //*******************************
-     // SUBSTR                        
-     //*******************************
+     /*********************************/
+     /* SUBSTR                        */
+     /*********************************/
 
        1 : begin
              START := I1 ;
@@ -2398,9 +2391,9 @@ function $PASSTR1 ( FUNCCODE : INTEGER ; const S1 : STRING ; I1 :
              MEMCPY ( P , Q , LEN ) ;
            end (* tag/ca *) ;
 
-     //*******************************
-     // DELETE                        
-     //*******************************
+     /*********************************/
+     /* DELETE                        */
+     /*********************************/
 
        2 : begin
              START := I1 ;
@@ -2438,9 +2431,9 @@ function $PASSTR1 ( FUNCCODE : INTEGER ; const S1 : STRING ; I1 :
                end (* else *) ;
            end (* tag/ca *) ;
 
-     //*******************************
-     // RTRIM                         
-     //*******************************
+     /*********************************/
+     /* RTRIM                         */
+     /*********************************/
 
        3 : begin
              LS1 := LENGTH ( S1 ) ;
@@ -2463,9 +2456,9 @@ function $PASSTR1 ( FUNCCODE : INTEGER ; const S1 : STRING ; I1 :
              MEMCPY ( STRRESULTP , Q , LEN ) ;
            end (* tag/ca *) ;
 
-     //*******************************
-     // LTRIM                         
-     //*******************************
+     /*********************************/
+     /* LTRIM                         */
+     /*********************************/
 
        4 : begin
              LS1 := LENGTH ( S1 ) ;
@@ -2487,9 +2480,9 @@ function $PASSTR1 ( FUNCCODE : INTEGER ; const S1 : STRING ; I1 :
              MEMCPY ( STRRESULTP , CP , LEN ) ;
            end (* tag/ca *) ;
 
-     //*******************************
-     // TRIM                          
-     //*******************************
+     /*********************************/
+     /* TRIM                          */
+     /*********************************/
 
        5 : begin
              LS1 := LENGTH ( S1 ) ;
@@ -2519,9 +2512,9 @@ function $PASSTR1 ( FUNCCODE : INTEGER ; const S1 : STRING ; I1 :
              MEMCPY ( STRRESULTP , CP , LEN ) ;
            end (* tag/ca *) ;
 
-     //*******************************
-     // COMPRESS                      
-     //*******************************
+     /*********************************/
+     /* COMPRESS                      */
+     /*********************************/
 
        6 : begin
              LS1 := LENGTH ( S1 ) ;
@@ -2555,72 +2548,62 @@ function $PASSTR1 ( FUNCCODE : INTEGER ; const S1 : STRING ; I1 :
              LF -> := LEN ;
            end (* tag/ca *) ;
 
-     //*******************************
-     // LEFT                          
-     //*******************************
+     /*********************************/
+     /* LEFT                          */
+     /*********************************/
 
        7 : begin
              START := 1 ;
              LEN := I1 ;
-             if LEN < 0 then
+             if LEN < 1 then
                $ERROR ( 1201 ) ;
-             if LEN = 0 then
-               $PASSTR1 := ''
-             else
+             LS1 := LENGTH ( S1 ) ;
+             if LS1 > LEN then
+               LS1 := LEN ;
+             $PASSTR1 := REPEATSTR ( ' ' , LEN ) ;
+             if LS1 > 0 then
                begin
-                 LS1 := LENGTH ( S1 ) ;
-                 if LS1 > LEN then
-                   LS1 := LEN ;
-                 $PASSTR1 := REPEATSTR ( ' ' , LEN ) ;
-                 if LS1 > 0 then
-                   begin
-                     P := STRRESULTP ;
-                     Q := ADDR ( S1 [ START ] ) ;
-                     MEMCPY ( P , Q , LS1 )
-                   end (* then *)
-               end (* else *)
+                 P := STRRESULTP ;
+                 Q := ADDR ( S1 [ START ] ) ;
+                 MEMCPY ( P , Q , LS1 )
+               end (* then *)
            end (* tag/ca *) ;
 
-     //*******************************
-     // RIGHT                         
-     //*******************************
+     /*********************************/
+     /* RIGHT                         */
+     /*********************************/
 
        8 : begin
              START := 1 ;
              LEN := I1 ;
-             if LEN < 0 then
+             if LEN < 1 then
                $ERROR ( 1201 ) ;
-             if LEN = 0 then
-               $PASSTR1 := ''
+             LS1 := LENGTH ( S1 ) ;
+             if LS1 > LEN then
+               begin
+                 START := LS1 - LEN + 1 ;
+                 LS1 := LEN ;
+                 X := 0 ;
+               end (* then *)
              else
                begin
-                 LS1 := LENGTH ( S1 ) ;
-                 if LS1 > LEN then
-                   begin
-                     START := LS1 - LEN + 1 ;
-                     LS1 := LEN ;
-                     X := 0 ;
-                   end (* then *)
-                 else
-                   begin
-                     START := 1 ;
-                     X := LEN - LS1 ;
-                   end (* else *) ;
-                 $PASSTR1 := REPEATSTR ( ' ' , LEN ) ;
-                 if LS1 > 0 then
-                   begin
-                     P := STRRESULTP ;
-                     if X > 0 then
-                       P := PTRADD ( P , X ) ;
-                     Q := ADDR ( S1 [ START ] ) ;
-                     MEMCPY ( P , Q , LS1 )
-                   end (* then *)
-               end (* else *)
+                 START := 1 ;
+                 X := LEN - LS1 ;
+               end (* else *) ;
+             $PASSTR1 := REPEATSTR ( ' ' , LEN ) ;
+             if LS1 > 0 then
+               begin
+                 P := STRRESULTP ;
+                 if X > 0 then
+                   P := PTRADD ( P , X ) ;
+                 Q := ADDR ( S1 [ START ] ) ;
+                 MEMCPY ( P , Q , LS1 )
+               end (* then *)
            end (* tag/ca *) ;
 
-     //*******************************
-     // unknown subfunction           
-     //*******************************
+     /*********************************/
+     /* unknown subfunction           */
+     /*********************************/
 
        otherwise
          $ERROR ( 1120 ) ;
@@ -2652,9 +2635,9 @@ function $PASSTR2 ( FUNCCODE : INTEGER ; const S1 : STRING ; const S2 :
    begin (* $PASSTR2 *)
      case FUNCCODE of
 
-     //*******************************
-     // INDEX                         
-     //*******************************
+     /*********************************/
+     /* INDEX                         */
+     /*********************************/
 
        1 : begin
 
@@ -2758,9 +2741,9 @@ function $PASSTR2 ( FUNCCODE : INTEGER ; const S1 : STRING ; const S2 :
                end (* else *)
            end (* tag/ca *) ;
 
-     //*******************************
-     // VERIFY                        
-     //*******************************
+     /*********************************/
+     /* VERIFY                        */
+     /*********************************/
 
        2 : begin
              OKSET := [ ] ;
@@ -2775,9 +2758,9 @@ function $PASSTR2 ( FUNCCODE : INTEGER ; const S1 : STRING ; const S2 :
                  end (* then *) ;
            end (* tag/ca *) ;
 
-     //*******************************
-     // LastIndex                     
-     //*******************************
+     /*********************************/
+     /* LastIndex                     */
+     /*********************************/
 
        3 : begin
 
@@ -2878,9 +2861,9 @@ function $PASSTR2 ( FUNCCODE : INTEGER ; const S1 : STRING ; const S2 :
                end (* else *)
            end (* tag/ca *) ;
 
-     //*******************************
-     // unknown subfunction           
-     //*******************************
+     /*********************************/
+     /* unknown subfunction           */
+     /*********************************/
 
        otherwise
          $ERROR ( 1120 ) ;
@@ -2942,9 +2925,9 @@ function $PASSTR3 ( FUNCCODE : INTEGER ; const S1 : STRING ; const S2 :
    begin (* $PASSTR3 *)
      case FUNCCODE of
 
-     //*******************************
-     // TRANSLATE                     
-     //*******************************
+     /*********************************/
+     /* TRANSLATE                     */
+     /*********************************/
 
        1 : begin
              L2 := LENGTH ( S2 ) ;
@@ -2983,9 +2966,9 @@ function $PASSTR3 ( FUNCCODE : INTEGER ; const S1 : STRING ; const S2 :
                end (* for *) ;
            end (* tag/ca *) ;
 
-     //*******************************
-     // unknown subfunction           
-     //*******************************
+     /*********************************/
+     /* unknown subfunction           */
+     /*********************************/
 
        otherwise
          $ERROR ( 1120 ) ;
@@ -3019,9 +3002,9 @@ function FILESTAT ( var X : ANYFILE ) : CHAR ;
 
 local function TOUPPER ( CH : CHAR ) : CHAR ;
 
-//****************************************
-//   SETZT KLEINBUCHSTABEN IN GROSSE UM   
-//****************************************
+(******************************************)
+(*   SETZT KLEINBUCHSTABEN IN GROSSE UM   *)
+(******************************************)
 
 
    begin (* TOUPPER *)
@@ -3629,7 +3612,7 @@ function $PASRDX ( var F : TEXT ; PMETA : ANYPTR ; WIDTH : INTEGER ) :
                  INTEGER ;
 
 //**********************************************************
-// function to read scalar values from files                
+// function to scalar values from files                     
 // this does not exist in Standard Pascal                   
 //**********************************************************
 // WIDTH parameter added to support fixed length integer    
@@ -3655,18 +3638,13 @@ function $PASRDX ( var F : TEXT ; PMETA : ANYPTR ; WIDTH : INTEGER ) :
        ELEMCOUNT : SHORT ;
        MAXIDLEN : SHORT ;
        MINIDLEN : SHORT ;
-       IMIN , IMAX , IMID : SHORT ;
-       PTABLE : PSHORT ;
-       PELEM : PSHORT ;
-       OFFS : SHORT ;
-       LEN : SHORT ;
-       PVAL : -> CHAR ;
-       MRES : INTEGER ;
-       IFOUND : SHORT ;
 
    begin (* $PASRDX *)
      if WIDTH = 0 then
-       $ERROR ( 1216 ) ;
+       begin
+         $PASRDX := 0 ;
+         return
+       end (* then *) ;
 
      //**********************************
      // access metadata for scalar type  
@@ -3698,8 +3676,11 @@ function $PASRDX ( var F : TEXT ; PMETA : ANYPTR ; WIDTH : INTEGER ) :
      if EOLN ( F ) then
        GET ( F ) ;
      if EOF ( F ) then
-       $ERROR ( 1216 ) ;
-     RETVAL := - 1 ;
+       begin
+         $PASRDX := 0 ;
+         return
+       end (* then *) ;
+     RETVAL := 0 ;
 
      //**********************
      // skip leading blanks  
@@ -3718,7 +3699,10 @@ function $PASRDX ( var F : TEXT ; PMETA : ANYPTR ; WIDTH : INTEGER ) :
            begin
              GET ( F ) ;
              if EOF ( F ) then
-               $ERROR ( 1216 ) ;
+               begin
+                 $PASRDX := RETVAL ;
+                 return
+               end (* then *)
            end (* else *)
        end (* while *) ;
 
@@ -3755,51 +3739,7 @@ function $PASRDX ( var F : TEXT ; PMETA : ANYPTR ; WIDTH : INTEGER ) :
      // do a binary search in the PMETA table     
      // to find the value of the scalar           
      //*******************************************
-     // The normal table of scalar type ids       
-     // (sorted by order of definition, that is   
-     // scalar value) starts at PMETA + 8.        
-     // The ordered table of scalar type ids      
-     // (sorted by name) starts at PMETA + 8      
-     // + ELEMCOUNT * 4.                          
-     // Every table element consists of a         
-     // 2 byte offset (from PMETA) and a 2 byte   
-     // length; the offset points to the beginning
-     // of the (upper case) scalar ID.            
-     // This is true for both tables, BTW.        
-     //*******************************************
 
-     IMAX := ELEMCOUNT - 1 ;
-     IMIN := 0 ;
-     PTABLE := PTRADD ( PMETA , 8 + ELEMCOUNT * 4 ) ;
-     while TRUE do
-       begin
-         if IMAX < IMIN then
-           begin
-             IFOUND := - 1 ;
-             break
-           end (* then *) ;
-         IMID := ( IMAX + IMIN ) DIV 2 ;
-         PELEM := PTRADD ( PTABLE , IMID * 6 ) ;
-         OFFS := PELEM -> ;
-         PELEM := PTRADD ( PELEM , 2 ) ;
-         LEN := PELEM -> ;
-         PVAL := PTRADD ( PMETA , OFFS ) ;
-         MRES := MEMCMP ( PVAL , ADDR ( BUFFER ) , IX ) ;
-         if MRES < 0 then
-           IMIN := IMID + 1
-         else
-           if MRES > 0 then
-             IMAX := IMID - 1
-           else
-             begin
-               PELEM := PTRADD ( PELEM , 2 ) ;
-               IFOUND := PELEM -> ;
-               break
-             end (* else *)
-       end (* while *) ;
-     if IFOUND < 0 then
-       $ERROR ( 1215 ) ;
-     RETVAL := IFOUND ;
 
      //*******************************************
      // set result                                
@@ -3976,7 +3916,10 @@ function $PASRSB ( const S : STRING ;     // source string
 
    begin (* $PASRSB *)
      if WIDTH = 0 then
-       $ERROR ( 1210 ) ;
+       begin
+         $PASRSB := FALSE ;
+         return
+       end (* then *) ;
      FORMATTED := TRUE ;
      if WIDTH < 0 then
        begin
@@ -3986,7 +3929,10 @@ function $PASRSB ( const S : STRING ;     // source string
      if RPOS <= 0 then
        RPOS := 1 ;
      if RPOS > LENGTH ( S ) then
-       $ERROR ( 1210 ) ;
+       begin
+         $PASRSB := FALSE ;
+         return
+       end (* then *) ;
      F := ADDR ( S [ RPOS ] ) ;
      RLEN := LENGTH ( S ) - RPOS + 1 ;
      RETVAL := FALSE ;
@@ -4004,7 +3950,8 @@ function $PASRSB ( const S : STRING ;     // source string
      if ( RLEN <= 0 ) or ( WIDTH <= 0 ) then
        begin
          RPOS := PTRDIFF ( F , ADDR ( S [ 1 ] ) ) + 1 ;
-         $ERROR ( 1210 ) ;
+         $PASRSB := RETVAL ;
+         return
        end (* then *) ;
 
      //************************************************
@@ -4110,196 +4057,6 @@ function $PASRSB ( const S : STRING ;     // source string
          end (* while *) ;
      RPOS := PTRDIFF ( F , ADDR ( S [ 1 ] ) ) + 1 ;
    end (* $PASRSB *) ;
-
-
-
-function $PASRSX ( const S : STRING ;     // source string
-                 var RPOS : INTEGER ;     // reading position
-                 WIDTH : INTEGER ;        // optional width
-                 PMETA : ANYPTR )         // meta table for scalar type
-                 : INTEGER ;              // result type
-
-//**********************************************************
-// this function implements READSTR for scalars             
-// s = the source string                                    
-// rpos = the reading position (counts from 1) - is updated 
-// width = the optional width (default -1)                  
-//**********************************************************
-// Bernd Oppolzer - New Stanford Pascal                     
-//**********************************************************
-
-
-   type SHORT = 0 .. 32000 ;
-        PSHORT = -> SHORT ;
-
-   var PS : PSHORT ;
-       RETVAL : INTEGER ;
-       FORMATTED : BOOLEAN ;
-       F : -> CHAR ;
-       RLEN : INTEGER ;
-       IX : INTEGER ;
-       BUFFER : CHAR ( 5 ) ;
-       WIDTHMAX : INTEGER ;
-       ELEMCOUNT : SHORT ;
-       MAXIDLEN : SHORT ;
-       MINIDLEN : SHORT ;
-       IMIN , IMAX , IMID : SHORT ;
-       PTABLE : PSHORT ;
-       PELEM : PSHORT ;
-       OFFS : SHORT ;
-       LEN : SHORT ;
-       PVAL : -> CHAR ;
-       MRES : INTEGER ;
-       IFOUND : SHORT ;
-
-   begin (* $PASRSX *)
-     if WIDTH = 0 then
-       $ERROR ( 1216 ) ;
-
-     //**********************************
-     // access metadata for scalar type  
-     //**********************************
-
-     PS := PMETA ;
-     if PS -> <> 0 then
-       $ERROR ( 1220 ) ;
-     PS := PTRADD ( PS , 2 ) ;
-     ELEMCOUNT := PS -> ;
-     PS := PTRADD ( PS , 2 ) ;
-     MAXIDLEN := PS -> ;
-     PS := PTRADD ( PS , 2 ) ;
-     MINIDLEN := PS -> ;
-     PS := PTRADD ( PS , 2 ) ;
-     FORMATTED := TRUE ;
-     if WIDTH < 0 then
-       begin
-         FORMATTED := FALSE ;
-         WIDTH := 999999999 ;
-       end (* then *) ;
-     if RPOS <= 0 then
-       RPOS := 1 ;
-     if RPOS > LENGTH ( S ) then
-       $ERROR ( 1216 ) ;
-     F := ADDR ( S [ RPOS ] ) ;
-     RLEN := LENGTH ( S ) - RPOS + 1 ;
-
-     //**********************
-     // skip leading blanks  
-     //**********************
-
-     while ( F -> = ' ' ) and ( WIDTH > 0 ) and ( RLEN > 0 ) do
-       begin
-         F := PTRADD ( F , 1 ) ;
-         RLEN := RLEN - 1 ;
-         WIDTH := WIDTH - 1 ;
-       end (* while *) ;
-     if ( RLEN <= 0 ) or ( WIDTH <= 0 ) then
-       begin
-         RPOS := PTRDIFF ( F , ADDR ( S [ 1 ] ) ) + 1 ;
-         $ERROR ( 1216 ) ;
-       end (* then *) ;
-
-     //************************************************
-     // symbol begins ...                              
-     //************************************************
-
-     if not ( F -> in IDCHARS ) then
-       $ERROR ( 1212 ) ;
-     BUFFER := ' ' ;
-     WIDTHMAX := WIDTH ;
-     if WIDTHMAX > 20 then
-       WIDTHMAX := 20 ;
-     if WIDTHMAX > MAXIDLEN then
-       WIDTHMAX := MAXIDLEN ;
-     IX := 1 ;
-     repeat
-       BUFFER [ IX ] := TOUPPER ( F -> ) ;
-       IX := IX + 1 ;
-       F := PTRADD ( F , 1 ) ;
-       RLEN := RLEN - 1 ;
-       WIDTH := WIDTH - 1
-     until ( IX > WIDTHMAX ) or ( not ( F -> in IDCHARS ) ) or ( WIDTH
-     <= 0 ) or ( RLEN <= 0 ) ;
-     IX := IX - 1 ;
-     if IX < MINIDLEN then
-       $ERROR ( 1214 ) ;
-
-     //*******************************************
-     // now the string in BUFFER is the scalar    
-     // identifier (maybe) and has a length       
-     // between MINIDLEN and MAXIDLEN;            
-     // do a binary search in the PMETA table     
-     // to find the value of the scalar           
-     //*******************************************
-     // The normal table of scalar type ids       
-     // (sorted by order of definition, that is   
-     // scalar value) starts at PMETA + 8.        
-     // The ordered table of scalar type ids      
-     // (sorted by name) starts at PMETA + 8      
-     // + ELEMCOUNT * 4.                          
-     // Every table element consists of a         
-     // 2 byte offset (from PMETA) and a 2 byte   
-     // length; the offset points to the beginning
-     // of the (upper case) scalar ID.            
-     // This is true for both tables, BTW.        
-     //*******************************************
-
-     IMAX := ELEMCOUNT - 1 ;
-     IMIN := 0 ;
-     PTABLE := PTRADD ( PMETA , 8 + ELEMCOUNT * 4 ) ;
-     while TRUE do
-       begin
-         if IMAX < IMIN then
-           begin
-             IFOUND := - 1 ;
-             break
-           end (* then *) ;
-         IMID := ( IMAX + IMIN ) DIV 2 ;
-         PELEM := PTRADD ( PTABLE , IMID * 6 ) ;
-         OFFS := PELEM -> ;
-         PELEM := PTRADD ( PELEM , 2 ) ;
-         LEN := PELEM -> ;
-         PVAL := PTRADD ( PMETA , OFFS ) ;
-         MRES := MEMCMP ( PVAL , ADDR ( BUFFER ) , IX ) ;
-         if MRES < 0 then
-           IMIN := IMID + 1
-         else
-           if MRES > 0 then
-             IMAX := IMID - 1
-           else
-             begin
-               PELEM := PTRADD ( PELEM , 2 ) ;
-               IFOUND := PELEM -> ;
-               break
-             end (* else *)
-       end (* while *) ;
-     if IFOUND < 0 then
-       $ERROR ( 1215 ) ;
-     RETVAL := IFOUND ;
-
-     //*******************************************
-     // compose final result                      
-     //*******************************************
-
-     $PASRSX := RETVAL ;
-
-     //*******************************************
-     // if width specified, skip remaining chars  
-     //*******************************************
-
-     if FORMATTED then
-       while TRUE do
-         begin
-           if ( RLEN <= 0 ) or ( WIDTH <= 0 ) then
-             break ;
-           if F -> <> ' ' then
-             $ERROR ( 1211 ) ;
-           F := PTRADD ( F , 1 ) ;
-           RLEN := RLEN - 1 ;
-           WIDTH := WIDTH - 1 ;
-         end (* while *) ;
-     RPOS := PTRDIFF ( F , ADDR ( S [ 1 ] ) ) + 1 ;
-   end (* $PASRSX *) ;
 
 
 
@@ -4948,6 +4705,7 @@ procedure $PASWRR ( var F : TEXT ; WIDTH : INTEGER ; SCALE : INTEGER ;
            end (* then *) ;
          FERTIG := FALSE ;
          EXPONENT := 0 ;
+         WRITELN ( 'v = ' , V : 12 : 6 , ' expo = ' , EXPONENT : 1 ) ;
          while not FERTIG do
            begin
              if V >= 100000000.0 then
@@ -4988,45 +4746,44 @@ procedure $PASWRR ( var F : TEXT ; WIDTH : INTEGER ; SCALE : INTEGER ;
                        else
                          FERTIG := TRUE
            end (* while *) ;
+         WRITELN ( 'v = ' , V : 12 : 6 , ' expo = ' , EXPONENT : 1 ) ;
        end (* else *) ;
 
-     //*************************
-     // modify and check length 
-     //*************************
+     //*********************************
+     // add leading zeroes or blanks    
+     // like in the integer procedure   
+     //*********************************
 
      if MINUS then
        LEN := LEN + 1 ;
-     if WIDTH < LEN then
-       WIDTH := LEN ;
-
-     //**************************************************
-     // if needed, add leading zeroes or blanks          
-     // like in the integer procedure                    
-     //**************************************************
-
-     ZEROES := WIDTH - LEN ;
-     if LEADZ then
+     if LEN < WIDTH then
        begin
-         if MINUS then
-           WRITE ( F , '-' ) ;
-         for X := 1 to ZEROES do
-           WRITE ( F , '0' ) ;
-         if MINUS then
-           WRITE ( F , BUFFER : LEN - 1 )
-         else
-           WRITE ( F , BUFFER : LEN ) ;
-       end (* then *)
-     else
-       begin
-         WRITE ( F , ' ' : ZEROES ) ;
-         if MINUS then
+         ZEROES := WIDTH - LEN ;
+         if LEADZ then
            begin
-             WRITE ( F , '-' ) ;
-             WRITE ( F , BUFFER : LEN - 1 ) ;
+             if MINUS then
+               WRITE ( F , '-' ) ;
+             for X := 1 to ZEROES do
+               WRITE ( F , '0' ) ;
+             if MINUS then
+               WRITE ( F , BUFFER : LEN - 1 )
+             else
+               WRITE ( F , BUFFER : LEN ) ;
            end (* then *)
          else
-           WRITE ( F , BUFFER : LEN ) ;
-       end (* else *)
+           begin
+             WRITE ( F , ' ' : ZEROES ) ;
+             if MINUS then
+               begin
+                 WRITE ( F , '-' ) ;
+                 WRITE ( F , BUFFER : LEN - 1 ) ;
+               end (* then *)
+             else
+               WRITE ( F , BUFFER : LEN ) ;
+           end (* else *)
+       end (* then *)
+     else
+       $ERROR ( 1208 )
    end (* $PASWRR *) ;
 
 
@@ -5117,971 +4874,6 @@ procedure $PASWRX ( var F : TEXT ; V : INTEGER ; WIDTH : INTEGER ;
      else
        WRITE ( F , SUBSTR ( BUFFER , 1 , LEN ) : - WIDTH )
    end (* $PASWRX *) ;
-
-
-
-procedure $PASWSI ( var S : STRING ; INIT : BOOLEAN ; WERT : INTEGER ;
-                  STELLEN : INTEGER ) ;
-
-//**********************************************************
-// write integer to string                                  
-//**********************************************************
-// Bernd Oppolzer - New Stanford Pascal                     
-//**********************************************************
-
-
-   var L : INTEGER ;
-       LA : INTEGER ;
-       ML : INTEGER ;
-       BUFFER : CHAR ( 20 ) ;
-       MINUS : BOOLEAN := FALSE ;
-       ZEROES : BOOLEAN := FALSE ;
-       IX : INTEGER ;
-       FERTIG : BOOLEAN ;
-       CPT : -> CHAR ;
-       LEN : INTEGER ;
-       LEN2 : INTEGER ;
-       NZEROES : INTEGER ;
-
-   begin (* $PASWSI *)
-
-     //*********************************
-     // negative length = zeroes left   
-     //*********************************
-
-     if STELLEN < 0 then
-       begin
-         ZEROES := TRUE ;
-         STELLEN := - STELLEN
-       end (* then *) ;
-     BUFFER := '' ;
-     if WERT < 0 then
-       begin
-         MINUS := TRUE ;
-         WERT := - WERT
-       end (* then *) ;
-
-     //*********************************
-     // build digits in buffer          
-     //*********************************
-
-     IX := 20 ;
-     repeat
-       BUFFER [ IX ] := CHR ( ORD ( '0' ) + WERT MOD 10 ) ;
-       WERT := WERT DIV 10 ;
-       IX := IX - 1 ;
-       FERTIG := WERT = 0
-     until FERTIG ;
-
-     //*********************************
-     // look if number of digits fit    
-     // if not, adjust output width     
-     // don't loose digits here         
-     //*********************************
-
-     LEN := 20 - IX ;
-     LEN2 := LEN ;
-     if MINUS then
-       LEN2 := LEN + 1 ;
-     L := STELLEN ;
-     if L < LEN2 then
-       L := LEN2 ;
-
-     //*************************
-     // append blanks to string 
-     //*************************
-
-     ML := MAXLENGTH ( S ) ;
-     if INIT then
-       begin
-         if L > ML then
-           $ERROR ( 1226 ) ;
-         S := REPEATSTR ( ' ' , L ) ;
-         CPT := ADDR ( S [ 1 ] ) ;
-       end (* then *)
-     else
-       begin
-         LA := LENGTH ( S ) ;
-         if LA + L > ML then
-           $ERROR ( 1226 ) ;
-         S := S || REPEATSTR ( ' ' , L ) ;
-         CPT := ADDR ( S [ LA + 1 ] ) ;
-       end (* else *) ;
-
-     //*************************
-     // move buffer to string   
-     //*************************
-
-     if ZEROES then
-       begin
-         if MINUS then
-           begin
-             CPT -> := '-' ;
-             CPT := PTRADD ( CPT , 1 )
-           end (* then *) ;
-         NZEROES := L - LEN2 ;
-         if NZEROES > 0 then
-           begin
-             MEMSET ( CPT , '0' , NZEROES ) ;
-             CPT := PTRADD ( CPT , NZEROES ) ;
-           end (* then *) ;
-       end (* then *)
-     else
-       begin
-         NZEROES := L - LEN2 ;
-         if NZEROES > 0 then
-           CPT := PTRADD ( CPT , NZEROES ) ;
-         if MINUS then
-           begin
-             CPT -> := '-' ;
-             CPT := PTRADD ( CPT , 1 )
-           end (* then *) ;
-       end (* else *) ;
-     MEMCPY ( CPT , ADDR ( BUFFER [ IX + 1 ] ) , LEN ) ;
-   end (* $PASWSI *) ;
-
-
-
-procedure $PASWSB ( var S : STRING ; INIT : BOOLEAN ; WERT : INTEGER ;
-                  STELLEN : INTEGER ) ;
-
-//**********************************************************
-// write boolean to string                                  
-//**********************************************************
-// Bernd Oppolzer - New Stanford Pascal                     
-//**********************************************************
-
-
-   var L : INTEGER ;
-       LA : INTEGER ;
-       ML : INTEGER ;
-       XLEFT : BOOLEAN := FALSE ;
-       XBOOL : CHAR ( 5 ) ;
-       CPT : -> CHAR ;
-       LTRANS : INTEGER ;
-       TOFFS : INTEGER ;
-
-   begin (* $PASWSB *)
-     if STELLEN = 0 then
-       return ;
-     if STELLEN < 0 then
-       begin
-         XLEFT := TRUE ;
-         STELLEN := - STELLEN
-       end (* then *) ;
-
-     //*************************
-     // append blanks to string 
-     //*************************
-
-     L := STELLEN ;
-     ML := MAXLENGTH ( S ) ;
-     if INIT then
-       begin
-         if L > ML then
-           $ERROR ( 1226 ) ;
-         S := REPEATSTR ( ' ' , L ) ;
-         CPT := ADDR ( S [ 1 ] ) ;
-       end (* then *)
-     else
-       begin
-         LA := LENGTH ( S ) ;
-         if LA + L > ML then
-           $ERROR ( 1226 ) ;
-         S := S || REPEATSTR ( ' ' , L ) ;
-         CPT := ADDR ( S [ LA + 1 ] ) ;
-       end (* else *) ;
-
-     //***********************************
-     // build value in XBOOL variable     
-     //***********************************
-
-     if WERT <> 0 then
-       begin
-         XBOOL := 'TRUE' ;
-         LTRANS := 4 ;
-       end (* then *)
-     else
-       begin
-         XBOOL := 'FALSE' ;
-         LTRANS := 5 ;
-       end (* else *) ;
-
-     //*************************
-     // move value to string    
-     //*************************
-
-     if LTRANS >= STELLEN then
-       begin
-         TOFFS := 0 ;
-         LTRANS := STELLEN
-       end (* then *)
-     else
-       if XLEFT then
-         TOFFS := 0
-       else
-         TOFFS := STELLEN - LTRANS ;
-     CPT := PTRADD ( CPT , TOFFS ) ;
-     MEMCPY ( CPT , ADDR ( XBOOL ) , LTRANS ) ;
-   end (* $PASWSB *) ;
-
-
-
-procedure $PASWSC ( var S : STRING ; INIT : BOOLEAN ; WERT : INTEGER ;
-                  STELLEN : INTEGER ) ;
-
-//**********************************************************
-// write char to string                                     
-//**********************************************************
-// Bernd Oppolzer - New Stanford Pascal                     
-//**********************************************************
-
-
-   var L : INTEGER ;
-       LA : INTEGER ;
-       ML : INTEGER ;
-
-   begin (* $PASWSC *)
-     if STELLEN <= 0 then
-       return ;
-
-     //*************************
-     // append blanks to string 
-     // and insert chat         
-     //*************************
-
-     L := STELLEN ;
-     ML := MAXLENGTH ( S ) ;
-     if INIT then
-       begin
-         if L > ML then
-           $ERROR ( 1226 ) ;
-         S := REPEATSTR ( ' ' , L ) ;
-         S [ L ] := CHR ( WERT )
-       end (* then *)
-     else
-       begin
-         LA := LENGTH ( S ) ;
-         if LA + L > ML then
-           $ERROR ( 1226 ) ;
-         S := S || REPEATSTR ( ' ' , L ) ;
-         S [ LA + L ] := CHR ( WERT )
-       end (* else *) ;
-   end (* $PASWSC *) ;
-
-
-
-procedure $PASWSS ( var S : STRING ; INIT : BOOLEAN ; PCHAR : -> CHAR ;
-                  STELLEN : INTEGER ; COUNT : INTEGER ) ;
-
-//**********************************************************
-// write char to string                                     
-//**********************************************************
-// Bernd Oppolzer - New Stanford Pascal                     
-//**********************************************************
-
-
-   var L : INTEGER ;
-       LA : INTEGER ;
-       ML : INTEGER ;
-       XLEFT : BOOLEAN := FALSE ;
-       CPT : -> CHAR ;
-       LTRANS : INTEGER ;
-       TOFFS : INTEGER ;
-
-   begin (* $PASWSS *)
-     if STELLEN = 0 then
-       return ;
-     if STELLEN < 0 then
-       begin
-         XLEFT := TRUE ;
-         STELLEN := - STELLEN
-       end (* then *) ;
-
-     //*************************
-     // append blanks to string 
-     // and copy string         
-     // justified left or right 
-     //*************************
-
-     L := STELLEN ;
-     ML := MAXLENGTH ( S ) ;
-     if INIT then
-       begin
-         if L > ML then
-           $ERROR ( 1226 ) ;
-         S := REPEATSTR ( ' ' , L ) ;
-         CPT := ADDR ( S [ 1 ] ) ;
-       end (* then *)
-     else
-       begin
-         LA := LENGTH ( S ) ;
-         if LA + L > ML then
-           $ERROR ( 1226 ) ;
-         S := S || REPEATSTR ( ' ' , L ) ;
-         CPT := ADDR ( S [ LA + 1 ] ) ;
-       end (* else *) ;
-     LTRANS := COUNT ;
-     if LTRANS >= STELLEN then
-       begin
-         TOFFS := 0 ;
-         LTRANS := STELLEN
-       end (* then *)
-     else
-       if XLEFT then
-         TOFFS := 0
-       else
-         TOFFS := STELLEN - LTRANS ;
-     CPT := PTRADD ( CPT , TOFFS ) ;
-     MEMCPY ( CPT , PCHAR , LTRANS ) ;
-   end (* $PASWSS *) ;
-
-
-
-procedure $PASWSV ( var S : STRING ; INIT : BOOLEAN ; const WERT :
-                  STRING ; STELLEN : INTEGER ) ;
-
-//**********************************************************
-// write string to string                                   
-//**********************************************************
-// Bernd Oppolzer - New Stanford Pascal                     
-//**********************************************************
-
-
-   var L : INTEGER ;
-       LA : INTEGER ;
-       ML : INTEGER ;
-       XLEFT : BOOLEAN := FALSE ;
-       CPT : -> CHAR ;
-       LTRANS : INTEGER ;
-       TOFFS : INTEGER ;
-       PCHAR : -> CHAR ;
-       COUNT : INTEGER ;
-
-   begin (* $PASWSV *)
-     COUNT := LENGTH ( WERT ) ;
-     if STELLEN < 0 then
-       begin
-         XLEFT := TRUE ;
-         STELLEN := - STELLEN
-       end (* then *) ;
-     if STELLEN = 0 then
-       STELLEN := COUNT ;
-
-     //*************************
-     // append blanks to string 
-     // and copy string         
-     // justified left or right 
-     //*************************
-
-     L := STELLEN ;
-     ML := MAXLENGTH ( S ) ;
-     if INIT then
-       begin
-         if L > ML then
-           $ERROR ( 1226 ) ;
-         S := REPEATSTR ( ' ' , L ) ;
-         CPT := ADDR ( S [ 1 ] ) ;
-       end (* then *)
-     else
-       begin
-         LA := LENGTH ( S ) ;
-         if LA + L > ML then
-           $ERROR ( 1226 ) ;
-         S := S || REPEATSTR ( ' ' , L ) ;
-         CPT := ADDR ( S [ LA + 1 ] ) ;
-       end (* else *) ;
-     LTRANS := COUNT ;
-     if LTRANS >= STELLEN then
-       begin
-         TOFFS := 0 ;
-         LTRANS := STELLEN
-       end (* then *)
-     else
-       if XLEFT then
-         TOFFS := 0
-       else
-         TOFFS := STELLEN - LTRANS ;
-     CPT := PTRADD ( CPT , TOFFS ) ;
-     PCHAR := ADDR ( WERT [ 1 ] ) ;
-     MEMCPY ( CPT , PCHAR , LTRANS ) ;
-   end (* $PASWSV *) ;
-
-
-
-procedure $PASWSR ( var S : STRING ; INIT : BOOLEAN ; V : REAL ; WIDTH
-                  : INTEGER ; SCALE : INTEGER ) ;
-
-//**********************************************************
-// write reals to strings                                   
-// normally there is one blank at the leftmost position     
-// then the sign (+/-)                                      
-// the procedure supports the F-format (using only dot)     
-// and the E-format (using mantissa and exponent)           
-//**********************************************************
-// Bernd Oppolzer - New Stanford Pascal                     
-//**********************************************************
-
-
-   const INTMAX = 1000000000 ;
-
-   var L : INTEGER ;
-       LA : INTEGER ;
-       ML : INTEGER ;
-       CPT : -> CHAR ;
-       CPB : -> CHAR ;
-       BUFFER : CHAR ( 100 ) ;
-       MINUS : BOOLEAN ;
-       LEADZ : BOOLEAN ;
-       LEN : INTEGER ;
-       DIG : INTEGER ;
-       EXPO : CHAR ( 4 ) ;
-       ZEROES : INTEGER ;
-       X : INTEGER ;
-       EXPONENT : INTEGER ;
-       FERTIG : BOOLEAN ;
-       VO : REAL ;
-       VNK : REAL ;
-       IVO : INTEGER ;
-       INK : INTEGER ;
-       SVO : STRING ( 10 ) ;
-       SNK : STRING ( 10 ) ;
-       SEXP : STRING ( 4 ) ;
-       SCALEKORR : INTEGER ;
-       SC : INTEGER ;
-       PLNACHK : INTEGER ;
-
-   begin (* $PASWSR *)
-
-     //*************************
-     // check size parameters   
-     //*************************
-
-     if WIDTH = 0 then
-       return ;
-     if SCALE > 16 then
-       $ERROR ( 1207 ) ;
-     LEADZ := FALSE ;
-     if WIDTH < 0 then
-       begin
-         LEADZ := TRUE ;
-         WIDTH := - WIDTH
-       end (* then *) ;
-
-     //*****************************************************
-     // convert real to string                              
-     // build char representation with respect to width     
-     // but if width too small (say: 1) then modify width   
-     //*****************************************************
-     // the result is in variables BUFFER and LEN           
-     // and MINUS and LEADZ (LEADZ already set above)       
-     //*****************************************************
-
-     MINUS := FALSE ;
-     BUFFER := ' ' ;
-
-     //*************************
-     // output real value zero  
-     //*************************
-
-     if V = 0.0 then
-       if SCALE < 0 then
-
-     //*************************
-     // write zero in E-Format  
-     //*************************
-
-         begin
-           if WIDTH < 10 then
-             begin
-               BUFFER := '0.0E+00' ;
-               LEN := 7 ;
-               WIDTH := 9 ;
-               LEADZ := FALSE ;
-             end (* then *)
-           else
-             begin
-               DIG := WIDTH - 8 ;
-               if DIG > 17 then
-                 DIG := 17 ;
-               BUFFER := '0.' ;
-               MEMSET ( ADDR ( BUFFER [ 3 ] ) , '0' , DIG ) ;
-               EXPO := 'E+00' ;
-               MEMCPY ( ADDR ( BUFFER [ 3 + DIG ] ) , ADDR ( EXPO ) , 4
-                        ) ;
-               LEN := DIG + 6 ;
-               LEADZ := FALSE ;
-             end (* else *)
-         end (* then *)
-       else
-
-     //*********************************
-     // write zero in F-Format          
-     // no decimal point, if scale = 0  
-     //*********************************
-
-         if SCALE = 0 then
-           begin
-             BUFFER [ 1 ] := '0' ;
-             LEN := 1 ;
-           end (* then *)
-         else
-           begin
-             MEMSET ( ADDR ( BUFFER ) , '0' , SCALE + 2 ) ;
-             BUFFER [ 2 ] := '.' ;
-             LEN := SCALE + 2 ;
-           end (* else *)
-
-     //*************************
-     // output non-zero value   
-     //*************************
-
-     else
-       begin
-         if V < 0.0 then
-           begin
-             MINUS := TRUE ;
-             V := - V
-           end (* then *) ;
-
-     //*****************************************************
-     // if value is between certain limits then             
-     // convert integer and fractional part to integers     
-     // and build output                                    
-     //*****************************************************
-
-         FERTIG := FALSE ;
-         VO := V ;
-         if ( VO < INTMAX ) and ( SCALE >= 0 ) and ( SCALE <= 9 ) then
-           begin
-             IVO := TRUNC ( VO ) ;
-             VNK := VO - IVO ;
-             VNK := VNK * INTMAX ;
-             VNK := ROUNDX ( VNK , 0 ) ;
-             INK := TRUNC ( VNK ) ;
-             if SCALE < 9 then
-               begin
-                 SCALEKORR := 5 ;
-                 for SC := SCALE + 2 to 9 do
-                   SCALEKORR := SCALEKORR * 10 ;
-                 INK := INK + SCALEKORR ;
-               end (* then *) ;
-             $PASWSI ( SVO , TRUE , IVO , 1 ) ;
-             $PASWSI ( SNK , TRUE , INK , - 9 ) ;
-             if FALSE then
-               WRITELN ( 'WSR: <' , SVO , '>' , INK : 1 , '<' , SNK ,
-                         '>' ) ;
-             if SCALE = 0 then
-               begin
-                 BUFFER := SVO ;
-                 LEN := LENGTH ( SVO ) ;
-                 FERTIG := TRUE
-               end (* then *)
-             else
-               if SCALE > 0 then
-                 begin
-                   BUFFER := SVO || '.' || SNK ;
-                   LEN := LENGTH ( SVO ) + 1 + SCALE ;
-                   FERTIG := TRUE
-                 end (* then *)
-           end (* then *) ;
-
-     //*****************************************************
-     // if output has not been built, compute exponent      
-     //*****************************************************
-
-         if not FERTIG then
-           begin
-             LEADZ := FALSE ;
-             FERTIG := FALSE ;
-             EXPONENT := 9 ;
-             while not FERTIG do
-               begin
-                 if V >= 1000000000.0 then
-                   begin
-                     V := V / 1000000000.0 ;
-                     EXPONENT := EXPONENT + 9
-                   end (* then *)
-                 else
-                   if V < 1.0 then
-                     begin
-                       V := V * 1000000000.0 ;
-                       EXPONENT := EXPONENT - 9
-                     end (* then *)
-                   else
-                     if V < 10000.0 then
-                       begin
-                         V := V * 100000.0 ;
-                         EXPONENT := EXPONENT - 5
-                       end (* then *)
-                     else
-                       if V < 1000000.0 then
-                         begin
-                           V := V * 1000.0 ;
-                           EXPONENT := EXPONENT - 3
-                         end (* then *)
-                       else
-                         if V < 10000000.0 then
-                           begin
-                             V := V * 100.0 ;
-                             EXPONENT := EXPONENT - 2
-                           end (* then *)
-                         else
-                           if V < 100000000.0 then
-                             begin
-                               V := V * 10.0 ;
-                               EXPONENT := EXPONENT - 1
-                             end (* then *)
-                           else
-                             FERTIG := TRUE
-               end (* while *) ;
-             IVO := TRUNC ( V ) ;
-             VNK := V - IVO ;
-             VNK := VNK * INTMAX ;
-             VNK := ROUNDX ( VNK , 0 ) ;
-             INK := TRUNC ( VNK ) ;
-             $PASWSI ( SVO , TRUE , IVO , 1 ) ;
-             $PASWSI ( SNK , TRUE , INK , - 9 ) ;
-             $PASWSI ( SEXP , TRUE , EXPONENT - 1 , - 4 ) ;
-             if SEXP [ 1 ] = '-' then
-               SEXP [ 2 ] := '-'
-             else
-               SEXP [ 2 ] := '+' ;
-             SEXP [ 1 ] := 'E' ;
-             WRITELN ( 'WSR: <' , SVO , SNK , '> EXP = ' , SEXP ) ;
-
-     //***************************************
-     // Platz fuer Nachkomma = Width minus 3  
-     // (Vorz + 1. Ziffer + Punkt)            
-     // minus 4 Zeichen fuer Exponent         
-     // mindestens eine Nachkommastelle       
-     //***************************************
-
-             PLNACHK := WIDTH - 8 ;
-             if PLNACHK < 1 then
-               PLNACHK := 1 ;
-             if PLNACHK > 17 then
-               PLNACHK := 17 ;
-             LEN := 2 + PLNACHK + 4 ;
-             BUFFER [ 1 ] := SVO [ 1 ] ;
-             BUFFER [ 2 ] := '.' ;
-             CPB := ADDR ( BUFFER [ 3 ] ) ;
-             if PLNACHK > 8 then
-               begin
-                 MEMCPY ( CPB , ADDR ( SVO [ 2 ] ) , 8 ) ;
-                 CPB := PTRADD ( CPB , 8 ) ;
-                 MEMCPY ( CPB , ADDR ( SNK [ 1 ] ) , PLNACHK - 8 ) ;
-                 CPB := PTRADD ( CPB , PLNACHK - 8 ) ;
-               end (* then *)
-             else
-               begin
-                 MEMCPY ( CPB , ADDR ( SVO [ 2 ] ) , PLNACHK ) ;
-                 CPB := PTRADD ( CPB , PLNACHK ) ;
-               end (* else *) ;
-             MEMCPY ( CPB , ADDR ( SEXP [ 1 ] ) , 4 ) ;
-           end (* then *)
-       end (* else *) ;
-
-     //*************************
-     // modify and check length 
-     //*************************
-
-     if MINUS then
-       LEN := LEN + 1 ;
-     if WIDTH < LEN then
-       WIDTH := LEN ;
-
-     //*************************
-     // append blanks to string 
-     //*************************
-
-     L := WIDTH ;
-     ML := MAXLENGTH ( S ) ;
-     if INIT then
-       begin
-         if L > ML then
-           $ERROR ( 1226 ) ;
-         S := REPEATSTR ( ' ' , L ) ;
-         CPT := ADDR ( S [ 1 ] ) ;
-       end (* then *)
-     else
-       begin
-         LA := LENGTH ( S ) ;
-         if LA + L > ML then
-           $ERROR ( 1226 ) ;
-         S := S || REPEATSTR ( ' ' , L ) ;
-         CPT := ADDR ( S [ LA + 1 ] ) ;
-       end (* else *) ;
-
-     //**************************************************
-     // if needed, add leading zeroes or blanks          
-     // like in the integer procedure                    
-     //**************************************************
-
-     ZEROES := WIDTH - LEN ;
-     if LEADZ then
-       begin
-         if MINUS then
-           begin
-             CPT -> := '-' ;
-             CPT := PTRADD ( CPT , 1 )
-           end (* then *) ;
-         for X := 1 to ZEROES do
-           begin
-             CPT -> := '0' ;
-             CPT := PTRADD ( CPT , 1 )
-           end (* for *) ;
-         if MINUS then
-           MEMCPY ( CPT , ADDR ( BUFFER ) , LEN - 1 )
-         else
-           MEMCPY ( CPT , ADDR ( BUFFER ) , LEN )
-       end (* then *)
-     else
-       begin
-         CPT := PTRADD ( CPT , ZEROES ) ;
-         if MINUS then
-           begin
-             CPT -> := '-' ;
-             CPT := PTRADD ( CPT , 1 ) ;
-             MEMCPY ( CPT , ADDR ( BUFFER ) , LEN - 1 )
-           end (* then *)
-         else
-           MEMCPY ( CPT , ADDR ( BUFFER ) , LEN )
-       end (* else *)
-   end (* $PASWSR *) ;
-
-
-
-procedure $PASWSX ( var S : STRING ; INIT : BOOLEAN ; V : INTEGER ;
-                  WIDTH : INTEGER ; PMETA : ANYPTR ) ;
-
-//**********************************************************
-// write scalars to string                                  
-//**********************************************************
-// Bernd Oppolzer - New Stanford Pascal                     
-//**********************************************************
-
-
-   type SHORT = 0 .. 32000 ;
-        PSHORT = -> SHORT ;
-
-   var L : INTEGER ;
-       LA : INTEGER ;
-       ML : INTEGER ;
-       CPT : -> CHAR ;
-       PS : PSHORT ;
-       LEFTX : BOOLEAN ;
-       ELEMCOUNT : SHORT ;
-       MAXIDLEN : SHORT ;
-       MINIDLEN : SHORT ;
-       LEN : SHORT ;
-       SCAL_OFFS : SHORT ;
-       CP : -> CHAR ;
-
-   begin (* $PASWSX *)
-     if WIDTH = 0 then
-       return ;
-
-     //**********************************
-     // access metadata for scalar type  
-     //**********************************
-
-     PS := PMETA ;
-     if PS -> <> 0 then
-       $ERROR ( 1220 ) ;
-     PS := PTRADD ( PS , 2 ) ;
-     ELEMCOUNT := PS -> ;
-     PS := PTRADD ( PS , 2 ) ;
-     MAXIDLEN := PS -> ;
-     PS := PTRADD ( PS , 2 ) ;
-     MINIDLEN := PS -> ;
-     PS := PTRADD ( PS , 2 ) ;
-
-     //**************
-     // check width  
-     //**************
-
-     LEFTX := FALSE ;
-     if WIDTH < 0 then
-       begin
-         LEFTX := TRUE ;
-         WIDTH := - WIDTH ;
-         if WIDTH = 1 then
-           WIDTH := MAXIDLEN
-       end (* then *) ;
-
-     //************************************
-     // error if width too small for type  
-     //************************************
-
-     if WIDTH < MINIDLEN then
-       $ERROR ( 1221 ) ;
-
-     //*******************************
-     // error if scalar out of range  
-     //*******************************
-
-     if ( V < 0 ) or ( V >= ELEMCOUNT ) then
-       $ERROR ( 1222 ) ;
-
-     //*************************
-     // append blanks to string 
-     //*************************
-
-     L := WIDTH ;
-     ML := MAXLENGTH ( S ) ;
-     if INIT then
-       begin
-         if L > ML then
-           $ERROR ( 1226 ) ;
-         S := REPEATSTR ( ' ' , L ) ;
-         CPT := ADDR ( S [ 1 ] ) ;
-       end (* then *)
-     else
-       begin
-         LA := LENGTH ( S ) ;
-         if LA + L > ML then
-           $ERROR ( 1226 ) ;
-         S := S || REPEATSTR ( ' ' , L ) ;
-         CPT := ADDR ( S [ LA + 1 ] ) ;
-       end (* else *) ;
-
-     //*********************************
-     // access string for scalar value  
-     //*********************************
-
-     PS := PTRADD ( PS , ( ELEMCOUNT - 1 - V ) * 4 ) ;
-     SCAL_OFFS := PS -> ;
-     PS := PTRADD ( PS , 2 ) ;
-     LEN := PS -> ;
-     CP := PTRADD ( PMETA , SCAL_OFFS ) ;
-     if not LEFTX then
-       if LEN < WIDTH then
-         CPT := PTRADD ( CPT , WIDTH - LEN ) ;
-     MEMCPY ( CPT , CP , LEN ) ;
-   end (* $PASWSX *) ;
-
-
-
-procedure $PASWSP ( var S : STRING ; INIT : BOOLEAN ; WERT : INTEGER ;
-                  STELLEN : INTEGER ) ;
-
-//**********************************************************
-// write pointer to string                                  
-//**********************************************************
-// Bernd Oppolzer - New Stanford Pascal                     
-//**********************************************************
-
-
-   var L : INTEGER ;
-       LA : INTEGER ;
-       ML : INTEGER ;
-       BUFFER : CHAR ( 20 ) ;
-       MINUS : BOOLEAN := FALSE ;
-       ZEROES : BOOLEAN := FALSE ;
-       IX : INTEGER ;
-       FERTIG : BOOLEAN ;
-       CPT : -> CHAR ;
-       LEN : INTEGER ;
-       LEN2 : INTEGER ;
-       NZEROES : INTEGER ;
-
-   begin (* $PASWSP *)
-
-     //*********************************
-     // negative length = zeroes left   
-     //*********************************
-
-     if STELLEN < 0 then
-       begin
-         ZEROES := TRUE ;
-         STELLEN := - STELLEN
-       end (* then *) ;
-     BUFFER := '' ;
-     if WERT < 0 then
-       begin
-         MINUS := TRUE ;
-         WERT := - WERT
-       end (* then *) ;
-
-     //*********************************
-     // build digits in buffer          
-     //*********************************
-
-     IX := 20 ;
-     repeat
-       BUFFER [ IX ] := CHR ( ORD ( '0' ) + WERT MOD 10 ) ;
-       WERT := WERT DIV 10 ;
-       IX := IX - 1 ;
-       FERTIG := WERT = 0
-     until FERTIG ;
-
-     //*********************************
-     // look if number of digits fit    
-     // if not, adjust output width     
-     // don't loose digits here         
-     //*********************************
-
-     LEN := 20 - IX ;
-     LEN2 := LEN ;
-     if MINUS then
-       LEN2 := LEN + 1 ;
-     L := STELLEN ;
-     if L < LEN2 then
-       L := LEN2 ;
-
-     //*************************
-     // append blanks to string 
-     //*************************
-
-     ML := MAXLENGTH ( S ) ;
-     if INIT then
-       begin
-         if L > ML then
-           $ERROR ( 1226 ) ;
-         S := REPEATSTR ( ' ' , L ) ;
-         CPT := ADDR ( S [ 1 ] ) ;
-       end (* then *)
-     else
-       begin
-         LA := LENGTH ( S ) ;
-         if LA + L > ML then
-           $ERROR ( 1226 ) ;
-         S := S || REPEATSTR ( ' ' , L ) ;
-         CPT := ADDR ( S [ LA + 1 ] ) ;
-       end (* else *) ;
-
-     //*************************
-     // move buffer to string   
-     //*************************
-
-     if ZEROES then
-       begin
-         if MINUS then
-           begin
-             CPT -> := '-' ;
-             CPT := PTRADD ( CPT , 1 )
-           end (* then *) ;
-         NZEROES := L - LEN2 ;
-         if NZEROES > 0 then
-           begin
-             MEMSET ( CPT , '0' , NZEROES ) ;
-             CPT := PTRADD ( CPT , NZEROES ) ;
-           end (* then *) ;
-       end (* then *)
-     else
-       begin
-         NZEROES := L - LEN2 ;
-         if NZEROES > 0 then
-           CPT := PTRADD ( CPT , NZEROES ) ;
-         if MINUS then
-           begin
-             CPT -> := '-' ;
-             CPT := PTRADD ( CPT , 1 )
-           end (* then *) ;
-       end (* else *) ;
-     MEMCPY ( CPT , ADDR ( BUFFER [ IX + 1 ] ) , LEN ) ;
-   end (* $PASWSP *) ;
 
 
 

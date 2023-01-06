@@ -67,6 +67,11 @@
 /*             !             ! which led to empty sourcenames         */
 /*             !             ! which inhibited debugging in PCINT     */
 /*             !             ! see comment --20220419-- in PCINTCMP   */
+/*  13.06.2022 ! Oppolzer    ! Error reported by George Smith         */
+/*             !             ! -102 in compiler, turned out to be     */
+/*             !             ! wrong implementation of numeric        */
+/*             !             ! comparison ... see --20220613--        */
+/*  .......... ! ........    ! .....................................  */
 /*  .......... ! ........    ! .....................................  */
 /*  .......... ! ........    ! .....................................  */
 /*  .......... ! ........    ! .....................................  */
@@ -4699,7 +4704,16 @@ static int do_comparison (global_store *gs,
          (gs -> sp) -= 4;
          wert2 = STACK_I (gs -> sp);
 
-         res = wert2 - wert1;
+         /************************************************/
+         /*   --20220613--                               */
+         /*   old coding                                 */
+         /*   res = wert2 - wert1                        */
+         /*   did not work, if difference between        */
+         /*   wert2 and wert1 was larger than 2 ** 31    */
+         /************************************************/
+
+         res = (wert2 >= wert1 ?
+                  (wert2 == wert1 ? 0 : 1) : -1);
          break;
 
       default:

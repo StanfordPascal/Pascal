@@ -1,0 +1,40 @@
+
+Ueberarbeiten der Funktionen des Literal-Pools
+----------------------------------------------
+
+nur als Char-Vektor definieren
+hoechsten Pegel immer nur als Char-Pegel fuehren
+(keine unterschiedlichen Pegel)
+
+Ablage von Char-Strings wie gehabt
+zunaechst schauen, ob der String am Anfang oder am Ende
+zu einem der bereits vorhandenen Strings passt.
+Wenn nicht, dann ab Pegel-Position ablegen und Pegel hochsetzen
+
+Luecken entstehen nur, wenn doubles oder ints abgelegt werden
+einzelne Bytes fuehren nicht zu Luecken
+
+doubles:
+
+alle kompletten doubles im vorhandenen Pool anschauen
+doubles mit Luecken ueberlesen
+bei Treffer: nichts machen
+wenn nicht Treffer:
+Neuen double am Ende des Pools anlegen
+Luecke mit maximal 6 Bytes registrieren - Anfangsadresse und Laenge
+(Halbwort + Integer)
+
+integer:
+
+alle kompletten integers im vorhandenen Pool anschauen
+bei Treffer: nichts machen
+wenn nicht Treffer: vorrangig Luecken fuellen
+ansonsten: neuen double am Ende des Pools anlegen und Luecke
+
+smallint:
+
+alle kompletten smallints im vorhandenen Pool anschauen
+bei Treffer: nichts machen
+wenn nicht Treffer: vorrangig Luecken fuellen
+ansonsten: neuen double am Ende des Pools anlegen und Luecke
+

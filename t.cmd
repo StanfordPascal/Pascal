@@ -1,3 +1,3 @@
-call copybin
-call pp testrbol
-call prun testrbol
+call pasf testws
+call pp testws
+call prun testws

@@ -137,6 +137,18 @@ program PCODE_TRANSLATOR ( PCODE , PCODE1 , PCODE2 , PCODE3 , OUTPUT ,
 //  Jan 2023 - Extensions to the Compiler by Bernd Oppolzer         
 //             (berndoppolzer@yahoo.com)                            
 //                                                                  
+//  Because of problems with MVS deployment I decided to convert    
+//  PASCAL2 to support the D+ (Debug) option. This uncovered MANY   
+//  flaws which then were corrected step by step.                   
+//                                                                  
+//  Some of the procedures became longer than 8k during this        
+//  process and needed to be split in smaller parts.                
+//                                                                  
+//******************************************************************
+//                                                                  
+//  Jan 2023 - Extensions to the Compiler by Bernd Oppolzer         
+//             (berndoppolzer@yahoo.com)                            
+//                                                                  
 //  Handling of Literal Pool reworked because of error when testing 
 //  some minor enhancements of the compiler.                        
 //                                                                  
@@ -16810,11 +16822,11 @@ procedure ASMNXTINST ;
       procedure WORK_VRP ;
 
          begin (* WORK_VRP *)
+           RGWORK := - 1 ;
 
            //********************************************************
            // get constant length of top stack element               
            // or load length into rgwork                             
-           //******************************************************  
            //********************************************************
 
            with STK [ TOP - 1 ] do
@@ -16911,7 +16923,8 @@ procedure ASMNXTINST ;
                  AVAIL [ B1 ] := TRUE ;
                  AVAIL [ P2 ] := TRUE ;
                  AVAIL [ B2 ] := TRUE ;
-                 AVAIL [ RGWORK ] := TRUE ;
+                 if RGWORK >= 0 then
+                   AVAIL [ RGWORK ] := TRUE ;
                  FINDRG ;
                  RGWORK1 := NXTRG ;
                  GENRX ( XL , RGWORK1 , STRCURR , 12 , 0 ) ;
@@ -16970,7 +16983,8 @@ procedure ASMNXTINST ;
                    GENRELRX ( XBCT , Q2 , - 5 ) ;
                    AVAIL [ P1 ] := TRUE ;
                    AVAIL [ Q2 ] := TRUE ;
-                   AVAIL [ RGWORK ] := TRUE ;
+                   if RGWORK >= 0 then
+                     AVAIL [ RGWORK ] := TRUE ;
                    FINDRG ;
                    RGWORK1 := NXTRG ;
                    GENRX ( XL , RGWORK1 , STRCURR , 12 , 0 ) ;
@@ -17046,7 +17060,8 @@ procedure ASMNXTINST ;
                    AVAIL [ P1 ] := TRUE ;
                    AVAIL [ Q1 ] := TRUE ;
                    AVAIL [ Q2 ] := TRUE ;
-                   AVAIL [ RGWORK ] := TRUE ;
+                   if RGWORK >= 0 then
+                     AVAIL [ RGWORK ] := TRUE ;
                    FINDRG ;
                    RGWORK1 := NXTRG ;
                    GENRX ( XL , RGWORK1 , STRCURR , 12 , 0 ) ;

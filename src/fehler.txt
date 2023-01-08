@@ -1,4 +1,25 @@
 
+Abbruch bei MVS in PASCAL2 - Adressing Exception (2004)
+
+EP $PASENT  = EE958    LKED 48CB8   LP = A5CA0
+EP $PASMAIN = EDBA8    LKED 47F08   LP = A5CA0
+Fehler PSW  = F207A    LKED 4C3DA   LP = A5CA0
+Location    = 01272
+
+CODE AROUND ERROR PSW : 00014122 0001430E 700046F0
+
+**** INTERRUPT PSW :  078D0004 200F207A
+**** REGS   0 -  3 :  00000040 000F1FEA 0011B911 00000050
+**** REGS   4 -  7 :  00000050 900F200A 00000000 00555FB0
+**** REGS   8 - 11 :  000A4830 001136FC 000F0E08 000F1E04
+**** REGS  12 - 15 :  00103050 0011B988 00000050 00000001
+
+OFFSET   4C3DA     3722
+$PASCSP  4A886     1BCE
+$PASCSP2 4A8C2     1C0A
+
+======================================================================
+
 TESTTYP bricht am Mainframe ab, laeuft am PC korrekt durch
 TESTTYP2 laueft auf beiden Plattformen korrekt
 

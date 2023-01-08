@@ -4,24 +4,27 @@ $PASUTI# CST $PASMAIN                0,F,F,F
 18 DFC H,3
 20 DFC H,15
 22 DFC H,7
-24 DFC H,32
+24 DFC H,38
 26 DFC H,15
-28 DFC H,48
+28 DFC H,54
 30 DFC H,11
-32 DFC H,60
+32 DFC H,66
 34 DFC H,13
-36 DFC H,48
+36 DFC H,54
 38 DFC H,11
-40 DFC H,32
-42 DFC H,15
-44 DFC H,60
-46 DFC H,13
-48 DFC M,'PLATF_MAINFRAME '
-64 DFC M,'PLATF_INTEL '
-76 DFC M,'PLATF_UNKNOWN '
-90 DFC M,'*'
+40 DFC H,1
+42 DFC H,38
+44 DFC H,15
+46 DFC H,2
+48 DFC H,66
+50 DFC H,13
+52 DFC H,0
+54 DFC M,'PLATF_MAINFRAME '
+70 DFC M,'PLATF_INTEL '
+82 DFC M,'PLATF_UNKNOWN '
+96 DFC M,'*'
  LOC 15
-92 DFC H,0
+98 DFC H,0
  END
  LOC 41
 $UTIL003 ENT P,2,L1  CHECK_PLATFORM      ,TFFFF,2,3,,        ,112
@@ -34,7 +37,7 @@ $UTIL003 ENT P,2,L1  CHECK_PLATFORM      ,TFFFF,2,3,,        ,112
  FJP L3
  LOC 42
  LCA P,$PASUTI#
- INC A,92                    ; PLATF               
+ INC A,98                    ; PLATF               
  LOC 43
  LDC I,1
  STO H
@@ -42,7 +45,7 @@ $UTIL003 ENT P,2,L1  CHECK_PLATFORM      ,TFFFF,2,3,,        ,112
 L3 LAB
  LOC 44
  LCA P,$PASUTI#
- INC A,92                    ; PLATF               
+ INC A,98                    ; PLATF               
  LOC 45
  LDC I,2
  STO H
@@ -311,7 +314,7 @@ TERMIN   ENT P,2,L1  TERMIN              ,TFFFF,2,7,,        ,120
  LOC 105
  VPU 2,228
  LCA P,$PASUTI#
- IND H,92                    ; PLATF               
+ IND H,98                    ; PLATF               
  LDC I,0
  EQU I
  FJP L3
@@ -321,7 +324,7 @@ TERMIN   ENT P,2,L1  TERMIN              ,TFFFF,2,7,,        ,120
 L3 LAB
  LOC 107
  LCA P,$PASUTI#
- IND H,92                    ; PLATF               
+ IND H,98                    ; PLATF               
  LDC I,1
  EQU I
  FJP L4
@@ -417,7 +420,7 @@ TERMOUT  ENT P,2,L1  TERMOUT             ,TFFFF,2,8,,        ,120
  LOC 141
  VPU 2,228
  LCA P,$PASUTI#
- IND H,92                    ; PLATF               
+ IND H,98                    ; PLATF               
  LDC I,0
  EQU I
  FJP L3
@@ -427,7 +430,7 @@ TERMOUT  ENT P,2,L1  TERMOUT             ,TFFFF,2,8,,        ,120
 L3 LAB
  LOC 143
  LCA P,$PASUTI#
- IND H,92                    ; PLATF               
+ IND H,98                    ; PLATF               
  LDC I,1
  EQU I
  FJP L4
@@ -523,7 +526,7 @@ ASSIGN   ENT P,2,L1  ASSIGN              ,TFFFF,2,9,,        ,128
  LOC 178
  VPU 2,236
  LCA P,$PASUTI#
- IND H,92                    ; PLATF               
+ IND H,98                    ; PLATF               
  LDC I,0
  EQU I
  FJP L3
@@ -533,7 +536,7 @@ ASSIGN   ENT P,2,L1  ASSIGN              ,TFFFF,2,9,,        ,128
 L3 LAB
  LOC 180
  LCA P,$PASUTI#
- IND H,92                    ; PLATF               
+ IND H,98                    ; PLATF               
  LDC I,1
  EQU I
  FJP L4
@@ -647,7 +650,7 @@ ASSIGNME ENT P,2,L1  ASSIGNMEM           ,TFFFF,2,10,,        ,128
  LOC 214
  VPU 2,144
  LCA P,$PASUTI#
- IND H,92                    ; PLATF               
+ IND H,98                    ; PLATF               
  LDC I,0
  EQU I
  FJP L3
@@ -657,7 +660,7 @@ ASSIGNME ENT P,2,L1  ASSIGNMEM           ,TFFFF,2,10,,        ,128
 L3 LAB
  LOC 216
  LCA P,$PASUTI#
- IND H,92                    ; PLATF               
+ IND H,98                    ; PLATF               
  LDC I,1
  EQU I
  FJP L4

@@ -152,12 +152,6 @@ type CHARPTR = -> CHAR ;
 
 
 
-procedure CMSX ( CMD : CHARPTR ; var RETCODE : INTEGER ) ;
-
-   EXTERNAL ;
-
-
-
 procedure $PASSNAP ( LEVEL : INTEGER ; DUMPPTR : VOIDPTR ) ;
 
 (****************************************************************)
@@ -278,7 +272,6 @@ procedure $PASSNAP ( LEVEL : INTEGER ; DUMPPTR : VOIDPTR ) ;
          STKTRACE = 1 ;
 
    type CHAR8 = array [ 1 .. 8 ] of CHAR ;
-        CHAR80 = array [ 1 .. 80 ] of CHAR ;
         INT2PTR = record
                     case INTEGER of
                       0 :
@@ -431,14 +424,15 @@ procedure $PASSNAP ( LEVEL : INTEGER ; DUMPPTR : VOIDPTR ) ;
           MOD1 : INTEGER ;
           MOD2 : INTEGER ;
 
-      const DUMPSHOWCHARS : set of CHAR =
-            [ 'a' .. 'i' , 'j' .. 'r' , 's' .. 'z' , 'A' .. 'I' , 'J'
-              .. 'R' , 'S' .. 'Z' , '0' .. '9' , ' ' , ',' , '.' , '-'
-              , ';' , ':' , '_' , '!' , '"' , 'õ' , '$' , '%' , '&' ,
-              '/' , '(' , ')' , '=' , '?' , '+' , '*' , '#' , '*' ] ;
-
 
       procedure DUMPCHAR ( CH : CHAR ) ;
+
+         const DUMPSHOWCHARS : set of CHAR =
+               [ 'a' .. 'i' , 'j' .. 'r' , 's' .. 'z' , 'A' .. 'I' ,
+                 'J' .. 'R' , 'S' .. 'Z' , '0' .. '9' , ' ' , ',' , '.'
+                 , '-' , ';' , ':' , '_' , '!' , '"' , '$' , '%' , '&'
+                 , '/' , '(' , ')' , '=' , '?' , '+' , '*' , '#' , '*'
+                 ] ;
 
          begin (* DUMPCHAR *)
            if CH in DUMPSHOWCHARS then
@@ -619,26 +613,12 @@ procedure $PASSNAP ( LEVEL : INTEGER ; DUMPPTR : VOIDPTR ) ;
                    2 :
                      ( P : FRM_PTR )
                end ;
-          CMSCMD : CHAR80 ;
-          RC : INTEGER ;
-          STATERC : INTEGER ;
           PSTATNAME : -> CHAR8 ;
           PSTATLEN : -> HINTEGER ;
           SSIZE : -> HINTEGER ;
           OFFS : HINTEGER ;
           AKT_PROC : PROC_PTR ;
-
-
-      procedure INS_SOURCENAME ( var CMD : CHAR80 ; SOURCENAME : CHAR8
-                               ; STARTPOS : INTEGER ) ;
-
-         begin (* INS_SOURCENAME *)
-           for I := 1 to 8 do
-             begin
-               CMD [ STARTPOS ] := SOURCENAME [ I ] ;
-               STARTPOS := STARTPOS + 1 ;
-             end (* for *)
-         end (* INS_SOURCENAME *) ;
+          OPENOK : BOOLEAN ;
 
 
       procedure ALIGN ( var OFFSET : INTEGER ; ALN : INTEGER ) ;
@@ -728,12 +708,15 @@ procedure $PASSNAP ( LEVEL : INTEGER ; DUMPPTR : VOIDPTR ) ;
 
          procedure PRINT_UDEF ;
 
-            const TN : array [ INT .. PSET ] of record L : 1 .. 8 ;
-                  N : array [ 1 .. 8 ] of CHAR end =
-                  ( ( 7 , 'INTEGER ' ) , ( 6 , 'SCALAR  ' ) , ( 4 ,
-                    'REAL    ' ) , ( 7 , 'BOOLEAN ' ) , ( 4 ,
-                    'CHAR    ' ) , ( 7 , 'POINTER ' ) , ( 3 ,
-                    'SET     ' ) ) ;
+            const TN : array [ INT .. PSET ] of record
+                                                  L : 1 .. 8 ;
+                                                  N : array [ 1 .. 8 ]
+                                                   of CHAR
+                                                end =
+                       ( ( 7 , 'INTEGER ' ) , ( 6 , 'SCALAR  ' ) , ( 4
+                         , 'REAL    ' ) , ( 7 , 'BOOLEAN ' ) , ( 4 ,
+                         'CHAR    ' ) , ( 7 , 'POINTER ' ) , ( 3 ,
+                         'SET     ' ) ) ;
 
             var LEN : 1 .. 8 ;
 
@@ -1393,6 +1376,71 @@ procedure $PASSNAP ( LEVEL : INTEGER ; DUMPPTR : VOIDPTR ) ;
          end (* IVSCAN *) ;
 
 
+      function OPENFILE ( SOURCENAME : CHAR8 ; var F : TEXT ) : BOOLEAN
+                        ;
+
+      (*******************************************)
+      (* this function is different between      *)
+      (* the mvs and cms versions ... opening    *)
+      (* the dbginfo files depending on the      *)
+      (* procedure name ...                      *)
+      (*******************************************)
+      (* here: cms version                       *)
+      (*******************************************)
+
+
+         var CMSCMD : CHAR ( 80 ) ;
+             RC : INTEGER ;
+             STATERC : INTEGER ;
+
+
+         procedure CMSX ( CMD : CHARPTR ; var RETCODE : INTEGER ) ;
+
+            EXTERNAL ;
+
+
+         procedure INS_SOURCENAME ( var CMD : CHAR ( 80 ) ; SOURCENAME
+                                  : CHAR8 ; STARTPOS : INTEGER ) ;
+
+            begin (* INS_SOURCENAME *)
+              for I := 1 to 8 do
+                begin
+                  CMD [ STARTPOS ] := SOURCENAME [ I ] ;
+                  STARTPOS := STARTPOS + 1 ;
+                end (* for *)
+            end (* INS_SOURCENAME *) ;
+
+
+         begin (* OPENFILE *)
+           CMSCMD := 'STATE XXXXXXXX DBGINFO * #' ;
+           INS_SOURCENAME ( CMSCMD , SOURCENAME , 7 ) ;
+           CMSX ( ADDR ( CMSCMD ) , RC ) ;
+           if FALSE then
+             begin
+               WRITELN ( 'CMSX: ' , CMSCMD ) ;
+               WRITELN ( 'print_variable: state command returns rc = '
+                         , RC ) ;
+             end (* then *) ;
+           STATERC := RC ;
+           CMSCMD := 'FILEDEF QRD CLEAR #' ;
+           CMSX ( ADDR ( CMSCMD ) , RC ) ;
+           if STATERC = 0 then
+             begin
+               CMSCMD := 'FILEDEF QRD DISK XXXXXXXX DBGINFO * '
+                         '(RECFM F LRECL 80#' ;
+               INS_SOURCENAME ( CMSCMD , SOURCENAME , 18 ) ;
+               CMSX ( ADDR ( CMSCMD ) , RC ) ;
+               if FALSE then
+                 WRITELN ( 'print_variable: filedef returns rc = ' , RC
+                           ) ;
+               RESET ( F ) ;  // this is the file allocated to QRD
+               OPENFILE := TRUE
+             end (* then *)
+           else
+             OPENFILE := FALSE
+         end (* OPENFILE *) ;
+
+
       begin (* PRINT_VARIABLE *)
         AKT_PROC := STKP -> . EPA ;
         OFFS := AKT_PROC -> . SPC1 MOD 256 ;
@@ -1431,61 +1479,26 @@ procedure $PASSNAP ( LEVEL : INTEGER ; DUMPPTR : VOIDPTR ) ;
               end (* then *) ;
             return
           end (* then *) ;
-
-        (*******************************************)
-        (* the following part is different between *)
-        (* the mvs and cms versions ... opening    *)
-        (* the dbginfo files depending on the      *)
-        (* procedure name ...                      *)
-        (*******************************************)
-
         if not ( PID in PROCSTOCOME ) then
           begin
             if QRD_IS_OPEN then
               CLOSE ( QRD ) ;
             QRD_IS_OPEN := FALSE ;
             if FALSE then
-              WRITELN ( 'print_variable: try reset(qrd), sourcename = '
-                        , SOURCENAME ) ;
-            CMSCMD := 'STATE XXXXXXXX DBGINFO * #' ;
-            INS_SOURCENAME ( CMSCMD , SOURCENAME , 7 ) ;
-            CMSX ( ADDR ( CMSCMD ) , RC ) ;
-            if FALSE then
-              begin
-                WRITELN ( 'CMSX: ' , CMSCMD ) ;
-                WRITELN ( 'print_variable: state command returns rc = '
-                          , RC ) ;
-              end (* then *) ;
-            STATERC := RC ;
-            CMSCMD := 'FILEDEF QRD CLEAR #' ;
-            CMSX ( ADDR ( CMSCMD ) , RC ) ;
-            if STATERC = 0 then
-              begin
-                CMSCMD := 'FILEDEF QRD DISK XXXXXXXX DBGINFO * '
-                          '(RECFM F LRECL 80#' ;
-                INS_SOURCENAME ( CMSCMD , SOURCENAME , 18 ) ;
-                CMSX ( ADDR ( CMSCMD ) , RC ) ;
-                if FALSE then
-                  WRITELN ( 'print_variable: filedef returns rc = ' ,
-                            RC ) ;
-                RESET ( QRD ) ;
-                PROCSTOCOME := [ 0 .. 255 ] ;
-                QRD_IS_OPEN := TRUE ;
-              end (* then *)
-            else
+              WRITELN ( 'print_variable: try reset(qrd), ' ,
+                        'sourcename = ' , SOURCENAME ) ;
+            OPENOK := OPENFILE ( SOURCENAME , QRD ) ;
+            if not OPENOK then
               begin
                 WRITELN ( '     Debug information file for '
                           'program/module ' , SOURCENAME , ' not found'
                           ) ;
                 WRITELN ;
                 return ;
-              end (* else *) ;
+              end (* then *) ;
+            PROCSTOCOME := [ 0 .. 255 ] ;
+            QRD_IS_OPEN := TRUE ;
           end (* then *) ;
-
-        (*******************************************)
-        (* end of opsys dependency                 *)
-        (*******************************************)
-
         TPROCN := '            ' ;
         VADDR := - 1 ;
         while ( ( PNAME <> TPROCN ) or ( PID <> VADDR ) ) and ( not EOF

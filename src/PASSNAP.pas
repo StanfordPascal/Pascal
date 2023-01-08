@@ -618,8 +618,7 @@ procedure $PASSNAP ( LEVEL : INTEGER ; DUMPPTR : VOIDPTR ) ;
           SSIZE : -> HINTEGER ;
           OFFS : HINTEGER ;
           AKT_PROC : PROC_PTR ;
-          FCB : VOIDPTR ;
-          CPT : CHARPTR ;
+          OPENOK : BOOLEAN ;
 
 
       procedure ALIGN ( var OFFSET : INTEGER ; ALN : INTEGER ) ;
@@ -709,12 +708,15 @@ procedure $PASSNAP ( LEVEL : INTEGER ; DUMPPTR : VOIDPTR ) ;
 
          procedure PRINT_UDEF ;
 
-            const TN : array [ INT .. PSET ] of record L : 1 .. 8 ;
-                  N : array [ 1 .. 8 ] of CHAR end =
-                  ( ( 7 , 'INTEGER ' ) , ( 6 , 'SCALAR  ' ) , ( 4 ,
-                    'REAL    ' ) , ( 7 , 'BOOLEAN ' ) , ( 4 ,
-                    'CHAR    ' ) , ( 7 , 'POINTER ' ) , ( 3 ,
-                    'SET     ' ) ) ;
+            const TN : array [ INT .. PSET ] of record
+                                                  L : 1 .. 8 ;
+                                                  N : array [ 1 .. 8 ]
+                                                   of CHAR
+                                                end =
+                       ( ( 7 , 'INTEGER ' ) , ( 6 , 'SCALAR  ' ) , ( 4
+                         , 'REAL    ' ) , ( 7 , 'BOOLEAN ' ) , ( 4 ,
+                         'CHAR    ' ) , ( 7 , 'POINTER ' ) , ( 3 ,
+                         'SET     ' ) ) ;
 
             var LEN : 1 .. 8 ;
 
@@ -1374,6 +1376,32 @@ procedure $PASSNAP ( LEVEL : INTEGER ; DUMPPTR : VOIDPTR ) ;
          end (* IVSCAN *) ;
 
 
+      function OPENFILE ( SOURCENAME : CHAR8 ; var F : TEXT ) : BOOLEAN
+                        ;
+
+      (*******************************************)
+      (* this function is different between      *)
+      (* the mvs and cms versions ... opening    *)
+      (* the dbginfo files depending on the      *)
+      (* procedure name ...                      *)
+      (*******************************************)
+      (* here: mvs version                       *)
+      (*******************************************)
+
+
+         var FCB : VOIDPTR ;
+             CPT : CHARPTR ;
+
+         begin (* OPENFILE *)
+           FCB := FILEFCB ( F ) ;
+           CPT := PTRADD ( FCB , 40 ) ;
+           MEMCPY ( CPT , ADDR ( SOURCENAME ) , 8 ) ;
+           RESET ( F ) ;  // this is the file allocated to QRD
+           CPT := PTRADD ( FCB , 32 ) ;
+           OPENOK := CPT -> <> '0' ;
+         end (* OPENFILE *) ;
+
+
       begin (* PRINT_VARIABLE *)
         AKT_PROC := STKP -> . EPA ;
         OFFS := AKT_PROC -> . SPC1 MOD 256 ;
@@ -1412,14 +1440,6 @@ procedure $PASSNAP ( LEVEL : INTEGER ; DUMPPTR : VOIDPTR ) ;
               end (* then *) ;
             return
           end (* then *) ;
-
-        (*******************************************)
-        (* the following part is different between *)
-        (* the mvs and cms versions ... opening    *)
-        (* the dbginfo files depending on the      *)
-        (* procedure name ...                      *)
-        (*******************************************)
-
         if not ( PID in PROCSTOCOME ) then
           begin
             if QRD_IS_OPEN then
@@ -1428,12 +1448,8 @@ procedure $PASSNAP ( LEVEL : INTEGER ; DUMPPTR : VOIDPTR ) ;
             if FALSE then
               WRITELN ( 'print_variable: try reset(qrd), ' ,
                         'sourcename = ' , SOURCENAME ) ;
-            FCB := FILEFCB ( QRD ) ;
-            CPT := PTRADD ( FCB , 40 ) ;
-            MEMCPY ( CPT , ADDR ( SOURCENAME ) , 8 ) ;
-            RESET ( QRD ) ;
-            CPT := PTRADD ( FCB , 32 ) ;
-            if CPT -> = '0' then
+            OPENOK := OPENFILE ( SOURCENAME , QRD ) ;
+            if not OPENOK then
               begin
                 WRITELN ( '     Debug information file for '
                           'program/module ' , SOURCENAME , ' not found'
@@ -1444,11 +1460,6 @@ procedure $PASSNAP ( LEVEL : INTEGER ; DUMPPTR : VOIDPTR ) ;
             PROCSTOCOME := [ 0 .. 255 ] ;
             QRD_IS_OPEN := TRUE ;
           end (* then *) ;
-
-        (*******************************************)
-        (* end of opsys dependency                 *)
-        (*******************************************)
-
         TPROCN := '            ' ;
         VADDR := - 1 ;
         while ( ( PNAME <> TPROCN ) or ( PID <> VADDR ) ) and ( not EOF

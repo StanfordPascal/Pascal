@@ -15,8 +15,42 @@ VNext:
 
 =======================================================================================
 
-2022.11:
+2023.01:
 
+* Wie geht der Unterschied zwischen PASSNAP und PASSNAPC ?
+* Funktionieren Abbrueche mit PASSNAPC ohne Aufbereitung noch ?
+* Laenge der Stack-Bereiche ausgeben
+* PASSNAP nach MVS und testen (mit TEST0C4)
+
+
+pascala pascal2
+EXEC PASCOMPA PASCAL2
+STANFORD PASCAL COMPILER (BACKUP VERSION)
+   **** STANFORD PASCAL COMPILER, OPPOLZER VERSION OF 2022.04 ****
+
+   **** Compiler Summary ****
+   ****      No Errors, no Warnings.
+   ****   19234 LINE(S) READ,  149 PROCEDURE(S) COMPILED,
+   ****   69479 P_INSTRUCTIONS GENERATED,   7.99 SECONDS IN COMPILATION.
+EXEC PASC370A PASCAL2
+   **** STANFORD PASCAL POST-PROCESSOR, OPPOLZER VERSION OF 2022.04
+
+   ++++ Error   302 (near line 10680 of procedure SETCOMPARE)
+        IMPLIED SUBSCRIPTRANGE ERROR.
+   ****       -1 IS NOT IN THE RANGE:        0     65535
+   ++++ Error   253 (near line 13234 of procedure COPERATION)
+        PROCEDURE TOO LARGE.
++++ R(00253) +++
+EXEC PASLINKA PASCAL2
+THE FOLLOWING NAMES ARE UNDEFINED:
+ $PASMAIN
+ERROR 4 ON LOAD COMMAND.
+
+
+- Auslieferung auf MVS (Fehler 2104 in PASCAL2 mit falscher Fehlerdiagnose)
+- TESTWS funktioniert nicht auf VM/CMS
+
+* Auslieferung auf GitHub und VM
 * WRITESTR Funktion fuer Skalare
 * WRITESTR integer usw: Buffer Limit auf 200 abschaffen
 * Fehler korrigiert: -102 bei Non-Mainframe-Version (Int-Compare falsch)
@@ -27,10 +61,7 @@ VNext:
 * SYARROW bei Funktionsresultat-Typ zulassen
 * Problem bei TESTTYP mit SYARROW nach Pointer-Funktionsaufruf
 * LEFT funktioniert nicht mit Laenge 0 - RIGHT auch nicht
-- TESTTYP funktioniert nicht auf VM/CMS
-- TESTWS funktioniert nicht auf VM/CMS
-
-Auslieferung auf alle Plattformen (GitHub, VM, MVS)
+* TESTTYP funktioniert nicht auf VM/CMS
 
 =======================================================================================
 

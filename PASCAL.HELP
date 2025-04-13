@@ -189,7 +189,7 @@ PASRUN command:
 
 Run Time Routines
 
-  The run time system needed by Pascal programs is seperated into
+  The run time system needed by Pascal programs is separated into
   different modules.
 
   PASMONN       is the so called Pascal monitor, which contains the

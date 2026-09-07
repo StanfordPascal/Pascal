@@ -1,0 +1,36 @@
+************************************************************
+* NEW STANFORD PASCAL - PASCAL EXEC ************************
+************************************************************
+&IF .&1 EQ . &GOTO -SYNTAX
+&IF .&2 EQ . &GOTO -OK1
+&IF &2 EQ ( &GOTO -OK0
+&GOTO -SYNTAX
+-OK0
+&IF .&3 EQ .NOLINK &GOTO -OK1
+&GOTO -SYNTAX
+-SYNTAX
+&BEGTYPE
+This is the New Stanford Pascal compiler
+The PASCAL EXEC is used to compile Pascal programs
+Usage:
+PASCAL sourcename           -- for main programs
+PASCAL sourcename (NOLINK   -- for modules (subprograms)
+&END
+&EXIT 20
+-OK1
+STATE &1 PASCAL A
+&IF &RETCODE EQ 0 &GOTO -OK2
+&BEGTYPE
+Source file &1 PASCAL A cannot be found
+&END
+&EXIT 12
+-OK2
+EXEC PASCOMP &1
+&IF &RETCODE > 0 &GOTO -ERROR
+EXEC PASC370 &1
+&IF &RETCODE > 0 &GOTO -ERROR
+&IF .&3 EQ .NOLINK &EXIT 0
+EXEC PASLINK &1
+&EXIT &RETCODE
+-ERROR
+&EXIT &RETCODE

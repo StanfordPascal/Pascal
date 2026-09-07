@@ -1,0 +1,33 @@
+
+* PASGLB ist fertig :-)
+* PASMON ist fertig :-)
+* PASCSP ist fertig :-)
+- PASERR
+- PASSNP
+- PASIO  fehlt noch
+
+Globale Datenfelder: siehe PASGLOB.ASS
+
+- SNAPFLAG
+
+Global benutzte Funktionen:
+
+- FIXDATE
+- FIXTIME
+- PTRACE
+
+Aufteilung PASMONN:
+
+- PASMON = Rahmenprogramm fuer Startup, Tracing, zentrale Funktionen
+- PASGLB = globale Definitionen, die von mehreren Modulen benutzt werden
+- PASCSP = Support fuer Pascal-CSPs, ohne Low-Level I/O
+- PASIO  = I/O Funktionen aus PASCSP, die OS-Abhaengigkeiten haben
+- PASERR = Error Handling
+- PASSNP = Assembler-SNAP-Ausgabe (wenn nicht PASSNAP aktiv)
+
+Includes bzw. COPY-Books:
+
+- Definitionen STACK bzw. DYNSTORE
+- Fehlermeldungen usw.
+- FILDEF und Definitionen
+

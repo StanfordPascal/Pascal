@@ -1,0 +1,76 @@
+&CONTROL OFF NOMSG
+*
+************************************************************
+*   PASRUNM EXEC to run Pascal programs (MODULEs)
+*   OPP - 06.2017
+************************************************************
+*
+&IF .&1 EQ .? &GOTO -HELP
+&IF .&1 EQ . &GOTO -NOFILE
+&ANZ = &INDEX
+*-----------------------------------------------------------
+STATE &1 MODULE *
+&IF &RETCODE EQ 0 &GOTO -OK1
+&TYPE FILE &1 MODULE NOT FOUND
+&END
+&EXIT &RETCODE
+*-----------------------------------------------------------
+-OK1
+&IF &INDEX LE 1 &GOTO -OK2
+&IF &2 EQ ( &GOTO -RUNTONLY
+&BEGTYPE
+2ND PARM (BEFORE CMD LINE PARAMETERS) MUST BE A LEFT PARANTHESIS
+SUB MODULES ARE NOT ALLOWED ON PASRUNM (USE PASRUN INSTEAD)
+&END
+&EXIT 99
+*-----------------------------------------------------------
+-RUNTONLY
+&R1 = &3
+&R2 = &4
+&R3 = &5
+&R4 = &6
+&R5 = &7
+&R6 = &8
+&R7 = &9
+&R8 = &10
+&R9 = &11
+&R10 = &12
+&R11 = &13
+&R12 = &14
+&R13 = &15
+&R14 = &16
+&GOTO -OK2
+*-----------------------------------------------------------
+*
+************************************************************
+* FORTLIB NEEDED FOR MATH FUNCTIONS
+* REPLACE FORTLIB WITH NAME OF YOUR FORTRAN G LIBRARY
+* THE NAMES OF THE NEEDED (STANDARD) PASCAL RUNTIME
+* LIBRARIES ARE ADDED VIA &STACK, &READ ARGS ETC.
+* MORE MAY FOLLOW.
+************************************************************
+*
+-OK2
+FILEDEF QRD DISK &1 DBGINFO (RECFM F
+XRUNPARM &1 &R1 &R2 &R3 &R4 &R5 &R6 &R7 &R8 &R9 &R10 &R11 &R12 &R13 &R14
+&EXIT &RETCODE
+*
+************************************************************
+* ALL SORT OF ERROR MESSAGES
+************************************************************
+*
+-NOFILE
+&TYPE MISSING FILE NAME - 1ST PARAM.
+&GOTO -HELP
+*-----------------------------------------------------------
+-HELP
+&BEGTYPE
+
+USE THIS EXEC TO RUN A STANFORD PASCAL PROGRAM.
+SPECIFY THE FILE NAME OF THE MODULE FILE CONTAINING THE
+TRANSLATED PASCAL PROGRAM ON THE COMMAND LINE.
+MORE OPTIONS:
+SPECIFY RUNTIME PARAMETERS FOLLOWING A LEFT PARANTHESIS
+E.G.: PASRUNM PPROG ( PARM1 PARM3 PARM3
+
+&END

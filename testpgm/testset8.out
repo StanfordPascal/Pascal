@@ -1,0 +1,171 @@
+
+PCINT (Build 1.0 May 18 2023 19:46:58)
+
+   **** STANFORD PASCAL COMPILER, OPPOLZER VERSION OF 2023.05 ****
+
+
+in TYP
+line of code  =            4
+size          =           64
+setmin        =            0
+setmax        =          500
+svo           =            0
+
+in TYP
+line of code  =            7
+size          =           16
+setmin        =            0
+setmax        =          120
+svo           =            0
+
+in TYP
+line of code  =            8
+size          =           28
+setmin        =            0
+setmax        =          200
+svo           =            0
+
+in TYP
+line of code  =            9
+size          =           40
+setmin        =            0
+setmax        =          300
+svo           =            0
+
+in BUILD_SETCONST
+line of code  =           11
+psi.setmin    =          -50
+psi.setmax    =          150
+setsize       =           20
+setmin        =            0
+setmax        =          150
+svo           =            0
+
+in TYP
+line of code  =           12
+size          =           16
+setmin        =            0
+setmax        =          100
+svo           =            0
+
+in BUILD_SETCONST
+line of code  =           13
+psi.setmin    =          -70
+psi.setmax    =           70
+setsize       =           12
+setmin        =            0
+setmax        =           70
+svo           =            0
+
+in TYP
+line of code  =           14
+size          =           16
+setmin        =            0
+setmax        =          120
+svo           =            0
+
+in BUILD_SETCONST
+line of code  =           15
+psi.setmin    =          -10
+psi.setmax    =           80
+setsize       =           12
+setmin        =            0
+setmax        =           80
+svo           =            0
+
+in TYP
+line of code  =           16
+size          =           32
+setmin        =            0
+setmax        =          255
+svo           =            0
+
+in BUILD_SETCONST
+line of code  =           17
+psi.setmin    =           48
+psi.setmax    =           57
+setsize       =           32
+setmin        =            0
+setmax        =           57
+svo           =            0
+
+in TYP
+line of code  =           18
+size          =           32
+setmin        =            0
+setmax        =          255
+svo           =            0
+
+in BUILD_SETCONST
+line of code  =           19
+psi.setmin    =           74
+psi.setmax    =           78
+setsize       =           32
+setmin        =            0
+setmax        =           78
+svo           =            0
+
+in TYP
+line of code  =           23
+size          =           40
+setmin        =            0
+setmax        =          300
+svo           =            0
+
+in TYP
+line of code  =           49
+size          =           32
+setmin        =            0
+setmax        =          255
+svo           =            0
+
+in BUILD_SETCONST
+line of code  =           63
+psi.setmin    =           30
+psi.setmax    =           50
+setsize       =            8
+setmin        =            0
+setmax        =           50
+svo           =            0
+
+in BUILD_SETCONST
+line of code  =           64
+psi.setmin    =           70
+psi.setmax    =          150
+setsize       =           20
+setmin        =            0
+setmax        =          150
+svo           =            0
+
+in BUILD_SETCONST
+line of code  =           67
+psi.setmin    =          150
+psi.setmax    =          150
+setsize       =           20
+setmin        =            0
+setmax        =          150
+svo           =            0
+
+in BUILD_SETCONST
+line of code  =           71
+psi.setmin    =           70
+psi.setmax    =           70
+setsize       =           12
+setmin        =            0
+setmax        =           70
+svo           =            0
+
+in BUILD_SETCONST
+line of code  =           72
+psi.setmin    =           80
+psi.setmax    =           80
+setsize       =           12
+setmin        =            0
+setmax        =           80
+svo           =            0
+   **** Compiler Summary ****
+   ****      No Errors, no Warnings.
+   ****      78 LINE(S) READ,    3 PROCEDURE(S) COMPILED,
+   ****     318 P_INSTRUCTIONS GENERATED,   0.09 SECONDS IN COMPILATION.
+
+*** EXIT Aufruf mit Parameter = 0 ***

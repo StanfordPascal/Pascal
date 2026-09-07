@@ -1,0 +1,38 @@
+************************************************************
+* NEW STANFORD PASCAL - PASCALA EXEC ***********************
+* Pascal exec for old version of the compiler **************
+************************************************************
+&IF .&1 EQ . &GOTO -SYNTAX
+&IF .&2 EQ . &GOTO -OK1
+&IF &2 EQ ( &GOTO -OK0
+&GOTO -SYNTAX
+-OK0
+&IF .&3 EQ .NOLINK &GOTO -OK1
+&GOTO -SYNTAX
+-SYNTAX
+&BEGTYPE
+This is the New Stanford Pascal compiler
+The PASCALA EXEC is used to compile Pascal programs
+(it is the old version of the compiler - current version minus -1)
+Usage:
+PASCALA sourcename           -- for main programs
+PASCALA sourcename (NOLINK   -- for modules (subprograms)
+&END
+&EXIT 20
+-OK1
+STATE &1 PASCAL A
+&IF &RETCODE EQ 0 &GOTO -OK2
+&BEGTYPE
+Source file &1 PASCAL A cannot be found
+&END
+&EXIT 12
+-OK2
+EXEC PASCOMPA &1
+&IF &RETCODE > 0 &GOTO -ERROR
+EXEC PASC370A &1
+&IF &RETCODE > 0 &GOTO -ERROR
+&IF .&3 EQ .NOLINK &EXIT 0
+EXEC PASLINKA &1
+&EXIT &RETCODE
+-ERROR
+&EXIT &RETCODE

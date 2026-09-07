@@ -298,6 +298,7 @@ procedure $PASSNAP ( LEVEL : INTEGER ; DUMPPTR : VOIDPTR ) ;
                      CHKPASE : VOIDPTR ;
                      CHKHEAPP : VOIDPTR ;
                      CHKHEAPT : VOIDPTR ;
+                     CHKCURRP : VOIDPTR ;
                    end ;
         MSGTYPE = array [ 1 .. 100 ] of CHAR ;
         HINTEGER = - 32768 .. 32767 ;
@@ -1887,12 +1888,12 @@ procedure $PASSNAP ( LEVEL : INTEGER ; DUMPPTR : VOIDPTR ) ;
           begin
 
         //********************************************************
-        // change 11.01.2020 - oppolzer                           
-        // call to procedure $error generates p-code instruction  
-        // CHK E, which in turn generates instruction X'00'       
-        // and certain operands ... if the 2001 exception         
-        // turns out to be this sort of exception, other          
-        // output is generated                                    
+        // change 11.01.2020 - oppolzer
+        // call to procedure $error generates p-code instruction
+        // CHK E, which in turn generates instruction X'00'
+        // and certain operands ... if the 2001 exception
+        // turns out to be this sort of exception, other
+        // output is generated
         //********************************************************
 
             $ERROR_CALL := FALSE ;
@@ -1930,7 +1931,7 @@ procedure $PASSNAP ( LEVEL : INTEGER ; DUMPPTR : VOIDPTR ) ;
               end (* then *) ;
 
         //***********************
-        // handle runtime error  
+        // handle runtime error
         //***********************
 
             WRITE ( '**** RUN ERROR: ' , CHKERRC : 4 ) ;
@@ -1953,7 +1954,7 @@ procedure $PASSNAP ( LEVEL : INTEGER ; DUMPPTR : VOIDPTR ) ;
             WRITE ( '**** ' ) ;
 
         //**********************************************
-        // call to runtime error procedure $ERROR       
+        // call to runtime error procedure $ERROR
         //**********************************************
 
             if $ERROR_CALL then
@@ -1964,7 +1965,7 @@ procedure $PASSNAP ( LEVEL : INTEGER ; DUMPPTR : VOIDPTR ) ;
               end (* then *) ;
 
         //**********************************************
-        // error codes less than 2000 : pascal runtime  
+        // error codes less than 2000 : pascal runtime
         //**********************************************
 
             if CHKERRC < 2000 then
@@ -2005,7 +2006,7 @@ procedure $PASSNAP ( LEVEL : INTEGER ; DUMPPTR : VOIDPTR ) ;
               end (* then *) ;
 
         //***************************
-        // machine check interrupts  
+        // machine check interrupts
         //***************************
 
             if CHKERRC < 3000 then
@@ -2189,5 +2190,5 @@ procedure $PASSNAP ( LEVEL : INTEGER ; DUMPPTR : VOIDPTR ) ;
 
 
 begin (* HAUPTPROGRAMM *)
-  
+
 end (* HAUPTPROGRAMM *) .

@@ -7,6 +7,15 @@
 /*  Oppolzer / from 2012 until today                                  */
 /*                                                                    */
 /**********************************************************************/
+/*                                                                    */
+/*  The numbers of the opcodes here (XXX_opcode) need not match       */
+/*  the numbers in PASCAL1 and PASCAL2 ... PCINT reads the            */
+/*  opcode mnemonics and uses its own number coding !!                */
+/*                                                                    */
+/*  obsolete opcodes can be removed as long as old versions           */
+/*  of PCODE files are not used any more :-)                          */
+/*                                                                    */
+/**********************************************************************/
 
 #define PCINT_VERSION  "1.0"
 
@@ -430,6 +439,7 @@ typedef struct
    int stepanz;                   /* Stepanzahl Debugger            */
                                   /*--------------------------------*/
                                   /* nur tempor. waehrend assembly: */
+   int inside_main;               /* = 1 solange innerhalb main     */
    int local_error;               /* lokaler Fehler bei assembler   */
    int xbg_xen_count;             /* Anzahl belegte XBG/XEN         */
    int xbg_xen_tag [10];          /* XBG/XEN-Tags                   */
@@ -573,35 +583,44 @@ static const filecb nullfcb_bin =
 #define XXX_SBI    74
 #define XXX_SBR    75
 #define XXX_SCL    76
-#define XXX_SLD    77
-#define XXX_SMV    78
-#define XXX_SQI    79
-#define XXX_SQR    80
-#define XXX_STO    81
-#define XXX_STP    82
-#define XXX_STR    83
-#define XXX_TRC    84
-#define XXX_UJP    85
-#define XXX_UNI    86
-#define XXX_UXJ    87
-#define XXX_VC1    88
-#define XXX_VC2    89
-#define XXX_VCC    90
-#define XXX_VIX    91
-#define XXX_VLD    92
-#define XXX_VLM    93
-#define XXX_VMV    94
-#define XXX_VPO    95
-#define XXX_VPU    96
-#define XXX_VRP    97
-#define XXX_VSM    98
-#define XXX_VST    99
-#define XXX_XBG    00
-#define XXX_XEN   101
-#define XXX_XJP   102
-#define XXX_XLB   103
-#define XXX_XOR   104
-#define XXX_XPO   105
+#define XXX_SCP    77
+#define XXX_SLD    78
+#define XXX_SMV    79
+#define XXX_SQI    80
+#define XXX_SQR    81
+#define XXX_STO    82
+#define XXX_STP    83
+#define XXX_STR    84
+#define XXX_TRC    85
+#define XXX_UJP    86
+#define XXX_UNI    87
+#define XXX_UXJ    88
+#define XXX_VC1    89
+#define XXX_VC2    90
+#define XXX_VCC    91
+#define XXX_VIX    92
+#define XXX_VLD    93
+#define XXX_VLM    94
+#define XXX_VMV    95
+#define XXX_VPO    96
+#define XXX_VPU    97
+#define XXX_VRP    98
+#define XXX_VSM    99
+#define XXX_VST   100
+#define XXX_XBG   101
+#define XXX_XEN   102
+#define XXX_XJP   103
+#define XXX_XLB   104
+#define XXX_XOR   105
+#define XXX_XPO   106
+#define XXX_ZAE   107
+#define XXX_ZAR   108
+#define XXX_ZDI   109
+#define XXX_ZIN   110
+#define XXX_ZIS   111
+#define XXX_ZMV   112
+#define XXX_ZMX   113
+#define XXX_ZUN   114
 
 
 
@@ -714,6 +733,7 @@ static opctab ot [] =
    { "SBI", XXX_SBI, 0, ' ' },
    { "SBR", XXX_SBR, 0, ' ' },
    { "SCL", XXX_SCL, 0, 'B' },    /* neu McGill: Set Clear */
+   { "SCP", XXX_SCP, 0, 'B' },    /* neu 2023: Set Copy */
    { "SLD", XXX_SLD, 0, 'B' },    /* neu McGill: Set Load */
    { "SMV", XXX_SMV, 0, 'B' },    /* neu McGill: Set Move */
    { "SQI", XXX_SQI, 0, ' ' },
@@ -737,13 +757,20 @@ static opctab ot [] =
    { "VRP", XXX_VRP, 0, ' ' },    /* varchar repeatstr */
    { "VSM", XXX_VSM, 0, 'A' },    /* varchar set maxlength */
    { "VST", XXX_VST, 0, 'B' },    /* varchar store */
-
    { "XBG", XXX_XBG, 0, 'A' },    /* bedingte Codeseq. Anfang */
    { "XEN", XXX_XEN, 0, 'F' },    /* bedingte Codeseq. Ende */
    { "XJP", XXX_XJP, 0, 'X' },
    { "XLB", XXX_XLB, 0, 'L' },    /* neu McGill: Long Jump Target */
    { "XOR", XXX_XOR, 0, 'W' },    /* neu Opp 2017 */
    { "XPO", XXX_XPO, 0, ' ' },    /* nicht in Stanford-Papier */
+   { "ZAE", XXX_ZAE, 0, 'A' },    /* neu 2024.06: replaces ASE */
+   { "ZAR", XXX_ZAR, 0, 'G' },    /* neu 2024.06: replaces ASR */
+   { "ZDI", XXX_ZDI, 0, ' ' },    /* neu 2024.06: replaces DIF */
+   { "ZIN", XXX_ZIN, 0, ' ' },    /* neu 2024.06: replaces INN */
+   { "ZIS", XXX_ZIS, 0, ' ' },    /* neu 2024.06: replaces INT */
+   { "ZMV", XXX_ZMV, 0, 'B' },    /* neu 2024.06: replaces SMV */
+   { "ZMX", XXX_ZMX, 0, 'B' },    /* neu 2024.06: ZMV plus */
+   { "ZUN", XXX_ZUN, 0, ' ' },    /* neu 2024.06: replaces UNI */
    { NULL,  -1, 0, ' ' }
 };
 

@@ -4,11 +4,15 @@
 
     copy %PASECHO% script\pascal.cmd    %PASDIR%
     copy %PASECHO% script\pasf.cmd      %PASDIR%
+    copy %PASECHO% script\pasfcc.cmd    %PASDIR%
     copy %PASECHO% script\pp.cmd        %PASDIR%
     copy %PASECHO% script\prun.cmd      %PASDIR%
+    copy %PASECHO% script\prunn.cmd     %PASDIR%
     copy %PASECHO% script\prund.cmd     %PASDIR%
+    copy %PASECHO% script\prunnd.cmd    %PASDIR%
 
     copy %PASECHO% bin\pcint.exe        %PASDIR%
+    copy %PASECHO% bin\pcintn.exe       %PASDIR%
 
     copy %PASECHO% src\pascal1.pcode    %PASDIR%
     copy %PASECHO% src\pascal1.pcode1   %PASDIR%
@@ -21,4 +25,8 @@
     copy %PASECHO% src\pasutils.pas     %PASDIR%
 
     copy %PASECHO% etc\pascal.messages  %PASDIR%
+
+    copy %PASECHO% script\ppa.cmd       %PASDIR%
+    copy %PASECHO% src\pascal1a.pcode   %PASDIR%
+    copy %PASECHO% src\pascal1a.pcode1  %PASDIR%
 

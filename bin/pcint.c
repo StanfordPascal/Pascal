@@ -71,7 +71,16 @@
 /*             !             ! -102 in compiler, turned out to be     */
 /*             !             ! wrong implementation of numeric        */
 /*             !             ! comparison ... see --20220613--        */
-/*  .......... ! ........    ! .....................................  */
+/*  07.08.2024 ! Oppolzer    ! New implementation of Pascal sets      */
+/*  07.08.2024 ! Oppolzer    ! New variants of DCF and LCA for sets   */
+/*  09.08.2024 ! Oppolzer    ! New P-Code ZMV                         */
+/*  09.08.2024 ! Oppolzer    ! New P-Code ZIN                         */
+/*  11.08.2024 ! Oppolzer    ! Corrections DCF und LCA und ZIN        */
+/*             !             ! TESTSET9 and TESTSETA work correctly   */
+/*  05.09.2024 ! Oppolzer    ! New P-Code ZMX (similar to ZMV)        */
+/*  23.08.2026 ! Oppolzer    ! allow comments in the PCODE input      */
+/*  23.08.2026 ! Oppolzer    ! New P-Codes ZAR and ZAE                */
+/*  06.09.2026 ! Oppolzer    ! New P-Code CRD (Function CARD)         */
 /*  .......... ! ........    ! .....................................  */
 /*  .......... ! ........    ! .....................................  */
 /*  .......... ! ........    ! .....................................  */
@@ -927,7 +936,7 @@ static void file_input (void *vgs, filecb *fcb)
    }
 
    //*********************************************
-   // Pruefen, ob Zeile komplett reingepasst hat
+   // Pruefen, ob Zeile komplett reingeworkmod hat
    //*********************************************
 
    cp = fcb -> fbuffer + strlen (fcb -> fbuffer) - 1;
@@ -3981,6 +3990,12 @@ static char *cup_special (global_store *gs,
       //   first argument = integer
       //   second argument = address
       //**********************************************
+      //   subfunction 1 = ALLOC
+      //   subfunction 2 = FREE (not here ???)
+      //   subfunction 10 = FILEFCB
+      //   subfunction 11 = CMSX a.k.a. system
+      //   subfunction 12 = WINX a.k.a. system
+      //**********************************************
 
       addr = gs -> pcups + pcode -> x + 112;
       first = STOR_I (addr);
@@ -4787,6 +4802,19 @@ static void int1 (global_store *gs)
    int copy_string;
    int addr_displaysave;
 
+   int lent;
+   int lens;
+   int offst;
+   int offss;
+   int offs_delta;
+   int lens2;
+   int offss2;
+   int offs_diff;
+   char *start_charp;
+   char *start_charp2;
+   unsigned char *ucp;
+   unsigned char *ucp2;
+
    unsigned char worksetbuf [SETLENMAX];
 
    funtab *pft;
@@ -5127,6 +5155,52 @@ static void int1 (global_store *gs)
          uwert = *uintp;
          uwert &= 0xff;
          *uintp = uwert;
+
+         break;
+
+      case XXX_CRD:
+
+         /************************************************/
+         /*   set is on top of stack                     */
+         /*   compute card and put it on top of stack    */
+         /************************************************/
+
+         intp = ADDRSTACK (gs -> sp);
+         charp = ADDRSTOR (*intp);
+
+         //*******************************************
+         // Laenge und Offset vom Set holen
+         //*******************************************
+
+         shortp = (short *) charp;
+         lens = *shortp;
+         shortp ++;
+         offss = *shortp;
+
+         //*******************************************
+         // jedes Byte des Sets anschauen und die
+         // Anzahl der Bits zaehlen
+         //*******************************************
+
+         shortp ++;
+         charp = (char *) shortp;
+         charp2 = charp + lens;
+         wert1 = 0;
+         for (; charp < charp2; charp ++)
+         {
+            unsigned int uwert;
+            ucp = (unsigned char *) charp;
+            uwert = *ucp;
+            while (uwert != 0)
+            {
+                if ((uwert & 1u) != 0)
+                   wert1 ++;
+                uwert >>= 1;
+            }
+         }
+
+         intp = ADDRSTACK (gs -> sp);
+         *intp = wert1;
 
          break;
 
@@ -7119,6 +7193,85 @@ static void int1 (global_store *gs)
 
          break;
 
+      case XXX_SCP:
+
+         // Opp / 12.2016
+         // working sets relative to pcups
+
+         /************************************************/
+         /*   copy set from storage to storage           */
+         /*   len1 = target length of set                */
+         /*   len2 = source length                       */
+         /*   if len1 < 0:                               */
+         /*   different sequence of parameter on stack   */
+         /************************************************/
+
+         len1 = pcode -> p;
+         len2 = pcode -> q;
+
+         if (len1 < 0)
+         {
+            len1 = - len1;
+
+            intp2 = ADDRSTACK (gs -> sp);
+            charp2 = ADDRSTOR (SET_ADDR (*intp2));
+
+            (gs -> sp) -= 4;
+
+            intp = ADDRSTACK (gs -> sp);
+            charp = ADDRSTOR (SET_ADDR (*intp));
+
+            (gs -> sp) -= 4;
+         }
+         else
+         {
+            intp = ADDRSTACK (gs -> sp);
+            charp = ADDRSTOR (SET_ADDR (*intp));
+
+            (gs -> sp) -= 4;
+
+            intp2 = ADDRSTACK (gs -> sp);
+            charp2 = ADDRSTOR (SET_ADDR (*intp2));
+
+            (gs -> sp) -= 4;
+         }
+
+         if (len1 > len2)
+         {
+            //*************************************
+            // ueberzaehlige Laenge auf Hex Null setzen
+            //*************************************
+
+            memset (charp2 + len2, 0x00, len1 - len2);
+         }
+
+         if (len2 != 0 && charp != charp2)
+         {
+            len = len1;
+            if (len1 > len2)
+            {
+               len = len2;
+            }
+
+            //*************************************
+            // wg. moeglicher Ueberlappungen
+            //*************************************
+
+            memcpy (worksetbuf, charp, len);
+            memcpy (charp2, worksetbuf, len);
+         }
+
+#if 0
+
+         fprintf (stderr, "SCP: pcode -> p = %d\n", pcode -> p);
+         fprintf (stderr, "SCP: len1 = %d\n", len1);
+         fprintf (stderr, "SCP: len2 = %d\n", len2);
+         fprintf (stderr, "SCP: target = %d\n", *intp2);
+
+#endif
+
+         break;
+
       case XXX_SLD:
 
          // Opp / 12.2016
@@ -7182,7 +7335,7 @@ static void int1 (global_store *gs)
          // working sets relative to pcups
 
          /************************************************/
-         /*   move set to storage                        */
+         /*   move set from stack to storage             */
          /*   len1 = target length of set                */
          /*   len2 = source length                       */
          /*   if len1 < 0:                               */
@@ -8705,6 +8858,781 @@ static void int1 (global_store *gs)
 
          break;
 
+      case XXX_ZAE:
+
+         //***********************************************************
+         //   new implementation of sets in 2024
+         //   ZAE = create a set in the work area from an integer
+         //   the integer is on SP
+         //   the set is created in the string workarea
+         //***********************************************************
+         //   outcome:
+         //   the set as defined by the int parameter is constructed
+         //   in the workarea, the space required is allocated first
+         //   the stack element at SP is replaced with the string
+         //   address, no change to SP
+         //***********************************************************
+
+         wert1 = STACK_I (gs -> sp);
+
+         /************************************************/
+         /*   alloc set of length 8                      */
+         /*   in string workarea                         */
+         /************************************************/
+
+         newstr = alloc_string (gs, 8);
+         if (newstr < 0)
+            runtime_error (gs, STRINGSPACE, NULL);
+
+         intp = ADDRSTACK (gs -> sp);
+         *intp = newstr;
+
+         charp = ADDRSTOR (*intp);
+         setp = (unsigned char *) (charp + 4);
+
+         {
+            //*******************************************
+            // Laenge und Offset des Sets erzeugen
+            // d.h. lens und offss berechnen
+            // byte mit einem gesetzten Bit an die Stelle
+            // setp abspeichern
+            //*******************************************
+
+            int offss;
+            int byteoffs;
+            unsigned char *byte;
+
+            offss = wert1 / 8;
+            if (offss * 8 > wert1)
+               offss --;
+            byteoffs = wert1 - offss * 8;
+
+            shortp = (short *) charp;
+            *shortp = 1;
+            shortp ++;
+            *shortp = offss;
+
+            byte = setp;
+            *byte = 0x80 >> byteoffs;
+         }
+
+         break;
+
+      case XXX_ZAR:
+
+         //***********************************************************
+         //   new implementation of sets in 2024
+         //   ZAR = create a set in the work area from a range of
+         //   two integers, the two integers are on SP and SP - 4
+         //   the set is created in the string workarea
+         //***********************************************************
+         //   outcome:
+         //   the set as defined by the int parameter is constructed
+         //   in the workarea, the space required is allocated first
+         //   SP is reduced by 4.
+         //   the stack element at SP is replaced with the string
+         //   address
+         //***********************************************************
+
+         wert1 = STACK_I (gs -> sp - 4);
+         wert2 = STACK_I (gs -> sp);
+
+         if (wert2 < wert1)
+         {
+            lent = 0;
+         }
+         else
+         {
+            lent = wert2 - wert1;
+            lent = lent + 24;
+            lent = lent / 8;
+         }
+
+         (gs -> sp) -= 4;
+
+         /************************************************/
+         /*   alloc string of computed length            */
+         /*   in string workarea                         */
+         /************************************************/
+
+         newstr = alloc_string (gs, lent + 4);
+         if (newstr < 0)
+            runtime_error (gs, STRINGSPACE, NULL);
+
+         intp = ADDRSTACK (gs -> sp);
+         *intp = newstr;
+
+         charp = ADDRSTOR (*intp);
+         setp = (unsigned char *) (charp + 4);
+
+         if (lent == 0)
+         {
+            //*******************************************
+            // leere Menge
+            //*******************************************
+
+            shortp = (short *) charp;
+            *shortp = 0;
+            shortp ++;
+            *shortp = 0;
+         }
+         else
+         {
+            //*******************************************
+            // Laenge und Offset des Sets erzeugen
+            // d.h. lens und offss berechnen
+            // Bits in Set entsprechend Range setzen
+            //*******************************************
+
+            int offss;
+            int offss2;
+            int byteoffs;
+            int byteoffs2;
+            unsigned char *byte1;
+            unsigned char *byte2;
+            int lrest;
+
+            offss = wert1 / 8;
+            if (offss * 8 > wert1)
+               offss -= 8;
+            byteoffs = wert1 - offss * 8;
+
+            offss2 = wert2 / 8;
+            if (offss2 * 8 > wert2)
+               offss2 -= 8;
+            byteoffs2 = 7 - (wert2 - offss2 * 8);
+
+            shortp = (short *) charp;
+            *shortp = lent;
+            shortp ++;
+            *shortp = offss;
+
+            memset (setp, 0x00, lent);
+
+            byte1 = setp;
+            byte2 = setp + offss2 - offss;
+
+#if 0
+
+            fprintf (stderr, "ZAR: offs1 = %d\n", offss);
+            fprintf (stderr, "ZAR: offs2 = %d\n", offss2);
+            fprintf (stderr, "ZAR: byte1 = %p\n", byte1);
+            fprintf (stderr, "ZAR: byte2 = %p\n", byte2);
+
+#endif
+
+            if (byte1 != byte2)
+            {
+               *byte1 = 0xff >> byteoffs;
+               *byte2 = 0xff << byteoffs2;
+               lrest = byte2 - byte2 - 1;
+
+#if 0
+
+               fprintf (stderr, "ZAR: boffs1 = %d\n", byteoffs);
+               fprintf (stderr, "ZAR: boffs2 = %d\n", byteoffs2);
+               fprintf (stderr, "ZAR: lrest  = %d\n", lrest);
+
+#endif
+
+               if (lrest > 0)
+                  memset (setp + 1, 0xff, lrest);
+            }
+            else
+            {
+               *byte1 = (0xff >> byteoffs) & (0xff << byteoffs2);
+            }
+         }
+
+         break;
+
+      case XXX_ZIN:
+
+         //**********************************************
+         //   new implementation of sets in 2024
+         //   ZIN = check, if element in set
+         //   the set has its length and offset
+         //   in its meta data (first four bytes)
+         //**********************************************
+         //   wert1 is the value to be checked
+         //   lens = length of set (from source meta)
+         //   offss = offset of set
+         //**********************************************
+
+         wert1 = STACK_I (gs -> sp - 4);
+
+         intp = ADDRSTACK (gs -> sp);
+         charp = ADDRSTOR (*intp);
+         setp = (unsigned char *) (charp + 4);
+
+         //*******************************************
+         // Laenge und Offset vom Set holen
+         //*******************************************
+
+         shortp = (short *) charp;
+         lens = *shortp;
+         shortp ++;
+         offss = *shortp;
+
+#if 0
+
+         fprintf (stderr, "===================================\n");
+         fprintf (stderr, "ZIN: pcode -> loc = %d\n", pcode -> loc);
+         fprintf (stderr, "ZIN: lens  = %d\n", lens);
+         fprintf (stderr, "ZIN: offss = %d\n", offss);
+         fprintf (stderr, "ZIN: limitu = %d\n", offss * 8);
+         fprintf (stderr, "ZIN: limito = %d\n", (offss + lens) * 8);
+         fprintf (stderr, "ZIN: wert1  = %d\n", wert1);
+
+#endif
+
+         bool = 0;
+
+         if (wert1 >= offss * 8 &&
+             wert1 < (offss + lens) * 8)
+         {
+            int diff_wert = wert1 - offss * 8;
+
+            int bytenr;
+            int byteoffs;
+            unsigned int byte;
+
+            bytenr = diff_wert / 8;
+            byteoffs = diff_wert % 8;
+
+#if 0
+
+            fprintf (stderr, "ZIN: bytenr   = %d\n", bytenr);
+            fprintf (stderr, "ZIN: byteoffs = %d\n", byteoffs);
+
+#endif
+
+            byte = setp [bytenr];
+            byte = byte << byteoffs;
+            byte &= 0x80;
+
+            bool = (byte != 0);
+         }
+
+#if 0
+
+         fprintf (stderr, "ZIN: bool = %d\n", bool);
+
+#endif
+
+         (gs -> sp) -= 4;
+         intp = ADDRSTACK (gs -> sp);
+         charp = (char *) intp;
+         *intp = 0;
+         *charp = bool;
+
+         break;
+
+      case XXX_ZMV:
+      case XXX_ZMX:
+
+         //***********************************************************
+         //   new implementation of sets in 2024
+         //   ZMV = set move
+         //   the source set has its length and offset
+         //   in its meta data (first four bytes)
+         //   the values for the target set are part of
+         //   the ZMV instruction
+         //***********************************************************
+         //   move set from source to target
+         //***********************************************************
+         //   lent = length of target (from instruction)
+         //   offst = offset of target (from instr.)
+         //   lens = length of source (from source meta)
+         //   offss = offset of source
+         //***********************************************************
+         //   the addresses are fetched from the stack
+         //   sequence depends on the sign of the length
+         //   then we have the lengths and offsets of the operands.
+         //   The delta of the offsets is computed. The resulting
+         //   transfer len and the resulting transfer offsets for
+         //   source and target are computed. It is possible that
+         //   the resulting transfer len is zero or negative;
+         //   in this case there is no transfer and the result will
+         //   be the empty set
+         //***********************************************************
+         //   Later we will have to implement checks for elements
+         //   which cannot be stored into the target set;
+         //   a runtime error (range violation) should be reported
+         //   in such cases
+         //***********************************************************
+         //   05.09.2024:
+         //   ZMX is the same as ZMV, but the address of the
+         //   target stays on the stack for further processing
+         //***********************************************************
+         //   27.08.2026:
+         //   ZMX has to be reworked, see the pascal_sets document
+         //   - it has only one operand, because it fetches the
+         //     target address from the string workarea
+         //***********************************************************
+
+         lent = pcode -> p;
+         offst = pcode -> q / 8;
+
+#if 0
+
+         fprintf (stderr, "===================================\n");
+         fprintf (stderr, "ZMV: pcode -> loc = %d\n", pcode -> loc);
+         fprintf (stderr, "ZMV: pcode -> p = %d\n", pcode -> p);
+         fprintf (stderr, "ZMV: pcode -> q = %d\n", pcode -> q);
+         fprintf (stderr, "ZMV: lent  = %d\n", lent);
+         fprintf (stderr, "ZMV: offst = %d\n", offst);
+
+#endif
+
+         if (opnum == XXX_ZMV)
+         {
+            if (lent < 0)
+            {
+               lent = - lent;
+
+               intp2 = ADDRSTACK (gs -> sp);
+               charp2 = ADDRSTOR (*intp2);
+
+               (gs -> sp) -= 4;
+
+               intp = ADDRSTACK (gs -> sp);
+               charp = ADDRSTOR (*intp);
+
+               (gs -> sp) -= 4;
+            }
+            else
+            {
+               intp = ADDRSTACK (gs -> sp);
+               charp = ADDRSTOR (*intp);
+
+               (gs -> sp) -= 4;
+
+               intp2 = ADDRSTACK (gs -> sp);
+               charp2 = ADDRSTOR (*intp2);
+
+               (gs -> sp) -= 4;
+            }
+         }
+         else
+         {
+            intp = ADDRSTACK (gs -> sp);
+            charp = ADDRSTOR (*intp);
+
+            /************************************************/
+            /*   alloc string of length 1                   */
+            /*   in string workarea                         */
+            /************************************************/
+
+            newstr = alloc_string (gs, lent + 4);
+            if (newstr < 0)
+               runtime_error (gs, STRINGSPACE, NULL);
+
+            *intp = newstr;
+
+            intp2 = ADDRSTACK (gs -> sp);
+            charp2 = ADDRSTOR (newstr);
+         }
+
+         //*******************************************
+         // Laenge und Offset vom Source Set holen
+         //*******************************************
+
+         shortp = (short *) charp;
+         lens = *shortp;
+         shortp ++;
+         offss = *shortp;
+
+#if 0
+
+         fprintf (stderr, "ZMV: lens  = %d\n", lens);
+         fprintf (stderr, "ZMV: offss = %d\n", offss);
+
+#endif
+
+         //*******************************************
+         // Zunaechst Ziel-Set komplett auf Null
+         //*******************************************
+
+         shortp = (short *) charp2;
+         *shortp = lent;
+         shortp ++;
+         *shortp = offst;
+
+         memset (charp2 + 4, 0x00, lent);
+
+#if 0
+
+         fprintf (stderr, "ZMV: lens  = %d\n", lens);
+         fprintf (stderr, "ZMV: offss = %d\n", offss);
+
+#endif
+
+         //*******************************************
+         // Jetzt berechnen, wo Source-Set in Ziel
+         // reinkopiert werden muss und in welcher
+         // Laenge
+         //*******************************************
+
+         offs_delta = offss - offst;
+
+         if (offs_delta >= 0)
+         {
+            len = lens;
+            offss = 0;
+            offst = offs_delta;
+         }
+         else
+         {
+            len = lens - offs_delta;
+            offss = - offs_delta;
+            offst = 0;
+         }
+
+         if (offst + len > lent)
+         {
+            len = lent - offst;
+         }
+
+#if 0
+
+         fprintf (stderr, "ZMV: delta = %d\n", offs_delta);
+         fprintf (stderr, "ZMV: len   = %d\n", len);
+         fprintf (stderr, "ZMV: offst = %d\n", offst);
+         fprintf (stderr, "ZMV: offss = %d\n", offss);
+
+#endif
+
+         if (len > 0)
+         {
+            //********************************************
+            // Bytes uebertragen, soweit erforderlich
+            //********************************************
+            // wg. moeglicher Ueberlappungen
+            //********************************************
+
+            memcpy (worksetbuf, charp + 4 + offss, len);
+            memcpy (charp2 + 4 + offst, worksetbuf, len);
+         }
+
+         break;
+
+      case XXX_ZIS:
+      case XXX_ZDI:
+
+         //***********************************************************
+         //   new implementation of sets in 2024
+         //   ZIS = set intersection
+         //   ZDI = set difference
+         //   two sets on top of stack
+         //   one of them is popped, the result goes into the
+         //   remaining set (which is always large enough, the
+         //   compiler ensures this)
+         //***********************************************************
+
+         intp = ADDRSTACK (gs -> sp);
+         charp = ADDRSTOR (*intp);
+
+         (gs -> sp) -= 4;
+
+         intp2 = ADDRSTACK (gs -> sp);
+         charp2 = ADDRSTOR (*intp2);
+
+         //*******************************************
+         // Laenge und Offset vom Set holen
+         //*******************************************
+
+         shortp = (short *) charp;
+         lens = *shortp;
+         shortp ++;
+         offss = *shortp;
+
+         shortp = (short *) charp2;
+         lens2 = *shortp;
+         shortp ++;
+         offss2 = *shortp;
+
+         //*******************************************
+         // compute first matching byte
+         // in both set representations
+         //*******************************************
+
+         charp += 4;
+         charp2 += 4;
+         start_charp = charp;
+         start_charp2 = charp2;
+
+         if (offss > offss2)
+         {
+            offs_diff = offss - offss2;
+            charp2 += offs_diff;
+         }
+         else
+         {
+            offs_diff = offss2 - offss;
+            charp += offs_diff;
+         }
+
+         //*******************************************
+         // process both sets until one of them
+         // reaches its end
+         //*******************************************
+
+         switch (opnum)
+         {
+            case XXX_ZIS:
+               if (charp2 > start_charp2)
+               {
+                  memset (start_charp2, 0x00,
+                          charp2 - start_charp2);
+               }
+               while (charp < start_charp + lens &&
+                      charp2 < start_charp2 + lens2)
+               {
+                  ucp = (unsigned char *) charp;
+                  ucp2 = (unsigned char *) charp2;
+                  *ucp2 &= *ucp;
+                  charp ++;
+                  charp2 ++;
+               }
+               if (charp2 < start_charp2 + lens2)
+               {
+                  memset (charp2, 0x00,
+                          start_charp2 + lens2 - charp2);
+               }
+               break;
+
+            case XXX_ZDI:
+               while (charp < start_charp + lens &&
+                      charp2 < start_charp2 + lens2)
+               {
+                  ucp = (unsigned char *) charp;
+                  ucp2 = (unsigned char *) charp2;
+                  *ucp2 &= (*ucp ^ 0xffu);
+                  charp ++;
+                  charp2 ++;
+               }
+               break;
+         }
+
+         break;
+
+      case XXX_ZUN:
+
+         //***********************************************************
+         //   new implementation of sets in 2024
+         //   ZUN = set union
+         //   two sets on top of stack
+         //   one of them is popped, the result goes into the
+         //   remaining set
+         //   with the ZUN instruction, the result set can be larger
+         //   than the operand sets, so the length of the result set
+         //   must be computed first - see below
+         //***********************************************************
+
+         {
+            int offsr;
+            int lenr;
+            int workmod;
+            char *charpr;
+            char *start_charpr;
+
+            intp = ADDRSTACK (gs -> sp);
+            charp = ADDRSTOR (*intp);
+
+            (gs -> sp) -= 4;
+
+            intp2 = ADDRSTACK (gs -> sp);
+            charp2 = ADDRSTOR (*intp2);
+
+            //*******************************************
+            // Laenge und Offset vom Set holen
+            //*******************************************
+
+            shortp = (short *) charp;
+            lens = *shortp;
+            shortp ++;
+            offss = *shortp;
+
+            shortp = (short *) charp2;
+            lens2 = *shortp;
+            shortp ++;
+            offss2 = *shortp;
+
+#if 0
+
+            fprintf (stderr, "===================================\n");
+            fprintf (stderr, "ZUN: pcode -> loc = %d\n", pcode -> loc);
+            fprintf (stderr, "ZUN: lens   = %d\n", lens);
+            fprintf (stderr, "ZUN: offss  = %d\n", offss);
+            fprintf (stderr, "ZUN: limitu = %d\n", offss * 8);
+            fprintf (stderr, "ZUN: limito = %d\n", (offss + lens) * 8);
+            fprintf (stderr, "ZUN: lens2  = %d\n", lens2);
+            fprintf (stderr, "ZUN: offss2 = %d\n", offss2);
+            fprintf (stderr, "ZUN: limitu = %d\n", offss2 * 8);
+            fprintf (stderr, "ZUN: limito = %d\n",
+                              (offss2 + lens2) * 8);
+
+#endif
+
+            if (offss >= offss2 &&
+                offss + lens <= offss2 + lens2)
+            {
+#if 0
+               fprintf (stderr, "ZUN: result fits in operand 2\n");
+#endif
+               offsr = offss2;
+               lenr = lens2;
+               workmod = 1;
+            }
+            else
+            {
+               if (offss >= offss2)
+                  offsr = offss2;
+               else
+                  offsr = offss;
+               if (offss + lens > offss2 + lens2)
+                  lenr = offss + lens - offsr;
+               else
+                  lenr = offss2 + lens2 - offsr;
+               workmod = 0;
+            }
+
+#if 0
+            fprintf (stderr, "ZUN: workmod = %d\n", workmod);
+#endif
+
+            //*******************************************
+            // if needed, reserve new storage in string
+            // workarea
+            //*******************************************
+            // if not, operand 2 is also target of
+            // operation - set charpr in both cases
+            // and set workmod to show working mode
+            //*******************************************
+
+            if (workmod == 0)
+            {
+               intp = ADDRSTACK (gs -> sp);
+               newstr = alloc_string (gs, lenr + 4);
+               if (newstr < 0)
+                  runtime_error (gs, STRINGSPACE, NULL);
+               *intp = newstr;
+               charpr = ADDRSTOR (newstr);
+
+               shortp = (short *) charpr;
+               *shortp = lenr;
+               shortp ++;
+               *shortp = offsr;
+
+#if 0
+               fprintf (stderr, "ZUN: new string in workarea\n");
+               fprintf (stderr, "ZUN: lensr  = %d\n", lenr);
+               fprintf (stderr, "ZUN: offsr = %d\n", offsr);
+#endif
+
+               memset (charpr + 4, 0x00, lenr);
+
+               if (offsr == offss)
+               {
+                  memcpy (charpr + 4, charp + 4, lens);
+                  workmod = 1;
+               }
+               else
+               {
+                  memcpy (charpr + 4, charp2 + 4, lens2);
+                  workmod = 2;
+               }
+            }
+            else
+            {
+               charpr = charp2;
+               workmod = 2;
+            }
+
+            //*******************************************
+            // compute first matching byte
+            // in both set representations
+            //*******************************************
+
+            charp += 4;
+            charp2 += 4;
+            charpr += 4;
+            start_charp = charp;
+            start_charp2 = charp2;
+            start_charpr = charpr;
+
+            //*******************************************
+            // process both sets until one of them
+            // reaches its end
+            //*******************************************
+            // if workmod = 1, the target is preloaded
+            // with operand 1 and operand 2 must be
+            // ZUNed into it.
+            //*******************************************
+            // if workmod = 2, the target is preloaded
+            // with operand 2 and operand 1 must be
+            // ZUNed into it.
+            //*******************************************
+
+#if 0
+            fprintf (stderr, "ZUN: workmod = %d\n", workmod);
+#endif
+
+            if (workmod == 1)
+            {
+               if (offss2 > offsr)
+               {
+                  offs_diff = offss2 - offsr;
+                  charpr += offs_diff;
+               }
+               else
+               {
+                  offs_diff = offsr - offss2;
+                  charp2 += offs_diff;
+               }
+
+#if 0
+               fprintf (stderr, "ZUN: offs_diff = %d\n", offs_diff);
+#endif
+
+               while (charpr < start_charpr + lenr &&
+                      charp2 < start_charp2 + lens2)
+               {
+                  ucp = (unsigned char *) charpr;
+                  ucp2 = (unsigned char *) charp2;
+                  *ucp |= *ucp2;
+                  charpr ++;
+                  charp2 ++;
+               }
+            }
+            else
+            {
+               if (offss > offsr)
+               {
+                  offs_diff = offss - offsr;
+                  charpr += offs_diff;
+               }
+               else
+               {
+                  offs_diff = offsr - offss;
+                  charp += offs_diff;
+               }
+
+               while (charp < start_charp + lens &&
+                      charpr < start_charpr + lenr)
+               {
+                  ucp = (unsigned char *) charp;
+                  ucp2 = (unsigned char *) charpr;
+                  *ucp2 |= *ucp;
+                  charp ++;
+                  charpr ++;
+               }
+            }
+         }
+
+         break;
+
       default:
          fprintf (stderr,
                   "+++ Opcode %s\n",
@@ -9888,6 +10816,7 @@ int main (int argc, char **argv)
       strcpy (gs.sourcename, pasfilename);
    }
 
+   gs.inside_main = 1;
    translate (&gs, gs.inpfile, inpfilename);
 
    fclose (inpfile);
@@ -9957,6 +10886,7 @@ int main (int argc, char **argv)
       else
       {
          gs.inpfile = inpfile;
+         gs.inside_main = 0;
          translate (&gs, gs.inpfile, incfilename);
          fclose (inpfile);
       }

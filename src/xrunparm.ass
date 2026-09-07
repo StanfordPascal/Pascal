@@ -30,7 +30,10 @@ XRUNPARM START 0
          OI    FLAGS,COMPON
 *
 **************************************************************
-*        program name etc.
+*        PLSTOPTN and PLSTPROG point to the same place
+*        at BUMPLIST, R4 is in fact incremented by 8,
+*        so that PLSTPROG points 8 bytes after PLSTOPTN
+*        (strange method, hard to understand)
 **************************************************************
 *
 BUMPLIST DS    0H
@@ -46,9 +49,36 @@ MOVEPROG DS    0H
          FSCLOSE FSCB=MODFSCB       CLOSE MODULE FILE
          LA    R5,MODESCR           POINT TO MODULE DESCRIPTOR
          USING STRTADDR,R5
+*
+**************************************************************
+*        show some addresses
+**************************************************************
+*
+**************************************************************
+*        LA    R0,ENDRUN
+*        LINEDIT TEXT='ENDRUN  = ........',
+*              DOT=NO,RENT=NO,SUB=(HEX,(R0))
+*        L     R0,FRSTLOC
+*        LINEDIT TEXT='FRSTLOC = ........',
+*              DOT=NO,RENT=NO,SUB=(HEX,(R0))
+*        L     R0,LASTLOC
+*        LINEDIT TEXT='LASTLOC = ........',
+*              DOT=NO,RENT=NO,SUB=(HEX,(R0))
+*        S     R0,FRSTLOC
+*        LINEDIT TEXT='MODSIZE = ........',
+*              DOT=NO,RENT=NO,SUB=(HEX,(R0))
+**************************************************************
+*
+**************************************************************
+*        this logic does not work on newer VM systems
+*        because the format of the Module description
+*        record has changed
+**************************************************************
+*
          LA    R0,ENDRUN            POINT TO END OF INTERFACE
          C     R0,FRSTLOC           DOES MODULE OVERLAY INTERFACE ?
          BH    BADORG               YES
+*
          L     R2,LASTLOC           OBTAIN LAST LOCATION ADDRESS
          S     R2,FREELOWE          WILL MODULE FIT IN STORAGE ?
          BP    BADSIZE              YES
@@ -106,8 +136,38 @@ ENDTOKEN DS    0H
          S     R0,=A(ENDRUN)
          GETMAIN R,LV=(0)           OBTAIN STORAGE FOR MODULE
          STM   R0,R1,MODSIZE        SAVE MODULE AREA SIZE AND ADDRESS
+*
+**************************************************************
+*        L     R0,MODSIZE
+*        LINEDIT TEXT='R0 after GETMAIN = ........',
+*              DOT=NO,RENT=NO,SUB=(HEX,(R0))
+*        L     R0,MODSIZE+4
+*        LINEDIT TEXT='R1 after GETMAIN = ........',
+*              DOT=NO,RENT=NO,SUB=(HEX,(R0))
+*        LA    0,100
+*        GETMAIN R,LV=(0)
+*        ST    R1,GETM2
+*        LINEDIT TEXT='R0 after GETMAIN = ........',
+*              DOT=NO,RENT=NO,SUB=(HEX,(R0))
+*        L     R0,GETM2
+*        LINEDIT TEXT='R1 after GETMAIN = ........',
+*              DOT=NO,RENT=NO,SUB=(HEX,(R0))
+**************************************************************
+*
          COMPSWT ON                 TURN ON COMPILER SWITCH
+         XR    R1,R1
          LOAD  EPLOC=PROGNAME       LOAD PROGRAM
+         ST    R0,MODENTRY
+         ST    R1,MODSIZEL
+*
+**************************************************************
+*        LINEDIT TEXT='R0 after LOAD = ........',
+*              DOT=NO,RENT=NO,SUB=(HEX,(R0))
+*        L     R0,MODSIZEL
+*        LINEDIT TEXT='MODSIZE = ........',
+*              DOT=NO,RENT=NO,SUB=(HEX,(R0))
+**************************************************************
+*
          TM    FLAGS,COMPON         WAS COMPON SPECIFIED ?
          BO    RUNPROG              YES - LEAVE COMPSWT ON
          COMPSWT OFF                NO - TURN IT OFF
@@ -117,6 +177,7 @@ ENDTOKEN DS    0H
 **************************************************************
 *
 RUNPROG  DS    0H
+         L     R0,MODENTRY
          LR    R15,R0
          LA    R1,PARMLIST          POINT TO PARM LIST
          BALR  R14,R15
@@ -181,6 +242,9 @@ EXIT     DS    0H
 REGSAVE  DC    18F'0'               REGISTER SAVE AREA
          SPACE
 MODSIZE  DS    2F                   MODULE AREA SIZE AND ADDRESS
+MODENTRY DS    A                    MODULE ENTRY AFTER LOAD
+MODSIZEL DS    F                    MODULE SIZE FROM LOAD
+GETM2    DS    A
          SPACE
 PROGNAME DS    CL8                  PROGRAM NAME AREA
          SPACE
@@ -210,7 +274,6 @@ MODESCR  DS    CL80                 MODULE DESCRIPTOR RECORD
 ENDRUN   DS    0D
          EJECT
 PLIST    DSECT                      COMMAND PLIST
-         SPACE
 PLSTCMND DS    CL8                  COMMAND NAME
 PLSTPROG DS    CL8                  PROGRAM NAME
 PLSTOPTN EQU   PLSTPROG             COMPON/OFF OPTION

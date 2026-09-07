@@ -7,9 +7,12 @@
     copy %PASECHO% script\pasfcc.cmd    %PASDIR%
     copy %PASECHO% script\pp.cmd        %PASDIR%
     copy %PASECHO% script\prun.cmd      %PASDIR%
+    copy %PASECHO% script\prunn.cmd     %PASDIR%
     copy %PASECHO% script\prund.cmd     %PASDIR%
+    copy %PASECHO% script\prunnd.cmd    %PASDIR%
 
     copy %PASECHO% bin\pcint.exe        %PASDIR%
+    copy %PASECHO% bin\pcintn.exe       %PASDIR%
 
     copy %PASECHO% src\pascal1.pcode    %PASDIR%
     copy %PASECHO% src\pascal1.pcode1   %PASDIR%

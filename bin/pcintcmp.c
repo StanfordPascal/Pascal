@@ -252,6 +252,150 @@ static int copy_string (void *vgs,
 
 
 
+static int copy_set_new  (void *vgs,
+                          int len_vorgabe,
+                          char *cpt,
+                          char *cps)
+
+/**********************************************************/
+/*                                                        */
+/*   Kopiere Set                                          */
+/*                                                        */
+/**********************************************************/
+
+{
+   global_store *gs = vgs;
+
+   int len = 0;
+   int x;
+   unsigned short sx;
+   unsigned char *cpsu;
+   unsigned char *cptu;
+   char c1;
+   char c2;
+   unsigned char bitp;
+   int offs;
+   int shift;
+   char *pz;
+
+   /***********************************************/
+   /*   empty set                                 */
+   /***********************************************/
+
+   if (*cps == 'E')
+   {
+      sx = 0;
+      memcpy (cpt, &sx, 2);
+      cpt += 2;
+      len = 0;
+   }
+
+   /***********************************************/
+   /*   hexadezimaler Bitstring                   */
+   /***********************************************/
+   /*   11.08.24: buffer auf null in der vorgeg.  */
+   /*   Laenge len_vorgabe ... String mit X       */
+   /*   kann auch kuerzer sein.                   */
+   /***********************************************/
+
+   else if (*cps == 'X')
+   {
+      memset (cpt, 0x00, len_vorgabe);
+
+      cps ++;
+      len = len_vorgabe;
+      while (*cps != '\'')
+         cps ++;
+      cps ++;
+      for (;;)
+      {
+         c1 = *cps;
+         if (c1 == '\'')
+         {
+            if (cps [1] == ',')
+            {
+               pz = fgets (gs -> inpzeile, 255, gs -> inpfile);
+               if (pz == NULL)
+                  break;
+
+               cps = pz;
+               while (*cps != '\'')
+                  cps ++;
+               cps ++;
+               continue;
+            }
+            break;
+         }
+         cps ++;
+         c2 = *cps;
+         cps ++;
+
+         sx = hexvalue (c1) * 16 + hexvalue (c2);
+         cptu = (unsigned char *) cpt;
+         *cptu = sx;
+         cpt ++;
+      }
+   }
+
+   /***********************************************/
+   /*   Zeichenmenge (set of char)                */
+   /***********************************************/
+
+   else if (*cps == 'C')
+   {
+      memset (cpt, 0x00, len_vorgabe);
+
+      cps ++;
+      len = len_vorgabe;
+      while (*cps != '\'')
+         cps ++;
+      cps ++;
+
+      for (;;)
+      {
+         if (*cps == '\'')
+         {
+            if (cps [1] == ',')
+            {
+               pz = fgets (gs -> inpzeile, 255, gs -> inpfile);
+               if (pz == NULL)
+                  break;
+
+               cps = pz;
+               while (*cps != '\'')
+                  cps ++;
+               cps ++;
+               continue;
+            }
+
+            if (cps [1] != '\'')
+               break;
+
+            cps ++;
+         }
+
+         cpsu = (unsigned char *) cps;
+         sx = *cpsu;
+         offs = sx / 8;
+         shift = sx % 8;
+
+         bitp = 0x80;
+         bitp >>= shift;
+         cptu = (unsigned char *) cpt;
+         cptu = cptu + offs;
+         *cptu = *cptu | bitp;
+
+         cps ++;
+      }
+   }
+
+   return len;
+}
+
+
+
+
+
 static int copy_set (void *vgs,
                      char *cpt,
                      char *cps)
@@ -279,6 +423,8 @@ static int copy_set (void *vgs,
 
    /***********************************************/
    /*   alte set-Darstellung mit integers         */
+   /***********************************************/
+   /*   2024: gibt's hoffentlich nicht mehr       */
    /***********************************************/
 
    if (*cps == '(')
@@ -492,6 +638,51 @@ static void conv_const (void *vgs,
 
 
 
+static void conv_const_set (void *vgs,
+                            char *cp,
+                            char *buffer,
+                            int *len_used)
+
+/**********************************************************/
+/*                                                        */
+/*   Konvertiere Set-Konstante (neues Format)             */
+/*                                                        */
+/*   vorne rein (Meta-Daten) Laenge des Sets und          */
+/*   Set-Offset, danach die Repraesentation als Bits      */
+/*                                                        */
+/**********************************************************/
+
+{
+   global_store *gs = vgs;
+   short len_const;
+   int set_offs;
+   short set_offs_8;
+   short *shortp;
+   int len_string;
+
+   len_const = atoi (cp);
+   while (*cp != ',')
+       cp ++;
+   cp ++;
+   set_offs = atoi (cp);
+   while (*cp != ',')
+       cp ++;
+   cp ++;
+
+   shortp = (short *) buffer;
+   *shortp = len_const;
+   shortp ++;
+   set_offs_8 = set_offs / 8;
+   *shortp = set_offs_8;
+
+   len_string = copy_set_new (gs, len_const, buffer + 4, cp);
+   *len_used = len_string + 4;
+}
+
+
+
+
+
 static void load (void *vgs,
                   void *vpot,
                   char *plabel,
@@ -528,6 +719,7 @@ static void load (void *vgs,
    int diff;
    int len_oper;
    char buffer [33000];
+   int done;
 
    /**********************************************************/
    /*   PCODE-Instruktion in den Speicher, vorher            */
@@ -618,6 +810,7 @@ static void load (void *vgs,
       /**********************************************************/
 
       case 'A':
+
          pcode -> q = atoi (poper);
          break;
 
@@ -626,6 +819,7 @@ static void load (void *vgs,
       /**********************************************************/
 
       case 'B':
+
          cp = poper;
          do
          {
@@ -650,6 +844,7 @@ static void load (void *vgs,
       /**********************************************************/
 
       case 'C':
+
          cp = poper;
          do
          {
@@ -715,6 +910,7 @@ static void load (void *vgs,
       /**********************************************************/
 
       case 'D':
+
          cp = poper;
          do
          {
@@ -738,6 +934,7 @@ static void load (void *vgs,
       /**********************************************************/
 
       case 'E':
+
          cp = poper;
          do
          {
@@ -747,56 +944,90 @@ static void load (void *vgs,
                break;
             pcode -> t = *cp;
 
-            cp ++;
-            if (*cp == ',')
-               cp ++;
-            if (*cp == 0x00)
-               break;
+            //********************************************
+            //   2024.08:
+            //   check for new set constant format
+            //   and handle it
+            //********************************************
 
-            if (pcode -> t == 'M')
+            done = 0;
+
+            if (pcode -> t == 'S')
             {
-               //*********************************************
-               //*   read string
-               //*   maybe max length before string
-               //*   maybe X or B tag before string
-               //*********************************************
-
-               len_string = 0;
-
-               if (*cp != '\'' && *cp != 'B' && *cp != 'X')
+               cp ++;
+               if (*cp == ',')
                {
-                  len_string = atoi (cp);
-                  while (*cp != ',')
-                     cp ++;
-                  if (*cp == ',')
-                     cp ++;
-                  if (*cp == 0x00)
-                     break;
+                  cp --;
                }
-
-               conv_const (gs, pcode -> t,
-                           cp,
-                           &ivalue,
-                           &rvalue,
-                           buffer,
-                           &len_used);
-
-               if (len_string > len_used)
+               else
                {
-                  diff = len_string - len_used;
-                  memset (buffer + len_used, ' ', diff);
-                  len_used = len_string;
-                  buffer [len_used] = 0x00;
+                  conv_const_set (gs,
+                                 cp,
+                                 buffer,
+                                 &len_used);
+                  done = 1;
                }
             }
-            else
+
+            //********************************************
+            //   handle other formats
+            //   including the old (traditional)
+            //   set constants
+            //********************************************
+
+            if (! done)
             {
-               conv_const (gs, pcode -> t,
-                           cp,
-                           &ivalue,
-                           &rvalue,
-                           buffer,
-                           &len_used);
+               cp ++;
+               if (*cp == ',')
+                  cp ++;
+               if (*cp == 0x00)
+                  break;
+
+               if (pcode -> t == 'M')
+               {
+                  //*********************************************
+                  //*   read string
+                  //*   maybe max length before string
+                  //*   maybe X or B tag before string
+                  //*********************************************
+
+                  len_string = 0;
+
+                  if (*cp != '\'' && *cp != 'B' && *cp != 'X')
+                  {
+                     len_string = atoi (cp);
+                     while (*cp != ',')
+                        cp ++;
+                     if (*cp == ',')
+                        cp ++;
+                     if (*cp == 0x00)
+                        break;
+                  }
+
+                  conv_const (gs, pcode -> t,
+                              cp,
+                              &ivalue,
+                              &rvalue,
+                              buffer,
+                              &len_used);
+
+                  if (len_string > len_used)
+                  {
+                     diff = len_string - len_used;
+                     memset (buffer + len_used, ' ', diff);
+                     len_used = len_string;
+                     buffer [len_used] = 0x00;
+                  }
+               }
+               else
+               {
+                  conv_const (gs, pcode -> t,
+                              cp,
+                              &ivalue,
+                              &rvalue,
+                              buffer,
+                              &len_used);
+               }
             }
 
             switch (pcode -> t)
@@ -1458,15 +1689,6 @@ static void load (void *vgs,
 
          pcst = gs -> pcst_last;
 
-         if (pcst -> cst_alloc <= pcode -> q + 1000)
-         {
-            alloc_alt = pcst -> cst_alloc;
-            pcst -> cst_alloc += 10000;
-            pcst -> cst0 = realloc (pcst -> cst0,
-                                    pcst -> cst_alloc);
-            memset (pcst -> cst0 + alloc_alt, INIT_PATTERN, 10000);
-         }
-
          cp = poper;
 
          do
@@ -1477,6 +1699,28 @@ static void load (void *vgs,
                break;
             pcode -> t = *cp;
 
+            //********************************************
+            //   make sure that enough CST storage is
+            //   allocated (using pcode -> q)
+            //********************************************
+
+            {
+               int delta;
+
+               delta = pcode -> q + 1000 - pcst -> cst_alloc;
+
+               if (delta > 0)
+               {
+                   delta += 1000;
+                   alloc_alt = pcst -> cst_alloc;
+                   pcst -> cst_alloc += delta;
+                   pcst -> cst0 = realloc (pcst -> cst0,
+                                           pcst -> cst_alloc);
+                   memset (pcst -> cst0 + alloc_alt,
+                           INIT_PATTERN, delta);
+               }
+            }
+
             if (pcode -> t == 'N')
             {
                intp = (int *) (pcst -> cst0 + pcode -> q);
@@ -1485,72 +1729,130 @@ static void load (void *vgs,
                break;
             }
 
-            if (pcode -> t == 'M')
+            len_used = 0;
+            done = 0;
+
+            //********************************************
+            //   2024.08:
+            //   check for new set constant format
+            //   and handle it
+            //********************************************
+
+            if (pcode -> t == 'S')
             {
                cp ++;
-               while (*cp == ',' && *cp != 0x00)
-                  cp ++;
-               if (*cp == 0x00)
-                  break;
-
-               //*********************************************
-               //*   read string
-               //*   maybe max length before string
-               //*   maybe X or B tag before string
-               //*********************************************
-
-               len_string = 0;
-
-               if (*cp != '\'' && *cp != 'B' && *cp != 'X')
+               if (*cp == ',')
                {
-                  len_string = atoi (cp);
+                  cp --;
+               }
+               else
+               {
+                  conv_const_set (gs,
+                                 cp,
+                                 buffer,
+                                 &len_used);
+                  done = 1;
+               }
+            }
 
-                  if (len_string > 32000)
-                  {
-                     fprintf (stderr,
-                              "DFC length too large - "
-                              "32k is the limit\n");
+            //********************************************
+            //   handle other formats
+            //   including the old (traditional)
+            //   set constants
+            //********************************************
 
-                     len_string = 32000;
-                  }
-
-                  while (*cp != ',')
-                     cp ++;
-                  if (*cp == ',')
+            if (! done)
+            {
+               if (pcode -> t == 'M')
+               {
+                  cp ++;
+                  while (*cp == ',' && *cp != 0x00)
                      cp ++;
                   if (*cp == 0x00)
                      break;
+
+                  //********************************************
+                  //   read string
+                  //   maybe max length before string
+                  //   maybe X or B tag before string
+                  //********************************************
+
+                  len_string = 0;
+
+                  if (*cp != '\'' && *cp != 'B' && *cp != 'X')
+                  {
+                     len_string = atoi (cp);
+
+                     if (len_string > 32000)
+                     {
+                        fprintf (stderr,
+                                 "DFC length too large - "
+                                 "32k is the limit\n");
+
+                        len_string = 32000;
+                     }
+
+                     while (*cp != ',')
+                        cp ++;
+                     if (*cp == ',')
+                        cp ++;
+                     if (*cp == 0x00)
+                        break;
+                  }
+
+                  conv_const (gs, pcode -> t,
+                              cp,
+                              &ivalue,
+                              &rvalue,
+                              buffer,
+                              &len_used);
+
+                  if (len_string > len_used)
+                  {
+                     diff = len_string - len_used;
+                     memset (buffer + len_used, ' ', diff);
+                     len_used = len_string;
+                     buffer [len_used] = 0x00;
+                  }
                }
-
-               conv_const (gs, pcode -> t,
-                           cp,
-                           &ivalue,
-                           &rvalue,
-                           buffer,
-                           &len_used);
-
-               if (len_string > len_used)
+               else
                {
-                  diff = len_string - len_used;
-                  memset (buffer + len_used, ' ', diff);
-                  len_used = len_string;
-                  buffer [len_used] = 0x00;
+                  cp ++;
+                  while (*cp == ',' && *cp != 0x00)
+                     cp ++;
+                  if (*cp == 0x00)
+                     break;
+
+                  conv_const (gs, pcode -> t,
+                              cp,
+                              &ivalue,
+                              &rvalue,
+                              buffer,
+                              &len_used);
                }
             }
-            else
-            {
-               cp ++;
-               while (*cp == ',' && *cp != 0x00)
-                  cp ++;
-               if (*cp == 0x00)
-                  break;
 
-               conv_const (gs, pcode -> t,
-                           cp,
-                           &ivalue,
-                           &rvalue,
-                           buffer,
-                           &len_used);
+            //********************************************
+            //   make sure that enough CST storage is
+            //   allocated (using pcode -> q + len_used)
+            //********************************************
+
+            {
+               int delta;
+
+               delta = pcode -> q + len_used + 1000
+                       - pcst -> cst_alloc;
+
+               if (delta > 0)
+               {
+                   delta += 1000;
+                   alloc_alt = pcst -> cst_alloc;
+                   pcst -> cst_alloc += delta;
+                   pcst -> cst0 = realloc (pcst -> cst0,
+                                           pcst -> cst_alloc);
+                   memset (pcst -> cst0 + alloc_alt,
+                           INIT_PATTERN, delta);
+               }
             }
 
             switch (pcode -> t)
@@ -1610,9 +1912,12 @@ static void load (void *vgs,
 
       case '3':
 
-         strcpy (gs -> progheader, poper);
-         pcode -> q = gs -> code_used - 1;
-         gs -> startpos = pcode -> q;
+         if (gs -> inside_main)
+         {
+            strcpy (gs -> progheader, poper);
+            pcode -> q = gs -> code_used - 1;
+            gs -> startpos = pcode -> q;
+         }
 
          break;
 
@@ -2021,6 +2326,10 @@ void translate (global_store *gs, FILE *f, char *fname)
 
       lineno ++;
 
+      /**********************************************************/
+      /*   pruefen auf Zeilenende                               */
+      /**********************************************************/
+
       cp = zeile + strlen (zeile) - 1;
       if (*cp != '\n')
       {
@@ -2056,6 +2365,13 @@ void translate (global_store *gs, FILE *f, char *fname)
       }
       else
       {
+         /**********************************************************/
+         /*   23.08.2026: Kommentare mit Strichpunkt erlauben      */
+         /**********************************************************/
+
+         if (*cp == ';')
+            continue;
+
          while (*cp != ' ' && *cp != 0x00)
             cp ++;
 
@@ -2071,11 +2387,22 @@ void translate (global_store *gs, FILE *f, char *fname)
       }
 
       /**********************************************************/
-      /*   Leerzeilen etc. abhandeln                            */
+      /*   Suche nach Operand nach Label                        */
       /**********************************************************/
 
       while (*cp == ' ')
          cp ++;
+
+      /**********************************************************/
+      /*   23.08.2026: Kommentare mit Strichpunkt erlauben      */
+      /**********************************************************/
+
+      if (*cp == ';')
+         continue;
+
+      /**********************************************************/
+      /*   Pruefen auf komplett leere Zeilen                    */
+      /**********************************************************/
 
       if (*cp == 0x00)
       {

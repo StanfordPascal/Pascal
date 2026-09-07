@@ -1,0 +1,231 @@
+ABS        is a legacy Pascal function; it returns the absolute value of the argument
+
+ADDR       new with New Stanford Pascal; ADDR returns the address of the argument
+           (which should be a variable or an array element etc.); the value returned
+           has the type ANYPTR (a type compatible to every other pointer type)
+
+ALLOC      this new function allocated a number of bytes on the new LE inspired heap
+           (much like C's malloc)
+
+ALLOCX     directly calls the ALLOC function of the underlying OS (no management,
+           no optimization)
+
+APPEND     Opens a file for output. Used to append new content at the end of the file.
+           Similar to REWRITE, but REWRITE starts from the beginning of the file
+           and overwrites old content
+
+ARCTAN     arcus tangens function (Fortran library on the mainframe)
+
+CARD       legacy Pascal function
+
+CHKALLOC   description will be added later
+
+CHKHEAP    description will be added later
+
+CHR        legacy Pascal function, converts integer to char
+
+CLOCK      compute CPU time in clock units
+
+CLOSE      new function: CLOSE a file
+
+COMPRESS   replaces sequences of spaces in the string by only one space
+           (like in Pascal/VS)
+
+COS        cosinus function (Fortran library on the mainframe)
+
+DELETE     deletes portions of a string; the parameters are the same as with
+           SUBSTR. DELETE works the same as its Pascal/VS counterpart
+
+DIGITSOF   returns the number of digits of a decimal variable (from the definition)
+
+DISPOSE    legacy Pascal function, but has no effect in this implementation (!)
+
+EOF           ' , 25 , FUNC ) ,    // legacy Pascal standard proc
+EOL           ' , 28 , FUNC ) ,    // legacy Pascal standard proc
+EOLN          ' , 26 , FUNC ) ,    // legacy Pascal standard proc
+EOT           ' , 29 , FUNC ) ,    // legacy Pascal standard proc
+EXIT          ' , 15 , PROC ) ,    // legacy Pascal standard proc
+EXP           ' ,'DEXP' ) ,     // math function of the Fortran lib
+EXPO          ' , 39 , FUNC ) ,    // legacy Pascal standard proc
+FILEFCB       ' , 70 , FUNC ,'$PASMEM' , 7 , 1 ,'A' , 0 ) ,
+FLOOR         ' , 47 , FUNC ) ,    // floor function
+FREE          ' , 63 , PROC ,'$PASMEM' , 3 , 1 ,'P' , 0 ) ,
+FREEX         ' , 64 , PROC ,'$PASMEM' , 4 , 1 ,'P' , 0 ) ,
+GET           ' , 1 , PROC ) ,    // legacy Pascal standard proc
+
+INDEX      INDEX (s1, s2) returns the index of the first occurence of s2 in s1;
+           zero if not found. Same as in Pascal/VS and PL/1.
+
+LASTINDEX  LASTINDEX (s1, s2) returns the index of the last occurence of s2 in s1;
+           zero if not found.
+
+LEFT       string function. Same as SUBSTR starting from position 1.
+
+LENGTH     gets the current length of a string variable
+
+LINELIMIT  legacy Pascal standard proc; not sure, what this function does ...
+
+LN         logarithm function (Fortran library on the mainframe)
+
+LTRIM      trims spaces on the left (like in Pascal/VS)
+
+MARK       legacy Pascal standard proc to save the current heap pointer,
+           see RELEASE (MARK and RELEASE should not be used with new programs,
+           but they are still used in the compiler; use ALLOC and FREE with
+           new programs)
+
+MAXLENGTH  gets the maximum length of a string variable
+
+MEMCMP     block compare like memcmp in C
+
+MEMCPY     block move (copy) like memcpy in C
+
+MEMSET     initialize a block with a byte pattern (like memset in C)
+
+MESSAGE    on the mainframe: WTO (write to operator);
+           on other platforms: write to stderr
+
+NEW        legacy Pascal standard proc to allocate storage on the (old) heap;
+           such storage can only be freed by using MARK and RELEASE.
+           It is recommended to use ALLOC and FREE with new programs
+           instead of NEW.
+
+ODD        legacy Pascal standard proc, returns TRUE, if the argument is odd,
+           and FALSE otherwise
+
+ORD        legacy Pascal standard proc; converts char to integer
+
+PACK       legacy Pascal standard proc - only for compatibility reasons,
+           not needed
+
+PAGE       legacy Pascal standard proc; writes a new page on an output file
+
+PRECISIONOF   returns the precision of a decimal variable (from the definition);
+              that is, the number of digits after the decimal point
+
+PRED       legacy Pascal standard proc; returns the predecessor of the argument
+           (with scalar and simple types)
+
+PTR2INT    new function; converts pointers to integers
+
+PTRADD     new function; adds an integer value to a pointer
+
+PTRCAST    new function; PTRCAST can be used to assign pointers of different types
+
+PTRDIFF    new function; PTRDIFF returns the difference of two pointers as an
+           integer value
+
+PUT        legacy Pascal standard proc; used to transfer a file component to a file
+           (usually not used for TEXT files, but for binary files, that is:
+           FILES of RECORDs).
+
+READ       legacy Pascal standard proc; used to read different types from a
+           TEXT file. New Stanford Pascal has several extensions; it is
+           possible to read scalar types, for example. And: READ supports
+           length specifications, like with Pascal/VS. For example:
+              READ (I:4, CH, J:5);
+           only 4 characters are read for the integer value I, then one
+           character CH, then 5 characters for J etc.
+
+READLN     legacy Pascal standard proc; used to ignore the rest of the current
+           line and start reading at the beginning of the next line
+
+READSTR    new function, same as in Pascal/VS. The first parameter is a
+           string variable. The variables are read from the string variable
+           and not from an input file.
+           Example:
+              S := '0007X   12';
+              READSTR (S, I:4, CH, J:5);
+           This will set I to 7, CH to 'X' and J to 12.
+
+RELEASE    legacy Pascal standard proc to reset the heap pointer
+           this way returning all storage since the last MARK call
+           to the Pascal runtime (should not be used with new programs;
+           use ALLOC and FREE instead).
+
+REPEATSTR  REPEATSTR (s, n) returns the string s repeated n times. This
+           function is implemented using a new P-Code instruction, and it
+           is used inside string functions to build new strings, containing of
+           n blanks (for example)
+
+RESET      legacy Pascal standard proc; this procedure opens a file for input
+           and resets the file pointer to the beginning of the file
+
+RESULTP    is a function returning a pointer (ANYPTR) to the function result
+           (usable in every function)
+
+REWRITE    legacy Pascal standard proc; this procedure opens a file for output
+           and resets the file pointer to the beginning of the file.
+           Old content of the file is lost
+
+RIGHT      string function. Similar to SUBSTR at the right part of the string.
+
+ROUND      legacy Pascal standard proc; returns the argument (floating point)
+           rounded as integer value. Caution: if the FP argument is the result
+           of a computation, you may not get the expected result due to
+           precision problems.
+
+ROUNDX     new function with two arguments. The first argument is a FP value,
+           and the second tells the decimal place, where the rounding will
+           take place. For example: roundx (123.4567, 2) = 123.46
+           The result is a FP value again. The input FP value is "corrected"
+           before the rounding takes place, so that precision problems
+           (hopefully) will not occur.
+
+RTRIM      trims spaces on the right (like TRIM in Pascal/VS)
+
+SIN        sinus function (Fortran library on the mainframe)
+
+SIZEOF     this (compile time) function returns the size of an object in bytes;
+           it can by used for variables and for types (much the same as in C)
+
+SKIP       legacy Pascal standard proc; writes line feeds on output files (maybe!)
+
+SQR        legacy Pascal standard proc ... maybe square ?
+
+SQRT       square root function (Fortran library on the mainframe)
+
+STR        this function converts char arrays and single chars to strings
+
+STRRESULT  is a function of type STRING which retrieves the current
+           function result, when inside a string function
+
+STRRESULTP is a function of type pointer to CHAR, which points to the
+           content of the current function result, when inside a string function
+
+SUBSTR     SUBSTR (s, n, m) or SUBSTR (s, n) - gets the Substring from s
+           starting at position n with length m (first format) or the rest of the
+           string (2nd format); same as in Pascal/VS and PL/1
+
+SUCC       legacy Pascal standard proc; returns the successor of the argument
+           (with scalar and simple types)
+
+TRACE      legacy Pascal standard proc; not sure, what this function does ...
+
+TRANSLATE  TRANSLATE (s1, to, from) translates s1 controlled by one or two
+           translate tables (see PL/1)
+
+TRAP       legacy Pascal standard proc; not sure, what this function does ...
+
+TRIM       trims spaces on both sides (different from TRIM in Pascal/VS !!)
+
+TRUNC      legacy Pascal standard proc; returns the argument (floating point)
+           truncated to the next lower integer value.
+
+UNPACK     legacy Pascal standard proc - only for compatibility reasons,
+           not needed
+
+VERIFY     VERIFY (s1, s2) returns the index of the first character in s1
+           which is not in s2 (same as in PL/1)
+
+WRITE      legacy Pascal standard proc; used to write different types to an
+           output file. New Stanford Pascal has several extensions; it is
+           possible to write scalar types and pointers, for example.
+
+WRITELN    legacy Pascal standard proc; writes a new line on output files
+
+WRITESTR   new function, same as in Pascal/VS. The first parameter is a
+           string variable. The result of the WRITE goes to the string variable
+           and not to a file. The same types and parameters are allowed as
+           with "normal" WRITE; the string must be long enough to hold the result.
+

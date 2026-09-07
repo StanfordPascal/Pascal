@@ -1,0 +1,775 @@
+         TITLE 'PASERR - PASCAL ERROR HANDLING'
+*
+         GBLB  &SYSTEM
+&SYSTEM  SETB  0
+*
+*
+*
+*
+************************************************************
+*
+*        This code comes from source file PASDEFS.ASS
+*        and is copied here. If changes are made, it should
+*        be changed in PASDEFS.ASS and the changes should be
+*        transferred to the different places where it is used.
+*        PASCSP.ASS - PASMONN.ASS - ...
+*
+************************************************************
+*
+*        Stanford PASCAL runtime
+*
+*        This DSECT defines the low addresses of the
+*        dynamic storage which are used by all runtime
+*        components and addressed most of the time
+*        by reg 12 - the numbers in the comments show
+*        the offsets
+*
+*        The area must be allocated and initialized by
+*        Stanford Pascal initialization
+*
+************************************************************
+*
+*
+*
+*
+DYNSTORE DSECT
+*
+         DS    20F                 PASCAL ENVIRONMENT SAVE AREA
+STACK    DS    18F          0000   BOTTOM OF RUNTIME STACK
+CLOCK    EQU   STACK               CLOCK LOCATION
+NEWPTR   DS    A            0072   PASCAL 'NEW' POINTER
+HEAPLIM  DS    A            0076   UPPER LIMIT OF HEAP ( +1 )
+*                                  ALSO POINTS TO DYN2STOR
+*
+************************************************************
+*        The DISPLAY is used to store the environment
+*        when calling procedures at different levels
+************************************************************
+*        at the moment only 10 static levels are supported
+*        which seems sort of limited
+************************************************************
+*
+DISPREGS DS    10F          0080   RUN TIME DISPLAY REGISTERS
+DISPLAY  EQU   DISPREGS,*-DISPREGS
+*
+FL1OLD   DS    D            0120   should not be used any more
+FL2OLD   DS    D            0128   maybe this area can be used in
+FL3OLD   DS    D            0136   the future to extend the display
+FL4OLD   DS    D            0144   area - bernd oppolzer
+*
+************************************************************
+*        Entry information for different run time check
+*        routines
+************************************************************
+*
+CHKSUBS  DS    0F                  ENTRY TO RUN TIME CHECK ROUTINES
+INXCHK   DS    3F           0152   INDEX CHECK
+RNGCHK   DS    3F           0164   SUBRANGE CHECK
+PRMCHK   DS    3F           0176   PARAMETER VALUE CHECK
+PTRCHK   DS    3F           0188   POINTER CHECK
+PTACHK   DS    3F           0200   SET MEMBER CHECK
+SETCHK   DS    3F           0212
+STKCHK   DS    3F           0224
+TRACER   DS    3F           0236
+*
+************************************************************
+*        Six default files (INPUT, OUTPUT, ...)
+************************************************************
+*
+INPUT    DS    3F           0248
+OUTPUT   DS    3F           0260
+PRD      DS    3F           0272
+PRR      DS    3F           0284
+QRD      DS    3F           0296
+QRR      DS    3F           0308
+*
+************************************************************
+*        Global system variables
+************************************************************
+*
+CLEARBUF DS    XL8          0320   BUFFER TO CLEAR ACTIVATION RECORDS
+PASDATE  DS    CL10         0328   PREDEFINED VARIABLE DATE
+PASTIME  DS    CL10         0338   PREDEFINED VARIABLE TIME
+OSPRMPTR DS    A            0348   POINTER TO O.S. PARM STRING
+*
+************************************************************
+*        Workarea for certain floating point actions
+************************************************************
+*
+FL1      DS    D            0352   R/W  FIX/FLOAT CONVERSION HELPS
+FL2      DS    D            0360   R ONLY
+FL3      DS    D            0368   R/W
+FL4      DS    D            0376   R ONLY
+*
+************************************************************
+*        Pointers to string workarea
+************************************************************
+*
+STRFIRST DS    A            0384   PTR TO BEGIN OF STR WORKAREA
+STRCURR  DS    A            0388   ACTUAL PTR TO STR WORKAREA
+STRSIZE  DS    F            0392   STR WORKAREA SIZE
+*
+FRSTGVAR DS    0D           0400   FOR ALIGNMENT PURPOSES
+*
+*
+*
+*
+*
+***************************************************************
+*        DYNAMIC STORAGE AREA POINTED TO BY HEAPLIM
+***************************************************************
+*
+DYN2STOR DSECT
+DYNRUNC  DS    F                   # OF RUN TIME FREQUENCY COUNTERS
+         DS    0D
+DYNCOUNT DS    0F
+         AIF   (&SYSTEM).SYS3
+DYN2LEN  EQU   128                 EXTRA MARGIN FOR
+*                                  PATHOLOGICAL CALL PARMS
+         AGO   .USE3
+.SYS3    ANOP
+DYN2LEN  EQU   *-DYN2STOR
+.USE3    ANOP
+*
+*
+*
+*
+*
+***************************************************************
+*        LAYOUT of the MVS and CMS DCB
+***************************************************************
+*
+*        PRINT NOGEN               ich will den dcb sehen
+         DCBD  DSORG=PS
+ENDDCBD  DS    0F
+LENDCB   EQU   ENDDCBD-IHADCB
+         PRINT GEN
+*
+*
+*
+*
+************************************************************
+*        End of PASDEFS.ASS
+************************************************************
+*
+*
+*
+*
+***************************************************************
+*        DSECT for global variables implemented by pasglob
+***************************************************************
+*
+PASGLOB  DSECT
+*
+***********************************************************************
+*
+*        global variables
+*        --------------------------------------------------------------
+*        addressed by other modules using v-constant and dsect
+*
+***********************************************************************
+*
+GLOBAREA DS    0D
+*
+SPUSERSA DS    18F                 save area for csp functions
+OLDDATE  DS    F                   MACHINE DATE
+ALOSTACK DS    A                   address of first stack frame
+ATRLINES DS    A                   address of TRLINES field
+AFIXDATE DS    A                   address of FIXDATE routine
+AFIXTIME DS    A                   address of FIXTIME routine
+AINTDATA DS    A                   address of interrupt data
+ATRDUMP  DS    A                   address of TRDUMP routine
+CCFLAG   DC    X'00'               SET BY NOCC O.S. PARM STRING
+PROFFLAG DC    X'00'               CALL PROFILE MODULE FLAG
+SNAPFLAG DC    X'00'               X'FF' IF SNAPSHOT NOT TO BE CALLED#
+DUMPFLAG DC    X'00'               X'FF' IF DUMP REQUESTED
+SCHCSP   DC    X'00'               TELLS, IF INSIDE CSP
+*
+**********************************************************************
+*        this area is input area to error diagnosis
+*        and to passnap
+**********************************************************************
+*
+CHKAREA  DS    0D
+*
+CHKERRC  DS    F                   ERROR CODE
+CHKPSW1  DS    A                   psw left part
+CHKPSW2  DS    A                   psw right part
+CHKREGS  DS    16F                 REGISTERS 0 TO 15
+CHKINTRP DS    A                   INTERRUPT ADDRESS
+CHKITYPE DS    C                   INTERRUPT TYPE (S OR P)
+CHKRANGE DC    AL1(0)              range error flag
+CHKFILE  DC    AL1(0)              file error flag
+CHKDUMMY DS    C                   not used
+CHKLOWR  DS    F                   range error lower bound
+CHKUPPR  DS    F                   range error upper bound
+CHKCVAL  DS    F                   offending value
+CHKMSGL  DS    F                   message length
+CHKMSG   DS    A                   pointer to message
+CHKPASE  DS    A                   entry $PASENT
+CHKHEAPP DS    A                   heap pointer
+CHKHEAPT DS    A                   top of heap
+CHKCURRP DS    A                   entry point of current proc
+*
+CHKAREAX DS    0D
+LCHKAREA EQU   CHKAREAX-CHKAREA
+*
+**********************************************************************
+*        end of input area
+**********************************************************************
+*
+*
+*
+*
+*
+*
+*****************************************************************
+*
+*        $PASERR (PASCAL Error Handling)
+*
+*        Parameter und Registerverwendung bei
+*        BADRNG usw. noch abchecken
+*
+*        Fehlertabelle in PASMONN muss bleiben !!
+*
+*****************************************************************
+*
+$PASERR  CSECT
+         USING $PASERR,R15
+         B     P002
+         DC    AL1(8),CL8'$PASERR'
+P002     DS    0H
+         L     R7,=V($PASGLOB)
+         USING PASGLOB,R7
+*
+         XC    CHKAREA(LCHKAREA),CHKAREA
+*
+         LTR   R1,R1
+         BNP   UNDFERR
+         CH    R1,=H'23'
+         BH    UNDFERR
+         SLA   R1,2
+         B     JUMPTAB(R1)
+*
+JUMPTAB  DC    A(UNDFERR)      0
+         DC    A(LIMITERR)     1
+         DC    A(BADFDF)       2
+         DC    A(BADFILE)      3
+         DC    A(BADWRITE)     4
+         DC    A(BADREAD)      5
+         DC    A(EOFREAD)      6
+         DC    A(BADBOOL)      7
+         DC    A(BIGINT)       8
+         DC    A(BADINT)       9
+         DC    A(BADREAL)      10
+         DC    A(BADRECRD)     11
+         DC    A(BADRSTA)      12
+         DC    A(BADWSTA)      13
+         DC    A(XRNGCHK)      14
+         DC    A(XINXCHK)      15
+         DC    A(XPRMCHK)      16
+         DC    A(XPTACHK)      17
+         DC    A(XPTRCHK)      18
+         DC    A(XSETCHK)      19
+         DC    A(XSTKCHK)      20
+         DC    A(XCSPERR)      21
+         DC    A(TIMEOUT)      22
+         DC    A(SYNADRT)      23
+*
+*
+*
+*
+*
+**********************************************************************
+*        RANGE CHECK, INDEX CHECK, PARAMETER CHECK
+**********************************************************************
+*
+XRNGCHK  MVI   CHKRANGE,1
+         BAL   R3,BADRNG
+         DC    AL2(30,SUBERR),CL30'SUBRANGE VALUE OUT OF RANGE'
+*
+XINXCHK  MVI   CHKRANGE,1
+         BAL   R3,BADRNG
+         DC    AL2(30,INXERR),CL30'INDEX VALUE OUT OF RANGE'
+*
+XPRMCHK  MVI   CHKRANGE,1
+         BAL   R3,BADRNG
+         DC    AL2(30,PARERR),CL30'ACTUAL PARAMETER OUT OF RANGE'
+*
+**********************************************************************
+*        POINTER CHECK ROUTINE
+**********************************************************************
+*
+XPTACHK  SR    R0,R0
+         BCTR  R0,0                R0 <-- '-1'
+         CR    R0,R2
+         BER   R14                 NIL VALUE BEING ASSIGNED
+*
+         USING STACK,R12
+*
+XPTRCHK  LM    R0,R1,NEWPTR        LOAD POINTER RANGE
+         CR    R2,R0               CHECK LOWER BOUND
+         BL    XBADPTR
+         CR    R2,R1               CHECK UPPER BOUND
+         BNHR  R14                 IF WITHIN BOUNDS, RETURN
+XBADPTR  MVI   CHKRANGE,1
+         BAL   R3,RUNMSG
+         DC    AL2(30,PTRERR),CL30'POINTER VALUE OUT OF RANGE'
+*
+**********************************************************************
+*        SET MEMBER CHECK ROUTINE
+**********************************************************************
+*
+XSETCHK  MVI   CHKRANGE,1
+         BAL   R3,RUNMSG
+         DC    AL2(30,SETERR),CL30'SET MEMBER(S) OUT OF RANGE'
+*
+**********************************************************************
+*        STACK/HEAP INTERFERENCE ERROR
+**********************************************************************
+*
+XSTKCHK  BAL   R3,RUNMSG
+         DC    AL2(30,STKERR),CL30'STACK/HEAP COLLISION'
+*
+**********************************************************************
+*        PASCSP RECURSIVE CALL NOT POSSIBLE (THIS WAY)
+**********************************************************************
+*
+XCSPERR  BAL   R3,RUNMSG
+         DC    AL2(30,CSPERR),CL30'$PASCSP RECURSION NOK'
+*
+**********************************************************************
+*        BADRNG ROUTINE
+**********************************************************************
+*
+BADRNG   DS    0H
+         LH    R0,0(,R14)          GET S-FORMAT ADDRESS PARM.
+         STH   R0,*+6              PLANT IN NEXT INSTR.
+         LM    R4,R5,*-*           *** SEE LINE ABOVE ***
+         AR    R2,R5
+         AR    R4,R5
+         LR    R0,R5
+         LR    R1,R4
+         STM   R0,R2,CHKLOWR
+         LA    R14,2(,R14)         TRUE RETURN ADDRESS
+         B     RUNMSG
+*
+*
+*
+*****************************************************************
+*        error exits
+*****************************************************************
+*
+SYNADRT  B     ERRMSGRT
+*
+BADFDF   LA    R14,FDFMSG
+         L     AE,=V($PASFILU)
+         L     AE,0(AE)            PROVIDE A FILE
+         MVC   FILNAM(8,AE),0(R2)  WITH RIGHT NAME
+         B     ERRMSGRT
+*
+UNDFERR  LA    R14,UNDFMSG
+         B     ERRMSGRT
+*
+LIMITERR LA    R14,LIMMSG
+         B     ERRMSGRT
+*
+BADREAD  LA    R14,READMSG
+         B     ERRMSGRT
+*
+EOFREAD  LA    R14,EOFMSG
+         B     ERRMSGRT
+*
+BADBOOL  LA    R14,BOOLMSG
+         B     ERRMSGRT
+*
+BIGINT   LA    R14,BIGMSG
+         B     ERRMSGRT
+*
+BADINT   LA    R14,INTMSG
+         B     ERRMSGRT
+*
+BADREAL  LA    R14,REALMSG
+         B     ERRMSGRT
+*
+BADRECRD LA    R14,RECRDMSG
+         B     ERRMSGRT
+*
+BADRSTA  LA    R14,RSTAMSG
+         B     ERRMSGRT
+*
+BADWSTA  LA    R14,WSTAMSG
+         B     ERRMSGRT
+*
+BADFILE  LA    R14,FILERMSG
+         L     AE,=V($PASFLIS)
+         L     AE,0(,AE)           SEARCH FOR CORRECT FILE BLOCK
+BF1      C     AD,FILPAS(AE)
+         BE    ERRMSGRT            EXIT IF FOUND
+         L     AE,FILLNK(AE)       OTHERWISE TRY NEXT FILE
+         LTR   AE,AE
+         BNZ   BF1                 REPEAT LOOP
+         L     AE,=V($PASFILU)
+         L     AE,0(AE)            NOT FOUND - SO PROVIDE
+         B     ERRMSGRT            A DUMMY FILE BLOCK INSTEAD
+*
+BADWRITE LA    R14,WRITEMSG
+         B     ERRMSGRT
+*
+ERRMSGRT DS    0H
+         LH    R3,0(,R14)          GET MESSAGE LENGTH
+         LA    R2,4(,R14)          ADDR OF TEXT FOR MESSAGE
+         LPR   R4,R3
+         EX    R4,MSGMVC           MOVE MESSAGE INTO BIG BUFFER
+         LTR   R3,R3               R3 < 0 => PROBLEM WITH A FILE
+         BNM   ERR0                JUMP IF OTHER THAN A FILE ERROR
+*
+         LA    R5,CHKFILE
+         MVI   0(R5),1             SET FILE MSG INDICATOR
+*
+         LR    R5,R14              save R14
+         L     R15,=V($PASINTF)    build fake save area for errors
+         BALR  R14,R15             inside $pascsp
+*
+         LTR   R1,R1
+         BZ    NOFAKESA
+*
+         L     R2,=V($PASGLOB)
+         USING PASGLOB,R2
+         CLI   0(R5),X'01'
+         BE    FAKE1
+*
+FAKE2    DS    0H
+         L     R14,SPUSERSA
+         ST    R1,4(R14)               Reg 13 = FakeSA
+         MVC   12(4,R14),12(R1)        Reg 14
+         MVC   16(4,R14),=V($PASCSP)   Reg 15
+         B     NOFAKESA
+*
+FAKE1    DS    0H
+         ST    R1,SPUSERSA+48               Reg 13 = FakeSA
+         MVC   SPUSERSA+52(4),12(R1)        Reg 14
+         MVC   SPUSERSA+56(4),=V($PASCSP)   Reg 15
+*
+NOFAKESA DS    0H
+         DROP  R2
+*
+         LR    R14,R5                  restore R14
+*
+         LA    R5,MSGBUF+4(R4)
+         MVC   0(26,R5),=CL26' (PASCAL FILE =         )'
+         MVC   16(8,R5),FILNAM(AE)     MOVE FILE NAME INTO MSG
+         LA    R4,26(,R4)              NEW MESSAGE LENGTH
+*
+         MVC   MSGBUF+2(2),=X'8000'
+         LA    R4,4(,R4)               CONSTRUCT VARIABLE LENGTH RECORD
+         STH   R4,MSGBUF
+         LA    R3,MSGBUF(R4)
+         MVC   0(4,R3),=X'00000020'    SET ROUTING CODE
+         LA    R1,MSGBUF
+         SVC   35                      ISSUE WTO REQUEST
+*
+         SH    R4,=H'4'
+         LA    R0,OUTPUT
+         CR    AD,R0               TEST IF FILE IS "OUTPUT"
+         BNE   ERR0                IF NOT, CARRY ON AND PRINT MESSAGE
+*
+         L     R14,=V($PASEXIT)    GET ADR. OF ERROR EXIT ADDRESS
+         L     R14,0(R14)          GET ERROR EXIT ADDRESS
+         BR    R14                 AND GO TO IT
+*
+ERR0     DS    0H
+         LA    R3,MSGBUF+4         NEW MESSAGE ADDRESS
+         LH    R8,2(,R14)          ERROR CODE
+         L     R15,=V($PASSNP)     WHERE TO GO NEXT
+*
+         CLI   0(R5),X'01'
+         BE    RESTORE1
+*
+         DROP  R7
+*
+RESTORE2 DS    0H
+         L     R14,=V($PASGLOB)
+         USING PASGLOB,R14
+         L     R14,SPUSERSA
+         DROP  R14
+         LM    R1,R2,24(R14)       RESTORE MOST OF THE
+         LM    R5,R7,40(R14)       USER'S REGISTERS
+         LM    R9,R12,56(R14)
+         L     R13,4(R14)
+         L     R14,12(R14)
+         BR    R15
+*
+RESTORE1 DS    0H
+         L     R14,=V($PASGLOB)
+         USING PASGLOB,R14
+         LM    R1,R2,SPUSERSA      RESTORE MOST OF THE
+         LM    R5,R7,SPUSERSA+16   USER'S REGISTERS
+         LM    R9,R14,SPUSERSA+32
+         DROP  R14
+         BR    R15
+*
+*
+*
+**********************************************************************
+*        RUNMSG ROUTINE
+*        MUST BE HERE AND MUST SET NEW BASE REG,
+*        BECAUSE IT CAN BE CALLED FROM TIMEOUT FUNCTION
+**********************************************************************
+*
+RUNMSG   DS    0H
+         BALR  R15,0
+         USING *,R15
+         LH    R4,0(,R3)           LOAD MESSAGE LENGTH
+         LH    R8,2(,R3)           LOAD ERROR CODE
+         LA    R3,4(,R3)           LOAD MESSAGE ADDRESS
+         L     R15,=V($PASSNP)
+         BR    R15                 continue at label $PASSNP
+*
+*
+*
+**********************************************************************
+*
+*        'TIME OUT' ENTRY POINT
+*
+*        ASSUMES THAT R10 POINTS TO THE CURR PROC ENTRY POINT
+*        THIS MAY NOT BE TRUE UNDER MFT OR SOME OTHER VARIANTS
+*        OF THE OPERATING SYSTEM. ('STIMER' PECULIARITY)
+*
+**********************************************************************
+*
+TIMEOUT  DS    0H
+*
+         BALR  R15,0
+         USING *,R15
+*
+         L     R12,=V($PASGLOB)
+         USING PASGLOB,R12
+         L     R12,ALOSTACK        RESTORE STACK POINTER IN CASE !
+         DROP  R12
+         LA    R12,STACK-DYNSTORE(R12)
+         LR    R13,R12             r13 = first save area
+*
+         L     R14,=V($PASGLOB)
+         USING PASGLOB,R14
+         LA    R14,SCHCSP          check csp switch
+         CLI   0(R14),X'00'        if zero, check for correct sa
+         BE    TIMEOUT2            by chasing the sa chain
+*
+         CLI   0(R14),X'01'        if not x'01', it must be x'02'
+         BNE   TIMEOUT1            go to timeout1
+*
+         L     R14,=V($PASGLOB)    handle old csp save area format
+         USING PASGLOB,R14         maybe not used any more
+         LA    R14,SPUSERSA
+         LM    R1,R14,0(R14)
+         B     TIMEOUT4            go to timeou4 to write message
+*
+TIMEOUT1 DS    0H
+         L     R14,=V($PASGLOB)    handle new csp save area format
+         USING PASGLOB,R14
+         LA    R14,SPUSERSA
+         L     R1,0(R14)
+         L     R14,12(R1)
+         L     R13,4(R1)
+         LM    R1,R12,24(R1)
+         B     TIMEOUT4            go to timeou4 to write message
+*
+TIMEOUT2 DS    0H
+*
+         L     R1,16               LOAD CVT ADDR
+         L     R1,0(,R1)           LOAD TCB WORDS ADDR
+         L     R1,4(,R1)           ADDR OF CURRENT TCB
+         L     R1,120(,R1)         ADDR OF TQE
+         L     R1,28(,R1)          ADDR OF RB
+         L     R1,20(,R1)          WORD2 OF OLD PSW (AT LAST)
+         LA    R14,0(,R1)          SET ERROR LOC TO THIS ADDRESS
+*
+TIMEOUT3 DS    0H
+         C     R10,16(R13)         GO DOWN THE CALL CHAIN UP TO
+         BE    TIMEOUT4            CURRENT PROC.
+         L     R13,8(R13)          PROCEED TO NEXT SAVE AREA
+         B     TIMEOUT3
+*
+TIMEOUT4 DS    0H
+         L     R15,=A(RUNMSG)
+         BALR  R3,R15
+         DC    AL2(30,TIMERR),CL30'TIME LIMIT EXCEEDED'
+*
+TIMOENT  DS    A
+TRTIMO   DC    CL80'TRACE:   timo  (xxxxxxxx = reg 10)'
+TRTIMO1  DC    CL80'TRACE:   timo1'
+TRTIMO2  DC    CL80'TRACE:   timo2'
+*
+**********************************************************************
+*        end of input area
+**********************************************************************
+*
+*
+*
+*
+         LTORG ,
+*
+*****************************************************************
+*        messages moved here, so that they can accessed by
+*        first base register (10)
+*****************************************************************
+*
+READMSG  DC    H'-30',AL2(INPERR),CL30'INVALID INPUT OPERATION'
+WRITEMSG DC    H'-30',AL2(OUTERR),CL30'INVALID OUTPUT OPERATION'
+FDFMSG   DC    H'-30',AL2(FDFERR),CL30'INVALID FILE DEFINITION'
+UNDFMSG  DC    H'30',AL2(NDFERR),CL30'CALL TO UNDEF. STANDARD PROC.'
+LIMMSG   DC    H'-30',AL2(LIMERR),CL30'LINELIMIT VALUE EXCEEDED'
+EOFMSG   DC    H'-30',AL2(EOFERR),CL30'ILLEGAL READ AFTER EOF'
+BOOLMSG  DC    H'-30',AL2(BOLERR),CL30'BAD BOOLEAN ON INPUT'
+INTMSG   DC    H'-30',AL2(INTERR),CL30'BAD INTEGER ON INPUT'
+BIGMSG   DC    H'-30',AL2(BIGERR),CL30'OVER-LARGE INTEGER ON INPUT'
+REALMSG  DC    H'-30',AL2(RELERR),CL30'BAD REAL ON INPUT'
+FILERMSG DC    H'-30',AL2(FILERR),CL30'INVALID FILE CONTROL BLOCK'
+RECRDMSG DC    H'-30',AL2(RCDERR),CL30'INPUT RECORD TOO LARGE'
+RSTAMSG  DC    H'-30',AL2(RSTERR),CL30'BAD FILE STATUS FOR READ'
+WSTAMSG  DC    H'-30',AL2(WSTERR),CL30'BAD FILE STATUS FOR WRITE'
+         DS    0H
+MSGBUF   DC    CL128' '            BUFFER FOR WTO MESSAGES
+*
+MSGMVC   MVC   MSGBUF+4(*-*),0(R2)
+*
+**************************************************************
+*        pascal runtime specific error codes
+**************************************************************
+*
+INXERR   EQU   1001                INDEX ERROR RETURN CODE
+SUBERR   EQU   1002                SUBRANGE ERROR RETURN CODE
+PARERR   EQU   1003                PARAMETER ERROR RETURN CODE
+SETERR   EQU   1004                SET ELEMENT ERROR RETURN CODE
+PTRERR   EQU   1005                POINTER ERROR RETURN CODE
+STKERR   EQU   1006                STACK/HEAP ERROR RETURN CODE
+INPERR   EQU   1007                INPUT OPERATION ERROR RETURN CODE
+OUTERR   EQU   1008                OUTPUT OPERATION ERROR RETURN CODE
+SYNERR   EQU   1009                SYNCHRONOUS I/O ERROR RETURN CODE
+TIMERR   EQU   1010                TIME OUT ERROR RETURN CODE
+FDFERR   EQU   1011                FILE DEFINITION ERROR RETURN CODE
+SPCERR   EQU   1012                'NO SPACE' ERROR RETURN CODE
+NDFERR   EQU   1013                UNDEFINED CSP CALL ERROR
+LIMERR   EQU   1014                'LINES LIMIT EXCEEDED' ERROR
+FILERR   EQU   1015                BAD FILE CONTROL BLOCK
+RCDERR   EQU   1016                INPUT RECORD TOO LARGE
+EOFERR   EQU   1020                ILLEGAL READ PAST EOF
+BOLERR   EQU   1021                BAD BOOLEAN ON INPUT
+INTERR   EQU   1022                BAD INTEGER ON INPUT
+RELERR   EQU   1023                BAD REAL ON INPUT
+BIGERR   EQU   1024                TOO BIG INTEGER ON INPUT
+RSTERR   EQU   1025                BAD FILE STATUS FOR READ OPERATION
+WSTERR   EQU   1026                BAD FILE STATUS FOR WRITE OPERATION
+CSPERR   EQU   1027                PASCSP RECURSION NOT OK
+SNPERR   EQU   100                 SNAPSHOT ERROR RETURN CODE
+*
+*
+*
+*
+*
+*
+*
+**************************************************************
+*
+*        GLOBAL DEFINITIONS
+*
+*        REGISTER ASSIGNMENTS
+*
+**************************************************************
+*
+R0       EQU   0
+R1       EQU   1
+R2       EQU   2
+R3       EQU   3
+R4       EQU   4
+R5       EQU   5
+R6       EQU   6
+R7       EQU   7
+R8       EQU   8
+R9       EQU   9
+R10      EQU   10
+R11      EQU   11
+R12      EQU   12
+R13      EQU   13
+R14      EQU   14
+R15      EQU   15
+*
+**************************************************************
+*        FILE BLOCK FIELDS
+**************************************************************
+*
+FILNAM   EQU   0                   PASCAL NAME FOR FILE
+FILLNK   EQU   8                   LINK PTR TO NEXT FILE BLOCK
+FILPAS   EQU   12                  PTR TO PASCAL FILE VARIABLE
+FILBUF   EQU   16                  PTR TO I/O BUFFER
+FILLIM   EQU   20                  OUTPUT LINES LIMIT FOR FILE
+FILEND   EQU   24                  CURRENT BUFFER LENGTH (TEXTFILES)
+FILOPN   EQU   26                  OPEN/TEXT FLAGS
+FILEOF   EQU   27                  EOF FLAG
+FILPTR   EQU   28                  CURRENT CHAR POS (TEXTFILE)
+FILBEG   EQU   30                  CHAR START POS   (TEXTFILE)
+FILRSZ   EQU   28                  MAX RECORD SIZE (NON TEXTFILE)
+FILCSZ   EQU   30                  FILE COMP. SIZE (NON TEXTFILE)
+FILSTA   EQU   32                  File Status (Textfile)
+FILEOFP  EQU   33                  EOF FLAG IN PASCAL
+*                                  (neu, vorher in PASCAL FCB)
+FILEOLN  EQU   34                  EOLN FLAG IN PASCAL
+*                                  (neu, vorher in PASCAL FCB)
+FILDIR   EQU   35                  DIR (I(NPUT),O(UTPUT), U=INOUT)
+FILTERM  EQU   36                  TERMINAL FLAG
+FILRDBS  EQU   37                  READBUF SCHEDULED (Terminal file)
+FILMEM   EQU   40                  Member Name for PDS I/O (MVS only)
+FILDCB   EQU   48                  DCB POSITION IN BLOCK
+*                                  (was 32, when work started in 2016)
+FILDCBS  EQU   144                 SAVED DCB (FOR OPEN RETRY) 04.2017
+*
+**************************************************************
+*        PASCAL FILE BLOCK FIELDS
+**************************************************************
+*
+PFILPTR  EQU   0                   PTR TO FILE CONTROL BLOCK
+PFILRSZ  EQU   4                   RECORD SIZE  (NON TEXTFILE)
+PFILCOMP EQU   8                   FILE COMPONENT
+PFILTSIZ EQU   12                  TOTAL SIZE FOR TEXT FILE
+*
+**************************************************************
+*        INTERNAL CHARACTER CODE FOR USEFUL CHARACTERS
+**************************************************************
+*
+FILEOL   EQU   0  ?
+FILEXP   EQU   C'E'
+FILZER   EQU   C'0'
+FILNIN   EQU   C'9'
+FILPLU   EQU   C'+'
+FILMIN   EQU   C'-'
+FILTIM   EQU   C'*'
+FILBLA   EQU   C' '
+FILDOT   EQU   C'.'
+*
+**************************************************************
+*        READ/WRITE AND TEXT FLAG VALUES
+**************************************************************
+*
+READOPN  EQU   1
+WRITEOPN EQU   2
+TEXTFLAG EQU   4
+TEXTMOVE EQU   8
+*
+**************************************************************
+*        REGISTERS ASSOCIATED WITH FILE USAGE
+**************************************************************
+*
+AD       EQU   9                   PASCAL FILE CONTROL BLOCK
+AE       EQU   8                   CSP FILE CONTROL BLOCK
+AF       EQU   7                   O.S. RECORD BUFFER FOR FILE
+AG       EQU   6                   DCB FOR FILE
+*
+**************************************************************
+*        MISCELLANEOUS CONSTANTS
+**************************************************************
+*
+FALSE    EQU   0
+TRUE     EQU   1
+*
+         END   $PASERR

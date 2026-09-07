@@ -1,0 +1,289 @@
+
+11.06.2023
+
+when implementing the changes in PCINT, it occured to me that some changes
+to the meaning of several P-instructions are needed.
+
+First of all:
+
+the sets are stored in "normal" var storage and in static storage WITHOUT
+the control fields, that is: only the bit list. The control fields are not
+needed, because the length of the set (the length of the bit string) and
+the SVO is knwon to the compiler.
+
+When working with the set, the compiler (or the machine) builds a 8 byte
+representation, which contains the length, the SVO and the pointer to the
+bit list. Key is the SLD instruction.
+
+List of all set instructions, by instruction class:
+
+- DFC = define constant - with SET parameter
+- LCA = load constand with SET parameter (LCA S)
+
+- SCL = set clear
+- SLD = set load
+- SMV = set move
+
+- INN = check if element is in set
+
+- EQU = equal comparison - with SET parameter
+- DIF = difference of two sets
+- INT = intersection of two sets
+- UNI = union of two sets
+
+- ASE = add element to set
+- ASR = add range to set
+
+IMO, it makes sense to create a new SLD instruction which leaves the bit list
+at the original place and only creates the 8 byte (stack) representation;
+it should have three parameters: size, SVO and target address. Maybe it
+could not do the copy of the old SLD and leave the bit list at the original place,
+if the target address is zero or negative. The SVO is new.
+
+DFC and LCA with S (and all other load instructions for sets, BTW)
+only put the address of the bit list on the stack and don't create the 8-byte
+representation; this is left to SLD. So SLD needs the new SVO parameter.
+
+Maybe SMV needs a SVO parameter for the target, too. This will be examined later.
+
+All the other instructions like EQU, DIF, ... act on the 8 byte
+stack representation.
+
+When sets are passed using VAR or CONST, only the address to the bit string
+is passed.
+With VAR, the address points to the original bit string, and the types
+must be identical (the compiler has to enforce this).
+With CONST, a copy of the original set (the bit string) is built
+during the call sequence which has exactly the attributes of the
+new (parameter) set; then the address of the new set (of the bit list)
+is passed much the same way as in the VAR case.
+
+================================================================================
+
+xx.05.2023
+
+Implementation of Sets
+
+When Moshe installed the Stanford compiler in the video posted in January 2023,
+he had a problem when testing his version of the 8-Queens program.
+If you are interested, watch the video or look at the comments.
+
+It turned out that the problem was with a set definition in the
+program: set of -7 .. 7; a set involving negative base elements.
+This uncovered a serious flaw in the compiler. I repaired the
+problem by converting the set to a set of 0 .. 15 and
+transferring the base elements when accessing the set.
+
+The problem:
+
+Sets consist of two parts: a control field, which is moved on the stack
+etc. during assignments and computations, and a (large) bit list, which
+contains a bit for every base element, which is or is not in the set.
+The control field contains some meta informations and the address of
+the bit list in storage.
+
+The control field of sets on the stack has 4 Bytes currently,
+consisting of length (1 byte) and address (3 bytes).
+The 3-byte address is a problem when the AMODE will be 31
+some day in the future; the 1 byte length (number of bytes
+of the set) limits the number of base elements to 2000 at the moment.
+And: all sets begin at element zero. There is no other starting point
+for sets. So: a set with negative base elements is not possible.
+The compiler does not complain, but simply generates wrong code.
+
+The idea now is: sets will from now on be implemented as 8 bytes,
+consisting of SVO (= set virtual origin, that is: offset of element
+zero from the beginning of the set), then the length of the set
+as number of elements (both 16 bits) and then its address (4 bytes).
+This would allow SVOs in the range -32768 to 32767 and the number
+of set elements as 65536 (unsigned). Let's start with 32000 first,
+which would require a set bit list of 8000 bytes.
+
+Now it is needed to check the modifications for the existing
+set instructions (see the PCODE documentation on the Stanford
+compiler website, for example).
+
+In a first sprint, the SVO should be stored by the compiler,
+but ignored by the set instructions. Then the compiler and
+the existing programs should work as before, with the
+exception of QUEENS1 (by Moshe), which has a set which
+begins at -7.
+
+In a second sprint, the SVO will be respected by the set
+instructions.
+
+BTW: it is possible to assign larger sets (e.g set of 0 .. 300)
+to smaller sets (e.g. set of 0 .. 120); the PC version of Stanford
+Pascal simply cuts off elements which are not in the smaller range,
+but the mainframe version throws an error "SET VALUE OUT OF RANGE".
+This difference in behaviour is not ok and will be repaired
+with this rework of set instructions.
+
+
+
+Set instructions
+
+
+| ASE = add element to set
+|
+| The ASE instruction is used to add a single element to a set.
+| The instruction has one argument, which is the length of the set
+| in bytes. If the length is positive, the element to be added is on top
+| of the stack and the set address is on the second position; if the
+| length is negative, the arguments are reversed. In both cases,
+| one stack element is popped and the set address remains on the stack.
+|
+| Remarks:
+|
+| a) this instruction was present all the time, but it was not
+| documented until 2019. Don't know why.
+|
+| b) at the moment, all sets start at position zero.
+| The instruction parameter (the length) is only used to make sure
+| that the element to be added is within the set boundaries; if it
+| is outside, no action is taken.
+|
+| c) the compiler at the time of this writing computes wrong lengths
+| before ASE; this will soon be fixed.
+|
+| d) this instruction has recently gotten some interest, because the
+| compiler does not support S := S + [a .. b] etc., where a and
+| b are variables. So a companion instruction to ASE is needed
+| which supports ranges of two variables instead of just one.
+
+| ASR = add range to set
+|
+| ASR is the "companion" instruction to ASE added in 2019, see the
+| comment there. ASR is used to add a range of values to a set, defined
+| by the two margins of the range, which are evaluated at runtime.
+|
+| The instruction has two arguments; the first is the length of the set
+| in bytes, as with ASE. The second is a mode parameter, which can be 1
+| or 2; both parameters specify the position of the operands on the stack
+| as follows:
+|
+| - if the length is positive, the range parameters are on the top of
+| the stack and the set is at the third position
+|
+| - if the length is negative, the set is at the top of the stack and
+| the range parameters are at the second and third position
+|
+| - if the mode parameter is one, the low margin is at the lower stack
+| position, otherwise the high margin is at the lower stack position
+|
+| e.g.: ASR -252,2 means, that the high margin is at SP-2, the low
+| margin is at SP-1 and the set address is at SP; the length of the
+| set is 252 bytes (which is the current maximum = 2000 elements).
+|
+| ASR does not change the set, if the low margin value of the range
+| is higher than the high margin value. If the high margin value is
+| outside the base type of the set, there will be a range exception.
+|
+| Otherwise, if the margins are OK, and if the low margin is not
+| higher than the high margin, all the values between the low and the
+| high margin are added to the set.
+|
+| Two stack items are popped; the now top stack element is replaced
+| with the set address, if necessary. The set itself may have changed.
+|
+| The mainframe implementation will make use of fast register operations,
+| if the base type of the set has no more than 64 elements AND if it
+| is not a subrange of integer.
+
+| DFC = define constant - with SET parameter
+
+  DIF = difference of two sets
+
+  Evaluates the set difference given by subtracting the set on top of
+  the stack from the set which is second on the stack, pops those two
+  sets, and pushes the set difference.
+
+  EQU = equal comparison - with SET parameter
+
+| INN = check if element is in set
+
+| INT = intersection of two sets
+
+  Evaluates the set intersection of the set on the top of the stack and
+  the set which is second on the stack, pops those two sets, and pushes
+  the intersection.
+
+| See LCA for details on the implementation and enhancements on sets
+
+| LCA S was enhanced further, because there were some portability
+| issues that prohibited ports to ASCII platforms. The set constants
+| of all sets are implemented as bit strings (in fact: strings of
+| integer constants), but because the bit positions with char based
+| sets are related to the code position of the char in the specific
+| character set, the bit string representation is not portable.
+| I changed that in the following way:
+|
+| - char based sets are represented by listing all the chars that
+|   belong to the set (e.g. C32'BERND')
+|
+| - other sets are represented by bit strings, but using hexadecimal
+|   digits, because IMO the bit representation can be derived easily
+|   from the hex digits (e.g. X8'00f8004000102000')
+|
+| Such set constants can be processed in a portable way on other
+| platforms, too.
+|
+| 2017: a set can have up to 2000 elements
+
+| SCL = set clear
+|
+| This instruction creates an empty set at a certain position in
+| working storage. The length is given by p and the target address by q.
+| q is meant to be relative to the PCUPS pointer; the PCUPS pointer is
+| the pointer to the beginning of the current stack segment; see CUP.
+| The set is emptied (that is: filled with hex zeroes) and the set
+| representation (4 bytes, containing length and address) is pushed
+| onto the stack.
+
+  SGS = singleton set
+
+  Creates a singleton set containing the ordinal integer on the top of
+  the stack, pops that ordinal integer, and pushes the singleton set.
+
+| Does not exist in this version of Stanford Pascal
+
+| SLD = set load
+|
+| This instruction has two parameters: it loads a set constant or
+| variable to the stack for further processing. p (the first
+| parameter) is the length of the set in bytes, and q is the target
+| address. The binary representation of the set (the source) is found
+| at the address which is on top of the stack; this address was placed
+| there before. The SLD instruction pops this address, moves p bytes
+| from the source address to q, and pushes p and q.
+
+| SMV = set move
+|
+| This instruction has two parameters: it moves a set from
+| the stack to a set variable in storage. Both parameters (p and q)
+| are length parameters. If the second length is lower than the first
+| length, only the number of bytes specified by the first length is
+| moved. The rest of the bytes of the target set variable is set to
+| zero.
+|
+| The sign of p may be negative or positive.
+|
+| If p is positive,
+|
+| - before the execution of SMV, the set (address and length) is on
+| top of the stack; the target address is at the second position.
+|
+| If p is negative,
+|
+| - the absolute value of p is used as first length,
+|
+| - before the execution of SMV, the target address is on top of the
+| stack and the set (address and length) is at the second position.
+|
+| SMV pops all two stack items in both cases.
+
+| UNI = union of two sets
+
+  Evaluates the set union of the two sets on top of the stack, pops
+  those two sets, and pushes the union set.
+

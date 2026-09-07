@@ -1,0 +1,59 @@
+         TITLE 'PASGLB, PASCAL RUNTIME'
+*
+$PASGLOB CSECT
+*
+***********************************************************************
+*
+*        global variables
+*        --------------------------------------------------------------
+*        addressed by other modules using v-constant and dsect
+*
+***********************************************************************
+*
+GLOBAREA DS    0D
+*
+SPUSERSA DS    18F                 save area for csp functions
+OLDDATE  DS    F                   MACHINE DATE
+ALOSTACK DS    A                   address of first stack frame
+ATRLINES DS    A                   address of TRLINES field
+AFIXDATE DS    A                   address of FIXDATE routine
+AFIXTIME DS    A                   address of FIXTIME routine
+AINTDATA DS    A                   address of interrupt data
+ATRDUMP  DS    A                   address of TRDUMP routine
+CCFLAG   DC    X'00'               SET BY NOCC O.S. PARM STRING
+PROFFLAG DC    X'00'               CALL PROFILE MODULE FLAG
+SNAPFLAG DC    X'00'               X'FF' IF SNAPSHOT NOT TO BE CALLED#
+DUMPFLAG DC    X'00'               X'FF' IF DUMP REQUESTED
+SCHCSP   DC    X'00'               TELLS, IF INSIDE CSP
+*
+**********************************************************************
+*        this area is input area to error diagnosis
+*        and to passnap
+**********************************************************************
+*
+CHKAREA  DS    0D
+*
+CHKERRC  DS    F                   ERROR CODE
+CHKPSW1  DS    A                   psw left part
+CHKPSW2  DS    A                   psw right part
+CHKREGS  DS    16F                 REGISTERS 0 TO 15
+CHKINTRP DS    A                   INTERRUPT ADDRESS
+CHKITYPE DS    C                   INTERRUPT TYPE (S OR P)
+CHKRANGE DC    AL1(0)              range error flag
+CHKFILE  DC    AL1(0)              file error flag
+CHKDUMMY DS    C                   not used
+CHKLOWR  DS    F                   range error lower bound
+CHKUPPR  DS    F                   range error upper bound
+CHKCVAL  DS    F                   offending value
+CHKMSGL  DS    F                   message length
+CHKMSG   DS    A                   pointer to message
+CHKPASE  DS    A                   entry $PASENT
+CHKHEAPP DS    A                   heap pointer
+CHKHEAPT DS    A                   top of heap
+CHKCURRP DS    A                   entry point of current proc
+*
+**********************************************************************
+*        end of input area
+**********************************************************************
+*
+         END

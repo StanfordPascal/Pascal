@@ -4,51 +4,67 @@ program TESTWS ( INPUT , OUTPUT ) ;
 var S : STRING ( 50 ) ;
     CP : -> CHAR ;
     F : ( ROT , GELB , GRUEN , BLAU ) ;
+    CH : CHAR ;
 
 
 
 procedure TESTAUSGABE ( R : REAL ) ;
 
+
+   procedure TESTAUS1 ;
+
+      begin (* TESTAUS1 *)
+        WRITESTR ( S , R : 4 : 2 ) ;
+        WRITELN ( 's nach writestr: >' , S , '<' ) ;
+        WRITELN ( 'write mit real : >' , R : 4 : 2 , '<' ) ;
+        WRITESTR ( S , R : - 4 : 2 ) ;
+        WRITELN ( 's nach writestr: >' , S , '<' ) ;
+        WRITELN ( 'write mit real : >' , R : - 4 : 2 , '<' ) ;
+        WRITESTR ( S , R : 10 : 2 ) ;
+        WRITELN ( 's nach writestr: >' , S , '<' ) ;
+        WRITELN ( 'write mit real : >' , R : 10 : 2 , '<' ) ;
+        WRITESTR ( S , R : - 10 : 2 ) ;
+        WRITELN ( 's nach writestr: >' , S , '<' ) ;
+        WRITELN ( 'write mit real : >' , R : - 10 : 2 , '<' ) ;
+        WRITESTR ( S , R : 11 ) ;
+        WRITELN ( 's nach writestr: >' , S , '<' ) ;
+        WRITELN ( 'write mit real : >' , R : 11 , '<' ) ;
+        WRITESTR ( S , R : - 11 ) ;
+        WRITELN ( 's nach writestr: >' , S , '<' ) ;
+        WRITELN ( 'write mit real : >' , R : - 11 , '<' ) ;
+        WRITESTR ( S , R ) ;
+        WRITELN ( 's nach writestr: >' , S , '<' ) ;
+        WRITELN ( 'write mit real : >' , R , '<' ) ;
+        WRITESTR ( S , R : 25 : 2 ) ;
+        WRITELN ( 's nach writestr: >' , S , '<' ) ;
+        WRITELN ( 'write mit real : >' , R : 25 : 2 , '<' ) ;
+        WRITESTR ( S , R : - 25 : 2 ) ;
+        WRITELN ( 's nach writestr: >' , S , '<' ) ;
+        WRITELN ( 'write mit real : >' , R : - 25 : 2 , '<' ) ;
+      end (* TESTAUS1 *) ;
+
+
+   procedure TESTAUS2 ;
+
+      begin (* TESTAUS2 *)
+        WRITESTR ( S , R : 25 : 15 ) ;
+        WRITELN ( 's nach writestr: >' , S , '<' ) ;
+        WRITELN ( 'write mit real : >' , R : 25 : 15 , '<' ) ;
+        WRITESTR ( S , R : - 25 : 15 ) ;
+        WRITELN ( 's nach writestr: >' , S , '<' ) ;
+        WRITELN ( 'write mit real : >' , R : - 25 : 15 , '<' ) ;
+        WRITESTR ( S , R : 25 ) ;
+        WRITELN ( 's nach writestr: >' , S , '<' ) ;
+        WRITELN ( 'write mit real : >' , R : 25 , '<' ) ;
+        WRITESTR ( S , R : - 25 ) ;
+        WRITELN ( 's nach writestr: >' , S , '<' ) ;
+        WRITELN ( 'write mit real : >' , R : - 25 , '<' ) ;
+      end (* TESTAUS2 *) ;
+
+
    begin (* TESTAUSGABE *)
-     WRITESTR ( S , R : 4 : 2 ) ;
-     WRITELN ( 's nach writestr: >' , S , '<' ) ;
-     WRITELN ( 'write mit real : >' , R : 4 : 2 , '<' ) ;
-     WRITESTR ( S , R : - 4 : 2 ) ;
-     WRITELN ( 's nach writestr: >' , S , '<' ) ;
-     WRITELN ( 'write mit real : >' , R : - 4 : 2 , '<' ) ;
-     WRITESTR ( S , R : 10 : 2 ) ;
-     WRITELN ( 's nach writestr: >' , S , '<' ) ;
-     WRITELN ( 'write mit real : >' , R : 10 : 2 , '<' ) ;
-     WRITESTR ( S , R : - 10 : 2 ) ;
-     WRITELN ( 's nach writestr: >' , S , '<' ) ;
-     WRITELN ( 'write mit real : >' , R : - 10 : 2 , '<' ) ;
-     WRITESTR ( S , R : 11 ) ;
-     WRITELN ( 's nach writestr: >' , S , '<' ) ;
-     WRITELN ( 'write mit real : >' , R : 11 , '<' ) ;
-     WRITESTR ( S , R : - 11 ) ;
-     WRITELN ( 's nach writestr: >' , S , '<' ) ;
-     WRITELN ( 'write mit real : >' , R : - 11 , '<' ) ;
-     WRITESTR ( S , R ) ;
-     WRITELN ( 's nach writestr: >' , S , '<' ) ;
-     WRITELN ( 'write mit real : >' , R , '<' ) ;
-     WRITESTR ( S , R : 25 : 2 ) ;
-     WRITELN ( 's nach writestr: >' , S , '<' ) ;
-     WRITELN ( 'write mit real : >' , R : 25 : 2 , '<' ) ;
-     WRITESTR ( S , R : - 25 : 2 ) ;
-     WRITELN ( 's nach writestr: >' , S , '<' ) ;
-     WRITELN ( 'write mit real : >' , R : - 25 : 2 , '<' ) ;
-     WRITESTR ( S , R : 25 : 15 ) ;
-     WRITELN ( 's nach writestr: >' , S , '<' ) ;
-     WRITELN ( 'write mit real : >' , R : 25 : 15 , '<' ) ;
-     WRITESTR ( S , R : - 25 : 15 ) ;
-     WRITELN ( 's nach writestr: >' , S , '<' ) ;
-     WRITELN ( 'write mit real : >' , R : - 25 : 15 , '<' ) ;
-     WRITESTR ( S , R : 25 ) ;
-     WRITELN ( 's nach writestr: >' , S , '<' ) ;
-     WRITELN ( 'write mit real : >' , R : 25 , '<' ) ;
-     WRITESTR ( S , R : - 25 ) ;
-     WRITELN ( 's nach writestr: >' , S , '<' ) ;
-     WRITELN ( 'write mit real : >' , R : - 25 , '<' ) ;
+     TESTAUS1 ;
+     TESTAUS2 ;
    end (* TESTAUSGABE *) ;
 
 
@@ -146,6 +162,10 @@ procedure TEST1 ;
 
 
 begin (* HAUPTPROGRAMM *)
+  WRITELN ( 'test 1' ) ;
+  READLN ( CH ) ;
   TEST1 ;
+  WRITELN ( 'test 3' ) ;
+  READLN ( CH ) ;
   TEST3
 end (* HAUPTPROGRAMM *) .

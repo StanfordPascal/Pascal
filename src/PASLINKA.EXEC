@@ -1,0 +1,183 @@
+&CONTROL OFF NOMSG
+*
+************************************************************
+*   PASLINK EXEC to link a Pascal programs (from TEXT files)
+*   and build a module
+*   PASLINK is a copy of PASRUN EXEC
+*   the &R variables could be used as options later
+*   OPP - 06.2017
+************************************************************
+*
+&IF .&1 EQ .? &GOTO -HELP
+&IF .&1 EQ . &GOTO -NOFILE
+&ANZ = &INDEX
+*-----------------------------------------------------------
+STATE &1 TEXT *
+&IF &RETCODE EQ 0 &GOTO -OK1
+&TYPE FILE &1 TEXT NOT FOUND
+&END
+&EXIT &RETCODE
+*-----------------------------------------------------------
+-OK1
+&IF &INDEX LE 1 &GOTO -OK2
+&IF &2 EQ ( &GOTO -RUNTONLY
+&IF &* NE ( &GOTO -MODONLY
+&IF &3 EQ ( &GOTO -MOD1
+&IF &4 EQ ( &GOTO -MOD2
+&IF &5 EQ ( &GOTO -MOD3
+&IF &6 EQ ( &GOTO -MOD4
+&BEGTYPE
+MORE THAN 4 SUBMODULES ARE NOT ALLOWED (AT THE MOMENT)
+&END
+&EXIT 99
+*-----------------------------------------------------------
+-RUNTONLY
+&R1 = &3
+&R2 = &4
+&R3 = &5
+&R4 = &6
+&R5 = &7
+&R6 = &8
+&R7 = &9
+&R8 = &10
+&R9 = &11
+&R10 = &12
+&R11 = &13
+&R12 = &14
+&R13 = &15
+&R14 = &16
+&GOTO -OK2
+*-----------------------------------------------------------
+-MODONLY
+&M1 = &2
+&M2 = &3
+&M3 = &4
+&M4 = &5
+&GOTO -OK2
+*-----------------------------------------------------------
+-MOD1
+&M1 = &2
+&R1 = &4
+&R2 = &5
+&R3 = &6
+&R4 = &7
+&R5 = &8
+&R6 = &9
+&R7 = &10
+&R8 = &11
+&R9 = &12
+&R10 = &13
+&R11 = &14
+&R12 = &15
+&R13 = &16
+&GOTO -OK2
+*-----------------------------------------------------------
+-MOD2
+&M1 = &2
+&M2 = &3
+&R1 = &5
+&R2 = &6
+&R3 = &7
+&R4 = &8
+&R5 = &9
+&R6 = &10
+&R7 = &11
+&R8 = &12
+&R9 = &13
+&R10 = &14
+&R11 = &15
+&R12 = &16
+&GOTO -OK2
+*-----------------------------------------------------------
+-MOD3
+&M1 = &2
+&M2 = &3
+&M3 = &4
+&R1 = &6
+&R2 = &7
+&R3 = &8
+&R4 = &9
+&R5 = &10
+&R6 = &11
+&R7 = &12
+&R8 = &13
+&R9 = &14
+&R10 = &15
+&R11 = &16
+&GOTO -OK2
+*-----------------------------------------------------------
+-MOD4
+&M1 = &2
+&M2 = &3
+&M3 = &4
+&M4 = &5
+&R1 = &7
+&R2 = &8
+&R3 = &9
+&R4 = &10
+&R5 = &11
+&R6 = &12
+&R7 = &13
+&R8 = &14
+&R9 = &15
+&R10 = &16
+&GOTO -OK2
+*
+************************************************************
+* PASMATH NEEDED FOR MATH FUNCTIONS
+* REPLACE PASMATH WITH NAME OF YOUR FORTRAN G LIBRARY
+* THE NAMES OF THE NEEDED (STANDARD) PASCAL RUNTIME
+* LIBRARIES ARE ADDED VIA &STACK, &READ ARGS ETC.
+* MORE MAY FOLLOW.
+************************************************************
+*
+-OK2
+GLOBAL TXTLIB PASMATH
+&L1 = PASMONNA
+&L2 = PASLIBXA
+&L3 = PASUTILS
+&L4 = PASSNAPC
+&O1 = ORIGIN
+&O2 = 20700
+&O3 = RESET
+&O4 = $PASENT
+&O5 = CLEAR
+LOAD &L1 &L2 &L3 &L4 &M1 &M2 &M3 &M4 &1 ( &O1 &O2 &O3 &O4 &O5
+&IF &RETCODE NE 0 &GOTO -NOLOAD
+*-----------------------------------------------------------
+GENMOD &1
+&IF &RETCODE NE 0 &GOTO -NOMOD
+*-----------------------------------------------------------
+* ... no execution of the generated module
+&EXIT &RETCODE
+*
+************************************************************
+* ALL SORT OF ERROR MESSAGES
+************************************************************
+*
+-NOFILE
+&TYPE MISSING FILE NAME - 1ST PARAM.
+&GOTO -HELP
+*-----------------------------------------------------------
+-NOLOAD
+&TYPE ERROR &RETCODE ON LOAD COMMAND.
+&EXIT &RETCODE
+*-----------------------------------------------------------
+-NOMOD
+&TYPE ERROR &RETCODE ON GENMOD.
+&EXIT &RETCODE
+*-----------------------------------------------------------
+-HELP
+&BEGTYPE
+
+USE THIS EXEC TO GENERATE A MODULE OUT OF TEXT FILES
+FOR A STANFORD PASCAL PROGRAM.
+SPECIFY THE FILE NAME OF THE TEXT FILE CONTAINING THE
+TRANSLATED 370 CODE ON THE COMMAND LINE.
+MORE OPTIONS:
+SPECIFY MORE TEXT FILES CONTAINING SUBPROGRAMS
+AND: SPECIFY RUNTIME PARAMETERS FOLLOWING A LEFT PARANTHESIS
+E.G.: PASLINK MAIN SUB1 SUB2 SUB3 ( OPTIONS
+CURRENTLY THERE ARE NO OPTIONS AVAILABLE
+
+&END

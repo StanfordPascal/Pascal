@@ -1,0 +1,4536 @@
+         TITLE 'PASCSP - SUPPORT FOR PASCAL CSP - CALL STANDARD PROC'
+*
+*
+*
+*
+*
+**************************************************************
+*        fildef = definitionen fuer standard-files
+*        aenderungen opp 2016:
+*        - move mode fuer output
+*        - dcb verschoben nach offset 36 / spaeter 40
+*        - dadurch platz fuer neue flags
+*        File Status:
+*        0 = file closed
+*        1 = file open, no reset/rewrite so far
+*        2 = reset/rewrite issued, no get/read so far
+*        3 = read/write action performed
+*        the idea: when there is a read/write action without
+*        prior reset/rewrite, reset and rewrite will be performed
+*        automatically
+*        weitere aenderungen opp 2016:
+*        - eof und eoln flag hierher, weg von pascal-fcb
+*        - compiler entsprechend geaendert
+*        - flag wg. input/output/inout
+*        - eof initial auf false fuer input- und inout-files
+**************************************************************
+*
+         MACRO ,
+         FILDEF &NAME,&DIRECT,&KIND,&LINK
+.*       DEFINE A FILE
+         LCLC  &NAM,&OPT1,&OPT2
+         LCLC  &DIR
+         DS    0D
+&NAM     SETC  '&NAME'(1,3)
+FIL&NAM  DC    CL8'&NAME'          PASCAL FILE IDENTIFIER
+         DC    A(&LINK)            PTR TO NEXT FILE BLOCK
+         DC    A(0)                PTR TO PASCAL FILE VRBL.
+         DC    A(0)                I/O BUFFER ADDRESS
+         DC    F'0'                LINE-LIMIT FOR FILE (ON OUTPUT)
+         DC    H'0'                CURRENT RECORD LENGTH (TEXTFILE)
+.*
+         AIF   ('&DIRECT' EQ 'OUTPUT').DIRO
+         AIF   ('&DIRECT' EQ 'INPUT').DIRI
+&DIR     SETC  'U'                 DIRECT = INOUT
+         AGO   .DIRX
+.DIRI    ANOP
+&DIR     SETC  'I'                 DIRECT = INPUT
+         AGO   .DIRX
+.DIRO    ANOP
+&DIR     SETC  'O'                 DIRECT = OUTPUT
+.DIRX    ANOP
+         AIF   ('&KIND' NE 'TEXT').FD2
+&OPT1    SETC  'PM'                LOCATE-MODE OUTPUT NEEDED
+         AIF   ('&DIR' EQ 'O').FD1
+&OPT1    SETC  'GL'                LOCATE-MODE INPUT NEEDED
+         AIF   ('&DIR' EQ 'I').FD1
+&OPT2    SETC  'PM'                BOTH LOCATE MODE INPUT & OUTPUT
+.FD1     DC    AL1(TEXTFLAG,0)     OPEN/TEXT FLAGS, EOF FLAG
+         DC    H'0',H'0'           CHAR PTR, CHAR START POS
+         AGO   .FD3
+.FD2     DC    AL1(0,0)            OPEN/TEXT FLAGS, EOF FLAG
+         DC    H'0',H'0'           MAX REC SIZE, FILE COMP. SIZE
+&OPT1    SETC  'GM'                MOVE-MODE INPUT AND
+&OPT2    SETC  'PM'                MOVE-MODE OUTPUT NEEDED
+.FD3     ANOP  ,
+         DC    C'0'                File Status (Textfiles only)
+         DC    X'00'               EOF-Flag
+         DC    X'00'               EOLN-Flag (Textfiles only)
+         DC    C'&DIR'             I=INPUT,O=OUTPUT,U=INOUT
+*                                  DCB bei offset 40
+         DC    C' '                Terminal Flag
+         DC    X'00'               READLN scheduled
+         DC    X'00'               BUILTIN Flag (new 2023)
+         DC    X'00'               unused3
+         DC    CL8' '              Member Name for PDS I/O
+         DCB   DSORG=PS,DDNAME=&NAME,EODAD=EOD,SYNAD=SYNADRT,          X
+               EXLST=XL&DIRECT,BFTEK=A,MACRF=(&OPT1,&OPT2)
+         DS    CL(LENDCB)
+*
+         MEND  ,
+*
+*
+*
+*
+**************************************************************
+*        filadr = adressen fuer file-handling-routinen
+*        in bestimmte register ablegen
+**************************************************************
+*
+         MACRO ,
+&L       FILADR ,
+.*       TO COMPUTE FILE BUFFER ADDRESS ETC.
+         GBLB  &SYSTEM
+&L       L     AE,PFILPTR(AD)      LOAD FILE BLOCK ADDR
+         AIF   (&SYSTEM).NOCHK
+         C     AD,FILPAS(AE)       CHECK THAT FILE BLOCK POINTS
+         BNE   BADFILE             TO PASCAL FILE VARIABLE
+.NOCHK   ANOP
+         L     AF,FILBUF(AE)       SET I/O BUFFER POINTER
+         MEND  ,
+*
+*
+*
+*
+**************************************************************
+*        filadrn = adressen fuer file-handling-routinen
+*        in bestimmte register ablegen
+*        bei fehler (kein gueltiger file in AD)
+*        nil nach AE und AF
+**************************************************************
+*
+         MACRO ,
+&L       FILADRN ,
+.*
+.*       TO COMPUTE FILE BUFFER ADDRESS ETC.
+.*
+         LCLC  &LBL1
+         LCLC  &LBL2
+&LBL1    SETC  'FA01&SYSNDX'
+&LBL2    SETC  'FA02&SYSNDX'
+         GBLB  &SYSTEM
+&L       L     AE,PFILPTR(AD)      LOAD FILE BLOCK ADDR
+         LA    AE,0(AE)
+         AIF   (&SYSTEM).NOCHK
+         C     AD,FILPAS(AE)       CHECK THAT FILE BLOCK POINTS
+         BNE   &LBL1               TO PASCAL FILE VARIABLE
+.NOCHK   ANOP
+         L     AF,FILBUF(AE)       SET I/O BUFFER POINTER
+         LA    AF,0(AF)
+         B     &LBL2
+&LBL1    DS    0H
+         XR    AE,AE               return nil on err
+         BCTR  AE,0
+         LR    AF,AE               in both regs
+&LBL2    DS    0H
+         MEND  ,
+*
+*
+*
+*
+***************************************************************
+*
+*        DCB LAYOUT AND LENGTH
+*
+***************************************************************
+*
+*        PRINT NOGEN               ich will den dcb sehen
+         DCBD  DSORG=PS
+ENDDCBD  DS    0F
+LENDCB   EQU   ENDDCBD-IHADCB
+         PRINT GEN
+*
+*
+*
+*
+***************************************************************
+*        DSECT for global variables implemented by pasglob
+***************************************************************
+*
+PASGLOB  DSECT
+*
+***********************************************************************
+*
+*        global variables
+*        --------------------------------------------------------------
+*        addressed by other modules using v-constant and dsect
+*
+***********************************************************************
+*
+GLOBAREA DS    0D
+*
+SPUSERSA DS    18F                 save area for csp functions
+OLDDATE  DS    F                   MACHINE DATE
+ALOSTACK DS    A                   address of first stack frame
+ATRLINES DS    A                   address of TRLINES field
+AFIXDATE DS    A                   address of FIXDATE routine
+AFIXTIME DS    A                   address of FIXTIME routine
+AINTDATA DS    A                   address of interrupt data
+ATRDUMP  DS    A                   address of TRDUMP routine
+CCFLAG   DC    X'00'               SET BY NOCC O.S. PARM STRING
+PROFFLAG DC    X'00'               CALL PROFILE MODULE FLAG
+SNAPFLAG DC    X'00'               X'FF' IF SNAPSHOT NOT TO BE CALLED#
+DUMPFLAG DC    X'00'               X'FF' IF DUMP REQUESTED
+SCHCSP   DC    X'00'               TELLS, IF INSIDE CSP
+*
+*
+*
+*
+*
+         GBLB  &SYSTEM
+*
+&SYSTEM  SETB  0                   TRUE INDICATES A COMPACT 'CSP'
+*
+         AIF   (&SYSTEM).SYS1
+*
+***************************************************************
+*        GENERAL SETUP FOR USER PROGRAM(S).
+***************************************************************
+*
+         AGO   .USE1
+.SYS1    ANOP
+*
+***************************************************************
+*        COMPACT SETUP, OMITS FORTRAN INTERFACE & TRACING
+***************************************************************
+*
+.USE1    ANOP
+*
+*
+*
+*
+*
+*****************************************************************
+*
+*        $PASSYS (System Basisfunktionen)
+*
+*****************************************************************
+*
+$PASCSP0 CSECT
+*
+         ENTRY $PASCSP,$PASCSP2
+         ENTRY $PASSYS
+         ENTRY $PASFLIS,$PASFILO,$PASFILU
+         ENTRY $PASEXIT
+*
+         USING $PASSYS,R15
+*
+$PASSYS  DS    0H
+         B     *+12
+         DC    AL1(7),CL7'$PASSYS'
+*
+* ------ uebergangsweise
+*
+$PASSTOR EQU   $PASSYS
+         ENTRY $PASSTOR
+*
+* ------ uebergangsweise
+*
+         LR    R0,R1
+         L     R1,=V($PASGLOB)
+         USING PASGLOB,R1
+         ST    R0,SPUSERSA
+         STM   R2,R15,SPUSERSA+4
+         MVI   SCHCSP,X'01'        SET CSP FLAG
+         DROP  R1
+         LR    R1,R0
+*
+         L     R13,=A(CSPSTCK1)    SET UP SYSTEM SAVE AREA
+         LR    R10,R15
+         LA    R11,4092(,R10)
+         DROP  R15
+         USING $PASSYS,R10
+         USING STACK,R12
+*
+************************************************************
+*        Pascal-Parameter adressieren
+************************************************************
+*
+         LA    R2,LCAFTMST+FPRSAREA(R1)
+         L     R3,0(R2)            R3 = Funccode
+         L     R4,4(R2)            R4 = 2. Parameter
+*
+************************************************************
+*        Abfrage Funktionscode
+************************************************************
+*
+         CH    R3,=H'1'            = ALLOC ?
+         BE    STOR01
+         CH    R3,=H'2'            = FREE ?
+         BE    STOR02
+         CH    R3,=H'3'            = GIVEHPCB ?
+         BE    STOR03
+         CH    R3,=H'10'           = FILEFCB ?
+         BE    FILEFCB
+         CH    R3,=H'11'           = CMS-Call ?
+         BE    CMSCALL
+         CH    R3,=H'13'           = WAITT-Call
+         BE    WAITT
+         XR    R5,R5               sonst Rueckgabe Null
+         B     STOR99
+*
+************************************************************
+*        Alloc = Getmain
+************************************************************
+*
+STOR01   DS    0H
+         AH    R4,=H'8'            8 Bytes mehr
+         GETMAIN R,LV=(R4)
+         LR    R5,R1               Adresse nach R5
+         MVC   0(4,R5),=C'PSTG'    Kennung vorne rein
+         ST    R4,4(R5)            Laenge rein
+         LA    R5,8(R5)            8 Bytes spaeter zurueckgeben
+         B     STOR99
+*
+************************************************************
+*        Freemain
+************************************************************
+*
+STOR02   DS    0H
+         LR    R5,R4               Adresse nach R5
+         SH    R5,=H'8'            8 Bytes vorher
+         CLC   0(4,R5),=C'PSTG'    steht hier die Kennung?
+         BE    STOR02A             ja ?
+         XR    R5,R5               nein, dann raus
+         B     STOR99
+STOR02A  DS    0H
+         L     R4,4(R5)            Laenge holen und Bereich
+         FREEMAIN R,LV=(R4),A=(R5)             freigeben
+         XR    R5,R5               Null zurueckgeben
+         B     STOR99
+*
+************************************************************
+*        Give HPCB / Adresse statischer HPCB
+************************************************************
+*
+STOR03   DS    0H
+         LA    R5,HPCBGLOB
+         B     STOR99
+*
+************************************************************
+*        FILEFCB
+************************************************************
+*
+FILEFCB  DS    0H
+         LR    AD,R4               AD = R9 = Pascal File Block
+         FILADRN ,                 Register setzen
+         LR    R5,AE               R8 = FCB nach R5
+         B     STOR99
+*
+************************************************************
+*        CMSCALL
+************************************************************
+*
+CMSCALL  DS    0H
+         LR    R1,R4               CMS-Parameter nach R1
+         SVC   X'CA'               CMS-SVC = 'CAMBRIDGE'
+         DC    AL4(*+4)            Fehler-Adresse = naechste
+         LR    R5,R15              Returncode nach R5
+         B     STOR99
+*
+************************************************************
+*        WAITT - Wait for completion of Terminal I/O
+************************************************************
+*
+WAITT    DS    0H
+*
+         AIF   ('&SYSPARM' NE 'CMS').CMS001
+*
+         WAITT                     not supported on MVS
+*
+.CMS001  ANOP
+*
+         XR    R5,R5
+         B     STOR99
+*
+************************************************************
+*        Rueckkehr usw.
+************************************************************
+*
+STOR99   DS    0H
+         L     R3,=V($PASGLOB)
+         USING PASGLOB,R3
+         L     R1,SPUSERSA         Restore R1
+         ST    R5,72(R1)           Funktionsergebnis
+         MVI   SCHCSP,X'00'        CLEAR CSP FLAG
+         LM    R2,R15,SPUSERSA
+         BR    R14
+*
+         DS    0D
+HPCBGLOB DC    C'HPCB'             Eye Catcher Heap Control Block
+         DC    F'-1'               First Pointer = NIL
+         DC    F'-1'               Last Pointer = NIL
+         DC    F'0'                Dummy = 0
+*
+TRSTOR   DC    CL80'TRACE: AUFRUF $PASSYS'
+*
+         LTORG
+*
+         DROP ,
+*
+*
+*
+*
+*
+*****************************************************************
+*
+*        $PASCSP (PASCAL I/0) ENTRY POINT - new technique
+*
+*        R8 points to Pascal runtime stack
+*        $PASCSP always uses the Pascal stack
+*        R1 contains the desired CSP number
+*
+*        The compiler now always generates calls to $PASCSP
+*
+*****************************************************************
+*
+$PASCSP0 CSECT
+*
+         USING $PASCSP,R15
+*
+$PASCSP  DS    0H
+         B     P002
+*
+         DC    AL1(8),CL8'$PASCSP'
+*
+P002     DS    0H
+*
+         STM   R14,R12,12(R8)          store regs into Pascal stacks
+         ST    R8,8(R13)               chaining
+         ST    R13,4(R8)               chaining
+*
+         L     R13,=V($PASGLOB)
+         USING PASGLOB,R13
+         ST    R8,SPUSERSA             only for interrupt case
+         MVI   SCHCSP,X'02'            SET CSP FLAG - 02
+         DROP  R13
+*
+         LA    R13,72(R8)              SET UP SYSTEM SAVE AREA
+         ST    R8,4(R13)               chaining
+         ST    R13,8(R8)               chaining
+*
+****************************************************************
+*        ab hier aufmachen, wenn trace gewuenscht
+****************************************************************
+*        zunaechst anhand von R1 den Namen der CSP-Funktion
+*        ermitteln - geht davon aus, dass vor jedem Sprungziel
+*        die Kennung steht
+****************************************************************
+*        danach den Offset in der CSP-Tabelle anzeigen
+****************************************************************
+*
+         LR    R10,R15                 reg 10 as temporary base
+         USING $PASCSP,R10
+         DROP  R15
+*
+         ST    R8,DOWO
+         UNPK  TRSTART1+31(9),DOWO(5)
+         TR    TRSTART1+31(8),TABHEX-C'0'
+         MVI   TRSTART1+39,C' '
+         LA    R3,TRSTART1
+         L     R15,=V($PASTRX)
+         BALR  R14,R15
+*
+         ST    R13,DOWO
+         UNPK  TRSTART2+31(9),DOWO(5)
+         TR    TRSTART2+31(8),TABHEX-C'0'
+         MVI   TRSTART2+39,C' '
+         LA    R3,TRSTART2
+         L     R15,=V($PASTRX)
+         BALR  R14,R15
+*
+         CVD   R1,DOWO
+*
+         L     R1,SUBTBL2(R1)
+         SH    R1,=H'4'
+         MVC   TRSTART+23(3),0(R1)
+*
+         UNPK  TRSTART+35(9),DOWO+3(5)
+         OI    TRSTART+43,X'F0'
+*
+         LA    R3,TRSTART
+         L     R15,=V($PASTRX)
+         BALR  R14,R15
+*
+         CVB   R1,DOWO                 restore Reg 1
+         LM    R2,R5,28(R1)            and Regs 2 to 5
+*
+         LR    R15,R10                 re-establish base 15
+         USING $PASCSP,R15
+         DROP  R10
+*
+****************************************************************
+*        bis hier aufmachen, wenn trace gewuenscht
+****************************************************************
+*
+         LA    R10,CSPBASE             new base registers
+         LA    R11,4092(,R10)
+*
+         L     R1,SUBTBL2(R1)          jump to csp routine
+         BR    R1
+*
+*
+*
+*
+*****************************************************************
+*
+*        $PASCSP2 (PASCAL I/0) ENTRY POINT - old technique
+*
+*        R1 contains the desired CSP number
+*        or points to the Pascal runtime stack
+*        $PASCSP decides and acts accordingly
+*
+*****************************************************************
+*
+         USING $PASCSP2,R15
+$PASCSP2 DS    0H
+         B     P001
+*
+         DC    AL1(9),CL9'$PASCSP2'
+*
+P001     DS    0H
+         C     R1,=A(SUBTBLZ2-SUBTBL2)
+         BH    CSPNEWST
+*
+         ST    R1,SAVETEMP
+         L     R1,=V($PASGLOB)
+         USING PASGLOB,R1
+         MVI   SCHCSP,X'01'            SET CSP FLAG - 01
+         STM   R1,R15,SPUSERSA         store regs in SPUSER area
+         MVC   SPUSERSA(4),SAVETEMP
+         DROP  R1
+*
+         L     R13,=A(CSPSTCK1)        SET UP SYSTEM SAVE AREA
+*
+****************************************************************
+*        ab hier aufmachen, wenn trace gewuenscht
+*        problem: R15 wird veraendert in PTRACE
+****************************************************************
+*
+         LR    R10,R15
+         USING $PASCSP2,R10
+         DROP  R15
+*
+         CVD   R1,DOWO
+         UNPK  TRSTART+35(9),DOWO+3(5)
+         OI    TRSTART+43,X'F0'
+         LA    R3,TRSTART
+         L     R15,=V($PASTRX)
+         BALR  R14,R15
+*
+         L     R1,=V($PASGLOB)
+         USING PASGLOB,R1
+         LM    R2,R5,SPUSERSA+4
+         DROP  R1
+         CVB   R1,DOWO
+*
+         LR    R15,R10
+         USING $PASCSP2,R15
+         DROP  R10
+*
+****************************************************************
+*        bis hier aufmachen, wenn trace gewuenscht
+****************************************************************
+*
+         LA    R10,CSPBASE
+         LA    R11,4092(,R10)
+*
+         L     R1,SUBTBL2(R1)
+         BR    R1
+*
+*
+*
+*
+*****************************************************************
+*        $PASCSP nutzt den Pascal Runtime Stack ...
+*        die erste Savearea (R1) dient zur Ablage der User Regs
+*        wir muessen gleich eine zweite machen, auf die R13
+*        zeigen kann.
+*****************************************************************
+*
+CSPNEWST DS    0H
+*
+         STM   R14,R12,12(R1)          store regs into Pascal stacks
+         ST    R1,8(R13)               chaining
+         ST    R13,4(R1)               chaining
+*
+         L     R1,=V($PASGLOB)
+         USING PASGLOB,R1
+         MVI   SCHCSP,X'02'            SET CSP FLAG - 02
+         MVC   SPUSERSA(4),8(R13)      only for interrupt case
+         DROP  R1
+*
+         L     R1,8(R13)               RECOVER R1 ...
+*
+         LA    R13,72(R1)              SET UP SYSTEM SAVE AREA
+         ST    R1,4(R13)               chaining
+         ST    R13,8(R1)               chaining
+*
+         LA    R10,CSPBASE
+         LA    R11,4092(,R10)
+*
+*--------------------------------------------------------
+*        TRACING ONLY
+*--------------------------------------------------------
+*        L     R1,0(R1)
+*        CVD   R1,DOWO
+*        UNPK  TRSTART+35(9),DOWO+3(5)
+*        OI    TRSTART+43,X'F0'
+*        LA    R3,TRSTART
+*        L     R15,=V($PASTRX)
+*        BALR  R14,R15
+*
+*        L     R1,=V($PASGLOB)
+*        USING PASGLOB,R1
+*        L     R1,SPUSERSA             DONT KNOW, IF THIS IS
+*        LM    R2,R5,28(R1)            REALLY CORRECT ...
+*--------------------------------------------------------
+*
+         L     R1,0(R1)                Function Code from here
+         L     R1,SUBTBL2(R1)
+         BR    R1
+*
+         LTORG
+*
+*
+*
+*
+************************************************************
+*
+*        This code comes from source file PASDEFS.ASS
+*        and is copied here. If changes are made, it should
+*        be changed in PASDEFS.ASS and the changes should be
+*        transferred to the different places where it is used.
+*        PASCSP.ASS - PASMONN.ASS - ...
+*
+************************************************************
+*
+*        Stanford PASCAL runtime
+*
+*        This DSECT defines the low addresses of the
+*        dynamic storage which are used by all runtime
+*        components and addressed most of the time
+*        by reg 12 - the numbers in the comments show
+*        the offsets
+*
+*        The area must be allocated and initialized by
+*        Stanford Pascal initialization
+*
+************************************************************
+*
+*
+*
+*
+DYNSTORE DSECT
+*
+         DS    20F                 PASCAL ENVIRONMENT SAVE AREA
+STACK    DS    18F          0000   BOTTOM OF RUNTIME STACK
+CLOCK    EQU   STACK               CLOCK LOCATION
+NEWPTR   DS    A            0072   PASCAL 'NEW' POINTER
+HEAPLIM  DS    A            0076   UPPER LIMIT OF HEAP ( +1 )
+*                                  ALSO POINTS TO DYN2STOR
+*
+************************************************************
+*        The DISPLAY is used to store the environment
+*        when calling procedures at different levels
+************************************************************
+*        at the moment only 10 static levels are supported
+*        which seems sort of limited
+************************************************************
+*
+DISPREGS DS    10F          0080   RUN TIME DISPLAY REGISTERS
+DISPLAY  EQU   DISPREGS,*-DISPREGS
+*
+FL1OLD   DS    D            0120   should not be used any more
+FL2OLD   DS    D            0128   maybe this area can be used in
+FL3OLD   DS    D            0136   the future to extend the display
+FL4OLD   DS    D            0144   area - bernd oppolzer
+*
+************************************************************
+*        Entry information for different run time check
+*        routines
+************************************************************
+*
+CHKSUBS  DS    0F                  ENTRY TO RUN TIME CHECK ROUTINES
+INXCHK   DS    3F           0152   INDEX CHECK
+RNGCHK   DS    3F           0164   SUBRANGE CHECK
+PRMCHK   DS    3F           0176   PARAMETER VALUE CHECK
+PTRCHK   DS    3F           0188   POINTER CHECK
+PTACHK   DS    3F           0200   SET MEMBER CHECK
+SETCHK   DS    3F           0212
+STKCHK   DS    3F           0224
+TRACER   DS    3F           0236
+*
+************************************************************
+*        Six default files (INPUT, OUTPUT, ...)
+************************************************************
+*
+INPUT    DS    3F           0248
+OUTPUT   DS    3F           0260
+PRD      DS    3F           0272
+PRR      DS    3F           0284
+QRD      DS    3F           0296
+QRR      DS    3F           0308
+*
+************************************************************
+*        Global system variables
+************************************************************
+*
+CLEARBUF DS    XL8          0320   BUFFER TO CLEAR ACTIVATION RECORDS
+PASDATE  DS    CL10         0328   PREDEFINED VARIABLE DATE
+PASTIME  DS    CL10         0338   PREDEFINED VARIABLE TIME
+OSPRMPTR DS    A            0348   POINTER TO O.S. PARM STRING
+*
+************************************************************
+*        Workarea for certain floating point actions
+************************************************************
+*
+FL1      DS    D            0352   R/W  FIX/FLOAT CONVERSION HELPS
+FL2      DS    D            0360   R ONLY
+FL3      DS    D            0368   R/W
+FL4      DS    D            0376   R ONLY
+*
+************************************************************
+*        Pointers to string workarea
+************************************************************
+*
+STRFIRST DS    A            0384   PTR TO BEGIN OF STR WORKAREA
+STRCURR  DS    A            0388   ACTUAL PTR TO STR WORKAREA
+STRSIZE  DS    F            0392   STR WORKAREA SIZE
+*
+FRSTGVAR DS    0D           0400   FOR ALIGNMENT PURPOSES
+*
+*
+*
+***************************************************************
+*        DYNAMIC STORAGE AREA POINTED TO BY HEAPLIM
+***************************************************************
+*
+DYN2STOR DSECT
+DYNRUNC  DS    F                   # OF RUN TIME FREQUENCY COUNTERS
+         DS    0D
+DYNCOUNT DS    0F
+         AIF   (&SYSTEM).SYS3
+DYN2LEN  EQU   128                 EXTRA MARGIN FOR
+*                                  PATHOLOGICAL CALL PARMS
+         AGO   .USE3
+.SYS3    ANOP
+DYN2LEN  EQU   *-DYN2STOR
+.USE3    ANOP
+*
+*
+*
+*
+************************************************************
+*        End of PASDEFS.ASS
+************************************************************
+*
+*
+*
+*
+$PASCSP0 CSECT
+*
+SUBTBL2  DS    0A
+         DC    A(CTR)
+         DC    A(0,0,0,0,0,0,0,0,0)
+         DC    A(PAG,GET,PUT,RES,REW,RDC,WRI,WRE)
+         DC    A(WRR,WRC,WRS,WRX,RDB,WRB,RDR,RDH)
+         DC    A(RDY,EOL,EOT,RDD,WRD,CLK,WLN,RLN)
+         DC    A(RDI,EOF,ELN,RDS,TRP,XIT,FDF,SIO)
+         DC    A(EIO,MSG,SKP,LIM,TRA,WRP,CLS,DAT)
+         DC    A(TIM,FLR,TRC,RND,WRV,RDV,RFC,RFS)
+         DC    A(RFV)
+         DC    A(0,0,0,0,0,0,0,0)
+SUBTBLZ2 DS    0A
+*
+TRSTART  DC    CL80'TRACE: FUNKTIONSAUFRUF XXX BEI ADR XXXXXXXX'
+TRSTART1 DC    CL80'TRACE: Start CSP Register  8 = XXXXXXXX'
+TRSTART2 DC    CL80'TRACE: Start CSP Register 13 = XXXXXXXX'
+*
+CSPSTCK1 DS    18F
+SAVETEMP DS    F
+*
+*****************************************************************
+*        hier position fuer basisregister
+*        alles vorher wird nur fuer csp-startup gebraucht
+*****************************************************************
+*
+CSPBASE  DS    0D
+*
+         DROP  R15
+*
+*****************************************************************
+*
+*        erst jetzt die Basisregister umsetzen,
+*        bis hierher gilt R15
+*
+*****************************************************************
+*
+         USING CSPBASE,R10
+         USING CSPBASE+4092,R11
+         USING STACK,R12
+         USING IHADCB-FILDCB,AE
+*
+FLHILF   DS    D
+*
+DOWO     DS    D
+*
+SAVERETC DS    F
+SAVECHK  DS    5F
+SAVETRC  DS    5F
+SAVEGET  DS    5F
+SAVEEOD  DS    5F
+SAVERDS  DS    5F
+SAVERDI  DS    5F
+SAVERDI2 DS    F
+*
+SAVECLS  DS    2A
+SAVEWRR  DS    2A
+SAVEPOP  DS    2A
+SAVEGOP  DS    2A
+SAVEOPN  DS    2A
+RETAGNB  DS    A
+RETAPST  DS    A
+*
+         DS    0H
+MSGBUF   DC    CL128' '            BUFFER FOR WTO MESSAGES
+MSGMVC   MVC   MSGBUF+4(*-*),0(R2)
+*
+*****************************************************************
+*        VARIOUS TABLE AND DCB DEFINITIONS
+*        moved here, so that all that can accessed by
+*        first base register (10)
+*****************************************************************
+*
+TABHEX   DC    C'0123456789ABCDEF'
+DECTBL   DC    D'0,1,2,3,4,5,6,7,8,9'
+PINT     DS    D                   PACKED INTEGER BUFFER
+CINT     DC    30AL1(FILBLA)
+ZINT     DS    CL12                ZONED INTEGER BUFFER
+*
+MAXSKIP  DC    F'60'               MAXIMUM NUMBER OF LINES TO SKIP
+SKPASCII EQU   *+1                 TABLE OF ASCII CONTROL CHARS
+         DC    C'1+ 0-'
+SKPMACH  EQU   *+1                 TABLE OF MACHINE CONTROL CHARS
+         DC    X'8901091119'
+RRFLAG   DC    X'00'               REREAD FLAG
+*
+         LTORG ,
+*
+*
+*
+**************************************************************
+*        these two addresses are needed from outside
+**************************************************************
+*        $PASFLIS will contain the address of INPUT
+*        only in the beginning, later it will contain
+*        the address of the last file appended
+**************************************************************
+*        $PASFLIS will always contain the address of OUTPUT
+**************************************************************
+*
+$PASFLIS DC    A(FILINP)           HEAD POINTER FOR CHAIN OF FILES
+$PASFILO DC    A(FILOUT)           pointer to fcb of file output
+$PASFILU DC    A(FILUNK)           pointer to fcb of file unknown
+*
+*
+*
+**************************************************************
+*        FILE CONTROL BLOCKS
+**************************************************************
+*        verkettete Liste von Dateidefinitionen;
+*        die Namen werden aus den DD-Namen gebildet (FIL plus
+*        erste drei Zeichen); der letzte Parameter ist die
+*        Verkettung, d.h. Zeiger auf den naechsten File.
+*        Das hier sind die bekannten Standard-Files, weitere
+*        waeren moeglich; Move oder Locate-Mode wird im
+*        Macro FILDEF festgelegt.
+**************************************************************
+*
+         FILDEF INPUT,INPUT,TEXT,FILOUT
+         FILDEF OUTPUT,OUTPUT,TEXT,FILPRD
+         FILDEF PRD,INOUT,TEXT,FILPRR
+*
+#FILREC  EQU   FILPRD,*-FILPRD     TEXT FILE TEMPLATE
+*
+         FILDEF PRR,INOUT,TEXT,FILQRD
+         FILDEF QRD,INOUT,TEXT,FILQRR
+         FILDEF QRR,INOUT,TEXT,0
+         FILDEF UNKNOWN,INOUT,NONTEXT,0
+*
+#NONTXT  EQU   FILUNK,*-FILUNK     NON-TEXT FILE TEMPLATE
+*
+*
+*
+*****************************************************************
+*        Fehlerroutinen
+*****************************************************************
+*
+UNDFERR  DS    0H
+         LA    R1,0
+         L     R15,=V($PASERR)
+         BR    R15
+*
+LIMITERR DS    0H
+         LA    R1,1
+         L     R15,=V($PASERR)
+         BR    R15
+*
+BADFDF   DS    0H
+         LA    R1,2
+         L     R15,=V($PASERR)
+         BR    R15
+*
+BADFILE  DS    0H
+         LA    R1,3
+         L     R15,=V($PASERR)
+         BR    R15
+*
+BADWRITE DS    0H
+         LA    R1,4
+         L     R15,=V($PASERR)
+         BR    R15
+*
+BADREAD  DS    0H
+         LA    R1,5
+         L     R15,=V($PASERR)
+         BR    R15
+*
+EOFREAD  DS    0H
+         LA    R1,6
+         L     R15,=V($PASERR)
+         BR    R15
+*
+BADBOOL  DS    0H
+         LA    R1,7
+         L     R15,=V($PASERR)
+         BR    R15
+*
+BIGINT   DS    0H
+         LA    R1,8
+         L     R15,=V($PASERR)
+         BR    R15
+*
+BADINT   DS    0H
+         LA    R1,9
+         L     R15,=V($PASERR)
+         BR    R15
+*
+BADREAL  DS    0H
+         LA    R1,10
+         L     R15,=V($PASERR)
+         BR    R15
+*
+BADRECRD DS    0H
+         LA    R1,11
+         L     R15,=V($PASERR)
+         BR    R15
+*
+BADRSTA  DS    0H
+         LA    R1,12
+         L     R15,=V($PASERR)
+         BR    R15
+*
+BADWSTA  DS    0H
+         LA    R1,13
+         L     R15,=V($PASERR)
+         BR    R15
+*
+*
+*
+*
+*****************************************************************
+*        Unterprogramme fuer Mathe usw.
+*****************************************************************
+*
+*
+*
+*****************************************************************
+*        Floor
+*****************************************************************
+*
+         DC    CL4'FLR '
+FLR      DS    0H
+*
+         LTDR  2,2                 Bei Null: nichts machen
+         BZ    RTN
+         BP    FLRP                positiv?
+*
+FLRN     DS    0H                  negativ
+         STD   2,FL3               Originalwert speichern
+         AD    2,FL4               auf Ganzzahl bringen durch
+         STD   2,FLHILF            Addition von 4f08...
+         LD    2,FLHILF
+         SD    2,FL4
+         CD    2,FL3               identisch mit Original?
+         BZ    RTN                 dann raus
+         SD    2,=D'1.0'           sonst eins abziehen
+         B     RTN
+*
+FLRP     DS    0H                  positiv
+         AD    2,FL4               auf Ganzzahl bringen durch
+         STD   2,FLHILF            Addition von 4f08...
+         LD    2,FLHILF
+         SD    2,FL4
+         B     RTN
+*
+*
+*
+*****************************************************************
+*        Trunc
+*****************************************************************
+*
+         DC    CL4'TRC '
+TRC      DS    0H
+*
+         XR    2,2                 Ergebnis Init auf Null
+         LTDR  2,2                 Bei Null: nichts machen
+         BZ    RTNR2
+*
+         AD    2,FL4               auf Ganzzahl bringen durch
+         STD   2,FLHILF            Addition von 4f08...
+         L     2,FLHILF+4
+         B     RTNR2
+*
+*
+*
+*****************************************************************
+*        Round
+*****************************************************************
+*
+         DC    CL4'RND '
+RND      DS    0H
+*
+         C     R13,=A(CSPSTCK1)    R13 in Pascal stack ?
+         BNE   RNDOK
+*
+         L     R15,=V($PASERR)
+         LA    R1,21
+         BALR  R14,R15
+*
+RNDOK    DS    0H
+         LA    R1,72(R13)          save area position
+         LA    R2,1                function number, roundx = 1
+         ST    R2,112(R1)
+         LA    R2,0                roundx 2nd argument, zero here
+         ST    R2,116(R1)
+         STD   2,120(R1)           value to be rounded
+         L     R15,=V($PASMAT)     call $pasmat
+         BALR  R14,R15
+         LD    2,72(R1)            retrieve rounded value
+         AD    2,FL4               auf Ganzzahl bringen durch
+         STD   2,FLHILF            Addition von 4f08...
+         L     R2,FLHILF+4
+         B     RTNR2
+*
+         LTORG
+*
+*
+*
+*****************************************************************
+*        Unterprogramme fuer file-handling-funktionen
+*****************************************************************
+*
+*
+*
+*****************************************************************
+*        (GET FETCH) GET A CHAR TO (AD)
+*****************************************************************
+*
+PAFGFE   DS    0H
+         LH    R1,FILPTR(AE)
+         LA    R1,1(,R1)
+         CH    R1,FILEND(AE)       TEST FOR END-OF-LINE
+         BNL   PAFGFE2             IF SO, GO AND PROVIDE A BLANK
+         IC    R0,0(R1,AF)         PICK UP INPUT CHARACTER
+*
+PAFGFE1  DS    0H
+         STC   R0,PFILCOMP(AD)     AND PUT INTO CALLER'S BUFFER
+         STH   R1,FILPTR(AE)
+         BR    R5
+*
+PAFGFE2  DS    0H
+         LA    R0,FILBLA           SET EOL CHARACTER
+         MVI   FILEOLN(AE),TRUE    SET EOL FLAG
+         BE    PAFGFE1             GO BACK TO RETURN EOL CHAR
+         CLI   FILTERM(AE),C'Y'    Terminal File?
+         BNE   PAFGET              No, goto PAFGET
+*
+*------- MVI   FILRDBS(AE),1       No READBUF on Terminal files
+*
+         BR    R5
+*
+*
+*
+*****************************************************************
+*        GET A RECORD TO (AF)
+*****************************************************************
+*
+PAFGET   DS    0H
+         TM    FILEOF(AE),1
+         BOR   R5                  RETURN IF END-OF-FILE
+*
+         AIF   (&SYSTEM).SYS42
+         TM    FILOPN(AE),READOPN
+         BZ    BADREAD             IF FILE N.O. FOR READ, COMPLAIN
+.SYS42   ANOP
+*
+PAFGET1  DS    0H
+*
+*----------------------------------------------------------
+*        nur test wg. MVS Bug
+*        Anzahl Pruefen und bei > 2000 EOF Melden
+*----------------------------------------------------------
+*
+*        STM   R1,R5,SAVEGET
+*        LH    R3,XXANZ
+*        LA    R3,1(R3)
+*        STH   R3,XXANZ
+*        CH    R3,=H'2000'
+*        BL    XX001
+*        MVI   FILEOF(AE),1        EOF SETZEN
+*        BR    R5                  UND RUECKSPRUNG
+*
+*X001    DS    0H
+*        LA    R3,TRGET
+*        L     R15,=V($PASTRX)
+*        BALR  R14,R15
+*        LM    R1,R5,SAVEGET
+*
+*----------------------------------------------------------
+*
+         STM   R1,R5,SAVEGET
+         BAL   R5,GETL
+         LM    R1,R5,SAVEGET
+*
+*----------------------------------------------------------
+*        Ausgabe Laenge und Adresse des Buffers
+*----------------------------------------------------------
+*
+*        STM   R1,R5,SAVEGET
+*        ST    AF,DOWO
+*        UNPK  TRGET2+49(9),DOWO(5)
+*        TR    TRGET2+49(8),TABHEX-C'0'
+*        MVI   TRGET2+57,C' '
+*        LH    R2,FILEND(AE)
+*        CVD   R2,DOWO
+*        UNPK  TRGET2+33(5),DOWO+5(3)
+*        OI    TRGET2+37,X'F0'
+*        LA    R3,TRGET2
+*        L     R15,=V($PASTRX)
+*        BALR  R14,R15
+*        L     R2,0(AF)
+*        ST    R2,DOWO
+*        UNPK  TRGET3+16(9),DOWO(5)
+*        TR    TRGET3+16(8),TABHEX-C'0'
+*        MVI   TRGET3+24,C' '
+*        MVC   TRGET3+25(40),0(AF)
+*        LA    R3,TRGET3
+*        L     R15,=V($PASTRX)
+*        BALR  R14,R15
+*        LM    R1,R5,SAVEGET
+*
+*----------------------------------------------------------
+*
+         BR    R5
+*
+TRGET    DC    CL80'TRACE: BEFORE GET-CALL INSIDE PAFGET'
+TRGET2   DC    CL80'TRACE: SUCCESSFUL RETURN LRECL = XXXXX ADDRBUF = XX*
+               XXXXXX'
+TRGET3   DC    CL80'TRACE: BUFFER = XXXXXXXX XXX'
+XXANZ    DC    H'0'
+*
+*
+*
+*
+*****************************************************************
+*        (GET NON-BLANK) GET NEXT NON-BLANK TO (AD)
+*****************************************************************
+*
+PAFGNB   DS    0H
+         ST    R5,RETAGNB
+PAFGNBA  LH    R1,FILPTR(AE)       LOAD ADRESS OF CHAR
+PAFGNBN  CH    R1,FILEND(AE)       AT THE END OF BUFFER ?
+         BL    PAFGNB0             NO, TEST CHAR
+*
+         BAL   R5,PAFGET           GET NEXT BUFFER
+*
+         TM    FILEOF(AE),1        HAVE WE HIT THE EOF?
+         BNO   PAFGNBA             NO, GET CHAR AT BEGIN OF BUFFER
+         L     R5,RETAGNB
+         BR    R5                  MAKE ERROR RETURN
+*
+PAFGNB0  LA    R15,0(R1,AF)        TEST CHAR AT CURRENT POSITION
+         CLI   0(R15),FILBLA       IS IT BLANK ?
+         BNE   PAFGNBF             JUMP IF WE HAVE A NON-BLANK
+         LA    R1,1(,R1)           OTHERWISE, STEP TO NEXT POSITION
+         B     PAFGNBN
+*
+PAFGNBF  IC    R0,0(R15)           TRANSFER THE CHAR TO
+         STC   R0,PFILCOMP(AD)     THE FILE BUFFER
+         MVI   FILEOLN(AE),FALSE   CLEAR EOL FLAG
+         STH   R1,FILPTR(AE)       RESTORE THE FILE POINTER
+         L     R5,RETAGNB
+         B     4(R5)               AND MAKE NORMAL RETURN
+*
+*
+*
+*
+*****************************************************************
+*        (PUT-STORE) PUT A CHAR FROM (AD)
+*****************************************************************
+*
+PAFPST   DS    0H
+         ST    R5,RETAPST
+*
+PAFPST1  LH    R1,FILPTR(AE)
+         CH    R1,FILEND(AE)       TEST IF BUFFER FULL
+         BL    PAFPST2             CLEAR IT FIRST
+         BAL   R5,PAFPUT           EMPTY THE BUFFER
+         B     PAFPST1
+*
+PAFPST2  IC    R0,PFILCOMP(AD)
+         STC   R0,0(R1,AF)
+         LA    R1,1(R1)            INCREMENT CHAR. PTR.
+         STH   R1,FILPTR(AE)
+         L     R5,RETAPST
+         BR    R5
+*
+*
+*
+*****************************************************************
+*        PUT A RECORD (FROM AF)
+*****************************************************************
+*
+PAFPUT   DS    0H
+         AIF   (&SYSTEM).SYS44
+         TM    FILOPN(AE),WRITEOPN
+         BZ    BADWRITE            IF N.O. FOR WRITE, COMPLAIN
+.SYS44   ANOP
+*
+*        PREPARE THE OUTPUT BUFFER FOR TRANSMITTING TO O.S.
+*
+         CLI   DCBRECFM,X'80'
+         BNL   PAFPUT4             JUMP IF F OR U-FORMAT
+         LA    R0,6                MIN LENGTH FOR VBA RECORDS
+         TM    DCBRECFM,X'06'
+         BNZ   *+6                 JUMP IF CONTROL CHARS
+         BCTR  R0,0                ADJUST MIN LENGTH
+         LH    R1,FILPTR(AE)
+         CR    R1,R0
+         BNL   PAFPUT2             JUMP IF RECORD SIZE OK
+         LTR   AF,AF               RETURN IF THE I/O BUFFER IS NOT
+         BZ    PAFPUT4             ALLOCATED  (FILE NEWLY OPENED)
+         LA    R0,FILBLA
+         STC   R0,0(R1,AF)         PROVIDE 1 CHAR AT LEAST
+         LA    R1,1(R1)
+*
+**********************************************************************
+*        (ibm370 dependency: STCM)
+**********************************************************************
+*
+PAFPUT2  STCM  R1,3,0(AF)          SET RDW FOR V-FORMAT
+*
+PAFPUT4  DS    0H
+         TM    FILOPN(AE),TEXTMOVE
+         BZ    PAFPUT5
+*
+         PUT   FILDCB(AE),0(AF)
+         MVC   FILEND(2,AE),DCBLRECL
+         B     PAFPUT5A
+*
+PAFPUT5  DS    0H
+         PUT   FILDCB(AE)          WRITE THE RECORD
+         ST    R1,FILBUF(AE)       SAVE ADDRESS OF NEXT OUTPUT BUFFER#
+         MVC   FILEND(2,AE),DCBLRECL  RESET BUFFER LENGTH
+         LR    AF,R1
+*
+PAFPUT5A DS    0H
+         AIF   (&SYSTEM).SYS415
+         L     R0,FILLIM(AE)       LOAD LINES LIMIT
+         BCT   R0,PAFPUT6          DECREMENT
+         ST    R0,FILLIM(AE)       OVERFLOW OF COUNTER
+         B     LIMITERR
+PAFPUT6  ST    R0,FILLIM(AE)       PUT DECREMENTED COUNT BACK
+.SYS415  ANOP
+*
+*        B     PAFCLR              I.E., NEXT LINE
+*
+*
+*
+*****************************************************************
+*        CLEAR THE OUTPUT BUFFER TO BLANKS
+*****************************************************************
+*
+PAFCLR   DS    0H
+         LH    R1,FILBEG(AE)
+         STH   R1,FILPTR(AE)       RESET CHAR. POINTER
+         CLI   DCBRECFM,X'80'      JUMP IF F OR U-FORMAT
+         BNL   PAFCLR1
+         TM    DCBRECFM,X'06'
+         BZR   R5                  RETURN IF NO CONTROL CHAR NEEDED
+         MVI   4(AF),FILBLA        SET DEFAULT CONTROL CHAR
+         TM    DCBRECFM,X'04'
+         BOR   R5                  RETURN IF ASCII CONTROL CHARS
+         MVI   4(AF),X'09'         REPLACE WITH MACHINE CHAR
+         BR    R5
+PAFCLR1  DS    0H
+         LH    R15,FILEND(AE)      LOAD BUFFER LENGTH
+*
+**********************************************************************
+*        (ibm370 dependency: MVCL)
+**********************************************************************
+*
+         LR    R14,AF
+         LA    R1,FILBLA
+         SLL   R1,24               SET FILL CHARACTER
+         MVCL  R14,R0              CLEAR THE I/O BUFFER
+*
+         TM    DCBRECFM,X'02'
+         BZR   R5                  RETURN IF NOT MACH CONTROL CHAR
+         MVI   0(AF),X'09'
+         BR    R5
+*
+CLRBUF   MVC   1(0,R1),0(R1)       PROPAGATE BLANKS
+*
+*
+*
+*****************************************************************
+*        check file status
+*****************************************************************
+*
+PAFCHK   DS    0H
+         TM    FILOPN(AE),TEXTFLAG
+         BZ    PAFCHKE             JUMP IF NON-TEXT FILE
+*
+         CLI   FILSTA(AE),C'3'
+         BE    PAFCHK3             JUMP IF FILE IN R/W STATE
+         CLI   FILSTA(AE),C'0'
+         BE    PAFCHK2             JUMP IF FILE NEEDS RES/REW
+         CLI   FILSTA(AE),C'1'
+         BNE   BADRSTA             error on other filsta values
+         MVI   FILSTA(AE),C'3'
+         B     PAFCHK3             JUMP READY
+*
+PAFCHK2  DS    0H                  DO IMPLICIT RESET ON FILE
+         STM   R1,R5,SAVECHK
+*
+         L     R15,=A(PAFCLS)
+         BALR  R14,R15             GO AND CLOSE THE FILE
+*
+         L     R15,=A(PAFGOP)
+         BALR  R14,R15             open file for read
+*
+*                                  only in case of textfile there is
+*                                  a return from filgop, otherwise
+*                                  there is a branch to label get1
+*
+         L     R14,=A(ABNDCODE)
+         CLI   0(R14),C' '
+         BNE   PAFCHK4
+*
+         BAL   R5,PAFGET
+*
+         LM    R1,R5,SAVECHK
+         MVI   FILSTA(AE),C'3'
+         B     PAFCHKE
+*
+PAFCHK3  DS    0H
+         CLI   FILRDBS(AE),1       READBUF SCHEDULED ?
+         BNE   PAFCHKE             JUMP IF NOT
+*
+         MVI   FILRDBS(AE),0       switch readbuf schedule off
+         STM   R1,R5,SAVECHK       save regs
+*
+*        MVC   TREOF+18(1),FILEOF(AE)
+*        OI    TREOF+18,X'F0'
+*        LA    R3,TREOF
+*        L     R15,=V($PASTRX)
+*        BALR  R14,R15
+*
+*        MVC   TREOF2+18(1),FILEOFP(AE)
+*        OI    TREOF2+18,X'F0'
+*        LA    R3,TREOF2
+*        L     R15,=V($PASTRX)
+*        BALR  R14,R15
+*
+         BAL   R5,PAFGET           NOW PAFGET = READ BUFFER
+*
+         LM    R1,R5,SAVECHK       restore regs
+         B     PAFCHKE
+*
+PAFCHK4  DS    0H
+         L     R15,=A(PAFCLS)
+         BALR  R14,R15             CLOSE FILE FOLLOWING OPEN ERROR
+         LM    R1,R5,SAVECHK       restore regs
+         MVI   FILSTA(AE),C'0'     set file status to 0
+*
+PAFCHKE  DS    0H
+         BR    R5
+*
+TREOF    DC    CL80'TRACE: EOF-FLAG = X (FILEOF)  - nach READLN'
+TREOF2   DC    CL80'TRACE: EOF-FLAG = X (FILEOFP) - nach READLN'
+*
+*
+*
+*****************************************************************
+*        check file status (write)
+*****************************************************************
+*
+PAFCHKW  DS    0H
+         TM    FILOPN(AE),TEXTFLAG
+         BZ    PAFCHKWE            JUMP IF NON-TEXT FILE
+*
+         CLI   FILSTA(AE),C'4'
+         BE    PAFCHKWE            JUMP IF FILE IN R/W STATE
+         CLI   FILSTA(AE),C'0'
+         BE    PAFCHKW2            JUMP IF FILE NEEDS RES/REW
+         CLI   FILSTA(AE),C'2'
+         BNE   BADWSTA             error on other filsta values
+         MVI   FILSTA(AE),C'4'
+         B     PAFCHKWE            JUMP READY
+*
+PAFCHKW2 DS    0H                  DO IMPLICIT REWRITE ON FILE
+         STM   R1,R5,SAVECHK
+*
+         L     R15,=A(PAFCLS)
+         BALR  R14,R15             GO AND CLOSE THE FILE
+*
+         L     R15,=A(PAFPOP)
+         BALR  R14,R15             open file for write
+*
+         L     R14,=A(ABNDCODE)
+         CLI   0(R14),C' '
+         BNE   PAFCHKW4
+*
+         LM    R1,R5,SAVECHK
+         MVI   FILSTA(AE),C'4'
+PAFCHKWE DS    0H
+         BR    R5
+*
+PAFCHKW4 DS    0H
+         L     R15,=A(PAFCLS)
+         BALR  R14,R15             CLOSE FILE FOLLOWING OPEN ERROR
+         LM    R1,R5,SAVECHK       restore regs
+         MVI   FILSTA(AE),C'0'     set file status to 0
+         BR    R5
+*
+         LTORG
+*
+*
+*
+*****************************************************************
+*        RESET AN INPUT FILE
+*****************************************************************
+*
+         DS    0H
+         DC    CL4'RES '
+RES      DS    0H
+         FILADR ,
+         CLI   FILSTA(AE),C'1'     if filsta is 1, last call was reset
+         BE    RTN                 then no action
+*
+         L     R15,=A(PAFCLS)
+         BALR  R14,R15             GO AND CLOSE THE FILE
+*
+         L     R15,=A(PAFGOP)
+         BALR  R14,R15             open file for read
+*
+         L     R14,=A(ABNDCODE)
+         CLI   0(R14),C' '
+         BNE   RES1
+*
+*                                  only in case of textfile there is
+*                                  a return from PAFGOP, otherwise
+*                                  there is a branch to label GET1
+*
+*------- CLI   FILTERM(AE),C'Y'    don't call PAFGET on terminal files
+*------- BE    RES3
+         BAL   R5,PAFGET
+         B     RES2
+*
+RES3     DS    0H
+         MVI   FILRDBS(AE),1       READBUF SCHEDULED := 1
+*
+RES2     DS    0H
+         MVI   FILSTA(AE),C'1'     set file status to 1
+         B     RTN                 RETURN TO PASCAL PROGRAM
+*
+RES1     DS    0H
+         L     R15,=A(PAFCLS)
+         BALR  R14,R15             CLOSE FILE FOLLOWING OPEN ERROR
+         MVI   FILSTA(AE),C'0'     set file status to 0
+         B     RTN
+*
+*
+*
+*****************************************************************
+*        GET AN INPUT RECORD
+*****************************************************************
+*        changed opp 15.08.2020
+*        don't skip first byte after implied reset
+*****************************************************************
+*
+         DS    0H
+         DC    CL4'GET'
+GET      DS    0H
+         FILADR ,
+         TM    FILEOF(AE),1
+         BO    RTN
+         TM    FILOPN(AE),TEXTFLAG
+         BZ    GET1                jump if non-text file
+*
+*****************************************************************
+*        GET processing for textfiles
+*        reworked 08.2020 - opp
+*****************************************************************
+*
+         STM   R1,R5,SAVEGET       save regs 1 to 5
+*
+*****************************************************************
+*        if FILE status is zero, call PAFCHK to do open etc.
+*        no subsequent PAFGFE
+*        same goes if Read Buffer has been scheduled due to
+*        preceeding EOLN processing
+*        otherwise call PAFGFE to advance the buffer pointer
+*        after that check for EOLN and schedule Read Buffer
+*        for next time
+*****************************************************************
+*        GET reads next buffer, no matter if Terminal file or not
+*****************************************************************
+*
+         CLI   FILSTA(AE),C'0'     if file not open or
+         BE    GET7
+         CLI   FILRDBS(AE),1       if Readbuf scheduled
+         BE    GET7                go to GET7 ... PAFCHK
+*
+         BAL   R5,PAFGFE           otherwise: advance one character
+         B     GET6
+*
+GET7     DS    0H
+         BAL   R5,PAFCHK           file open and buffer read
+*
+GET6     DS    0H
+         CLI   FILEOLN(AE),TRUE    check if at end of line
+         BNE   GET4
+         MVI   FILRDBS(AE),1       if so: schedule Readbuf
+GET4     DS    0H
+         LM    R1,R5,SAVEGET       restore regs 1 to 5
+         B     RTN
+*
+*****************************************************************
+*        GET processing for binary files
+*        simple
+*****************************************************************
+*
+GET1     DS    0H
+         STM   R1,R5,SAVEGET
+         BAL   R5,GETM
+         LM    R1,R5,SAVEGET
+*
+         CLI   DCBRECFM,X'80'
+         BL    GET2                JUMP IF V-FORMAT
+         LH    R1,DCBLRECL
+         B     GET3
+GET2     LH    R1,0(AF)            LOAD RDW
+         SH    R1,=H'4'            SUBTRACT RDW LENGTH
+GET3     ST    R1,PFILRSZ(AD)      PUT SIZE BACK FOR PASCAL PROG ?
+         CH    R1,FILCSZ(AE)       CHECK THAT INPUT RECORD ISNT
+         BH    BADRECRD            TOO LARGE FOR BUFFER
+         B     RTN
+*
+*
+*
+*****************************************************************
+*        EOT (SKIP BLANKS TO END OF TEXT)
+*****************************************************************
+*
+EOT      DS    0H
+         FILADR ,
+         BAL   R5,PAFCHK           CHECK FILE STATUS
+         BAL   R5,PAFGNB
+         B     RTN
+         B     RTN
+*
+*
+*
+*****************************************************************
+*        READ-LINE (FOR TEXTFILE ONLY)
+*****************************************************************
+*
+         DS    0H
+         DC    CL4'RLN'
+RLN      DS    0H
+         FILADR ,
+*
+*****************************************************************
+*        SET readbuf_sched to 0, because readln is done anyway
+*        otherwise PAFCHK will do an additional pafget,
+*        which is plain wrong
+*****************************************************************
+*
+         MVI   FILRDBS(AE),0       READBUF SCHEDULED := 0
+         BAL   R5,PAFCHK           CHECK FILE STATUS
+*
+         CLI   FILTERM(AE),C'Y'    don't filget on terminal files
+         BE    RLN2
+*
+         BAL   R5,PAFGET
+         B     RTN
+*
+RLN2     DS    0H
+         LH    R1,FILEND(AE)       set buffer etc. to end of line
+         STH   R1,FILPTR(AE)
+         MVI   FILEOLN(AE),TRUE
+         MVI   PFILCOMP(AD),FILBLA
+         MVI   FILRDBS(AE),1       READBUF SCHEDULED := 1
+         B     RTN
+*
+*
+*
+*
+*****************************************************************
+*        EOL (SKIP BLANKS TO END OF LINE)
+*****************************************************************
+*
+EOL      DS    0H
+         FILADR ,
+         BAL   R5,PAFCHK           CHECK FILE STATUS
+         TM    FILEOF(AE),1
+         BO    RTN                 RETURN IF END OF FILE
+         LH    R1,FILPTR(AE)
+EOL1     CH    R1,FILEND(AE)
+         BNL   EOL3                JUMP IF AT END OF LINE
+         LA    R15,0(R1,AF)
+         CLI   0(R15),FILBLA
+         BNE   EOL2                EXIT LOOP IF A NON-BLANK
+         LA    R1,1(,R1)           ADVANCE TO NEXT CHAR.
+         B     EOL1
+EOL2     IC    R0,0(R15)           LOAD NON-BLANK CHAR.
+         STC   R0,PFILCOMP(AD)     PASS TO PASCAL PROG.
+         MVI   FILEOLN(AE),FALSE   REDUNDANT?
+         STH   R1,FILPTR(AE)
+         B     RTN
+EOL3     DS    0H
+         MVI   FILEOLN(AE),TRUE
+         MVI   PFILCOMP(AD),FILBLA
+         STH   R1,FILPTR(AE)
+         B     RTN
+*
+*
+*
+*****************************************************************
+*        RDB, (READ BOOLEAN)   ADR(FILE),ADR(BOOLEAN)
+*****************************************************************
+*        2023.03: RDB has been replaced by Pascal Code (PASLIBX)
+*****************************************************************
+*
+*
+         DS    0H
+         DC    CL4'RDB'
+RDB      DS    0H
+         DC    H'0'                abend here
+*
+*
+*
+*
+*****************************************************************
+*        RDI/RDH/RDY (READ INTEGER)    AD: ADR(FILE),  R2: ADR(INT)
+*****************************************************************
+*        2023.03: ... has been replaced by Pascal Code (PASLIBX)
+*****************************************************************
+*
+         DS    0H
+         DC    CL4'RDY'
+RDY      DS    0H
+         DC    H'0'                abend here
+*
+         DS    0H
+         DC    CL4'RDH'
+RDH      DS    0H
+         DC    H'0'                abend here
+*
+         DS    0H
+         DC    CL4'RDI'
+RDI      DS    0H
+         DC    H'0'                abend here
+*
+*
+*
+*****************************************************************
+*        RDS, (READ STRING)
+*        R2 = STRING ADDRESS, R3 = STRING LENGTH !
+*****************************************************************
+*        2023.03: RDS has been replaced by RFS
+*****************************************************************
+*
+         DS    0H
+         DC    CL4'RDS'
+RDS      DS    0H
+         DC    H'0'                abend here
+*
+*
+*
+*****************************************************************
+*        RDV, (READ STRING)
+*        R2 = STRING ADDRESS, R3 = STRING LENGTH !
+*****************************************************************
+*        2023.03: RDV has been replaced by RFV
+*****************************************************************
+*
+         DS    0H
+         DC    CL4'RDV'
+RDV      DS    0H
+         DC    H'0'                abend here
+*
+*
+*
+*****************************************************************
+*        RDC (READ CHAR FROM FILE)
+*        same as RFC to support RFC change ... 25.08.2020
+*        R2 = ADDR. OF CHAR
+*        R3 = field width (-1 = default)
+*****************************************************************
+*        2023.03: RDC has been replaced by RFC
+*****************************************************************
+*
+         DS    0H
+         DC    CL4'RDC'
+RDC      DS    0H
+         DC    H'0'                abend here
+*
+*
+*
+*****************************************************************
+*        RDR, READ THE NEXT (REAL) NUMBER INTO (GRG2)
+*****************************************************************
+*        2023.03: RDR has been replaced by Pascal Code
+*****************************************************************
+*
+         DS    0H
+         DC    CL4'RDR'
+RDR      DS    0H
+         DC    H'0'                abend here
+*
+*
+*
+*****************************************************************
+*        RFC (READ CHAR FROM FILE)
+*        R2 = ADDR. OF CHAR
+*        R3 = field width (-1 = default)
+*****************************************************************
+*        change 27.08.2020:
+*        ignore target addr in R2
+*        return result (char) in R3, because the compiler
+*        expects it there. The compiler generates CHK instruction
+*        and then STO C to store the result into target
+*****************************************************************
+*
+         DS    0H
+         DC    CL4'RFC'
+RFC      DS    0H
+         FILADR ,
+*
+         LTR   R3,R3               check field width
+         BZ    RFC01               if zero read nothing
+         BP    RFC02               if positive use it as is
+         LA    R3,1                otherwise set to 1 (default)
+*
+RFC02    DS    0H
+         BAL   R5,PAFCHK           check file status
+*
+         XR    R4,R4               set R4 to zero (for temp result)
+         IC    R4,PFILCOMP(AD)     insert char from file buffer
+*
+RFC03    DS    0H
+         BAL   R5,PAFGFE           get next character
+         CLI   FILEOLN(AE),TRUE    if eoln leave loop
+         BE    RFCXX
+         BCT   R3,RFC03            repeat get until r3 = zero
+         B     RFCXX               and quit
+*
+RFC01    DS    0H
+         LA    R3,FILBLA           store blank into target reg
+         B     RTNR3               and quit
+*
+RFCXX    DS    0H
+         LR    R3,R4               result into register R3
+         B     RTNR3               and quit
+*
+*
+*
+*****************************************************************
+*        RFS (READ char array - fixed size)
+*        R2 = address of char array
+*        R3 = length of char array
+*        R4 = field width (-1 = default)
+*****************************************************************
+*
+         DS    0H
+         DC    CL4'RFS'
+RFS      DS    0H
+         FILADR ,
+*
+         LTR   R4,R4               check field width
+         BZ    RFS01               if zero read nothing
+         BP    RFS02               if positive use it as is
+         LR    R4,R3               otherwise set to field length (R3)
+*
+RFS02    DS    0H
+         BAL   R5,PAFCHK           check file status
+*
+         CLI   FILEOF(AE),TRUE     if eof set then
+         BNE   RFSNOEOF
+*
+         LA    R0,FILBLA           end of line character
+         STC   R0,PFILCOMP(AD)     set current char
+*
+RFS01    DS    0H
+         XR    R14,R14             source address irrelevant
+         L     R15,=X'40000000'    source length zero, fill w. blank
+         MVCL  R2,R14              set string to blank
+         B     RFSZ                go to end of function
+*
+RFSNOEOF DS    0H
+         LH    R15,FILEND(AE)
+         LH    R14,FILPTR(AE)
+         SR    R15,R14             compute number of chars left
+         CR    R15,R4              enough chars left (w.r. field width)
+         BH    RFSH
+         MVC   FILPTR(2,AE),FILEND(AE)  filptr to filend
+         MVI   FILEOLN(AE),TRUE         incidate eoln
+         B     RFSL1
+*
+RFSH     DS    0H
+         LR    R0,R14              R14 = filptr (see above)
+         AR    R0,R4               add field width (R4) to filptr
+         STH   R0,FILPTR(AE)       new position to filptr
+*
+RFSL1    DS    0H
+         CR    R15,R4              if length of sender > field width
+         BNH   RFSL2               then
+         LR    R15,R4              set length of sender to field width
+*
+RFSL2    DS    0H
+         IC    R0,PFILCOMP(AD)     start with current character
+*
+**********************************************************************
+*        (ibm370 dependency: MVCL)
+**********************************************************************
+*
+         STC   R0,0(R2)            copy first char from file buffer
+         LA    R14,1(R14)          increment source address
+         BCTR  R15,0               reduce length of sender
+         LA    R2,1(R2)            increment target address
+         BCTR  R3,0                reduce length of target
+         LTR   R3,R3               if no more bytes to transfer
+         BNP   RFSF3               we're done
+         LTR   R15,R15             check length of sender
+         BNM   RFSF2               if negative
+         SR    R15,R15             set to zero
+*
+RFSF2    DS    0H
+         AR    R14,AF              addr of first char
+         ICM   R15,8,=AL1(FILBLA)  set fill char
+         MVCL  R2,R14              now copy (rest of string)
+*
+RFSF3    DS    0H
+         LH    R14,FILPTR(AE)
+         CLI   FILEOLN(AE),TRUE    eoln ?
+         BE    RFSF4
+         IC    R0,0(R14,AF)        load next input char
+         STC   R0,PFILCOMP(AD)     set current char
+         B     RFSZ
+*
+RFSF4    DS    0H
+         LA    R0,FILBLA           end of line character
+         STC   R0,PFILCOMP(AD)     set current char
+*
+*****************************************************************
+*        if eoln, do readbuf on next iteration
+*****************************************************************
+*
+         CLI   FILTERM(AE),C'Y'    if not a terminal file
+         BE    RFSZ
+         MVI   FILRDBS(AE),1       schedule Readbuf for next RFS
+*
+RFSZ     DS    0H
+         B     RTN
+*
+         LTORG
+*
+*
+*
+*****************************************************************
+*        RFV (READ varchar a.k.a. string)
+*        R2 = address of string
+*        R3 = maxlength of string
+*        R4 = field width (-1 = default)
+*****************************************************************
+*
+         DS    0H
+         DC    CL4'RFV'
+RFV      DS    0H
+         FILADR ,
+*
+         LTR   R4,R4               check field width
+         BZ    RFV01               if zero read nothing
+         BP    RFV02               if positive use it as is
+         LR    R4,R3               otherwise set to field length (R3)
+*
+RFV02    DS    0H
+*
+         BAL   R5,PAFCHK           check file status
+*
+         CLI   FILEOF(AE),TRUE     if eof set then
+         BNE   RFVNOEOF
+*
+         LA    R0,FILBLA           end of line character
+         STC   R0,PFILCOMP(AD)     set current char
+*
+RFV01    DS    0H
+         STH   R3,0(R2)            store R3 to maxlength
+         XR    R14,R14
+         STH   R14,2(R2)           store zero to actual length
+         B     RFVZ                go to end of function
+*
+RFVNOEOF DS    0H
+         LH    R15,FILEND(AE)
+         LH    R14,FILPTR(AE)
+         SR    R15,R14             compute number of chars left
+         CR    R15,R4              enough chars left (w.r. field width)
+         BH    RFVH
+         MVC   FILPTR(2,AE),FILEND(AE)  filptr to filend
+         MVI   FILEOLN(AE),TRUE         incidate eoln
+         B     RFVL1
+*
+RFVH     DS    0H
+         LR    R0,R14              R14 = filptr (see above)
+         AR    R0,R4               add field width (R4) to filptr
+         STH   R0,FILPTR(AE)       new position to filptr
+         LR    R15,R4              only transfer max. R4 bytes
+         CR    R15,R3
+         BNH   RFVL1
+         LR    R15,R3              but not more than maxlength
+*
+RFVL1    DS    0H
+         STH   R3,0(R2)            store maxlength to String maxl
+         STH   R15,2(R2)           store actlength to String actl
+         LA    R2,4(R2)            point R2 to String content
+         IC    R0,PFILCOMP(AD)     start with current character
+         LTR   R15,R15             if actlen = zero
+         BNP   RFVL2A              don't copy characters
+*
+*****************************************************************
+*        error in MVS version (did not show up in CMS)
+*        IC may not be executed after end of buffer, that is,
+*        when BCT will arrive at zero - opp - 08.01.2023
+*****************************************************************
+*
+RFVL2    DS    0H
+         STC   R0,0(R2)            copy chars one by one
+         LA    R14,1(R14)          increment source address
+         LA    R2,1(R2)            increment target address
+         BCT   R15,RFVL21
+         B     RFVL2A
+RFVL21   DS    0H
+         IC    R0,0(R14,AF)        load next input char
+         B     RFVL2
+*
+*****************************************************************
+*        ready with read loop
+*        move R0 to PFILCOMP, if not eoln, or
+*        move Blank to PFILCOMP, if eoln
+*****************************************************************
+*
+RFVL2A   DS    0H
+         CLI   FILEOLN(AE),TRUE    eoln ?
+         BE    RFVL3
+         STC   R0,PFILCOMP(AD)     set current char
+         B     RFVZ
+RFVL3    DS    0H
+         LA    R0,FILBLA           end of line character
+         STC   R0,PFILCOMP(AD)     set current char
+*
+*****************************************************************
+*        if eoln, do readbuf on next iteration
+*****************************************************************
+*
+         CLI   FILTERM(AE),C'Y'    if not a terminal file
+         BE    RFVZ
+         MVI   FILRDBS(AE),1       schedule Readbuf for next RFS
+*
+RFVZ     DS    0H
+         B     RTN
+*
+         LTORG
+*
+*
+*
+*****************************************************************
+*  REW (REWRITE = REWIND FOR OUTPUT)
+*****************************************************************
+*
+         DS    0H
+         DC    CL4'REW'
+REW      DS    0H
+         FILADR ,
+*
+         CLI   FILSTA(AE),C'2'     if filsta is 2, last call w. rewrite
+         BE    RTN                 then no action
+*
+         L     R15,=A(PAFCLS)
+         BALR  R14,R15             go and close the file
+*
+         L     R15,=A(PAFPOP)
+         BALR  R14,R15             open file for write
+*
+         L     R14,=A(ABNDCODE)
+         CLI   0(R14),C' '
+         BE    REW1
+         L     R15,=A(PAFCLS)
+         BALR  R14,R15             CLOSE FILE FOLLOWING OPEN ERROR
+         MVI   FILSTA(AE),C'0'     set file status to 0
+         B     RTN
+*
+REW1     DS    0H
+         TM    FILOPN(AE),TEXTFLAG
+         BZ    RTN                 return if not a text file
+         MVI   FILSTA(AE),C'2'     set file status to 2
+         B     RTN
+*
+*
+*
+*
+*****************************************************************
+*        PUT (PASCAL 'PUT' OPERATION)
+*****************************************************************
+*
+         DS    0H
+         DC    CL4'PUT '
+PUT      DS    0H
+         FILADR ,
+*
+*************************************************************
+*        03.10.2017 - versuchsweise test auf eof auskomm.
+*************************************************************
+*
+*----    TM    FILEOF(AE),1
+*----    BZ    RTN
+*
+         TM    FILOPN(AE),TEXTFLAG
+         BZ    PUT1                JUMP IF NOT A TEXT-FILE
+         BAL   R5,PAFCHKW          CHECK FILE STATUS (WRITE)
+         BAL   R5,PAFPST
+         B     RTN
+PUT1     LH    R1,FILRSZ(AE)       GET CORRECT RECORD SIZE
+         SLL   R1,16               CONSTRUCT A RDW
+         ST    R1,PFILRSZ(AD)      - IN CASE FILE HAS V-FORMAT
+         PUT   FILDCB(AE),(AF)     WRITE THE RECORD
+         AIF   (&SYSTEM).SYS425
+         L     R0,FILLIM(AE)
+         BCT   R0,PUT2             UPDATE OUTPUT LIMIT
+         ST    R0,FILLIM(AE)       - LIMIT EXCEEDED
+         B     LIMITERR
+PUT2     ST    R0,FILLIM(AE)       PUT UPDATED COUNT BACK
+.SYS425  ANOP
+         B     RTN
+*
+*
+*
+*****************************************************************
+*        WLN (WRITE LINE), TERMINATE CURRENT OUTPUT LINE
+*        18.08.2016: VERSUCH, SOFORT ZU SCHREIBEN
+*****************************************************************
+*
+         DS    0H
+         DC    CL4'WLN '
+WLN      DS    0H
+         FILADR ,
+         BAL   R5,PAFCHKW          CHECK FILE STATUS (WRITE)
+*
+         TM    FILOPN(AE),TEXTMOVE
+         BZ    WLN1
+*
+         BAL   R5,PAFPUT
+         B     RTN
+*
+WLN1     DS    0H
+         LH    R1,FILPTR(AE)
+         CH    R1,FILEND(AE)       IF BUFFER IS MARKED "OVER-FULL",
+         BNH   WLN2                WE WRITE IT OUT
+         BAL   R5,PAFPUT
+         LH    R1,FILPTR(AE)
+WLN2     DS    0H
+         BCTR  R1,0
+         STH   R1,FILEND(AE)       FLAG BUFFER AS "OVER-FULL"
+*
+         B     RTN
+*
+*
+*
+*
+*****************************************************************
+*        WRB (WRITE BOOLEAN)
+*        R1 = ADR(FILE)
+*        R2 = BOOLEAN
+*        R3 = FIELD_WIDTH (see comment on WRS)
+*****************************************************************
+*
+         DC    CL4'WRB'
+WRB      LTR   R2,R2
+         LA    R2,=C'TRUE'
+         LA    R4,4
+         BNZ   WRS                 JUMP IF "TRUE"
+WRB1     LA    R2,=C'FALSE'
+         LA    R4,5
+         B     WRS
+*
+*
+*
+*
+*****************************************************************
+*        WRV (WRITE VARCHAR)
+*        R1 = ADR(FILE)
+*        R2 = VARCHAR
+*        R3 = FIELD_WIDTH (see comment on WRS)
+*****************************************************************
+*
+         DC    CL4'WRV'
+WRV      DS    0H
+         LH    R4,0(R2)
+         LTR   R4,R4               load direct / indirect indicator
+         BM    WRV2
+*
+         LH    R4,2(R2)            load varchar length
+         LA    R2,4(R2)            set ptr to varchar content
+         LTR   R3,R3               if field width nonzero
+         BNZ   WRS                 continue with WRS
+         LR    R3,R4               else set field width to length
+         B     WRS                 continue with WRS
+*
+WRV2     DS    0H
+         LH    R4,2(R2)            load varchar length
+         L     R2,4(R2)            set ptr to varchar content
+         LTR   R3,R3               if field width nonzero
+         BNZ   WRS                 continue with WRS
+         LR    R3,R4               else set field width to length
+         B     WRS                 continue with WRS
+*
+*
+*
+*****************************************************************
+*        WRP (WRITE pointer)
+*        R1 = ADR(FILE)
+*        R2 = Pointer
+*        R3 = FIELD_WIDTH
+*****************************************************************
+*
+         DC    CL4'WRP'
+WRP      DS    0H
+         ST    R2,PINT             Print Pointer as Hex String
+         UNPK  ZINT(9),PINT(5)         Convert
+         TR    ZINT(8),TABHEX-C'0'     to Hex
+         LA    R2,ZINT
+         LA    R4,8                string length = 8
+         LTR   R3,R3               if given length = 0
+         BNZ   WRP1                then
+         LA    R3,8                set default length to 8
+WRP1     DS    0H
+         CR    R3,R4               if length > 8, all is ok
+         BNL   WRS
+         SR    R4,R3               otherwise inc address in R2
+         AR    R2,R4               so that rightmost part is printed
+         LR    R4,R3               adjust R4
+         B     WRS
+*
+*
+*
+*****************************************************************
+*        WRX (WRITE scalar)
+*        R1 = ADR(FILE)
+*        R2 = Scalar value
+*        R3 = Length value
+*        R4 = Pointer to Scalar String Vektor
+*****************************************************************
+*        2023.03: WRX has been replaced by Pascal Code
+*        in PASLIBX.PAS
+*****************************************************************
+*
+         DC    CL4'WRX'
+WRX      DS    0H
+         DC    H'0'                abend here
+*
+*
+*
+*****************************************************************
+*        WRC
+*        R1 = ADR(FILE)
+*        R2 = Char
+*        R3 = FIELD_WIDTH
+*****************************************************************
+*
+         DS    0H
+         DC    CL4'WRC '
+WRC      DS    0H
+         FILADR ,
+         BAL   R5,PAFCHKW          CHECK FILE STATUS (WRITE)
+         BCTR  R3,0
+         LTR   R3,R3
+         BZ    WRC3
+         BM    RTN
+WRC2     MVI   PFILCOMP(AD),FILBLA
+         BAL   R5,PAFPST
+         BCT   R3,WRC2
+WRC3     STC   R2,PFILCOMP(AD)
+         BAL   R5,PAFPST
+         B     RTN
+*
+*
+*
+*****************************************************************
+*        WRS
+*        R1 = ADR(FILE)
+*        R2 = Char
+*        R3 = FIELD_WIDTH (if negative, adjust left)
+*        R4 = String length (may be longer than R3, or shorter)
+*****************************************************************
+*
+         DS    0H
+         DC    CL4'WRS '
+WRS      DS    0H
+         FILADR ,
+*
+         BAL   R5,PAFCHKW          CHECK FILE STATUS (WRITE)
+         LTR   R3,R3
+         BZ    RTN                 ZERO FIELD WIDTH, RETURN
+*
+*****************************************************************
+*        IF R3 > R4, WRITE BLANKS BEFORE STRING CONTENT
+*        THAT IS: WRITE STRING CONTENT RIGHT JUSTIFIED
+*        OTHERWISE WRITE STRING LEFT JUSTIFIED
+*****************************************************************
+*
+         BP    WRSC1
+         B     WRSC2
+*
+WRSC1    DS    0H
+         CR    R3,R4
+         BH    WRSC11
+         LR    R4,R3
+*
+WRSC11   DS    0H
+         SR    R3,R4
+         B     WRSC3
+*
+WRSC2    DS    0H
+         LCR   R3,R3
+         CR    R3,R4
+         BH    WRSC21
+         LR    R4,R3
+*
+WRSC21   DS    0H
+         SR    R3,R4
+         LCR   R3,R3
+*
+WRSC3    DS    0H
+         LH    R1,FILPTR(AE)
+         LA    R0,FILBLA           FILL CHARACTER
+*
+*****************************************************************
+*        write blanks before string content, if needed
+*****************************************************************
+*
+         LTR   R3,R3               Blanks needed before string content?
+         BNP   WRSB2               NO NEED FOR FILL CHARS
+*
+WRSB1    DS    0H
+         CH    R1,FILEND(AE)
+         BL    WRSF1
+         STH   R1,FILPTR(AE)       UPDATE LENGTH FIRST
+         BAL   R5,PAFPUT           THEN EMPTY THE FULL BUFFER
+         LH    R1,FILPTR(AE)
+         LA    R0,FILBLA
+WRSF1    STC   R0,0(R1,AF)         PLANT NEXT BLANK IN BUFFER
+         LA    R1,1(R1)            AND ADVANCE TO NEXT POSITION
+         BCT   R3,WRSB1
+*
+*****************************************************************
+*        Now write string content
+*****************************************************************
+*
+WRSB2    DS    0H
+         CH    R1,FILEND(AE)
+         BL    WRSF3
+         STH   R1,FILPTR(AE)       UPDATE LENGTH FIELD
+         BAL   R5,PAFPUT           THEN EMPTY THE FULL BUFFER
+         LH    R1,FILPTR(AE)
+WRSF3    IC    R0,0(R2)            PICK UP NEXT CHAR IN STRING
+         STC   R0,0(R1,AF)         AND PLANT IT IN BUFFER
+         LA    R2,1(R2)            ADVANCE IN THE STRING
+         LA    R1,1(R1)            ADVANCE IN THE BUFFER
+         BCT   R4,WRSB2
+*
+*****************************************************************
+*        write blanks after string content, if needed
+*****************************************************************
+*
+         LTR   R3,R3               Blanks needed after string content?
+         BZ    WRSF5               NO NEED FOR FILL CHARS
+         LCR   R3,R3               negate R3 content
+         LA    R0,FILBLA
+*
+WRSB3    DS    0H
+         CH    R1,FILEND(AE)
+         BL    WRSF4
+         STH   R1,FILPTR(AE)       UPDATE LENGTH FIRST
+         BAL   R5,PAFPUT           THEN EMPTY THE FULL BUFFER
+         LH    R1,FILPTR(AE)
+         LA    R0,FILBLA
+WRSF4    STC   R0,0(R1,AF)         PLANT NEXT BLANK IN BUFFER
+         LA    R1,1(R1)            AND ADVANCE TO NEXT POSITION
+         BCT   R3,WRSB3
+*
+WRSF5    DS    0H
+         STH   R1,FILPTR(AE)
+         STC   R0,PFILCOMP(AD)
+         B     RTN
+*
+*
+*
+*****************************************************************
+*        WRI
+*
+*        09.2017: allow negative width to print leading zeroes
+*
+*        R1 = ADR(FILE)
+*        R2 = Integer
+*        R3 = FIELD_WIDTH (if negative, fill with leading zeros)
+*****************************************************************
+*
+         DC    CL4'WRI '
+WRI      DS    0H
+         LTR   R3,R3
+         BNM   WRI2
+*
+********************************************************
+*        if width negative, change to positive
+*        do normal ed and put sign in first position
+*        works only for lengths up to 12
+********************************************************
+*        this is only part of the solution,
+*        for widths lower than -12 there has to be done
+*        some additional work
+********************************************************
+*
+         LPR   R3,R3
+         LR    R4,R3
+         CH    R4,=H'12'
+         BNH   *+8
+         LA    R4,12
+         CVD   R2,PINT
+         MVC   ZINT,=X'402120202020202020202020'
+         ED    ZINT,PINT+2
+         MVC   ZINT(2),=C'00'
+         LA    R1,ZINT+12
+         SR    R1,R4
+         LTR   R2,R2
+         BNM   *+8
+         MVI   0(R1),C'-'
+         LR    R2,R1
+         B     WRI3
+*
+********************************************************
+*        if width positive, do edmk and put sign
+*        before first nonzero position. because
+*        integers are limited to 10 digits, this is ok
+*        with a 12 byte buffer (ZINT).
+*        WRS writes the string right justified
+*        with blanks added to the left
+********************************************************
+*
+WRI2     DS    0H
+         CVD   R2,PINT
+         LA    R1,ZINT+11
+         MVC   ZINT,=X'402020202020202020202120'
+         EDMK  ZINT,PINT+2
+         LTR   R2,R2
+         BNM   *+10
+         BCTR  R1,0
+         MVI   0(R1),C'-'
+         LR    R2,R1
+*
+WRI3     DS    0H
+         LA    R4,ZINT+L'ZINT
+         SR    R4,R1
+         CR    R4,R3
+         BNH   WRS                 PRINT INTEGER AS A STRING
+         LR    R3,R4               - BUT INCREASE FIELD WIDTH IF
+         B     WRS                 NECESSARY TO PRINT ENTIRE NUMBER
+*
+*
+*
+*****************************************************************
+*        WRR
+*
+*        R1 = ADR(FILE)
+*        FP2 = Real
+*        R3 = FIELD_WIDTH (if negative, fill with leading zeros)
+*        R4 = Scale (if negative, E-Notation)
+*
+*        Implementation in WRRSUB
+*****************************************************************
+*
+         DS    0H
+         DC    CL4'WRR'
+WRR      DS    0H
+         FILADR ,
+         L     R15,=A(WRRSUB)
+         BALR  R14,R15
+         B     RTN
+*
+*
+*
+*
+*****************************************************************
+*        PAG   SKIP TO NEW PAGE
+*****************************************************************
+*
+         DC    CL4'PAG'
+PAG      SR    R2,R2
+         BCT   R2,SKP1             SET R2 = -1, THEN USE SKP ROUTINE
+*
+*
+*
+*****************************************************************
+*        SKP - SKIP R2 INPUT OR OUTPUT LINES
+*****************************************************************
+*
+         DS    0H
+         DC    CL4'SKP'
+SKP      LTR   R2,R2
+         BM    RTN
+SKP1     DS    0H
+         FILADR ,
+         BAL   R5,PAFCHKW          CHECK FILE STATUS (WRITE)
+         TM    FILOPN(AE),TEXTFLAG
+         BZ    SKP9                JUMP IF NOT A TEXT FILE
+         TM    FILOPN(AE),READOPN
+         BO    SKP7                JUMP IF AN INPUT FILE
+         LA    R0,MAXSKIP
+         CR    R2,R0
+         BL    *+6                 LIMIT NUMBER OF LINES TO "MAXSKIP"#
+         LR    R2,R0
+         TM    DCBRECFM,X'06'      JUMP IF FILE DOES NOT HAVE
+         BZ    SKP6                CARRIAGE CONTROL CHARS
+         LA    R3,3                MAX NO. OF SKIPS PER RECORD
+         TM    DCBRECFM,X'04'
+         BNZ   SKP2                JUMP IF ANS CONTROL CHARS
+         LTR   AF,AF               FORCE AN INITIAL PUT OPERATION IF
+         BNZ   SKP3                  NO I/O BUFFER YET ALLOCATED
+SKP2     BAL   R5,PAFPUT           CLEAR LINE BUFFER
+SKP3     CR    R2,R3
+         LR    R4,R2
+         BNH   *+6
+         LR    R4,R3               NOW, R4 = MIN( R2, 3 )
+         SR    R1,R1
+         CLI   DCBRECFM,X'80'
+         BNL   *+8
+         LA    R1,4
+*
+         TM    DCBRECFM,X'04'
+         BZ    SKP5                JUMP IF MACHINE CHARS
+         IC    R0,SKPASCII(R4)
+         STC   R0,0(R1,AF)         SET ASCII CONTROL CHAR
+         SR    R2,R4
+         BP    SKP2                REPEAT IF MORE LINES TO SKIP
+         LA    R1,1(R1)
+         STH   R1,FILPTR(AE)       POINT AT FIRST DATA BYTE
+         B     RTN
+SKP5     IC    R0,SKPMACH(R4)
+         STC   R0,0(R1,AF)         SET MACHINE CONTROL CHAR
+         BAL   R5,PAFPUT           AND SEND TO OUTPUT DEVICE
+         SR    R2,R4
+         BP    SKP3                REPEAT IF MORE LINES TO SKIP
+         B     RTN
+SKP6     BAL   R5,PAFPUT           NO CONTROL CHARS
+         BCTR  R2,0                BUT GIVE AN APPROPRIATE NUMBER
+         LTR   R2,R2               OF EMPTY OUTPUT RECORDS
+         BP    SKP6
+         B     RTN
+SKP7     LTR   R2,R2               REJECT PAGE() ON AN INPUT FILE
+         BM    BADWRITE
+         BNZ   SKP8                JUMP IF > 0 SKIPS
+         LH    R1,FILBEG(AE)
+         STH   R1,FILPTR(AE)       RESET CHAR PTR. TO REREAD LINE
+         IC    R0,0(R1,AF)
+         STC   R0,PFILCOMP(AD)     RESET CURRENT FILE ELEMENT
+         B     RTN
+SKP8     BAL   R5,PAFGET
+         BCT   R2,SKP8             STEP THROUGH THE LINES
+         B     RTN
+*
+SKP9     LTR   R2,R2
+         BNP   RTN                 RETURN IF SKIP CNT NON-POS.
+         TM    FILOPN(AE),READOPN
+         BNZ   SKP11               JUMP IF AN INPUT FILE
+         LH    R1,FILRSZ(AE)
+         SLL   R1,16               CONSTRUCT A RDW
+         ST    R1,PFILRSZ(AD)      - IN CASE OF A V-FORMAT FILE
+SKP10    PUT   FILDCB(AE),(AF)     WRITE A RECORD
+         BCT   R2,SKP10            REPEAT
+         B     RTN
+*
+SKP11    DS    0H
+         STM   R1,R5,SAVEGET
+         BAL   R5,GETM
+         LM    R1,R5,SAVEGET
+*
+         LH    R1,DCBLRECL         GET RECORD LENGTH
+         CLI   DCBRECFM,X'80'
+         BNL   SKP12               JUMP IF F OR U-FORMAT
+         LH    R1,0(AF)            GET RECORD LENGTH FROM RDW
+         SH    R1,=H'4'
+SKP12    CH    R1,FILCSZ(AE)       CHECK FOR OVERFLOW
+         BH    BADRECRD
+         BCT   R2,SKP11
+         ST    R1,PFILRSZ(AD)      SET CURRENT LENGTH
+         B     RTN
+*
+*
+*
+*****************************************************************
+*        GET MOVE MODE
+*****************************************************************
+*
+GETM     DS    0H
+         GET   FILDCB(AE),(AF)
+         BR    R5
+*
+*
+*
+*****************************************************************
+*        GET LOCATE MODE
+*****************************************************************
+*
+GETL     DS    0H
+*
+         MVI   RRFLAG,0            CLEAR REREAD FLAG
+*
+         GET   FILDCB(AE)
+*
+         CLI   RRFLAG,0            TEST IF REREAD ASKED FOR
+         BNE   GETL                IF SO, GO BACK AND TRY AGAIN
+*
+         ST    R1,FILBUF(AE)       STORE ADDRESS OF INPUT RECORD
+         LR    AF,R1
+*
+         LH    R1,FILBEG(AE)
+         STH   R1,FILPTR(AE)       RESET CHAR. PTR
+         IC    R0,0(R1,AF)
+         STC   R0,PFILCOMP(AD)     UPDATE CURRENT FILE ELEMENT
+         MVI   FILEOLN(AE),FALSE   CLEAR EOL FLAG
+         MVC   FILEND(2,AE),DCBLRECL    RESET BUFFER LENGTH
+*
+         BR    R5
+*
+EODTERM  DS    0H
+         LA    R1,BUF0
+         ST    R1,FILBUF(AE)       STORE ADDRESS OF DUMMY RECORD
+         LR    AF,R1
+*
+         LH    R1,FILBEG(AE)
+         STH   R1,FILPTR(AE)       RESET CHAR. PTR
+         IC    R0,0(R1,AF)
+         STC   R0,PFILCOMP(AD)     UPDATE CURRENT FILE ELEMENT
+         MVI   FILEOLN(AE),TRUE    SET EOL FLAG
+         MVC   FILEND(2,AE),=H'4'
+         BR    R5
+*
+BUF0     DC    F'0'
+         DC    CL4' '
+*
+*
+*
+*****************************************************************
+*        'END OF DATA' EXIT, THIS ROUTINE IS ENTERED WHENEVER
+*        A 'GET' IS ISSUED FOR A FILE WHICH HAS REACHED THE
+*        'END OF FILE' MARK. (I.E. NO MORE INPUT)
+*****************************************************************
+*
+EOD      DS    0H
+*
+         STM   R1,R5,SAVEEOD
+         LA    R3,TREOD
+*        L     R15,=V($PASTRX)
+*        BALR  R14,R15
+         MVC   TREOD2+23(1),FILTERM(AE)
+         LA    R3,TREOD2
+*        L     R15,=V($PASTRX)
+*        BALR  R14,R15
+         LM    R1,R5,SAVEEOD
+*
+         CLI   FILTERM(AE),C'Y'    simulate success for
+         BE    EODTERM             terminal file
+*
+         LA    AG,FILDCB(AE)
+         CLOSE ((AG))
+         TM    DCBBUFCB+3,1
+         BO    EOD1                SKIP IF NO BUFFER POOL
+*
+         FREEPOOL (AG)
+*
+*
+EOD1     OI    FILEOF(AE),1
+         MVI   FILEOFP(AE),TRUE        SET EOF FLAG IN PASCAL
+         NI    FILOPN(AE),TEXTFLAG     CLEAR THE OPENFLAGS
+         BZ    EOD2                    JUMP IF NOT A TEXTFILE
+         MVI   FILEOLN(AE),TRUE        SET EOL FLAG
+         MVI   PFILCOMP(AD),FILBLA
+         SR    AF,AF               INDICATE NO I/O BUFFER
+         STH   AF,FILBEG(AE)       RESET VARIOUS POINTERS
+         STH   AF,FILEND(AE)
+         STH   AF,FILPTR(AE)
+         ST    AF,FILBUF(AE)
+*
+         LM    R1,R5,SAVEGET       return to caller of
+         BR    R5                  GETM/GETL Caller !!!
+*
+EOD2     SR    R0,R0
+         ST    R0,PFILRSZ(AD)      INDICATE ZERO LENGTH RECORD
+         B     RTN                 GO BACK TO CALLER
+*
+TREOD    DC    CL80'TRACE: BRANCH TO EOD'
+TREOD2   DC    CL80'TRACE: TERM-Schalter = X'
+*
+*
+*
+*****************************************************************
+*        CLOCK FUNCTION
+*****************************************************************
+*
+         DC    CL4'CLK'
+CLK      LR    R3,R0               SAVE PARAMETER
+         TTIMER ,
+         S     R0,CLOCK            SUBTRACT START-UP TIME
+         LPR   R0,R0               MAKE POSITIVE
+         LTR   R3,R3               TEST CLOCK PARAMETER
+         BP    RTN                 >0 MEANS RAW TIMER UNITS
+         LPR   R1,R0
+         M     R0,=FS32'0.02604166'
+         B     RTN                 RETURNS THE RESULT IN R0
+*
+*
+*
+*****************************************************************
+*        MESSAGE PROCEDURE   R2=STRING ADDR,  R3=LENGTH
+*****************************************************************
+*
+         DC    CL4'MSG'
+MSG      LTR   R3,R3
+         BNP   RTN
+         LA    R0,L'MSGBUF-8       SET MAX. MESSAGE LENGTH
+         CR    R3,R0
+         BNH   *+6
+         LR    R3,R0
+         EX    R3,MSGMVC
+         LA    R3,4(R3)            CONSTRUCT VARIABLE-LENGTH RECORD
+         STH   R3,MSGBUF
+         LA    R3,MSGBUF(R3)
+         MVC   0(4,R3),=X'00000020'    SET THE ROUTING CODE
+         MVC   MSGBUF+2(2),=X'8000'
+         LA    R1,MSGBUF
+         SVC   35                  ISSUE WTO REQUEST
+         B     RTN
+*
+*
+*
+*****************************************************************
+*        CTR, TO ALLOCATE AND CLEAR 'R2' RUN TIME 'COUNTERS'
+*****************************************************************
+*
+         DC    CL4'CTR'
+CTR      L     R3,HEAPLIM
+         USING DYN2STOR,R3
+         ST    R2,DYNRUNC          SET THE # OF COUNTERS
+         DROP  R3
+         SLA   R2,2                CONVERT COUNT TO BYTES
+         LR    R4,R3               POINT TO HEAP END
+         SR    R4,R2               LOWER IT TO ITS NEW POSITION
+         ST    R4,HEAPLIM          AND SAVE THE NEW HEAP LIMIT PTR
+*
+         SR    R5,R5               ASSUME NO OS PARAMETER AREA
+         L     R0,OSPRMPTR
+         LTR   R0,R0               SEE IF THAT IS THE CASE
+         BM    CTR10
+         LR    R5,R3               IF NOT, FIND THE LENGTH OF
+         SR    R5,R0               THE OS PARM AREA
+         SR    R3,R5               AND ADJUST 'TO' AND 'FROM' PTRS
+         SR    R4,R5
+         ST    R4,OSPRMPTR
+CTR10    LA    R5,DYNCOUNT-DYN2STOR(R5)   ADD THE SIZE OF FIXED AREA
+*
+*        AN EXTRA BYTE IS MOVED BUT IT IS OK.
+*
+         EX    R5,CTRMVE           AND COPY FROM THE OLD AREA.
+         ST    R4,NEWPTR           UPDATE HEAP PTR
+         AR    R4,R5               POINT BACK TO THE HEAP END
+         SRA   R2,2                CONVERT BACK BYTES TO WORDS
+         SR    R0,R0
+         ST    R0,0(R4)            AND CLEAR THE COUNTER AREA
+         LA    R4,4(R4)            ADJUST THE POINTER
+         BCT   R2,*-8              REPEAT AS NEEDED
+         B     RTN
+*
+CTRMVE   MVC   0(0,R4),0(R3)
+*
+*
+*
+*****************************************************************
+*        LINELIMIT PROCEDURE   AD=FILE,  R2=LIMIT
+*****************************************************************
+*
+         DS    0H
+         DC    CL4'LIM'
+LIM      DS    0H
+         FILADR ,
+         ST    R2,FILLIM(AE)       SET THE NEW LIMIT
+         B     RTN
+*
+*
+*
+*****************************************************************
+*        DEFINE A FILE,  R2: NAME,  R3: FILE COMP. SIZE
+*****************************************************************
+*
+         DC    CL4'FDF'
+FDF      DS    0H
+*
+         GETMAIN EC,LV=L'#FILREC,A=(AD)
+*
+         LTR   R15,R15             TEST IF STORAGE AVAILABLE
+         BNZ   BADFDF
+         L     AE,0(,AD)
+         L     R1,=A(#FILREC)      TEMPLATE FOR TEXT FILES
+         LTR   R3,R3               R3=0 => A TEXT FILE
+         BZ    *+8                 JUMP IF A TEXT FILE
+         L     R1,=A(#NONTXT)      TEMPLATE FOR NON-TEXT FILES
+         MVC   0(L'#FILREC,AE),0(R1)  COPY TO GETMAINED AREA
+         STH   R3,FILCSZ(AE)       SAVE FILE COMP. SIZE
+         ST    AD,FILPAS(AE)       SET BACK LINK
+         MVI   FILUSER(AE),X'01'   SET USER FLAG (NOT BUILTIN)
+*
+         L     R1,$PASFLIS
+         ST    R1,FILLNK(AE)       LINK NEW FILE BLOCK
+         ST    AE,$PASFLIS          INTO THE CHAIN
+*
+* ------ OI    $PASFLIS,X'80'       FLAG AS NOT BUILT-IN
+*
+         MVC   FILNAM(8,AE),0(R2)
+         MVC   DCBDDNAM,0(R2)      MOVE THE FILE NAME TO ITS DCB FIELD
+         B     RTN
+*
+*
+*
+*****************************************************************
+*        REQUEST FOR CONTROL TRACE OUTPUT
+*****************************************************************
+*
+TRA      EQU   *
+*
+         L     R3,=V($PASGLOB)
+         USING PASGLOB,R3
+*
+         AIF   (&SYSTEM).SYS920
+         LTR   R2,R2
+         BP    *+6
+         SR    R2,R2               KILL OUTPUT REQUEST
+         LA    R2,1(,R2)
+         L     R15,ATRLINES
+         ST    R2,0(,R15)
+.SYS920  ANOP
+*
+         DROP  R3
+*
+         B     RTN
+*
+*
+*
+*
+*****************************************************************
+*        CLOSE: CLOSE A FILE
+*****************************************************************
+*
+         DS    0H
+         DC    CL4'CLS'
+CLS      DS    0H
+         FILADR ,
+*
+         L     R15,=A(PAFCLS)
+         BALR  R14,R15             GO AND CLOSE THE FILE
+*
+         B     RTN
+*
+*
+*
+*
+*****************************************************************
+*        DAT: GET DATE FROM SYSTEM
+*****************************************************************
+*
+         DC    CL4'DAT'
+DAT      DS    0H
+*
+         TIME  DEC                 GET TOD IN TU
+*
+         L     R2,=V($PASGLOB)
+         USING PASGLOB,R2
+         LA    R2,OLDDATE
+         DROP  R2
+         C     R1,0(R2)            COMP. ORIGINAL DATE
+         BE    RTN                 ONLY CONVERT,
+         ST    R1,0(R2)            IF DATE CHANGED
+*
+         L     R15,=V($PASGLOB)
+         USING PASGLOB,R15
+         L     R15,AFIXDATE
+         DROP  R15
+         BALR  R5,R15              CONVERT DATE
+*
+         B     RTN
+*
+*
+*
+*
+*****************************************************************
+*        TIM: GET TIME FROM SYSTEM
+*****************************************************************
+*
+         DC    CL4'TIM'
+TIM      DS    0H
+*
+         TIME  DEC                 GET TOD IN TU
+*
+*        FIX TIME OF DAY STRING
+*
+         L     R15,=V($PASGLOB)
+         USING PASGLOB,R15
+         L     R15,AFIXTIME
+         DROP  R15
+         BALR  R5,R15              CONVERT TIME
+*
+         B     RTN
+*
+*
+*
+*
+*****************************************************************
+*        EXIT : TO EXIT USER PROGRAM WITH A RETURN CODE
+*****************************************************************
+*
+         DC    CL4'XIT'
+XIT      DS    0H
+         ST    R2,SAVERETC         SAVE RETURN CODE
+*
+         C     R2,=A(1000)         IF ERROR GO TO CLOSE/EXIT ROUTINE
+         BNL   CLSALL
+*
+         L     R4,HEAPLIM
+         USING DYN2STOR,R4
+         L     R5,DYNRUNC
+         LTR   R5,R5               SEE IF RUN TIME COUNTERS ARE PRESENT
+         BNP   CLSALL              IF NOT, QUIT.
+*
+         LA    AD,QRR              PICK THE COUNTER FILE NAME
+         LA    R1,PREW
+         L     R15,=A($PASCSP2)
+         BALR  R14,R15             CALL THE $PASCSP ROUTINES
+*
+*        THIS CAN BE DONE ONLY IF WE KNOW THAT WE DO NOT NEED
+*        TO GO BACK TO THE PROGRAM WHICH CALLED THE EXIT
+*        ROUTINE.
+*
+         LA    R1,PWRI             SET THE FUNCTION CODE
+         LA    R3,10               SET THE FIELD_WIDTH
+NXTCNT   L     R2,DYNCOUNT         PICK THE NEXT COUNT VALUE
+         BALR  R14,R15             OUTPUT IT
+         LA    R4,4(R4)
+         BCT   R5,NXTCNT           REPEAT UNTIL DONE
+         DROP  R4
+*
+         LA    R1,PWLN
+         BALR  R14,R15             OUTPUT THE LAST LINE
+         L     R14,=V($PASGLOB)
+         USING PASGLOB,R14
+         MVI   PROFFLAG,X'FF'      SET FLAG TO INDICATE PASPROF CALL
+         DROP  R14
+         B     CLSALL              GO TO COMPLETE EXIT EPILOGUE.
+*
+*****************************************************************
+*        CLOSE ALL THE FILES
+*****************************************************************
+*
+CLSALL   DS    0H
+*        LA    R3,TRCLSALL
+*        L     R15,=V($PASTRX)
+*        BALR  R14,R15
+*
+         L     AE,$PASFLIS
+*
+CLSALL1  DS    0H
+         L     AF,FILBUF(AE)
+*
+         L     R15,=A(PAFCLS)
+         BALR  R14,R15             GO AND CLOSE THE FILE
+*
+         L     R3,FILLNK(AE)       GET POINTER TO NEXT BLOCK
+         CLI   FILUSER(AE),X'01'   TEST IF USER-FILE
+         BNE   CLSALL2             IF NO USER-FILE, NO FREEMAIN
+*
+         FREEMAIN R,LV=L'#FILREC,A=(AE)  RELEASE FILE BLOCK STORAGE
+*
+CLSALL2  DS    0H
+         LTR   AE,R3               FOLLOW CHAIN OF FILE BLOCKS
+         BNZ   CLSALL1             REPEAT
+*
+*        LA    R3,TRCLSEND
+*        L     R15,=V($PASTRX)
+*        BALR  R14,R15
+*
+*****************************************************************
+*        TIME TO EXIT
+*****************************************************************
+*
+         L     R2,SAVERETC         RESTORE RETURN CODE
+         L     R15,=V($PASTERM)
+         BR    R15
+*
+*
+TRCLSALL DC    CL80'TRACE: START CLSALL SCHLEIFE'
+TRCLSEND DC    CL80'TRACE: ENDE CLSALL SCHLEIFE'
+TRXIT4   DC    CL80'TRACE: AT LABEL XIT4'
+*
+*
+*
+*
+*****************************************************************
+*        UNDEFINED CSP ENTRIES
+*****************************************************************
+*
+TRP      DS    0H
+SIO      DS    0H
+EIO      DS    0H
+EOF      DS    0H
+ELN      DS    0H
+RDD      DS    0H
+WRD      DS    0H
+WRE      DS    0H
+XXX      DS    0H
+         B     UNDFERR             REPORT AN ERROR
+*
+*
+*
+*
+*****************************************************************
+*         RETURN TO PASCAL PROGRAM
+*****************************************************************
+*
+RTNR2    DS    0H
+         L     R1,=V($PASGLOB)
+         USING PASGLOB,R1
+         C     R13,=A(CSPSTCK1)    R13 in Pascal stack ?
+         BNE   RTNEWR2             yes, new return
+*
+         ST    R2,SPUSERSA+4
+*
+RTN      DS    0H
+*
+*        ST    R13,DOWOR
+*        UNPK  TRRET+32(9),DOWOR(5)
+*        TR    TRRET+32(8),TABHEXR-C'0'
+*        MVI   TRRET+39,C' '
+*        LA    R3,TRRET
+*        L     R15,=V($PASTRX)
+*        BALR  R14,R15
+*
+         C     R13,=A(CSPSTCK1)    R13 in Pascal stack ?
+         BNE   RTNEW               yes, new return
+*
+         MVI   SCHCSP,X'00'        CLEAR CSP FLAG
+         LM    R1,R15,SPUSERSA     rslt reg SHOULD NOT BE RESTORED !
+         BR    14
+*
+RTNEWR2  DS    0H
+         L     R1,4(R13)           nur einmal zurueck
+         ST    R2,28(R1)           R2 abspeichern, siehe unten LM
+*
+RTNEW    DS    0H
+*
+         L     R13,4(R13)          zunaechst nur einmal zurueck
+*
+*        ST    R13,DOWOR
+*        UNPK  TRRETN+31(9),DOWOR(5)
+*        TR    TRRETN+31(8),TABHEXR-C'0'
+*        MVI   TRRETN+39,C' '
+*        LA    R3,TRRETN
+*        L     R15,=V($PASTRX)
+*        BALR  R14,R15
+*
+*        MVC   DOWOR(4),52(R13)
+*        UNPK  TRRETX+31(9),DOWOR(5)
+*        TR    TRRETX+31(8),TABHEXR-C'0'
+*        MVI   TRRETX+39,C' '
+*        LA    R3,TRRETX
+*        L     R15,=V($PASTRX)
+*        BALR  R14,R15
+*
+*        MVC   DOWOR(4),12(R13)
+*        UNPK  TRRET14+31(9),DOWOR(5)
+*        TR    TRRET14+31(8),TABHEXR-C'0'
+*        MVI   TRRET14+39,C' '
+*        LA    R3,TRRET14
+*        L     R15,=V($PASTRX)
+*        BALR  R14,R15
+*
+         L     R1,=V($PASGLOB)
+         USING PASGLOB,R1
+         MVI   SCHCSP,X'00'        CLEAR CSP FLAG
+*
+         LM    R14,R15,12(R13)
+         LM    R1,R12,24(R13)
+         L     R13,4(R13)          und jetzt nochmal zurueck
+         BR    14
+*
+RTNR3    DS    0H
+         L     R13,4(R13)          zunaechst nur einmal zurueck
+*
+         L     R1,=V($PASGLOB)
+         USING PASGLOB,R1
+         MVI   SCHCSP,X'00'        CLEAR CSP FLAG
+*
+         LM    R14,R15,12(R13)
+         LM    R1,R2,24(R13)
+         LM    R4,R12,36(R13)
+         L     R13,4(R13)          und jetzt nochmal zurueck
+         BR    14
+*
+         LTORG ,
+*
+TRRET    DC    CL80'TRACE: RETURN FROM CSP - R13 = XXXXXXXX'
+TRRETN   DC    CL80'TRACE: RETURN FROM CSP (new) = XXXXXXXX'
+TRRETX   DC    CL80'TRACE: RETURN FROM CSP - R8  = XXXXXXXX'
+TRRET14  DC    CL80'TRACE: RETURN FROM CSP - R14 = XXXXXXXX'
+DOWOR    DS    D
+TABHEXR  DC    C'0123456789ABCDEF'
+*
+*
+*****************************************************************
+*        drop all base regs
+*****************************************************************
+*
+         DROP  ,
+*
+*
+*
+*
+**************************************************************
+*
+*        END OF "NORMAL" $PASCSP MODULE
+*
+**************************************************************
+*
+*
+*
+*
+*
+**************************************************************
+*
+*        $PASCSP EXTENSION -
+*
+*        Procedures moved "outside"
+*        that have their own base registers
+*
+**************************************************************
+*
+         USING CSPBASE,R10
+         USING IHADCB-FILDCB,AE
+*
+*****************************************************************
+*        GENERAL ROUTINE TO CLOSE A FILE
+*****************************************************************
+*
+PAFCLS   DS    0H
+*
+         USING PAFCLS,R15
+*
+         ST    R14,SAVECLS
+         ST    R11,SAVECLS+4
+         LR    R11,R15
+*
+         DROP  R15
+         USING PAFCLS,R11
+*
+         TM    FILOPN(AE),READOPN+WRITEOPN
+         BZ    PAFCLSZ             RETURN IF FILE NOT OPEN
+*
+         MVI   FILSTA(AE),C'0'     File-Status auf Null zurueck
+*
+         TM    FILOPN(AE),TEXTFLAG+WRITEOPN
+         BNO   PAFCLS4             JUMP IF NONTEXT OR INPUT FILE
+*
+         TM    FILOPN(AE),TEXTMOVE
+         BNO   PAFCLSL
+*
+*****************************************************************
+*        letzte zeile ausgeben bei move mode - falls noetig
+*****************************************************************
+*
+         LH    R1,FILPTR(AE)       nur ausgeben, wenn was da ist
+         CH    R1,FILBEG(AE)
+         BNH   PAFCLSM
+*
+         BAL   R5,PAFPUT           letzte Zeile ausgeben
+*
+*****************************************************************
+*        speicher fuer buffer freigeben bei move mode
+*****************************************************************
+*
+PAFCLSM  DS    0H
+         LH    R3,DCBLRECL
+         FREEMAIN R,LV=(R3),A=FILBUF(AE)
+         B     PAFCLS4
+*
+*****************************************************************
+*        PREPARE THE OUTPUT BUFFER FOR TRANSMITTING TO O.S.
+*        bei locate mode
+*****************************************************************
+*
+PAFCLSL  DS    0H
+         LH    R1,FILPTR(AE)       IF BUFFER IS IN "OVER-FULL" STATE
+         CH    R1,FILEND(AE)       WE MUST WRITE A RECORD NOW -
+         BNH   PAFCLSL1            wir schreiben es jetzt im
+         BAL   R5,PAFPUT           zusammenhang mit close
+*
+PAFCLSL1 LH    R1,FILPTR(AE)
+         CLI   DCBRECFM,X'80'
+         BNL   PAFCLS4             RETURN IF F OR U-FORMAT
+         LA    R0,6                MIN LENGTH FOR VBA RECORDS
+         TM    DCBRECFM,X'06'
+         BNZ   *+6                 JUMP IF CONTROL CHARS
+         BCTR  R0,0                ADJUST MIN LENGTH
+         CR    R1,R0
+         BNL   PAFCLSL2            JUMP IF RECORD SIZE OK
+         LTR   AF,AF               RETURN IF THE I/O BUFFER IS NOT
+         BZ    PAFCLS4             ALLOCATED  (FILE NEWLY OPENED)
+         LA    R0,FILBLA
+         STC   R0,0(R1,AF)         PROVIDE 1 CHAR AT LEAST
+         LA    R1,1(R1)
+*
+**********************************************************************
+*        (ibm370 dependendy: STCM)
+**********************************************************************
+*
+PAFCLSL2 STCM  R1,3,0(AF)          SET RDW FOR V-FORMAT
+*
+PAFCLS4  DS    0H
+         LA    AG,FILDCB(AE)
+         CLOSE ((AG))
+*
+         NI    FILOPN(AE),X'FF'-READOPN-WRITEOPN   CLEAR OPEN FLAGS
+*
+         MVC   FILMEM(8,AE),=CL8' '    CLEAR MEMBER NAME
+*
+         TM    DCBBUFCB+3,1        TEST IF BUFFER POOL THERE
+         BO    PAFCLSZ             RETURN IF NOT
+*
+         FREEPOOL (AG)
+*
+PAFCLSZ  DS    0H
+         L     R11,SAVECLS+4
+         L     R14,SAVECLS
+         BR    R14
+*
+*
+*
+*
+*****************************************************************
+*        OUTPUT OF FLOATING POINT VALUES
+*
+*        R1 = ADR(FILE)
+*        R2 = Real
+*        R3 = FIELD_WIDTH (if negative, fill with leading zeros)
+*        R4 = Scale (if negative, E-Notation)
+*****************************************************************
+*
+WRRSUB   DS    0H
+*
+         USING WRRSUB,R15
+*
+         ST    R14,SAVEWRR
+         ST    R11,SAVEWRR+4
+         LR    R11,R15
+*
+         DROP  R15
+         USING WRRSUB,R11
+*
+         SR    R2,R2
+         STC   R2,SIGN             SIGN := 0
+         STC   R2,EFORM            EFORM := 0
+         MVI   LEADZ,C' '          LEADZ := ' '
+*
+         LTR   R3,R3
+         BZ    WRRSUBZ
+         BP    WRR10               IF R3 < 0
+         MVI   LEADZ,C'0'          LEADZ := '0'
+         LCR   R3,R3               R3 := - R3
+WRR10    DS    0H
+*
+         BAL   R5,PAFCHKW          CHECK FILE STATUS (WRITE)
+*
+         SR    R2,R2               Exponent := 0
+         SDR   FPR0,FPR0           set FP0 to zero
+         ADR   FPR2,FPR0           FORCE NORMALIZATION
+         LDR   FPR0,FPR2           FP0 := FP2 (ORIGINAL VALUE)
+         BNZ   WRR20
+*
+************************************************************
+*        PRINT 'ZERO' IN THE PROPER FORMAT
+************************************************************
+*
+         LTR   R4,R4               write zero in 'F' FORMAT ?
+         BNM   WRR40
+*
+**************************************************
+*        E-FORMAT ZERO
+**************************************************
+*
+         MVC   PFILCOMP(1,AD),LEADZ    write 2 blanks (or zeros)
+         BAL   R5,PAFPST
+         BAL   R5,PAFPST
+         LR    R4,R3
+         SH    R4,=H'8'                at least 9 positions needed
+         MVI   PFILCOMP(AD),FILZER     write 0
+         BAL   R5,PAFPST
+         MVI   PFILCOMP(AD),FILDOT     write .
+         BAL   R5,PAFPST
+         MVI   PFILCOMP(AD),FILZER     write 0
+         BAL   R5,PAFPST
+*
+**************************************************
+*        PRINT additional zeros after decimal point
+**************************************************
+*
+         LTR   R4,R4
+         BNP   WRR12
+         MVI   PFILCOMP(AD),FILZER
+         BALR  R5,0                    SET RETURN ADDRESS FOR PAFPST
+         BCT   R4,PAFPST               CALL REPEATEDLY
+*
+WRR12    DS    0H
+         MVI   PFILCOMP(AD),FILEXP     write E
+         BAL   R5,PAFPST
+         MVI   PFILCOMP(AD),FILPLU     write +
+         BAL   R5,PAFPST
+         MVI   PFILCOMP(AD),FILZER     write 00
+         BAL   R5,PAFPST
+         BAL   R5,PAFPST
+         B     WRRSUBZ
+*
+************************************************************
+*        PRINT A NON_ZERO REAL NUMBER
+************************************************************
+*
+WRR20    DS    0H
+         BNM   WRR24
+         MVI   SIGN,X'01'          NEGATIVE VALUE, REMEMBER SIGN
+         BCTR  R3,0                AND ADJUST FIELD WIDTH
+         LPDR  FPR2,FPR2
+         LDR   FPR0,FPR2           SAVE THE ORIGINAL VALUE
+*
+WRR24    DS    0H
+         CD    FPR2,=D'1.0'        PUT FPR2 INTO RANGE 1.0 to 10
+         BNL   WRR26               AND COUNT EXPONENT
+         MD    FPR2,=D'10.0'
+         BCT   R2,WRR24            expo := expo - 1
+*
+WRR26    DS    0H
+         CD    FPR2,=D'10.0'
+         BL    WRR30
+         DD    FPR2,=D'10.0'
+         AH    R2,=H'1'            expo := expo + 1
+         B     WRR26
+*
+**************************************************
+*        NOW WE HAVE  "1.0 <= FPR2 < 10"
+*        AND "FPR0 = FPR2 * (10 ** R2)"
+**************************************************
+*
+WRR30    DS    0H
+         LTR   R4,R4               SEE IF F_FORMAT REQUESTED
+         BNM   WRR40
+*
+************************************************************
+*        PRINT THE VALUE IN E_FORM
+************************************************************
+*
+         LD    FPR0,=D'1.0E-13'    wert ein bisschen hoch ...
+         MDR   FPR0,FPR2
+         ADR   FPR2,FPR0
+*
+         CD    FPR2,=D'10.0'       nochmal korrigieren ...
+         BL    WRR31
+         DD    FPR2,=D'10.0'
+         AH    R2,=H'1'
+*
+WRR31    DS    0H
+*
+         MVI   EFORM,X'01'         SET E_FORMAT FLAG
+         ST    R2,EXPONENT         SAVE EXPONENT VALUE
+         SR    R2,R2               ONLY ONE DIGIT BEFORE DEC. P.
+         LR    R4,R3
+         SH    R4,=H'7'            subtract used positions
+         BP    WRR50
+         LA    R4,1
+         B     WRR50
+*
+*
+************************************************************
+*        F_FORMAT OUTPUT
+************************************************************
+*
+WRR40    DS    0H
+*
+         LTR   R2,R2
+         BNM   WRR44               SEE IF NEGATIVE EXPONENT
+*
+         LDR   FPR2,FPR0           IF SO, USE THE ORIGINAL VALUE
+         SR    R2,R2               ONLY ONE DIGIT BEFORE DEC. P.
+*
+WRR44    DS    0H
+*
+********************************************************
+*        2017 - bernd oppolzer
+*        apply roundx function at the desired position
+********************************************************
+*
+         C     R13,=A(CSPSTCK1)    R13 in Pascal stack ?
+         BNE   WRR43
+*
+         L     R15,=V($PASERR)
+         LA    R1,21
+         BALR  R14,R15
+*
+WRR43    DS    0H
+         LA    R1,72(R13)          save area position for roundx
+         LA    R5,1                function number, roundx = 1
+         ST    R5,112(R1)
+         LNR   R5,R4               roundx 2nd argument, negative scale
+         SR    R5,R2               adjust according to exponent
+         ST    R5,116(R1)
+         STD   2,120(R1)           value to be rounded
+         L     R15,=V($PASMAT)     call $pasmat
+         BALR  R14,R15
+         LD    2,72(R1)            retrieve rounded value
+*
+         LD    FPR0,=D'1.0E-13'    wert ein bisschen hoch
+         MDR   FPR0,FPR2
+         ADR   FPR2,FPR0
+*
+*        ST    R3,SAVEWRR3
+*
+*        CVD   R2,DOWOWRR
+*        UNPK  TRWRRS2+22(9),DOWOWRR+3(5)
+*        OI    TRWRRS2+30,X'F0'
+*        LA    R3,TRWRRS2
+*        L     R15,=V($PASTRX)
+*        BALR  R14,R15
+*
+*        L     R3,SAVEWRR3
+*        CVD   R3,DOWOWRR
+*        UNPK  TRWRRS3+22(9),DOWOWRR+3(5)
+*        OI    TRWRRS3+30,X'F0'
+*        LA    R3,TRWRRS3
+*        L     R15,=V($PASTRX)
+*        BALR  R14,R15
+*
+*        CVD   R4,DOWOWRR
+*        UNPK  TRWRRS4+22(9),DOWOWRR+3(5)
+*        OI    TRWRRS4+30,X'F0'
+*        LA    R3,TRWRRS4
+*        L     R15,=V($PASTRX)
+*        BALR  R14,R15
+*
+*        L     R3,SAVEWRR3
+*
+         BCTR  R3,0                eine stelle weg bei width
+*
+         LTR   R4,R4               IF SCALE = 0, NO DEC. POINT
+         BZ    WRR45
+         SR    R3,R4               COMPUTE THE # OF LEADING BLANKS
+         BCTR  R3,0
+*
+WRR45    DS    0H
+         SR    R3,R2
+         BNP   WRR50
+*
+WRR46    DS    0H
+         MVC   PFILCOMP(1,AD),LEADZ
+         BALR  R5,0                    SET RETURN ADDRESS FOR PAFPST
+         BCT   R3,PAFPST               CALL REPEATEDLY
+*
+**************************************************
+*        R2 # OF DIGITS BEFORE DECIMAL POINT
+*        R4 # OF DIGITS FOLLOWING DECIMAL POINT
+*        IF R4 = ZERO, NO DECIMAL POINT
+**************************************************
+*
+WRR50    DS    0H
+         TM    SIGN,X'01'
+         BZ    WRR51
+         CLI   LEADZ,C'0'
+         BNE   WRR50A
+         MVI   PFILCOMP(AD),FILMIN
+         BAL   R5,PAFPST
+         MVC   PFILCOMP(1,AD),LEADZ
+         BAL   R5,PAFPST
+         B     WRR52
+*
+WRR50A   DS    0H
+         MVC   PFILCOMP(1,AD),LEADZ
+         BAL   R5,PAFPST
+         MVI   PFILCOMP(AD),FILMIN
+         BAL   R5,PAFPST
+         B     WRR52
+*
+WRR51    DS    0H
+         MVC   PFILCOMP(1,AD),LEADZ
+         BAL   R5,PAFPST
+*
+WRR52    DS    0H
+         LA    R2,2(R2)
+         BALR  R3,0                SET RETURN ADDRESS FOR WRRDGTS
+         BCT   R2,WRRDGTS          CALL REPEATEDLY
+         TM    EFORM,X'01'
+         BNZ   WRR53
+         LTR   R4,R4
+         BZ    WRRSUBZ
+*
+WRR53    DS    0H
+         MVI   PFILCOMP(AD),FILDOT
+         BAL   R5,PAFPST
+         BAL   R3,WRRDGTS          SET RETURN ADDRESS FOR WRRDGTS
+         BCT   R4,WRRDGTS          CALL REPEATEDLY
+         TM    EFORM,X'01'
+         BZ    WRRSUBZ
+*
+**************************************************
+*        PRINT THE EXPONENT FOR E_FORMAT OUTPUT
+**************************************************
+*
+         L     R4,EXPONENT
+         MVI   PFILCOMP(AD),FILEXP
+         BAL   R5,PAFPST
+         MVI   PFILCOMP(AD),FILPLU
+         LTR   R4,R4
+         BNM   *+8
+         MVI   PFILCOMP(AD),FILMIN
+         BAL   R5,PAFPST
+         LPR   R3,R4
+         SR    R2,R2
+         D     R2,=F'10'
+         LA    R3,FILZER(R3)
+         STC   R3,PFILCOMP(AD)
+         BAL   R5,PAFPST
+         LA    R2,FILZER(R2)
+         STC   R2,PFILCOMP(AD)
+         BAL   R5,PAFPST
+*
+WRRSUBZ  DS    0H
+         L     R11,SAVEWRR+4
+         L     R14,SAVEWRR
+         BR    R14
+*
+**************************************************
+*        local variables of wrrsub
+**************************************************
+*
+LEADZ    DC    C' '
+SIGN     DC    C' '
+EFORM    DC    C' '
+EXPONENT DC    F'0'
+*
+SAVEWRR3 DS    F
+DOWOWRR  DS    D
+TRWRRS2  DC    CL80'TRACE: WRRSUB REG 2 = XXXXXXXXX'
+TRWRRS3  DC    CL80'TRACE: WRRSUB REG 3 = XXXXXXXXX'
+TRWRRS4  DC    CL80'TRACE: WRRSUB REG 4 = XXXXXXXXX'
+*
+         LTORG
+*
+*
+*
+*
+*******************************************************************
+*        THIS ROUTINE PRINTS THE NEXT DIGIT OF THE VALUE
+*        IN FPR2, IT USES R3 FOR ITS RETURN ADDRESS
+*        IT IS ASSUMED THAT "0 <= FPR2 < 10" AND FPR2
+*        IS UPDATED FOR THE NEXT DIGIT
+*******************************************************************
+*
+WRRDGTS  DS    0H
+         CD    FPR2,=D'8.0'
+         BNL   WRRD8
+         CD    FPR2,=D'4.0'
+         BNL   WRRD4
+*
+         CD    FPR2,=D'2.0'
+         BNL   WRRD2
+         CD    FPR2,=D'1.0'
+         LD    FPR0,=D'10.0'
+         LA    R1,1
+         BNL   WRROK
+         LD    FPR0,=D'0.0'
+         LA    R1,0
+         B     WRROK
+*
+WRRD2    DS    0H
+         CD    FPR2,=D'3.0'
+         LD    FPR0,=D'30.0'
+         LA    R1,3
+         BNL   WRROK
+         LD    FPR0,=D'20.0'
+         LA    R1,2
+         B     WRROK
+*
+WRRD4    DS    0H
+         CD    FPR2,=D'6.0'
+         BNL   WRRD6
+         CD    FPR2,=D'5.0'
+         LD    FPR0,=D'50.0'
+         LA    R1,5
+         BNL   WRROK
+         LD    FPR0,=D'40.0'
+         LA    R1,4
+         B     WRROK
+*
+WRRD6    DS    0H
+         CD    FPR2,=D'7.0'
+         LD    FPR0,=D'70.0'
+         LA    R1,7
+         BNL   WRROK
+         LD    FPR0,=D'60.0'
+         LA    R1,6
+         B     WRROK
+*
+WRRD8    DS    0H
+         CD    FPR2,=D'9.0'
+         LD    FPR0,=D'90.0'
+         LA    R1,9
+         BNL   WRROK
+         LD    FPR0,=D'80.0'
+         LA    R1,8
+         B     WRROK
+*
+WRROK    DS    0H
+         LA    R1,FILZER(R1)
+         STC   R1,PFILCOMP(AD)
+         BAL   R5,PAFPST           WRITE NEXT DIGIT
+         MD    FPR2,=D'10.0'
+         SDR   FPR2,FPR0
+         BR    R3                  RETURN TO CALLER
+*
+         LTORG
+*
+*
+*
+*
+*****************************************************************
+*        Subroutine to open a file (for input)
+*****************************************************************
+*
+PAFGOP   DS    0H
+*
+         USING PAFGOP,R15
+*
+         ST    R14,SAVEGOP
+         ST    R11,SAVEGOP+4
+         LR    R11,R15
+*
+         DROP  R15
+         USING PAFGOP,R11
+*
+         NI    FILOPN(AE),TEXTFLAG     CLEAR OPEN FLAGS
+*
+         L     R14,=A(OPENMODE)
+         MVI   0(R14),C'I'
+*
+         L     R15,=A(PAFOPN)
+         BALR  R14,R15             call open for read
+*
+*        MVI   TROPENR+12,C'I'
+*        MVC   TROPENR+14(8),FILNAM(AE)
+*        MVC   TROPENR+32(8),FILMEM(AE)
+*        L     R14,=A(ABNDCODE)
+*        MVC   TROPENR+41(1),0(R14)
+*        LA    R3,TROPENR
+*        L     R15,=V($PASTRX)
+*        BALR  R14,R15
+*
+         L     R14,=A(ABNDCODE)
+         CLI   0(R14),C' '
+         BNE   PAFGOPZ
+*
+         TM    DCBOFLGS,X'10'
+         BNO   BADREAD             exit, if wrong file type
+*
+         L     AF,FILBUF(AE)
+         MVI   FILEOF(AE),0        CLEAR BOTH EOF FLAGS
+         MVI   FILEOFP(AE),FALSE
+         OI    FILOPN(AE),READOPN
+         TM    FILOPN(AE),TEXTFLAG
+         BNZ   PAFGOP2
+*
+         L     R14,=A(GET1)        no return to caller
+         ST    R14,SAVEGOP         branch to GET1 instead
+         B     PAFGOPZ
+*
+PAFGOP2  DS    0H
+         MVI   FILEOLN(AE),TRUE
+         SR    R0,R0
+         STH   R0,FILBEG(AE)
+         LH    R1,DCBLRECL
+         TM    DCBRECFM,X'C0'
+         BNO   *+8                 JUMP IF NOT U-FORMAT
+         LH    R1,DCBBLKSI
+         STH   R1,FILEND(AE)       SET LRECL FOR THE LOCAL BUF
+         CLI   DCBRECFM,X'80'
+         BNL   PAFGOP1             JUMP IF NOT V-FORMAT
+         MVI   FILBEG+1(AE),4      ALLOW 4-BYTE RDW/SDW
+*
+PAFGOP1  DS    0H
+         TM    DCBRECFM,X'06'
+         BZ    PAFGOPZ             JUMP IF NO CONTROL CHARS
+         L     R14,=V($PASGLOB)
+         USING PASGLOB,R14
+         CLI   CCFLAG,0            OR IF CONTROL CHARS ARE NOT
+         DROP  R14
+         BE    PAFGOPZ             TO BE INSERTED
+         OI    FILBEG+1(AE),1      ADD IN 1-BYTE CONTROL CHAR
+*
+PAFGOPZ  DS    0H
+         L     R11,SAVEGOP+4
+         L     R14,SAVEGOP
+         BR    R14
+*
+*
+*
+*
+*****************************************************************
+*        Subroutine to open a file (for output)
+*****************************************************************
+*
+PAFPOP   DS    0H
+*
+         USING PAFPOP,R15
+*
+         ST    R14,SAVEPOP
+         ST    R11,SAVEPOP+4
+         LR    R11,R15
+*
+         DROP  R15
+         USING PAFPOP,R11
+*
+         NI    FILOPN(AE),TEXTFLAG     PUT-OPEN THE FILE
+*
+         L     R14,=A(OPENMODE)
+         MVI   0(R14),C'O'
+*
+         L     R15,=A(PAFOPN)
+         BALR  R14,R15             call open for read
+*
+*        MVI   TROPENR+12,C'O'
+*        MVC   TROPENR+14(8),FILNAM(AE)
+*        MVC   TROPENR+32(8),FILMEM(AE)
+*        L     R14,=A(ABNDCODE)
+*        MVC   TROPENR+41(1),0(R14)
+*        LA    R3,TROPENR
+*        L     R15,=V($PASTRX)
+*        BALR  R14,R15
+*
+         L     R14,=A(ABNDCODE)
+         CLI   0(R14),C' '
+         BNE   PAFPOPZ
+*
+         TM    DCBOFLGS,X'10'
+         BNO   BADWRITE            REPORT ANY PROBLEM
+*
+************************************************************
+*   ausgeben der beiden MACRF Bytes im DCB zum Test
+*   2. fuer PUT
+*   Bits wie folgt belegt:
+*   X'01000000' - keine Ahnung, immer an im Test
+*   X'00010000' - move mode
+*   X'00001000' - locate mode
+************************************************************
+*
+*        XR    R3,R3
+*        IC    R3,DCBMACRF+1
+*        CVD   R3,DOWO
+*        UNPK  TRMACRF+18(9),DOWO+3(5)
+*        OI    TRMACRF+26,X'F0'
+*        LA    R3,TRMACRF
+*        L     R15,=V($PASTRX)
+*        BALR  R14,R15
+*
+         TM    DCBMACRF+1,X'10'
+         BNO   PAFPOP2
+         OI    FILOPN(AE),TEXTMOVE     MOVE-MODE ON FILE OUTPUT
+*
+PAFPOP2  DS    0H
+         OI    FILOPN(AE),WRITEOPN     SET FLAGS, BUF PTRS ETC.
+         OI    FILEOF(AE),1
+         MVI   FILEOFP(AE),TRUE    OUTPUT FILES HAVE EOF TRUE
+         SR    R0,R0
+         ST    R0,FILLIM(AE)       CLEAR OUTPUT LIMIT
+         TM    FILOPN(AE),TEXTFLAG
+         BZ    PAFPOPZ             RETURN IF NOT A TEXT FILE
+         MVI   FILEOLN(AE),TRUE    SET EOL - IN CASE !
+         STH   R0,FILPTR(AE)       CLEAR LINE POSN PTR
+         ST    R0,FILBUF(AE)       NULLIFY BUFFER POINTER
+         LH    R1,DCBLRECL         GET LRECL FROM THE DCB
+*
+************************************************************
+*   das fuehrt dazu, dass auch bei RECFM F die BLKSIZE in die
+*   Satzlaenge kopiert wird - offenbar nur bei RECFM = U
+************************************************************
+*
+         TM    DCBRECFM,X'C0'
+         BNO   *+12                JUMP IF NOT U-FORMAT
+         LH    R1,DCBBLKSI
+         STH   R1,DCBLRECL
+*
+         STH   R0,FILBEG(AE)       RESET CHAR. START POSITION
+         BCTR  R0,0
+         STH   R0,FILEND(AE)       INIT. BUFFER TO "OVER-FULL"
+         CLI   DCBRECFM,X'80'
+         BNL   PAFPOP1             JUMP IF NOT V-FORMAT
+         MVI   FILBEG+1(AE),4      ALLOW 4-BYTE RDW/SDW
+PAFPOP1  TM    DCBRECFM,X'06'      TEST IF CONTROL CHARS
+         BZ    PAFPOPE
+         L     R14,=V($PASGLOB)
+         USING PASGLOB,R14
+         CLI   CCFLAG,0            RETURN IF CONTROL CHARS ARE NOT
+         DROP  R14
+         BE    PAFPOPE             TO BE INSERTED
+         OI    FILBEG+1(AE),1      ADD 1-BYTE CONTROL CHAR.
+*
+PAFPOPE  DS    0H
+         TM    FILOPN(AE),TEXTMOVE
+         BZ    PAFPOPZ
+*
+*        XR    R3,R3
+*        LH    R3,DCBLRECL
+*        CVD   R3,DOWO
+*        UNPK  TRLRECL2+18(9),DOWO+3(5)
+*        OI    TRLRECL2+26,X'F0'
+*        LA    R3,TRLRECL2
+*        L     R15,=V($PASTRX)
+*        BALR  R14,R15
+*
+         LH    R5,DCBLRECL
+         GETMAIN R,LV=(R5)
+         ST    R1,FILBUF(AE)           FILE BUFFER FOR MOVE MODE
+         MVC   FILEND(2,AE),DCBLRECL   RESET BUFFER LENGTH
+         LR    AF,R1
+*
+         BAL   R5,PAFCLR
+*
+PAFPOPZ  DS    0H
+         L     R11,SAVEPOP+4
+         L     R14,SAVEPOP
+         BR    R14
+*
+*
+*
+*
+*****************************************************************
+*        Subroutine to prepare open of a file
+*****************************************************************
+*
+PAFOPN   DS    0H
+*
+         USING PAFOPN,R15
+*
+         ST    R14,SAVEOPN
+         ST    R11,SAVEOPN+4
+         LR    R11,R15
+*
+         DROP  R15
+         USING PAFOPN,R11
+*
+*        L     R14,=A(OPENMODE)
+*        MVC   TRMEMBER+12(1),0(R14)
+*        MVC   TRMEMBER+14(8),FILNAM(AE)
+*        MVC   TRMEMBER+32(8),FILMEM(AE)
+*        LA    R3,TRMEMBER
+*        L     R15,=V($PASTRX)
+*        BALR  R14,R15
+*
+*****************************************************************
+*        save dcb for possible retry
+*        and set abndcode flag to space
+*****************************************************************
+*
+         MVC   FILDCBS(LENDCB,AE),FILDCB(AE)
+*
+PAFOPN1  DS    0H
+         L     R14,=A(ABNDCODE)
+         MVI   0(R14),C' '
+*
+*****************************************************************
+*        no check for member name etc. on CMS
+*****************************************************************
+*
+         AIF   ('&SYSPARM' EQ 'CMS').CMS103
+*
+*****************************************************************
+*        if a member name has been assigned using ASSIGNMEM,
+*        this member name overrides the member name in the JFCB,
+*        which means: this member will be opened
+*        see: OPEN ... TYPE=J
+*        thanks to Gerhard Pospischil for support on this
+*****************************************************************
+*
+         CLC   FILMEM(8,AE),=CL8' '
+         BE    PAFOPN2
+*
+*****************************************************************
+*        call DEVTYPE to get the device type
+*        X'20' means: direct access device
+*        X'01' means: instream file
+*****************************************************************
+*
+         LA    AG,FILDCB(AE)
+         LA    R3,DCBDDNAM-IHADCB(AG)
+         DEVTYPE (R3),RDEVTYPE
+*
+         LTR   R15,R15
+         BNZ   PAFOPN2
+*
+*        XR    R3,R3
+*        IC    R3,RDEVTYPE+2
+*        CVD   R3,DOWO
+*        UNPK  TRDEVTYP+18(9),DOWO+3(5)
+*        OI    TRDEVTYP+26,X'F0'
+*        LA    R3,TRDEVTYP
+*        L     R15,=V($PASTRX)
+*        BALR  R14,R15
+*
+         CLI   RDEVTYPE+2,X'20'
+         BNE   PAFOPN2
+*
+*****************************************************************
+*        call RDJFCB to get DSName and Member name (from DD)
+*        JFCPDS: true if PDS - Member name has been specified
+*        JFCGDG: true if GDG version has been specified
+*        JFCPDS does not tell if DSN is PDS or not ...
+*****************************************************************
+*
+         LA    AG,FILDCB(AE)
+         LR    R3,AG
+         RDJFCB ((R3))
+*
+         MVC   TRJFCB+18(44),JFCBDSNM
+         TM    JFCBIND1,JFCPDS         Member specified on DD ?
+         MVI   TRJFCB+60,C' '
+         BNO   *+8
+         MVI   TRJFCB+60,C'P'
+         MVC   TRJFCB+62(8),JFCBELNM
+*
+*****************************************************************
+*        JFCDSRG1 does not tell, if PDS or not before OPEN ...
+*****************************************************************
+*
+*        XR    R3,R3
+*        IC    R3,JFCDSRG1
+*        CVD   R3,DOWO
+*        UNPK  TRJFCB+71(9),DOWO+3(5)
+*        OI    TRJFCB+79,X'F0'
+*
+*        LA    R3,TRJFCB
+*        L     R15,=V($PASTRX)
+*        BALR  R14,R15
+*
+         MVC   JFCBELNM,FILMEM(AE)     Membername in JFCB
+         OI    JFCBIND1,JFCPDS         Datei ist PDS
+         OI    JFCBTSDM,JFCVSL         redrive allocation (?)
+*
+         L     R14,=A(OPENMODE)
+         CLI   0(R14),C'O'
+         BE    PAFOPNO1
+*
+         LA    AG,FILDCB(AE)
+         OPEN  ((AG),(INPUT)),TYPE=J
+         B     PAFOPN3
+*
+PAFOPNO1 DS    0H
+         LA    AG,FILDCB(AE)
+         OPEN  ((AG),(OUTPUT)),TYPE=J
+         B     PAFOPN3
+*
+.CMS103  ANOP
+*
+PAFOPN2  DS    0H
+         L     R14,=A(OPENMODE)
+         CLI   0(R14),C'O'
+         BE    PAFOPNO2
+*
+         LA    AG,FILDCB(AE)
+         OPEN  ((AG),(INPUT))
+         B     PAFOPN3
+*
+PAFOPNO2 DS    0H
+         LA    AG,FILDCB(AE)
+         OPEN  ((AG),(OUTPUT))
+         B     PAFOPN3
+*
+************************************************************
+*   if Abend Code not Blank, the DCB is destroyed
+*   and must be restored from the saved DCB
+*   if the Abend Code is P (S013-14), there was a try
+*   to open a member on a sequential file; try again without
+*   a member name
+************************************************************
+*
+PAFOPN3  DS    0H
+         L     R14,=A(ABNDCODE)
+         CLI   0(R14),C' '
+         BE    PAFOPN4
+*
+         LA    AG,FILDCB(AE)
+         CLOSE ((AG))
+         TM    DCBBUFCB+3,1
+         BO    PAFOPN3A
+         FREEPOOL (AG)
+*
+PAFOPN3A DS    0H
+         MVC   FILDCB(LENDCB,AE),FILDCBS(AE)
+*
+************************************************************
+*   retry bei 013-14 funktioniert nicht, desh. auskommentiert
+************************************************************
+*
+*        L     R14,=A(ABNDCODE)
+*        CLI   0(R14),C'P'
+*        BNE   PAFOPN4
+*        CLC   FILMEM(8,AE),=CL8' '
+*        BE    PAFOPN4
+*        MVC   FILMEM(8,AE),=CL8' '
+*        B     PAFOPN1
+*
+************************************************************
+*   ausgeben LRECL und BLKSI
+************************************************************
+*
+PAFOPN4  DS    0H
+*        XR    R3,R3
+*        LH    R3,DCBLRECL
+*        CVD   R3,DOWO
+*        UNPK  TRLRECL+18(9),DOWO+3(5)
+*        OI    TRLRECL+26,X'F0'
+*        LA    R3,TRLRECL
+*        L     R15,=V($PASTRX)
+*        BALR  R14,R15
+*
+*        XR    R3,R3
+*        LH    R3,DCBBLKSI
+*        CVD   R3,DOWO
+*        UNPK  TRBLKSI+18(9),DOWO+3(5)
+*        OI    TRBLKSI+26,X'F0'
+*        LA    R3,TRBLKSI
+*        L     R15,=V($PASTRX)
+*        BALR  R14,R15
+*
+*        XR    R3,R3
+*        IC    R3,DCBRECFM
+*        CVD   R3,DOWO
+*        UNPK  TRRECFM+18(9),DOWO+3(5)
+*        OI    TRRECFM+26,X'F0'
+*        LA    R3,TRRECFM
+*        L     R15,=V($PASTRX)
+*        BALR  R14,R15
+*
+PAFOPNZ  DS    0H
+         L     R11,SAVEOPN+4
+         L     R14,SAVEOPN
+         BR    R14
+*
+*
+TRDDNAM  DC    CL80'TRACE: FILENAME = XXXXXXXX'
+TRLRECL  DC    CL80'TRACE: LRECL    = XXXXXXXXX'
+TRBLKSI  DC    CL80'TRACE: BLKSIZE  = XXXXXXXXX'
+TRDEVTYP DC    CL80'TRACE: DEVTYPE  = XXXXXXXXX'
+TRJFCB   DC    CL80'TRACE: JFCB     = '
+TRRECFM  DC    CL80'TRACE: RECFM    = XXXXXXXXX'
+TRMACRF  DC    CL80'TRACE: MACRF    = XXXXXXXXX'
+TRLRECL2 DC    CL80'TRACE: LRECL(2) = XXXXXXXXX'
+TRMEMBER DC    CL80'TRACE: OPEN X DDXXXXXX MEMBER = XXXXXXXX'
+TROPENR  DC    CL80'TRACE:  RET X DDXXXXXX MEMBER = XXXXXXXX'
+*                   0....5....1....5....2....5....3....5....4
+*
+RDEVTYPE DS    0D
+         DS    CL(LENDCB)
+*
+         AIF   ('&SYSPARM' EQ 'CMS').CMS104
+         IEFJFCBN
+.CMS104  ANOP
+*
+*
+*
+*
+*
+**********************************************************************
+*        EXIT ROUTINE CALLED WHEN DCB IS OPENED
+*
+*        IN THIS ROUTINE, WE PROVIDE SOME REASONABLE DEFAULTS
+*        FOR THE RECFM, LRECL, BLKSIZE AND BUFNO ATTRIBUTES
+*        THIS ROUTINE ALSO SETS THE REREAD FLAG WHEN NEEDED
+*        AT THE CHANGE-OVER BETWEEN TWO CONCATENATED
+*        INPUT FILES.
+**********************************************************************
+*        opp 02.2017:
+*        don't change dcb values on open for input
+*        because values come from the file system
+**********************************************************************
+*
+         DROP  ,
+*
+         USING XLSTRTOT,R15
+         USING IHADCB,R1
+         USING STACK,R12
+*
+XLSTRTOT DS    0H
+         LA    R5,DEFAULTS         ENTRY FOR OUTPUT DCB'S
+         LA    R0,OUTPUT
+         CR    AD,R0               TEST IF FILE IS "OUTPUT"
+         BNE   *+8                 IT USES DIFFERENT DEFAULTS
+         LA    R5,OUTDFLTS
+         BAL   R15,XLSTRT2         RESET BASE REGISTER & TRANSFER
+         USING XLSTRTIN,R15
+*
+XLSTRTIN DS    0H
+         LA    R5,DEFAULTS         ENTRY FOR INPUT AND INOUT FILES
+         TM    DCBOFLGS,X'08'      TEST IF CONCAT. FLAG SET
+         BZ    XLSTRT1
+         L     R4,=A(RRFLAG)
+         MVI   0(R4),X'FF'         REQUEST A REREAD
+         B     XLSTRT2
+XLSTRT1  OI    DCBOFLGS,X'08'      REQUEST PROC. OF CONCAT FILES
+*
+******************************************************************
+*        BUFNO ggf. setzen
+******************************************************************
+*
+XLSTRT2  DS    0H
+         SR    R4,R4
+         CLI   DCBBUFNO,0
+         BNE   XLSTRT3             JUMP IF BUFNO PROVIDED
+         CLI   FILTERM(AE),C'Y'    BUFNO = 1 on Terminal files
+         MVI   DCBBUFNO,1
+         BE    XLSTRT3
+         MVC   DCBBUFNO(1),4(R5)
+*
+******************************************************************
+*        RECFM ggf. setzen
+******************************************************************
+*        hier Modifikation 02.2017:
+*        wenn OpenMode = I, keine Werte aus dem DCB aendern;
+*        sie kommen alle aus dem FileSystem
+******************************************************************
+*
+XLSTRT3  DS    0H
+*
+         CLI   OPENMODE,C'I'
+         BE    XLSTRTE
+*
+         TM    DCBRECFM,X'FE'
+         BNZ   XLSTRT4             JUMP IF RECFM SPECIFIED
+         OC    DCBRECFM(1),5(R5)
+*
+******************************************************************
+*        LRECL ggf. setzen - Nicht Textfile
+******************************************************************
+*
+XLSTRT4  DS    0H
+         TM    FILOPN(AE),TEXTFLAG
+         BNZ   XLSTRT47            JUMP IF A TEXT FILE
+         LH    R3,FILCSZ(AE)       GET FILE COMPONENT SIZE
+         LA    AF,PFILCOMP(AD)
+         CLI   DCBRECFM,X'80'
+         BNL   XLSTRT45            JUMP IF RECFM=F OR U
+         LA    R3,4(,R3)           ADD IN 4 BYTES FOR RDW
+         S     AF,=F'4'            AND CORRECT BUFFER ADDRESS
+XLSTRT45 ST    AF,FILBUF(AE)
+         STH   R3,FILRSZ(AE)       SAVE CORRECT RECORD SIZE
+         CH    R4,DCBLRECL         R4 is zero at this point !
+         BNZ   XLSTRT5             JUMP IF LRECL SPECIFIED
+         B     XLSTRT49            GO AND SET THE LRECL
+*
+******************************************************************
+*        LRECL ggf. setzen - Textfile
+******************************************************************
+*
+XLSTRT47 DS    0H
+         CH    R4,DCBLRECL         R4 is zero at this point !
+         BNZ   XLSTRT5             JUMP IF LRECL SPECIFIED
+         LH    R3,0(R5)            load default lrecl
+         TM    DCBRECFM,X'C0'
+         BO    XLSTRT5             JUMP IF U-FORMAT (LEAVE LRECL=0)
+         CLI   DCBRECFM,X'80'
+         BNL   *+8                 JUMP IF F-FORMAT
+         LA    R3,4(R3)            ALLOW FOR RDW/SDW IN REC. LENGTH
+         TM    DCBRECFM,X'06'
+         BZ    *+8                 JUMP IF NO CONTROL CHAR.
+         LA    R3,1(R3)            ADD IN 1 BYTE FOR CONTROL CHAR
+XLSTRT49 STH   R3,DCBLRECL
+*
+******************************************************************
+*        BLOCKSIZE ermitteln bzw. korrigieren
+******************************************************************
+*
+XLSTRT5  DS    0H
+         LH    R3,DCBLRECL
+         LH    R5,DCBBLKSI         R5 = specified blocksize
+         CLI   DCBRECFM,X'80'
+         BNL   XLSTRT6             JUMP IF NOT V-FORMAT
+*
+         LA    R3,4(R3)            LRECL + 4 IS MINIMUM BLKSIZE
+         LR    R4,R3               R4 = minimum blocksize
+         B     XLSTRT7
+*
+XLSTRT6  TM    DCBRECFM,X'C0'
+         BNO   XLSTRT61
+         STH   R3,DCBBLKSI         RECFM = U, blck = rec size
+         BR    R14                 fertig
+*
+XLSTRT61 XR    R4,R4               RECFM = F
+         DR    R4,R3               Blocksize in R5
+         MR    R4,R3               auf Multiple of RecLen
+         LR    R4,R3               R4 = RecLen
+*
+XLSTRT7  CR    R5,R4
+         BNL   XLSTRT8
+         LR    R5,R4
+*
+XLSTRT8  STH   R5,DCBBLKSI
+*
+XLSTRTE  DS    0H
+         BR    R14
+*
+*
+*
+*
+**********************************************************************
+*        SYNAD ROUTINE
+**********************************************************************
+*
+         USING SYNADRT,R15
+         DROP  R1
+*
+SYNADRT  DS    0H
+         LA    R3,OUTPUT           GENERATES MESSAGES FOR FILE ERRORS
+         CR    AD,R3               CHECK IF PROBLEM WITH OUTPUT FILE
+         BNE   *+8                 JUMP IF NOT OUTPUT FILE
+         ST    R14,$PASEXIT        SAVE ERROR EXIT ADDRESS
+         SYNADAF ACSMETH=QSAM      GENERATE THE ERROR DESCRIPTION
+         MVC   SYNMSG+4(78),50(R1)   AND MOVE IT INTO LOCAL BUFFER
+         SYNADRLS ,                NOW RELEASE THE SYSTEM'S BUFFER
+         LA    R14,SYNMSG
+         LA    R1,23
+         L     R15,=V($PASERR)
+         BR    R15
+*
+         DROP  ,
+*
+*
+*
+*
+**********************************************************************
+*        OPEN ABEND EXIT
+**********************************************************************
+*
+         USING ABNDEXIT,R15
+*
+ABNDEXIT DS    0H
+         ST    R11,SAVEABND+4
+         ST    R14,SAVEABND
+         LR    R11,R15
+         DROP  R15
+         USING ABNDEXIT,R11
+         ST    R1,ABNDPARM
+         MVI   ABNDCODE,C' '
+*
+******************************************************************
+*        First two Bytes: ABEND Code in first 12 bits
+******************************************************************
+*
+         LH    R15,0(R1)
+         SRL   R15,4
+         STH   R15,HALFA
+         UNPK  TRABND+24(5),HALFA(3)
+         TR    TRABND+24(4),TABHEXA-C'0'
+         MVI   TRABND+28,C' '
+*
+******************************************************************
+*        Byte 2: Reason Code (e.g.: 013-xx)
+******************************************************************
+*
+         XR    R15,R15
+         IC    R15,2(R1)
+         STH   R15,HALFA
+         UNPK  TRABND+29(3),HALFA+1(2)
+         TR    TRABND+29(2),TABHEXA-C'0'
+         MVI   TRABND+31,C' '
+*
+******************************************************************
+*        Byte 3: Option Byte, see below
+******************************************************************
+*
+         XR    R15,R15
+         IC    R15,3(R1)
+         STH   R15,HALFA
+         UNPK  TRABND+32(3),HALFA+1(2)
+         TR    TRABND+32(2),TABHEXA-C'0'
+         MVI   TRABND+34,C' '
+*
+*        LA    R3,TRABND
+*        L     R15,=V($PASTRX)
+*        BALR  R14,R15
+*
+******************************************************************
+*        Input to exit:
+*
+*        3(3)          1                Option mask.
+*                      xxxx ...x        Reserved.
+*                      .... 1...        Okay to recover.
+*                      .... .1..        Okay to ignore.
+*                      .... ..1.        Okay to delay.
+*
+*        Test if ignore bit is on
+*        if not, set error code to 'X'
+*        set 0 into option byte
+*        (write message and abend immediately)
+*        return from abndexit
+******************************************************************
+*
+         L     R1,ABNDPARM
+         TM    3(R1),X'04'
+         BO    ABND1
+         MVI   ABNDCODE,C'X'
+         MVI   3(R1),X'00'
+         B     ABNDZ
+*
+******************************************************************
+*        if code = 013-14: member was issued for non-pds
+*        set code accordingly (code = 'P')
+*        set 20 into option byte
+*        return from abndexit
+******************************************************************
+*
+ABND1    DS    0H
+         LH    R15,0(R1)
+         SRL   R15,4
+         CH    R15,=X'0013'
+         BNE   ABND3
+         CLI   2(R1),X'14'
+         BNE   ABND2
+         MVI   ABNDCODE,C'P'
+         MVI   3(R1),X'14'
+         B     ABNDZ
+*
+******************************************************************
+*        if code = 013-18: member was not found
+*        set code accordingly (code = 'N')
+*        set 20 into option byte
+*        return from abndexit
+******************************************************************
+*
+ABND2    DS    0H
+         CLI   2(R1),X'18'
+         BNE   ABND3
+         MVI   ABNDCODE,C'N'
+         MVI   3(R1),X'14'
+         B     ABNDZ
+*
+******************************************************************
+*        otherwise: other errors which can be ignored
+*        set code accordingly (code = 'E')
+*        set 20 into option byte
+*        return from abndexit
+******************************************************************
+*
+ABND3    DS    0H
+         MVI   ABNDCODE,C'E'
+         MVI   3(R1),X'14'
+         B     ABNDZ
+*
+ABNDZ    DS    0H
+         XR    R15,R15
+         IC    R15,3(R1)
+         STH   R15,HALFA
+         UNPK  TRABND+32(3),HALFA+1(2)
+         MVI   TRABND+34,C' '
+*
+*        LA    R3,TRABND
+*        L     R15,=V($PASTRX)
+*        BALR  R14,R15
+*
+         L     R14,SAVEABND
+         L     R11,SAVEABND+4
+         BR    R14
+*
+         DROP  ,
+*
+ABNDPARM DS    A
+SAVEABND DS    2A
+HALFA    DS    H
+         DS    C
+*
+TRABND   DC    CL80'TRACE: CALL TO ABNDEXIT XXXX XX XX'
+*                   012345....1....5....2....5....3....5.
+ABNDCODE EQU   TRABND+35,1,C'C'
+*
+         LTORG
+*
+TABHEXA  DC    C'0123456789ABCDEF'
+*
+*
+*
+************************************************************
+*        DCB EXIT LIST PARAMETERS -
+*        see suggestions from gerhard postpischil
+************************************************************
+*
+         AIF   ('&SYSPARM' EQ 'CMS').CMS101
+*
+         DS    0F
+XLINPUT  DC    X'05',AL3(XLSTRTIN)
+         DC    X'07',AL3(JFCBDSNM)
+         DC    X'91',AL3(ABNDEXIT)
+*
+XLINOUT  EQU   XLINPUT
+*
+         DS    0F
+XLOUTPUT DC    X'05',AL3(XLSTRTOT)
+         DC    X'07',AL3(JFCBDSNM)
+         DC    X'91',AL3(ABNDEXIT)
+*
+         AGO   .CMS102
+*
+.CMS101  ANOP
+*
+         DS    0F
+XLINPUT  DC    X'85',AL3(XLSTRTIN)
+*
+XLINOUT  EQU   XLINPUT
+*
+         DS    0F
+XLOUTPUT DC    X'85',AL3(XLSTRTOT)
+*
+.CMS102  ANOP
+*
+*
+*
+************************************************************
+*        DEFAULT AND TARGET VALUES FOR FILES OTHER THAN "OUTPUT"
+*        opp 2017: blocksize was 1600, changed to 0 for cms
+*        opp 2017: make it equal to lrecl in exit routine
+************************************************************
+*
+DEFAULTS DC    H'80'               TARGET DATA BYTES PER RECORD
+         DC    H'0'                TARGET BYTES PER BLOCK
+         DC    AL1(3)              DEFAULT BUFNO VALUE
+         DC    X'50'               DEFAULT RECFM = VB
+*
+************************************************************
+*        DEFAULT AND TARGET VALUES FOR "OUTPUT" FILE
+*        opp 2017: blocksize was 1600, changed to 0 for cms
+*        opp 2017: make it equal to lrecl in exit routine
+************************************************************
+*
+OUTDFLTS DC    H'132'              TARGET DATA BYTES PER RECORD
+         DC    H'0'                TARGET BYTES PER BLOCK
+         DC    AL1(5)              DEFAULT BUFNO VALUE
+         DC    X'54'               DEFAULT RECFM = VBA
+*
+SYNMSG   DC    H'-79',AL2(SYNERR),CL79' '
+*
+$PASEXIT DC    A(XIT)
+*
+OPENMODE DS    C
+*
+*
+*
+*
+*
+**************************************************************
+*        drop all base regs
+**************************************************************
+*
+         DROP  ,
+*
+         LTORG
+*
+*
+*
+*
+*
+**************************************************************
+*
+*        GLOBAL DEFINITIONS
+*
+*        REGISTER ASSIGNMENTS
+*
+**************************************************************
+*
+R0       EQU   0
+R1       EQU   1
+R2       EQU   2
+R3       EQU   3
+R4       EQU   4
+R5       EQU   5
+R6       EQU   6
+R7       EQU   7
+R8       EQU   8
+R9       EQU   9
+R10      EQU   10
+R11      EQU   11
+R12      EQU   12
+R13      EQU   13
+R14      EQU   14
+R15      EQU   15
+*
+FPR0     EQU   0                   FLOATING REG 0
+FPR2     EQU   2
+FPR4     EQU   4
+FPR6     EQU   6
+*
+LCAFTMST EQU   80                  LOCAL VARIABLE AREA (PASCAL PROCS)
+FPRSAREA EQU   32                  FP REG SAVE AREA SIZE
+*
+**************************************************************
+*        MISCELLANEOUS CONSTANTS
+**************************************************************
+*
+SYNERR   EQU   1009                SYNCHRONOUS I/O ERROR RETURN CODE
+*
+**************************************************************
+*        FILE RELATED SYMBOL DEFINITIONS
+**************************************************************
+*
+         WXTRN IBCOM#
+IBCOMINI EQU   64                  IBCOM INITIALIZATION ENTRY POINT
+IBCOMXIT EQU   68                  IBCOM TERMINATION ENTRY POINT
+*
+**************************************************************
+*        CSP ROUTINE NUMBERS
+**************************************************************
+*
+PREW     EQU   4*4+40
+PWRI     EQU   6*4+40
+PWRC     EQU   9*4+40
+PWRS     EQU   10*4+40
+PWLN     EQU   22*4+40
+PXIT     EQU   29*4+40
+PSKP     EQU   34*4+40
+PWRP     EQU   37*4+40
+*
+**************************************************************
+*        FILE BLOCK FIELDS
+**************************************************************
+*
+FILNAM   EQU   0                   PASCAL NAME FOR FILE
+FILLNK   EQU   8                   LINK PTR TO NEXT FILE BLOCK
+FILPAS   EQU   12                  PTR TO PASCAL FILE VARIABLE
+FILBUF   EQU   16                  PTR TO I/O BUFFER
+FILLIM   EQU   20                  OUTPUT LINES LIMIT FOR FILE
+FILEND   EQU   24                  CURRENT BUFFER LENGTH (TEXTFILES)
+FILOPN   EQU   26                  OPEN/TEXT FLAGS
+FILEOF   EQU   27                  EOF FLAG
+FILPTR   EQU   28                  CURRENT CHAR POS (TEXTFILE)
+FILBEG   EQU   30                  CHAR START POS   (TEXTFILE)
+FILRSZ   EQU   28                  MAX RECORD SIZE (NON TEXTFILE)
+FILCSZ   EQU   30                  FILE COMP. SIZE (NON TEXTFILE)
+FILSTA   EQU   32                  File Status (Textfile)
+FILEOFP  EQU   33                  EOF FLAG IN PASCAL
+*                                  (neu, vorher in PASCAL FCB)
+FILEOLN  EQU   34                  EOLN FLAG IN PASCAL
+*                                  (neu, vorher in PASCAL FCB)
+FILDIR   EQU   35                  DIR (I(NPUT),O(UTPUT), U=INOUT)
+FILTERM  EQU   36                  TERMINAL FLAG
+FILRDBS  EQU   37                  READBUF SCHEDULED (Terminal file)
+FILUSER  EQU   38                  User File (not builtin) new in 2023
+FILMEM   EQU   40                  Member Name for PDS I/O (MVS only)
+FILDCB   EQU   48                  DCB POSITION IN BLOCK
+*                                  (was 32, when work started in 2016)
+FILDCBS  EQU   144                 SAVED DCB (FOR OPEN RETRY) 04.2017
+*
+**************************************************************
+*        PASCAL FILE BLOCK FIELDS
+**************************************************************
+*
+PFILPTR  EQU   0                   PTR TO FILE CONTROL BLOCK
+PFILRSZ  EQU   4                   RECORD SIZE  (NON TEXTFILE)
+PFILCOMP EQU   8                   FILE COMPONENT
+PFILTSIZ EQU   12                  TOTAL SIZE FOR TEXT FILE
+*
+**************************************************************
+*        INTERNAL CHARACTER CODE FOR USEFUL CHARACTERS
+**************************************************************
+*
+FILEOL   EQU   0  ?
+FILEXP   EQU   C'E'
+FILZER   EQU   C'0'
+FILNIN   EQU   C'9'
+FILPLU   EQU   C'+'
+FILMIN   EQU   C'-'
+FILTIM   EQU   C'*'
+FILBLA   EQU   C' '
+FILDOT   EQU   C'.'
+*
+**************************************************************
+*        READ/WRITE AND TEXT FLAG VALUES
+**************************************************************
+*
+READOPN  EQU   1
+WRITEOPN EQU   2
+TEXTFLAG EQU   4
+TEXTMOVE EQU   8
+*
+**************************************************************
+*        REGISTERS ASSOCIATED WITH FILE USAGE
+**************************************************************
+*
+AD       EQU   9                   PASCAL FILE CONTROL BLOCK
+AE       EQU   8                   CSP FILE CONTROL BLOCK
+AF       EQU   7                   O.S. RECORD BUFFER FOR FILE
+AG       EQU   6                   DCB FOR FILE
+*
+**************************************************************
+*        MISCELLANEOUS CONSTANTS
+**************************************************************
+*
+FALSE    EQU   0
+TRUE     EQU   1
+*
+         END   $PASCSP0

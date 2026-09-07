@@ -149,6 +149,15 @@
 *
 ***********************************************************************
 *
+*    Some more modifications in 2023 by Bernd Oppolzer
+*    (berndoppolzer@yahoo.com)
+*
+*    - all CSPs in $PASCSP, which are not needed any more,
+*      have been replaced by dummy code. This way the PASMONN source
+*      has been reduced from 8000+ lines to 7700 lines :-)
+*
+***********************************************************************
+*
 *    Some more modifications in 2020 by Bernd Oppolzer
 *    (berndoppolzer@yahoo.com)
 *
@@ -4167,41 +4176,14 @@ EOL3     DS    0H
 *****************************************************************
 *        RDB, (READ BOOLEAN)   ADR(FILE),ADR(BOOLEAN)
 *****************************************************************
+*        2023.03: RDB has been replaced by Pascal Code (PASLIBX)
+*****************************************************************
+*
 *
          DS    0H
          DC    CL4'RDB'
 RDB      DS    0H
-         FILADR ,
-         BAL   R5,PAFCHK           CHECK FILE STATUS
-         BAL   R5,PAFGNB           ADVANCE TO A NON-BLANK
-         B     EOFREAD             ERROR RETURN FOR EOF
-         LA    RSLT,TRUE
-         OI    PFILCOMP(AD),X'40'  CONVERT TO UPPER CASE (IN CASE !)
-         CLI   PFILCOMP(AD),C'T'   T = TRUE ?
-         BE    RDB6
-         CLI   PFILCOMP(AD),C'F'   F = FALSE ?
-         BNE   BADBOOL             NEITHER = AN ERROR
-RDB4     SR    RSLT,RSLT
-RDB6     STC   RSLT,0(R2)          STORE THE RESULT
-         BAL   R5,PAFGFE           STEP TO FOLLOWING CHAR
-         B     RTN
-*
-*
-*
-*****************************************************************
-*        RDC  (READ CHAR),  R2 = ADDR. OF CHAR
-*****************************************************************
-*
-         DS    0H
-         DC    CL4'RDC'
-RDCOLD   DS    0H
-         FILADR ,
-*
-         BAL   R5,PAFCHK           CHECK FILE STATUS
-         IC    R0,PFILCOMP(AD)
-         STC   R0,0(R2)
-         BAL   R5,PAFGFE
-         B     RTN
+         DC    H'0'                abend here
 *
 *
 *
@@ -4209,281 +4191,80 @@ RDCOLD   DS    0H
 *****************************************************************
 *        RDI/RDH/RDY (READ INTEGER)    AD: ADR(FILE),  R2: ADR(INT)
 *****************************************************************
+*        2023.03: ... has been replaced by Pascal Code (PASLIBX)
+*****************************************************************
 *
          DS    0H
          DC    CL4'RDY'
-RDY      OI    RDY1+1,X'F0'        OVERWRITE NO-OP
-         B     RDI
+RDY      DS    0H
+         DC    H'0'                abend here
 *
          DS    0H
          DC    CL4'RDH'
-RDH      OI    RDH1+1,X'F0'        OVERWRITE NO-OP
-         B     RDI
-*
-*
+RDH      DS    0H
+         DC    H'0'                abend here
 *
          DS    0H
          DC    CL4'RDI'
 RDI      DS    0H
-         FILADR ,
-*
-         BAL   R5,PAFCHK           CHECK FILE STATUS
-         LR    R4,R2               CLEAR A REGISTER PAIR  (R2,R3)
-         SR    R3,R3
-         MVI   RDISIGN,1           ASSUME POSITIVE
-         BAL   R5,PAFGNB           ADVANCE TO A NON-BLANK
-         B     EOFREAD             ERROR RETURN FOR EOF
-         CLI   PFILCOMP(AD),FILPLU
-         BE    RDI23
-         CLI   PFILCOMP(AD),FILMIN
-         BNE   RDI25
-         MVI   RDISIGN,0           CHANGE TO NEGATIVE
-RDI23    BAL   R5,PAFGFE
-RDI25    LA    R15,BADINT          PREPARE ERROR RT ADDRESS
-RDI4     DS    0H
-*
-*        STM   R1,R5,SAVERDI
-*        ST    R15,SAVERDI2
-*        SR    R0,R0
-*        IC    R0,PFILCOMP(AD)     GET DIGIT
-*        CVD   R0,DOWO
-*        UNPK  TRRDI1+21(9),DOWO+3(5)
-*        OI    TRRDI1+29,X'F0'
-*        LA    R3,TRRDI1
-*        L     R15,=A(PTRACE)
-*        BALR  R14,R15
-*        L     R15,SAVERDI2
-*        LM    R1,R5,SAVERDI
-*
-         SR    R0,R0
-         IC    R0,PFILCOMP(AD)     GET DIGIT
-         SH    R0,=AL2(FILZER)
-         BMR   R15                 QUIT LOOP IF NON-DIGIT
-         CH    R0,=AL2(9)
-         BHR   R15
-         M     R2,=F'10'
-         AR    R3,R0
-         BAL   R5,PAFGFE
-         BAL   R15,RDI4            LOOP BACK & SET EXIT ADDRESS
-*
-         TM    RDISIGN,1
-         BO    *+6
-         LCR   R3,R3
-RDH1     BC    0,RDH2              JUMP FOR RDH/RDY ROUTINES
-         ST    R3,0(R4)
-         B     RTN
-RDH2     NI    RDH1+1,X'0F'        RESET JUMP BACK TO NO-OP
-RDY1     BC    0,RDY2              JUMP FOR RDY ROUTINE
-         CH    R3,=H'32767'
-         BH    BIGINT
-         CH    R3,=H'-32768'
-         BL    BIGINT
-         STH   R3,0(R4)
-         B     RTN
-RDY2     NI    RDY1+1,X'0F'        RESET JUMP BACK TO NO-OP
-         CL    R3,=F'255'
-         BH    BIGINT
-         STC   R3,0(R4)
-         B     RTN
-*
-TRRDI1   DC    CL80'TRACE: ZEICHEN RDI = XXXXXXXXX'
-RDISIGN  DC    C' '
+         DC    H'0'                abend here
 *
 *
 *
 *****************************************************************
-*  RDS, (READ STRING), R2 = STRING ADDRESS, R3 = STRING LENGTH !
+*        RDS, (READ STRING)
+*        R2 = STRING ADDRESS, R3 = STRING LENGTH !
+*****************************************************************
+*        2023.03: RDS has been replaced by RFS
 *****************************************************************
 *
          DS    0H
          DC    CL4'RDS'
 RDS      DS    0H
-         FILADR ,
-*
-         BAL   R5,PAFCHK           check file status
-*
-         CLI   FILEOF(AE),TRUE     if eof set then
-         BNE   RDSNOEOF
-*
-         XR    R14,R14             source address irrelevant
-         L     R15,=X'40000000'    source length zero, fill w. blank
-         MVCL  R2,R14              set string to blank
-         LA    R0,FILBLA           end of line character
-         STC   R0,PFILCOMP(AD)     set current char
-         B     RDSZ                go to end of function
-*
-RDSNOEOF DS    0H
-         LH    R15,FILEND(AE)
-         LH    R14,FILPTR(AE)
-         SR    R15,R14             compute number of chars left
-         CR    R3,R15              more required ?
-         BL    RDSL
-         MVC   FILPTR(2,AE),FILEND(AE)  filptr to filend
-         MVI   FILEOLN(AE),TRUE         incidate eoln
-         B     RDS01
-*
-RDSL     DS    0H
-         LR    R0,R14              R14 = filptr (see above)
-         AR    R0,R3               add length (R3) to filptr
-         STH   R0,FILPTR(AE)       new position to filptr
-*
-RDS01    DS    0H
-         IC    R0,PFILCOMP(AD)     start with current character
-*
-**********************************************************************
-*        (ibm370 dependency: MVCL)
-**********************************************************************
-*
-         STC   R0,0(R2)            copy chars one by one
-         LA    R14,1(R14)          increment source address
-         BCTR  R15,0
-         LA    R2,1(R2)            increment target address
-         BCTR  R3,0
-         LTR   R3,R3
-         BNP   RDSF3
-         LTR   R15,R15
-         BNM   RDSF2
-         SR    R15,R15
-*
-RDSF2    DS    0H
-         AR    R14,AF              addr of first char
-         ICM   R15,8,=AL1(FILBLA)  set fill char
-         MVCL  R2,R14              now copy string
-*
-RDSF3    DS    0H
-         LH    R14,FILPTR(AE)
-         CLI   FILEOLN(AE),TRUE    eoln ?
-         BE    RDSF4
-         IC    R0,0(R14,AF)        load next input char
-         STC   R0,PFILCOMP(AD)     set current char
-         B     RDSZ
-*
-RDSF4    DS    0H
-         LA    R0,FILBLA           end of line character
-         STC   R0,PFILCOMP(AD)     set current char
-*
-*****************************************************************
-*        if eoln, do readbuf on next iteration
-*****************************************************************
-*
-         CLI   FILTERM(AE),C'Y'    if not a terminal file
-         BE    RDSZ
-         MVI   FILRDBS(AE),1       schedule Readbuf for next RDS
-*
-RDSZ     DS    0H
-*
-         B     RTN
-*
-         LTORG
+         DC    H'0'                abend here
 *
 *
 *
 *****************************************************************
-*  RDV, (READ STRING), R2 = STRING ADDRESS, R3 = STRING LENGTH !
+*        RDV, (READ STRING)
+*        R2 = STRING ADDRESS, R3 = STRING LENGTH !
+*****************************************************************
+*        2023.03: RDV has been replaced by RFV
 *****************************************************************
 *
          DS    0H
          DC    CL4'RDV'
 RDV      DS    0H
-         FILADR ,
+         DC    H'0'                abend here
 *
-*        STM   R1,R5,SAVERDS
 *
-*        ST    AF,HEX5
-*        UNPK  HEX9,HEX5
-*        TR    HEX9(8),TABHEX-C'0'
-*        MVC   TRRDV0+36(8),HEX9
-*        LA    R3,TRRDV0
-*        L     R15,=A(PTRACE)
-*        BALR  R14,R15
-*
-*        MVC   TRRDV1+20(30),0(R2)
-*        LA    R3,TRRDV1
-*        L     R15,=A(PTRACE)
-*        BALR  R14,R15
-*
-*        LM    R1,R5,SAVERDS
-*
-         BAL   R5,PAFCHK           check file status
-*
-         CLI   FILEOF(AE),TRUE     if eof set then
-         BNE   RDVNOEOF
-*
-         STH   R3,0(R2)            store R3 to maxlength
-         XR    R14,R14
-         STH   R14,2(R2)           store zero to actual length
-         LA    R0,FILBLA           end of line character
-         STC   R0,PFILCOMP(AD)     set current char
-         B     RDVZ                go to end of function
-*
-RDVNOEOF DS    0H
-         LH    R15,FILEND(AE)
-         LH    R14,FILPTR(AE)
-         SR    R15,R14             compute number of chars left
-         CR    R3,R15              string has more space ?
-         BL    RDVL
-         MVC   FILPTR(2,AE),FILEND(AE)  filptr to filend
-         MVI   FILEOLN(AE),TRUE         incidate eoln
-         B     RDV01
-*
-RDVL     DS    0H
-         LR    R0,R14              R14 = filptr (see above)
-         AR    R0,R3               add length (R3) to filptr
-         STH   R0,FILPTR(AE)       new position to filptr
-         LR    R15,R3              only transfer max. R3 bytes
-*
-RDV01    DS    0H
-         STH   R3,0(R2)            store maxlength to String maxl
-         STH   R15,2(R2)           store actlength to String actl
-         LA    R2,4(R2)            point R2 to String content
-         IC    R0,PFILCOMP(AD)     start with current character
-         LTR   R15,R15             if actlen = zero
-         BNP   RDV02A              don't copy characters
-*
-RDV02    DS    0H
-         STC   R0,0(R2)            copy chars one by one
-         LA    R14,1(R14)          increment source address
-         LA    R2,1(R2)            increment target address
-         IC    R0,0(R14,AF)        load next input char
-         BCT   R15,RDV02
-*
-RDV02A   DS    0H
-         CLI   FILEOLN(AE),TRUE    eoln ?
-         BE    RDV03
-         STC   R0,PFILCOMP(AD)     set current char
-         B     RDVZ
-*
-RDV03    DS    0H
-         LA    R0,FILBLA           end of line character
-         STC   R0,PFILCOMP(AD)     set current char
 *
 *****************************************************************
-*        if eoln, do readbuf on next iteration
+*        RDC (READ CHAR FROM FILE)
+*        same as RFC to support RFC change ... 25.08.2020
+*        R2 = ADDR. OF CHAR
+*        R3 = field width (-1 = default)
+*****************************************************************
+*        2023.03: RDC has been replaced by RFC
 *****************************************************************
 *
-         CLI   FILTERM(AE),C'Y'    if not a terminal file
-         BE    RDVZ
-         MVI   FILRDBS(AE),1       schedule Readbuf for next RDS
+         DS    0H
+         DC    CL4'RDC'
+RDC      DS    0H
+         DC    H'0'                abend here
 *
-RDVZ     DS    0H
 *
-*        LM    R1,R5,SAVERDS
-*        MVC   TRRDV2+20(30),0(R2)
-*        LA    R3,TRRDV2
-*        L     R15,=A(PTRACE)
-*        BALR  R14,R15
 *
-         B     RTN
+*****************************************************************
+*        RDR, READ THE NEXT (REAL) NUMBER INTO (GRG2)
+*****************************************************************
+*        2023.03: RDR has been replaced by Pascal Code
+*****************************************************************
 *
-TRRDV0   DC    CL80'TRACE: START  RDV FILEBUFFER (AF) = XXXXXXXX'
-*                   0....5....1....5....2....5....3....5
-TRRDV1   DC    CL80'TRACE: START  RDV = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
-TRRDV2   DC    CL80'TRACE: RETURN RDV = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
-         DS    0F
-HEX5     DS    CL5
-HEX9     DS    CL9
-*
-         LTORG
+         DS    0H
+         DC    CL4'RDR'
+RDR      DS    0H
+         DC    H'0'                abend here
 *
 *
 *
@@ -4529,44 +4310,6 @@ RFC01    DS    0H
 RFCXX    DS    0H
          LR    R3,R4               result into register R3
          B     RTNR3               and quit
-*
-*
-*
-*****************************************************************
-*        RDC (READ CHAR FROM FILE)
-*        same as RFC to support RFC change ... 25.08.2020
-*        R2 = ADDR. OF CHAR
-*        R3 = field width (-1 = default)
-*****************************************************************
-*
-         DS    0H
-         DC    CL4'RDC'
-RDC      DS    0H
-         FILADR ,
-*
-         LTR   R3,R3               check field width
-         BZ    RDC01               if zero read nothing
-         BP    RDC02               if positive use it as is
-         LA    R3,1                otherwise set to 1 (default)
-*
-RDC02    DS    0H
-         BAL   R5,PAFCHK           check file status
-*
-         IC    R0,PFILCOMP(AD)     insert char from file buffer
-         STC   R0,0(R2)            store into target
-*
-RDC03    DS    0H
-         BAL   R5,PAFGFE           get next character
-         CLI   FILEOLN(AE),TRUE    if eoln leave loop
-         BE    RTN
-         BCT   R3,RDC03            repeat get until r3 = zero
-*
-         B     RTN                 and quit
-*
-RDC01    DS    0H
-         LA    R0,FILBLA           store blank
-         STC   R0,0(R2)            into target
-         B     RTN                 and quit
 *
 *
 *
@@ -4964,55 +4707,13 @@ WRP1     DS    0H
 *        R3 = Length value
 *        R4 = Pointer to Scalar String Vektor
 *****************************************************************
+*        2023.03: WRX has been replaced by Pascal Code
+*        in PASLIBX.PAS
+*****************************************************************
 *
          DC    CL4'WRX'
 WRX      DS    0H
-         ST    R2,PINT             Store R2
-         LTR   R2,R2               if Scalar value negative
-         BM    WRXERR              branch to WRXERR
-         ST    R3,PINT+4           Store R3
-         LH    R2,0(R4)            Load offset of highest Scalar
-         LTR   R2,R2               if zero, new layout of meta info
-         BNZ   WRX1
-         LH    R2,2(R4)            this is max scalar value plus 1
-         BCTR  R2,0                max Scalar value
-         C     R2,PINT             compare max value with parm
-         BL    WRXERR              branch to WRXERR
-*
-         S     R2,PINT             value is ok, subtract parm
-         SLA   R2,2                multiply by 4, = offset of entry
-         LH    R3,10(R2,R4)        length of string
-         LH    R2,8(R2,R4)         offset of string
-         AR    R2,R4               address of string
-         LR    R4,R3               copy to R4
-         L     R3,PINT+4           restore R3
-         B     WRXC
-*
-WRX1     DS    0H
-         SRA   R2,2                divide by 4, = max scalar plus 1
-         BCTR  R2,0                max Scalar value
-         C     R2,PINT             compare max value with parm
-         BL    WRXERR              branch to WRXERR
-*
-         S     R2,PINT             value is ok, subtract parm
-         SLA   R2,2                multiply by 4, = offset of entry
-         LH    R3,2(R2,R4)         length of string
-         LH    R2,0(R2,R4)         offset of string
-         AR    R2,R4               address of string
-         LR    R4,R3               copy to R4
-         L     R3,PINT+4           restore R3
-*
-WRXC     DS    0H
-         B     WRS
-*
-WRXERR   DS    0H
-         L     R2,PINT             Print Pointer as Hex String
-         UNPK  ZINT(9),PINT(5)         Convert
-         TR    ZINT(8),TABHEX-C'0'     to Hex
-         LA    R2,ZINT
-         LA    R4,8                string length = 8
-         MVC   ZINT(4),=C'WRX:'
-         B     WRXC
+         DC    H'0'                abend here
 *
 *
 *
@@ -5242,103 +4943,6 @@ WRR      DS    0H
          BALR  R14,R15
          B     RTN
 *
-*
-*
-*****************************************************************
-*        RDR, READ THE NEXT (REAL) NUMBER INTO (GRG2)
-*****************************************************************
-*
-         DS    0H
-         DC    CL4'RDR'
-RDR      DS    0H
-         FILADR ,
-         BAL   R5,PAFCHK           CHECK FILE STATUS
-         SDR   0,0
-         LA    R3,1
-         BAL   R5,PAFGNB           ADVANCE TO A NON-BLANK
-         CLI   PFILCOMP(AD),FILPLU
-         BE    RDR3
-         CLI   PFILCOMP(AD),FILMIN
-         BNE   RDR4
-         LCR   R3,R3
-RDR3     BAL   R5,PAFGFE
-RDR4     LA    R15,BADREAL         SET ERROR EXIT ADDRESS
-RDR45    SR    R1,R1
-         IC    R1,PFILCOMP(AD)            GET CHARACTER
-         SH    R1,=AL2(FILZER)
-         BMR   R15                 QUIT LOOP IF NON-DIGIT
-         CH    R1,=AL2(9)
-         BHR   R15
-         MD    0,=D'10.0'
-         SLA   R1,3
-         AD    0,DECTBL(R1)
-         BAL   R5,PAFGFE
-         BAL   R15,RDR45           LOOP BACK & SET EXIT ADDRESS
-RDR5     SR    R4,R4
-         CLI   PFILCOMP(AD),FILDOT
-         BNE   RDR7
-         BAL   R5,PAFGFE
-RDR6     CLI   PFILCOMP(AD),FILZER
-         BL    RDR7
-         CLI   PFILCOMP(AD),FILNIN
-         BH    RDR7
-         MD    0,=D'10.0'
-         SR    R1,R1
-         IC    R1,PFILCOMP(AD)
-         SH    R1,=AL2(FILZER)
-         SLA   R1,3
-         AD    0,DECTBL(R1)
-         BAL   R5,PAFGFE
-         BCTR  R4,0
-         B     RDR6
-RDR7     LTR   R3,R3
-         BNM   *+6
-         LCDR  0,0
-         CLI   PFILCOMP(AD),C'E'
-         BE    RDR75
-         CLI   PFILCOMP(AD),C'e'
-         BNE   RDR13
-RDR75    LA    R3,1
-RDR8     BAL   R5,PAFGFE
-         CLI   PFILCOMP(AD),FILBLA
-         BE    RDR8
-         ST    R4,RDREXPO
-         SR    R4,R4
-RDR9     CLI   PFILCOMP(AD),FILPLU
-         BE    RDR10
-         CLI   PFILCOMP(AD),FILMIN
-         BNE   RDR11
-         LCR   R3,R3
-RDR10    BAL   R5,PAFGFE
-RDR11    LA    R15,BADREAL         SET ERROR EXIT ADDRESS
-RDR115   SR    R1,R1
-         IC    R1,PFILCOMP(AD)     GET CHARACTER
-         SH    R1,=AL2(FILZER)
-         BMR   R15                 QUIT LOOP IF NON-DIGIT
-         CH    R1,=AL2(9)
-         BHR   R15
-         MH    R4,=H'10'
-         AR    R4,R1
-         BAL   R5,PAFGFE
-         BAL   R15,RDR115          LOOP BACK & SET EXIT ADDRESS
-RDR12    LTR   R3,R3
-         BNM   *+6
-         LCR   R4,R4
-         A     R4,RDREXPO
-RDR13    LTR   R4,R4
-         BZ    RDR16
-         BP    RDR14
-         LPR   R4,R4
-         B     RDR15
-RDR14    MD    0,=D'10.0'
-         BCT   R4,RDR14
-         B     RDR16
-RDR15    DD    0,=D'10.0'
-         BCT   R4,RDR15
-RDR16    STD   0,0(R2)             PUT THE RESULT IN PASCAL VARIABLE
-         B     RTN
-*
-RDREXPO  DC    F'0'
 *
 *
 *

@@ -1,0 +1,411 @@
+
+Suchfile = *.pas
+ArgsFile = CMSX
+
+
+===== Durchsuchen Datei algolx1.pas ======
+
+
+===== Durchsuchen Datei aufbadr.pas ======
+
+
+===== Durchsuchen Datei automat.pas ======
+
+
+===== Durchsuchen Datei copyreal.pas ======
+
+
+===== Durchsuchen Datei copytext.pas ======
+
+
+===== Durchsuchen Datei crash.pas ======
+
+
+===== Durchsuchen Datei crash2.pas ======
+
+
+===== Durchsuchen Datei fibdemo.pas ======
+
+
+===== Durchsuchen Datei fibok.pas ======
+
+
+===== Durchsuchen Datei iso7185.pas ======
+
+
+===== Durchsuchen Datei iso7185n.pas ======
+
+
+===== Durchsuchen Datei iso7185pat.pas ======
+
+
+===== Durchsuchen Datei ivmoded.pas ======
+
+
+===== Durchsuchen Datei kalender.pas ======
+
+
+===== Durchsuchen Datei modrand.pas ======
+
+
+===== Durchsuchen Datei msaus2.pas ======
+
+
+===== Durchsuchen Datei msfedit.pas ======
+
+
+===== Durchsuchen Datei oevmoded.pas ======
+
+
+===== Durchsuchen Datei pdokkneu.pas ======
+
+
+===== Durchsuchen Datei pfehl.pas ======
+
+
+===== Durchsuchen Datei primzerl.pas ======
+
+
+===== Durchsuchen Datei qsort.pas ======
+
+
+===== Durchsuchen Datei rrwcomp.pas ======
+
+
+===== Durchsuchen Datei scanerg.pas ======
+
+
+===== Durchsuchen Datei scanergx.pas ======
+
+
+===== Durchsuchen Datei scangen.pas ======
+
+
+===== Durchsuchen Datei showhex.pas ======
+
+
+===== Durchsuchen Datei splitf.pas ======
+
+
+===== Durchsuchen Datei splitf2.pas ======
+
+
+===== Durchsuchen Datei splitpas.pas ======
+
+
+===== Durchsuchen Datei test.pas ======
+
+
+===== Durchsuchen Datei TEST1.PAS ======
+
+
+===== Durchsuchen Datei TESTAND.PAS ======
+
+
+===== Durchsuchen Datei testasg2.pas ======
+
+
+===== Durchsuchen Datei testasgn.pas ======
+
+
+===== Durchsuchen Datei TESTASM.PAS ======
+
+
+===== Durchsuchen Datei testavl.pas ======
+
+
+===== Durchsuchen Datei testc1.pas ======
+
+
+===== Durchsuchen Datei testc2.pas ======
+
+
+===== Durchsuchen Datei TESTCA2.PAS ======
+
+
+===== Durchsuchen Datei TESTCA3.PAS ======
+
+
+===== Durchsuchen Datei testcase.pas ======
+
+
+===== Durchsuchen Datei TESTCEIN.PAS ======
+
+
+===== Durchsuchen Datei testchar.pas ======
+
+
+===== Durchsuchen Datei testchk.pas ======
+
+
+===== Durchsuchen Datei TESTCOLL.PAS ======
+
+
+===== Durchsuchen Datei testcopy.pas ======
+
+
+===== Durchsuchen Datei testdec.pas ======
+
+
+===== Durchsuchen Datei testdump.pas ======
+
+
+===== Durchsuchen Datei TESTDUPL.PAS ======
+
+
+===== Durchsuchen Datei testeof.pas ======
+
+
+===== Durchsuchen Datei TESTERR1.PAS ======
+
+
+===== Durchsuchen Datei TESTERR2.PAS ======
+
+
+===== Durchsuchen Datei testerr3.pas ======
+
+
+===== Durchsuchen Datei TESTFIL1.PAS ======
+
+
+===== Durchsuchen Datei TESTFILE.PAS ======
+
+
+===== Durchsuchen Datei testfpar.pas ======
+
+
+===== Durchsuchen Datei TESTFUNC.PAS ======
+
+
+===== Durchsuchen Datei TESTIEIN.PAS ======
+
+
+===== Durchsuchen Datei testindx.pas ======
+
+
+===== Durchsuchen Datei TESTINN.PAS ======
+
+
+===== Durchsuchen Datei TESTINP.PAS ======
+
+
+===== Durchsuchen Datei testints.pas ======
+
+
+===== Durchsuchen Datei testkomm.pas ======
+
+
+===== Durchsuchen Datei TESTLAB.PAS ======
+
+
+===== Durchsuchen Datei testlab2.pas ======
+
+
+===== Durchsuchen Datei testlev.pas ======
+
+
+===== Durchsuchen Datei testlevf.pas ======
+
+
+===== Durchsuchen Datei testlevu.pas ======
+
+
+===== Durchsuchen Datei testlit.pas ======
+
+
+===== Durchsuchen Datei testlitf.pas ======
+
+
+===== Durchsuchen Datei testljmp.pas ======
+
+
+===== Durchsuchen Datei testlstr.pas ======
+
+
+===== Durchsuchen Datei TESTM1.PAS ======
+
+
+===== Durchsuchen Datei TESTMAJ.PAS ======
+
+
+===== Durchsuchen Datei testmcmp.pas ======
+
+
+===== Durchsuchen Datei TESTMOD.PAS ======
+
+procedure CMSX ( CMD : CHARPTR ; var RETCODE : INTEGER ) ;
+            CMSX ( ADDR ( CMSCMD ) , RC ) ;
+                WRITELN ( 'CMSX: ' , CMSCMD ) ;
+            CMSX ( ADDR ( CMSCMD ) , RC ) ;
+                CMSX ( ADDR ( CMSCMD ) , RC ) ;
+
+===== Durchsuchen Datei testncom.pas ======
+
+
+===== Durchsuchen Datei testnf.pas ======
+
+
+===== Durchsuchen Datei testopt.pas ======
+
+
+===== Durchsuchen Datei testp3.pas ======
+
+
+===== Durchsuchen Datei testp4.pas ======
+
+
+===== Durchsuchen Datei testp5.pas ======
+
+
+===== Durchsuchen Datei testp6.pas ======
+
+
+===== Durchsuchen Datei testp7.pas ======
+
+
+===== Durchsuchen Datei testparm.pas ======
+
+
+===== Durchsuchen Datei TESTPDS.PAS ======
+
+
+===== Durchsuchen Datei testptr.pas ======
+
+
+===== Durchsuchen Datei testptr2.pas ======
+
+
+===== Durchsuchen Datei testr001.pas ======
+
+
+===== Durchsuchen Datei testrbol.pas ======
+
+
+===== Durchsuchen Datei testrdr.pas ======
+
+
+===== Durchsuchen Datei testrdsx.pas ======
+
+
+===== Durchsuchen Datei TESTREAL.PAS ======
+
+
+===== Durchsuchen Datei TESTRL.PAS ======
+
+
+===== Durchsuchen Datei TESTRND.PAS ======
+
+
+===== Durchsuchen Datei TESTSCAN.PAS ======
+
+
+===== Durchsuchen Datei TESTSET.PAS ======
+
+
+===== Durchsuchen Datei TESTSET1.PAS ======
+
+
+===== Durchsuchen Datei TESTSET2.PAS ======
+
+
+===== Durchsuchen Datei testset3.pas ======
+
+
+===== Durchsuchen Datei testset4.pas ======
+
+
+===== Durchsuchen Datei testset5.pas ======
+
+
+===== Durchsuchen Datei testset6.pas ======
+
+
+===== Durchsuchen Datei TESTSETH.PAS ======
+
+
+===== Durchsuchen Datei TESTSETS.PAS ======
+
+
+===== Durchsuchen Datei testsin.pas ======
+
+
+===== Durchsuchen Datei testsin2.pas ======
+
+
+===== Durchsuchen Datei testskon.pas ======
+
+
+===== Durchsuchen Datei TESTSNA1.PAS ======
+
+
+===== Durchsuchen Datei TESTSNA2.PAS ======
+
+
+===== Durchsuchen Datei TESTSNA3.PAS ======
+
+
+===== Durchsuchen Datei TESTSNAP.PAS ======
+
+
+===== Durchsuchen Datei testsqrt.pas ======
+
+
+===== Durchsuchen Datei TESTSTAT.PAS ======
+
+
+===== Durchsuchen Datei teststr0.pas ======
+
+
+===== Durchsuchen Datei teststr1.pas ======
+
+
+===== Durchsuchen Datei teststr2.pas ======
+
+
+===== Durchsuchen Datei teststr3.pas ======
+
+
+===== Durchsuchen Datei testsub.pas ======
+
+
+===== Durchsuchen Datei testsvar.pas ======
+
+
+===== Durchsuchen Datei TESTTRC.PAS ======
+
+
+===== Durchsuchen Datei testuml.pas ======
+
+
+===== Durchsuchen Datei testvarc.pas ======
+
+
+===== Durchsuchen Datei testvc2.pas ======
+
+
+===== Durchsuchen Datei TESTVS.PAS ======
+
+
+===== Durchsuchen Datei testw2.pas ======
+
+
+===== Durchsuchen Datei testwith.pas ======
+
+
+===== Durchsuchen Datei testwrs.pas ======
+
+
+===== Durchsuchen Datei testx.pas ======
+
+
+===== Durchsuchen Datei TESTXB.PAS ======
+
+
+===== Durchsuchen Datei TESTXBM.PAS ======
+
+
+===== Durchsuchen Datei tqsort.pas ======
+
+
+===== Durchsuchen Datei xconvert.pas ======
+

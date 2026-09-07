@@ -1,0 +1,19 @@
+&CONTROL OFF NOMSG
+CP SET PF12 RETRIEVE
+CP SET PF3 IMMED FILE
+CP SET PF7 IMMED UP 15
+CP SET PF8 IMMED DOWN 15
+CP SET PF5 IMMED =
+CP SET PF6 IMMED ?
+ACC 19D Z
+CP LINK PLI 191 241 RR READ
+ACC 241 P
+&BEGTYPE
+
+**************************************************************
+*    USER PASCAL - WEITERENTWICKLUNG PASCAL-COMPILER         *
+**************************************************************
+
+&END
+Q DISK
+SET LDRTBLS 20

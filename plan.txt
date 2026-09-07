@@ -1,17 +1,48 @@
 
-VNext:
+2024.02:
+
+* Fehler 341 (USE STR FUNCTION) bei Zuweisungen abschaffen
+* Uebergabe von Char Array an CONST STRING geht nicht
+* Fehler beheben bei Sets mit negativen Zahlen im Basistyp
+* a) siehe %%% in PASCAL1
+* b) Konstanten werden korrekt berechnet in BUILD_SETCONST
+* c) hier weiter: neue Syntax bei DFC S und LCA S
+* d) uebergansgweise: LCA S mit neuer Syntax von PCINT anders?
+* e) neue Befehle als Ersatz fuer SLD und SMV usw.
+* f) neue Arbeitsweise bei UNI, INT, INN ... was noch?
+* g) Dokument "pascal_sets" erweitern
+- Fehler bei COMPERR4 untersuchen und klaeren
+- TESTPARM mit leerem Parameter: Abbruch am Mainframe, falsche Inhalte PC
+
+- STATIC FILEs in Modules zulassen?
+- Trailing Blanks bei Ausgabe von PASFORM unterdruecken (C++ Kommentare)
+
+- Klaeren, was bei Binaerfiles passiert (variante Records)
+- MLANGREF: Fehler Mainframe bei PASCAL2: DFC mit 32000 funktioniert nicht
+
+- PASMONN: Pruefen, welche CSPs zurueckgebaut werden koennen und Rueckbau
+- PASMONN: aufteilen in mehrere Module, separat uebersetzt
+- PASMONN: DCB in FILDEF nicht einbauen, sondern per Pointer ?
+- PASMONN: OS-Abhaengigkeiten abspalten (wg. Portierung auf VSE)
+
+- TESTWS funktioniert nicht auf VM/CMS
 
 - WRITESTR real ueberarbeiten: Laenge ggf. anpassen (nicht Fehler 1208)
-- Trailing Blanks bei Ausgabe von PASFORM unterdruecken (C++ Kommentare)
 - Rundungsdifferenzen zwischen WRITESTR und WRITE bei reals abklaeren
 - WRITESTR real auf F-Format bei Skalen groesser als 9
 - WRITESTR Limit bei Skalen abklaeren
 - WRITESTR Funktion fuer Pointer (neue CSP erforderlich)
 - Rundungsprobleme bei WRITESTR fuer Real abklaeren (VM)
-- Uebergabe von Char Array an CONST STRING bringt keinen Fehler, geht aber nicht
-- Fehler bei COMPERR4 untersuchen und klaeren
-- STATIC FILEs in Modules zulassen?
 - USE und INTERFACES (wurde in GitHub vorgeschlagen)
+- Schlechte Genauigkeit bei Mainframe-Variante (TESTDBL1)
+
+=======================================================================================
+
+2023.03:
+
+* MLANGREF: Fehler Anzeige PASSCANE bei Compile
+* MLANGREF: Modules duerfen auf PC nicht ausfuehrbar sein
+* STATIC CHAR (32000): Abbruch in PCINT bereits bei Allokation
 
 =======================================================================================
 
@@ -21,7 +52,6 @@ VNext:
 * Funktionieren Abbrueche mit PASSNAPC ohne Aufbereitung noch ?
 * Laenge der Stack-Bereiche ausgeben
 * PASSNAP nach MVS und testen (mit TEST0C4)
-
 
 pascala pascal2
 EXEC PASCOMPA PASCAL2
@@ -46,9 +76,7 @@ THE FOLLOWING NAMES ARE UNDEFINED:
  $PASMAIN
 ERROR 4 ON LOAD COMMAND.
 
-
-- Auslieferung auf MVS (Fehler 2104 in PASCAL2 mit falscher Fehlerdiagnose)
-- TESTWS funktioniert nicht auf VM/CMS
+* Auslieferung auf MVS (Fehler 2104 in PASCAL2 mit falscher Fehlerdiagnose)
 
 * Auslieferung auf GitHub und VM
 * WRITESTR Funktion fuer Skalare

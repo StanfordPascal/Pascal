@@ -53,24 +53,27 @@ PASMAIN  CSECT
 **************************************************************
 *
          LR    R2,R1             tokenized parameter list
-         XR    R4,R4             length of param = zero
          LA    R5,PARAM+2        target adress of param = R5
          MVC   PROGNAME+2(8),0(R2)    mv first token to progname
          LA    R2,8(R2)          next token
 *
 LOOP     CLI   0(R2),X'FF'       no token ?
          BE    ELOOP
-         CH    R4,=H'1000'       already 1000 bytes in target ?
+         C     R5,=A(PARAM+1002)   already 1000 bytes in target?
          BH    ELOOP
 *
          MVC   0(8,R5),0(R2)     move token to target
          MVI   8(R5),C' '        add blank in target
-         LA    R5,9(R5)          incr target pointer
-         LA    R4,9(R4)          incr param length
+L1       LA    R5,1(R5)          incr target pointer
+         CLI   0(R5),C' '        if char in target not blank
+         BNE   L1                   increment again
+         LA    R5,1(R5)          incr target pointer once more
          LA    R2,8(R2)          next token
          B     LOOP              try again
 *
 ELOOP    DS    0H
+         LR    R4,R5             compute param length
+         S     R4,=A(PARAM+2)
          STH   R4,PARAM          store param length
          MVI   0(R5),X'0'        hex zero at the end of buffer
 *
@@ -100,7 +103,7 @@ APARAM   DC    A(PARAM)
          DC    F'-1'
 *
 **************************************************************
-*        sp teres Format f r Strings (mit Maxl nge)
+*        spaeteres Format fuer Strings (mit Maxlaenge)
 **************************************************************
 *
 PARAMMAX DC    H'1024'

@@ -1,0 +1,324 @@
+
+Short language reference of New Stanford Pascal
+
+This compiler implements the Pascal language as defined by
+the Jensen/Wirth publication
+"Pascal User Manual and Report"
+of the 1970s -
+but with many enhancements
+and some differences. These enhancements are listed in this paper.
+
+The language defined by Jensen/Wirth is called "Standard Pascal"
+in this paper.
+
+
+Program header
+
+As with Standard Pascal, the program header may contain a list of
+external file names. But the names of the external files are
+optional. Every file which is declared in the main function is
+external by default, no matter if it appears in the program header
+or not. The allocation of external Pascal files to files known to
+the operating system(s) is explained later.
+
+Furthermore, there are six predefined external files, all of type TEXT:
+INPUT, OUTPUT, PRR, QRR, PRD, QRD.
+
+There is a second variant of program header, which starts with the
+MODULE keyword (instead of PROGRAM). This second variant does not
+contain a main program, but instead a collection of external procedures
+and functions (see later). A module must not have a list of file names,
+and the main routine must be empty in the module case (like this: BEGIN END).
+
+A module must not have (global) variables, only procedures and functions.
+But: a module can have global STATIC variables (see later). These static
+variables can be initialized by constants (see later).
+
+<Module example>
+
+
+Constants
+
+First of all, the "definition sections" CONST, TYPE, VAR etc.,
+which must be in a certain order in Standard Pascal and which
+may appear only once at a certain block level, may appear in ANY order
+in New Stanford Pascal and may appear multiple times.
+
+This is necessary, because we also have "typed" constants, that is:
+constant definitions involving explicit types, and so the type definitions
+in this case must precede the const definitions.
+
+"Normal" consts look like in this example:
+
+const TAB_MAX = 1000;
+
+where the type of the symbolic constant (TAB_MAX in this case) is derived from
+the type of the constant (1000 in this case, which sets the type of TAB_MAX
+to integer).
+
+With New Stanford Pascal, you can also specify consts like this:
+
+const TAB_MAX : INTEGER = 1000;
+
+which does not add much function.
+
+But
+
+const MESSAGE = 'This is a message';
+
+is different from
+
+const MESSAGE2 : CHAR (100) = 'This is a message';
+
+the second form has length 100 and is padded with blanks to the right.
+
+See more on the type CHAR (100) below;
+the type CHAR (100) is not present in Standard Pascal.
+
+The type in such const definitions can be any type, for example:
+
+const TAB : array [1..5] of INTEGER = (10, 20, 30, 40, 50);
+
+Of course, you can use the complete type syntax after the colon,
+and you can use type identifiers of types defined before.
+
+The so-called structured constants are specified using a new syntax
+(new = introduced in 1982 at McGill university). As a rule of thumb:
+every record and every array has to be enclosed by parantheses
+in the constant specification.
+
+See the following example for a record const.
+
+type date = record
+               year : 0 ... 9999;
+               month : 0 .. 12 ;
+               day : 0 .. 31 ;
+            end;
+     person = record
+                 name: char (30);
+                 birth: date
+              end ;
+
+const x : person = ( 'John' , (1957, 7, 4) );
+
+
+
+Types
+
+New Stanford Pascal supports all the types defined by Standard Pascal.
+
+Sets
+
+With the current implementation, the base type of sets is limited to
+2000 elements. SET OF CHAR is possible, of course. SET OF 0 .. 1999
+is possible, too.
+
+At the moment there is a serious bug: the base type of a set must not
+contain negative integers ... this will be addressed in the near future.
+
+Files
+
+TEXT files are fully supported, with some significant extensions
+(see "Predefined Functions ...").
+
+Binary files are supported, too, but only with constant length at
+the moment. Not sure what happens with binary files where the base
+type is a structure with variant records.
+
+PACKED
+
+the PACKED keyword is accepted, but ignored. All char arrays are
+packed by default.
+
+More types
+
+There are some new types in New Stanford Pascal
+
+- CHAR (n)
+
+CHAR (n) is simply an abbreviation for PACKED ARRAY [1 .. n] OF CHAR.
+CHAR (n) - called CHAR arrays - are character strings which always have
+a fixed length. It is possible to assign shorter CHAR arrays to
+longer CHAR arrays (by a simple assignment). The longer CHAR array
+will be padded with blanks. Same goes for shorter CHAR array constants.
+
+It is NOT possible to assign a longer CHAR array to a shorter one;
+you will have to use the SUBSTR function in this case.
+
+CHAR array constants are limited to 254 bytes; they can simply be
+terminated on one line and continued on the next line.
+
+- STRING (n)
+
+In contrast to CHAR (n), STRING (n) is a varying length character string.
+A STRING variable has two control fields - one holding the maximum length
+as allowed by the definition, and the other holding the actual length
+(which may be zero). These fields can be queried by the MAXLENGTH and
+the LENGTH builtin functions.
+
+It is possible to assign STRINGs to CHARs and vice versa. But keep in
+mind that, when assigning CHARs to STRINGs, the trailing blanks of the
+CHAR will be copied, too. To prevent this, you may use the RTRIM function
+(see later).
+
+STRINGs can be concatenated etc. - see more on the later paragraphs
+on predefined functions etc.
+
+In main storage, STRINGs are stored in their defined maximum length
+most of the time. During processing, the STRINGs may live in a so-called
+string workarea which is handled by the runtime system and which is
+garbage-collected automatically.
+
+STRINGs can, of course, be part of arrays or records.
+
+- DECIMAL (n, m)
+
+This type is supported and can be used.
+It will support decimal computations in the future.
+At the moment it is simply another name for the REAL type,
+with one exception:
+
+if you WRITE a DECIMAL value, it is automatically written with
+the number of decimal digits as derived from the DECIMAL type definition.
+
+See this example:
+
+var X : DECIMAL (9, 2);
+
+    ...
+
+    WRITE (X);   /* same as WRITE (X : 11 : 2); */
+
+n + 2 is used for the width specification,
+so that the decimal point and a minus (if needed) can be written, too.
+
+With REAL instead of DECIMAL (9,2), WRITE (X) would write a representation
+with mantissa and exponent.
+
+
+Variables
+
+There is not much difference to Standard Pascal in the variable definitions
+with one exception:
+
+New Stanford Pascal suports the initialization of variables at the time
+of the definition.
+
+This is done using the constant syntax (even structured constants are
+allowed, see above).
+
+for example:
+
+var x : person := ( 'John' , (1957, 7, 4) );
+    i : integer := 0;
+    ok : boolean := true;
+
+the type person used here is defined above in the types section.
+
+The only difference from the const definition above is the keyword var
+and the := here instead of the = there.
+
+In fact, the compiler accepts = and := at both places, but a warning is
+issued, if := is used on const definitions and if = is used on var definitions.
+
+The internal handling is different;
+the variables defined here live on the runtime stack and therefore
+the initialization must be carried out at runtime using machine instructions
+EVERY TIME when the block which contains this definition is entered.
+So such a definition can be costly, please keep this in mind.
+
+
+Static Variables
+
+Static variables can be specified much the same as "normal" (auto)
+variables by simply replacing the var keyword by the static keyword.
+
+for example:
+
+static x : person := ( 'John' , (1957, 7, 4) );
+       i : integer := 0;
+       ok : boolean := true;
+
+static is a new reserved word of New Stanford Pascal.
+
+In contrast to variables with initialization, these initializations
+of static data is carried out once (at compile time), so that there is
+no performance penalty.
+
+Modules (see above) cannot have global variables, but they can have
+global static data which are common to all (external) procedures and
+functions defined in a module. This is so-called static data local to
+the module (private storage hidden from the users of the interfaces
+of the module).
+
+
+Procedures and Functions
+
+
+
+Statements
+
+
+
+Predefined Procedures and Functions
+
+
+
+Allocation of external (file system) files to Pascal files
+
+On mainframe systems, the names of the Pascal external files are simply
+used as DDNames and can be assigned to "real" files using the mechanisms of the
+operating system used (DD statements on MVS or z/OS, FILEDEF on VM/CMS).
+
+The name of the Pascal external file, as seen from outside, is the name of the
+Pascal file variable, but only the first eight characters. All files which
+are defined in the main procedure (top level), are external, no matter if
+they appear in the program statement or not.
+
+Because modules don't have a top level procedure (and no top-level variables),
+they don't have external file variables of their own.
+
+But:
+
+- they can access files passed to them by (var) parameter
+- they can access the six predefined files
+- they can have a pointer to a file in the global (private) static area
+(which must be set by a procedure call, before it can be used)
+- at the moment, a module cannot have a file declaration in its static area
+
+On non-mainframe systems, the allocation of files works virtually the same
+way as on mainframes.
+
+The Pascal external file names (first 8 bytes only) are used to access
+the file system, if nothing special is done.
+
+But: you can override this filename by using an environment variable.
+
+On Windows:
+
+SET DD_INPFILE=c:\work\inpfile.txt
+
+this sets the "real" filename for the Pascal file INPFILE.
+
+SET DD_INPFILE=
+
+this resets the environment; the "real" file INPFILE is used
+
+SET DD_OUTFILE=*stdout*
+
+all Pascal writes to file OUTFILE go to stdout.
+
+The file INPUT is assigned to stdin by default (but can be reassigned);
+The file OUTPUT is assigned to stdout by default (but can be reassigned).
+
+
+
+
+Run Time Options
+
+
+
+Command Line Parameters
+
+
+

@@ -1,0 +1,19 @@
+
+- < und > Abfragen fuer Sets ??
+- ALL implementieren (function returning a set)
+- INCLUDE und EXCLUDE implementieren (Prozeduren mit SET und Element)
+
+* PCINT anschauen wg. Konstanten fuer C-Sets
+* schauen, ob TESTSETA laeuft
+* abchecken, ob TESTSET9 und TESTSETA korrekte Ergebnisse liefern
+* Protokoll in PASCAL_SETS aktualisieren
+* weitere Maschineninstruktionen implementieren
+* CONST Parameter bei SETs besser
+* CRD implementieren, was ist das, wie geht das?
+* Fehler (Abbruch) beim Compile von Pascal1
+* Fehler: Error 418 bei Compile von Pascal1
+* STKEXPR ... braucht man das noch ??
+* vor CARD muss der Set gar nicht in die Workarea
+* ZCL entfernen
+* nicht mehr relevante Instruktionen geeignet markieren (SCL, SMV, SLD, ASE, ASR, ...)
+

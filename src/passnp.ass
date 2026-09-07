@@ -1,0 +1,1121 @@
+         TITLE 'PASSNP - SNAP-OUTPUT SIMPLE VARIANT'
+*
+         GBLB  &SYSTEM
+&SYSTEM  SETB  0
+*
+*
+*
+*
+*
+***************************************************************
+*
+*        STACK (AND SAVE AREA) LAYOUT
+*
+***************************************************************
+*
+DYNSTORE DSECT
+*
+         DS    20F                 PASCAL ENVIRONMENT SAVE AREA
+STACK    DS    18F          0000   BOTTOM OF RUNTIME STACK
+CLOCK    EQU   STACK               CLOCK LOCATION
+NEWPTR   DS    A            0072   PASCAL 'NEW' POINTER
+HEAPLIM  DS    A            0076   UPPER LIMIT OF HEAP ( +1 )
+*                                  ALSO POINTS TO DYN2STOR
+DISPREGS DS    10F          0080   RUN TIME DISPLAY REGISTERS
+DISPLAY  EQU   DISPREGS,*-DISPREGS
+*
+FL1OLD   DS    D            0120   R/W  FIX/FLOAT CONVERSION HELPS
+FL2OLD   DS    D            0128   R ONLY
+FL3OLD   DS    D            0136   R/W
+FL4OLD   DS    D            0144   R ONLY
+*
+CHKSUBS  DS    0F                  ENTRY TO RUN TIME CHECK ROUTINES
+INXCHK   DS    3F           0152   INDEX CHECK
+RNGCHK   DS    3F           0164   SUBRANGE CHECK
+PRMCHK   DS    3F           0176   PARAMETER VALUE CHECK
+PTRCHK   DS    3F           0188   POINTER CHECK
+PTACHK   DS    3F           0200   SET MEMBER CHECK
+SETCHK   DS    3F           0212
+STKCHK   DS    3F           0224
+TRACER   DS    3F           0236
+INPUT    DS    3F           0248
+OUTPUT   DS    3F           0260
+PRD      DS    3F           0272
+PRR      DS    3F           0284
+QRD      DS    3F           0296
+QRR      DS    3F           0308
+CLEARBUF DS    XL8          0320   BUFFER TO CLEAR ACTIVATION RECORDS
+PASDATE  DS    CL10         0328   PREDEFINED VARIABLE DATE
+PASTIME  DS    CL10         0338   PREDEFINED VARIABLE TIME
+OSPRMPTR DS    A            0348   POINTER TO O.S. PARM STRING
+*
+FL1      DS    D            0352   R/W  FIX/FLOAT CONVERSION HELPS
+FL2      DS    D            0360   R ONLY
+FL3      DS    D            0368   R/W
+FL4      DS    D            0376   R ONLY
+*
+STRFIRST DS    A            0384   PTR TO BEGIN OF STR WORKAREA
+STRCURR  DS    A            0388   ACTUAL PTR TO STR WORKAREA
+STRSIZE  DS    F            0392   STR WORKAREA SIZE
+*
+FRSTGVAR DS    0D           0400   FOR ALIGNMENT PURPOSES
+*
+*
+*
+*
+*
+***************************************************************
+*        DSECT for global variables implemented by pasglob
+***************************************************************
+*
+PASGLOB  DSECT
+*
+***********************************************************************
+*
+*        global variables
+*        --------------------------------------------------------------
+*        addressed by other modules using v-constant and dsect
+*
+***********************************************************************
+*
+GLOBAREA DS    0D
+*
+SPUSERSA DS    18F                 save area for csp functions
+OLDDATE  DS    F                   MACHINE DATE
+ALOSTACK DS    A                   address of first stack frame
+ATRLINES DS    A                   address of TRLINES field
+AFIXDATE DS    A                   address of FIXDATE routine
+AFIXTIME DS    A                   address of FIXTIME routine
+AINTDATA DS    A                   address of interrupt data
+ATRDUMP  DS    A                   address of TRDUMP routine
+CCFLAG   DC    X'00'               SET BY NOCC O.S. PARM STRING
+PROFFLAG DC    X'00'               CALL PROFILE MODULE FLAG
+SNAPFLAG DC    X'00'               X'FF' IF SNAPSHOT NOT TO BE CALLED#
+DUMPFLAG DC    X'00'               X'FF' IF DUMP REQUESTED
+SCHCSP   DC    X'00'               TELLS, IF INSIDE CSP
+*
+**********************************************************************
+*        this area is input area to error diagnosis
+*        and to passnap
+**********************************************************************
+*
+CHKAREA  DS    0D
+*
+CHKERRC  DS    F                   ERROR CODE
+CHKPSW1  DS    A                   psw left part
+CHKPSW2  DS    A                   psw right part
+CHKREGS  DS    16F                 REGISTERS 0 TO 15
+CHKINTRP DS    A                   INTERRUPT ADDRESS
+CHKITYPE DS    C                   INTERRUPT TYPE (S OR P)
+CHKRANGE DC    AL1(0)              range error flag
+CHKFILE  DC    AL1(0)              file error flag
+CHKDUMMY DS    C                   not used
+CHKLOWR  DS    F                   range error lower bound
+CHKUPPR  DS    F                   range error upper bound
+CHKCVAL  DS    F                   offending value
+CHKMSGL  DS    F                   message length
+CHKMSG   DS    A                   pointer to message
+CHKPASE  DS    A                   entry $PASENT
+CHKHEAPP DS    A                   heap pointer
+CHKHEAPT DS    A                   top of heap
+CHKCURRP DS    A                   entry point of current proc
+*
+**********************************************************************
+*        end of input area
+**********************************************************************
+*
+*
+*
+*
+*
+*
+$PASSNP  CSECT
+*
+**********************************************************************
+*
+*        THIS IS THE ENTRY POINT FOR RUN-TIME ERROR INDICATION
+*        AND THE RELATED MESSAGES
+*
+*        AND: interface to passnap, if passnap is loaded and should
+*        be activated due to runtime options (SNAP / NOSNAP)
+*
+**********************************************************************
+*        reworked bernd oppolzer / from 03.2017 to 05.2017
+*        inline snap dump (without passnap) was wrong in some aspects
+*        large parts moved to separate procedures at the end of
+*        this module, with separate base registers, see:
+*        a) showregs - to print psw and register contents
+*        b) showintr - to print interrupt address and other info
+*        c) showstak - to print call stack etc.
+*        d) showaddr - to print some interesting addresses of pasmonn
+**********************************************************************
+*
+         USING $PASSNP,R15
+         STM   R10,R11,TEMP1011    STORE R10/R11 TEMP.
+*
+         LR    R11,R15
+         USING $PASSNP,R11
+         USING STACK,R12
+*
+         L     R10,=V($PASGLOB)
+         USING PASGLOB,R10
+*
+         MVC   CHKCURRP,TEMP1011   ORIGINAL R10 TO CHKCURRP
+*
+         LA    R14,0(R14)
+         LA    R15,0(R15)          GET RID OF FLAG BITS
+         STM   R0,R15,CHKREGS      SAVE RELEVANT REGISTERS
+         MVC   CHKREGS+4*R10(8),TEMP1011  ADD R10 AND R11 ORIG.
+*
+         ST    R3,CHKMSG
+         ST    R4,CHKMSGL
+         ST    R8,CHKERRC          SAVE ERROR CODE
+         L     R7,=V($PASENT)
+         ST    R7,CHKPASE          SAVE $PASENT entry
+         L     R7,NEWPTR
+         ST    R7,CHKHEAPP         SAVE HEAP POINTER
+         L     R7,HEAPLIM
+         ST    R7,CHKHEAPT         SAVE TOP OF HEAP
+*
+**********************************************************************
+*        check IF 0cx interrupt or pascal runtime check
+**********************************************************************
+*
+         L     R7,AINTDATA         POINT AT INTERRUPT DATA AREA
+         LA    R7,4(R7)            POINT AT INTERRUPT PSW
+         TM    3(R7),X'FF'
+         BZ    SNAPOUT1            NO 0CX error
+*
+         MVC   CHKPSW1(72),0(R7)   PSW + REGS from INTDATA + 4
+         L     R15,CHKPSW2
+         LA    R15,0(R15)
+         ST    R15,CHKINTRP
+         MVI   CHKITYPE,C'S'       SYSTEM CODE (0CX)
+         B     SNAPOUT2
+*
+SNAPOUT1 DS    0H
+         XR    R15,R15
+         ST    R15,CHKPSW1
+         L     R15,CHKREGS+4*R14   MOVE R14 TO INTERRUPT ADDRESS
+         LA    R15,0(R15)          GET RID OF FLAG BITS
+         ST    R15,CHKINTRP
+         ST    R15,CHKPSW2
+         MVI   CHKITYPE,C'P'       PASCAL RUNTIME CHECK
+*
+SNAPOUT2 DS    0H
+         L     R15,=V($PASCSP2)
+         L     R1,=V($PASFILO)
+         L     R1,0(R1)                REFER TO OUTPUT FCB
+         LA    R9,OUTPUT
+         TM    FILOPN(R1),WRITEOPN     CHECK IF "OUTPUT" IS OPEN
+         BNZ   SNAPOUT4                JUMP IF OPEN
+*
+         LA    R1,PREW
+         BALR  R14,R15             CALL PASCSP TO OPEN THE FILE
+*
+**********************************************************************
+*        check is passnap is loaded and should be called
+*        if not, go to nosnap and produce a short "inline" dump
+**********************************************************************
+*
+SNAPOUT4 DS    0H
+         L     R2,SNAPADR
+         LTR   R2,R2               IS SNAPSHOT LOADED ?
+         BZ    NOSNAP
+*
+         LA    R2,SNAPFLAG
+         CLI   0(R2),X'00'         SNAPSHOT TO BE USED?
+         BNE   NOSNAP              NO
+*
+         MVI   0(R2),X'FF'         PREVENT SNAPSHOT BEING REENTERED
+*
+**********************************************************************
+*        IF AN INTERRUPT, DUMP PSW AND REGISTERS
+**********************************************************************
+*
+         L     R2,=V($PASFILO)
+         L     R2,0(R2)            FORCE "OUTPUT" FILE TO
+         NI    FILBEG+1(R2),X'FE'  ACCEPT CONTROL CHARS
+*
+         GETMAIN EC,LV=SNAPAREA,A=SNAPLOCS
+         LTR   R15,R15             SUCCESSFUL ?
+         BNZ   NOSNAP              NOT ENOUGH SPACE FOR SNAPSHOT
+*
+**********************************************************************
+*        R1 POINTS TO THE BASE OF GOTTEN AREA
+*        adjust newptr to prevent stack collision errors
+*        when passnap calls other routines - opp 04.2017
+**********************************************************************
+*
+         L     R1,SNAPLOCS
+*
+         MVC   SAVENEWP,NEWPTR
+         LR    R15,R1
+         AH    R15,=AL2(SNAPAREA)
+         ST    R15,NEWPTR
+*
+         SR    R2,R2
+         BCTR  R2,0                R2 <-- '-1'
+         LA    R3,CHKERRC          SECOND PARM OF 'SNAPSHOT'
+         STM   R2,R3,LCAFTMST+FPRSAREA(R1)
+*
+**********************************************************************
+*        call passnap
+**********************************************************************
+*
+         L     R15,SNAPADR
+         BALR  R14,R15
+*
+**********************************************************************
+*        restore newptr and
+*        free passnap workarea
+**********************************************************************
+*
+         MVC   NEWPTR,SAVENEWP
+         FREEMAIN R,LV=SNAPAREA,A=SNAPLOCS  RETURN THE AREA TO O.S.
+*
+         AIF   (&SYSTEM).SYS910
+*
+         L     R15,ATRDUMP         CALL THE TRACE TABLE DUMP
+         BALR  R14,R15             ROUTINE TO PRINT LAST TRANSFERS
+*
+.SYS910  ANOP
+*
+         LA    R2,SNAPFLAG
+         MVI   0(R2),X'00'         REALLOW SNAPSHOT CALLS
+         LA    R2,CCFLAG
+         TM    0(R2),X'FF'         TEST IF "NOCC" OPTION ON
+         BZ    SNAPDONE            JUMP IF NOT
+         L     R2,=V($PASFILO)
+         L     R2,0(R2)
+         OI    FILBEG+1(R2),X'01'  READJUST FILE BLOCK
+         B     SNAPDONE
+*
+**********************************************************************
+*        produce a short inline snap dump
+**********************************************************************
+*
+NOSNAP   DS    0H
+*
+**********************************************************************
+*        IF AN INTERRUPT, DUMP PSW AND REGISTERS
+**********************************************************************
+*
+         LA    R7,CHKPSW1
+         L     R15,=A(SHOWREGS)    dump psw and registers
+         BALR  R14,R15
+         L     R15,=A(SHOWINTR)    dump interrupt information
+         BALR  R14,R15
+         L     R15,=A(SHOWSTAK)    dump call stack
+         BALR  R14,R15
+         L     R15,=A(SHOWADDR)    dump some interesting addresses
+         BALR  R14,R15
+         L     R8,CHKERRC          LOAD ERROR CODE
+         LA    R8,SNPERR(R8)       error code += 100
+         ST    R8,CHKERRC          LOAD ERROR CODE
+*
+**********************************************************************
+*        snap has been produced, either by calling passnap
+*        or inline
+**********************************************************************
+*
+SNAPDONE DS    0H
+         L     R15,=V($PASCSP2)
+         LA    R9,OUTPUT
+         LA    R1,PWLN             ANOTHER LINE FOR LUCK
+         BALR  R14,R15
+*
+         L     R8,CHKERRC          LOAD ERROR CODE
+         LA    R1,DUMPFLAG
+         CLI   0(R1),X'FF'         TEST IF O.S. DUMP REQUESTED
+         BNE   SNAPDON1
+*
+         ABEND (R8),DUMP
+*
+SNAPDON1 DS    0H
+         LR    R2,R8
+         LA    R1,PXIT
+         BR    R15
+*
+*
+*
+TEMP1011 DS    2A
+*
+SAVENEWP DS    A
+SNAPADR  DC    V($PASSNAP)
+SNAPAREA EQU   20480               OVERESTIMATE OF SNAPSHOT DATA SIZE
+SNAPLOCS DS    A                   ADDRESS OF TEMP SNAPAREA
+*
+HEXBUF   DS    CL9                 UNPACKING BUFFER
+HEXCHARS EQU   *-240               TRANSLATE TABLE FOR CODES
+         DC    C'0123456789ABCDEF'     X'F0' TO X'FF' ONLY
+*
+         DROP  R11
+         LTORG
+*
+*
+*
+*
+*
+*
+*
+*
+*
+**************************************************************
+*
+*        Show Registers and PSW
+*        after certain runtime errors
+*
+**************************************************************
+*
+**************************************************************
+*        drop all base regs
+**************************************************************
+*
+         DROP  ,
+*
+SHOWREGS DS    0H
+         USING SHOWREGS,R15
+         STM   R14,R12,SAVESHOW
+         LR    R11,R15
+         DROP  R15
+         USING SHOWREGS,R11
+         USING PASGLOB,R10
+*
+         L     R15,=V($PASCSP2)
+         BAL   R6,SKIP2            Skip 2 lines
+*
+**********************************************************************
+*        IF AN INTERRUPT, DUMP PSW AND REGISTERS
+**********************************************************************
+*
+         LA    R6,CHKITYPE         INTERRUPT TYPE
+         CLI   0(R6),C'S'
+         BNE   SHOWREGZ            JUMP IF NOT AN OCX TYPE ERROR
+*
+         L     R15,=V($PASCSP2)
+         BAL   R6,SKIP2            Skip 2 lines
+*
+         LA    R2,MSG8             Dump PSW
+         LA    R4,L'MSG8
+         BAL   R6,MSGLINE          PRINT A DESCRIPTION
+*
+         LA    R7,CHKPSW1          INTERRUPT TYPE
+         LA    R3,9
+         L     R2,0(R7)
+         BAL   R6,HEXWORD          PRINT 1ST PSW WORD
+         LA    R7,4(,R7)
+         L     R2,0(R7)
+         BAL   R6,HEXWORD          PRINT 2ND PSW WORD
+*
+         BAL   R6,SKIP2
+*
+         LA    R2,MSG9A
+         LA    R4,L'MSG9A
+         BAL   R6,MSGLINE
+*
+         LA    R5,4                # OF REGS PER LINE
+         LA    R3,9
+SHOWREG1 DS    0H
+         LA    R7,4(R7)
+         L     R2,0(R7)
+         BAL   R6,HEXWORD          PRINT REGS 0-3
+         BCT   R5,SHOWREG1
+         BAL   R6,SKIP1
+*
+         LA    R2,MSG9B
+         LA    R4,L'MSG9B
+         BAL   R6,MSGLINE
+*
+         LA    R5,4                # OF REGS PER LINE
+         LA    R3,9
+SHOWREG2 DS    0H
+         LA    R7,4(R7)
+         L     R2,0(R7)
+         BAL   R6,HEXWORD          PRINT REGS 4-7
+         BCT   R5,SHOWREG2
+         BAL   R6,SKIP1
+*
+         LA    R2,MSG9C
+         LA    R4,L'MSG9C
+         BAL   R6,MSGLINE
+*
+         LA    R5,4                # OF REGS PER LINE
+         LA    R3,9
+SHOWREG3 DS    0H
+         LA    R7,4(R7)
+         L     R2,0(R7)
+         BAL   R6,HEXWORD          PRINT REGS 8-11
+         BCT   R5,SHOWREG3
+         BAL   R6,SKIP1
+*
+         LA    R2,MSG9D
+         LA    R4,L'MSG9D
+         BAL   R6,MSGLINE
+*
+         LA    R5,4                # OF REGS PER LINE
+         LA    R3,9
+SHOWREG4 DS    0H
+         LA    R7,4(R7)
+         L     R2,0(R7)
+         BAL   R6,HEXWORD          PRINT REGS 12-15
+         BCT   R5,SHOWREG4
+         BAL   R6,SKIP1
+*
+SHOWREGZ DS    0H
+         LM    R14,R12,SAVESHOW
+         BR    R14
+*
+*
+*
+*
+**************************************************************
+*
+*        Show Interrupt address etc.
+*        after certain runtime errors
+*
+**************************************************************
+*
+**************************************************************
+*        drop all base regs
+**************************************************************
+*
+         DROP  ,
+*
+SHOWINTR DS    0H
+         USING SHOWINTR,R15
+         STM   R14,R12,SAVESHOW
+         LR    R11,R15
+         DROP  R15
+         USING SHOWINTR,R11
+         USING PASGLOB,R10
+*
+         L     R15,=V($PASCSP2)
+         BAL   R6,SKIP1            skip one line
+*
+         LA    R1,PWRS             runtime function = WRITE STRING
+         LA    R2,MSG15            which string
+         LA    R4,L'MSG15
+         LR    R3,R4               string length and field width
+         BALR  R14,R15
+*
+         L     R2,CHKINTRP         pointer to write
+         LA    R3,8                length of output
+         BAL   R6,HEXWORD
+*
+         BAL   R6,SKIP1
+*
+         LA    R1,PWRS             runtime function = WRITE STRING
+         LA    R2,MSG1             which string
+         LA    R4,L'MSG1
+         LR    R3,R4               string length and field width
+         BALR  R14,R15
+*
+**********************************************************************
+*        von R14 (chksave) den entry point (R10) abziehen
+*        ergibt offset innerhalb der prozedur
+*        neu: WRP wg. hex ausgabe
+**********************************************************************
+*
+         LA    R1,PWRP             runtime function = WRITE pointer
+         LA    R3,8                length of output
+         L     R2,CHKINTRP         interrupt address
+         S     R2,CHKREGS+4*R10    minus ENTRY OF CURRENT PROC
+         BM    SHOWINT5            TEST FOR OUT-OF-RANGE
+         CH    R2,=H'8192'
+         BNH   SHOWINT6            ADDRESS OK
+SHOWINT5 DS    0H
+         LA    R1,PWRC             NOT OK, SO PRINT
+         LA    R2,C'?'             A QUESTION MARK INSTEAD
+         LA    R3,1
+SHOWINT6 DS    0H
+         BALR  R14,R15
+*
+**********************************************************************
+*        hier weiter wg. Prozedur-Name
+**********************************************************************
+*
+         L     R2,CHKREGS+4*R10    POINTer TO PROC. ENTRY POINT
+         MVC   MSG2PROC,14(R2)     MOVE THE PROC. NAME to message
+         LA    R1,PWRS             runtime function = WRITE STRING
+         LA    R2,MSG2             which string
+         LA    R3,L'MSG2+20
+         LR    R4,R3               string length and field width
+         BALR  R14,R15
+*
+**********************************************************************
+*        INDICATE THE TYPE OF RUN TIME ERROR
+**********************************************************************
+*
+         BAL   R6,SKIP1
+*
+         L     R2,CHKERRC             check for 2001 error code
+         CH    R2,=H'2001'
+         BNE   NORTERR
+*
+         L     R4,CHKINTRP            check 4 bytes before error psw
+         SH    R4,=H'4'
+         CLC   0(4,R4),=X'18120053'   this pattern indicates $ERROR
+         BNE   NORTERR
+*
+         LA    R1,PWRS             output $ERROR call
+         LA    R2,MSG12A
+         LA    R4,L'MSG12A
+         LR    R3,R4
+         BALR  R14,R15
+*
+         LA    R1,PWRS             output colon
+         LA    R2,MSG13
+         LA    R4,L'MSG13
+         LR    R3,R4
+         BALR  R14,R15
+*
+         LA    R1,PWRS             output 'ERROR CODE IS'
+         LA    R2,MSG12C
+         LA    R4,L'MSG12C
+         LR    R3,R4
+         BALR  R14,R15
+*
+         LA    R1,PWRI             output error number
+         L     R2,CHKREGS+4*R1     from register 1
+         LA    R4,1
+         LR    R3,R4
+         BALR  R14,R15
+         B     CMNEXT
+*
+NORTERR  DS    0H
+         LA    R1,PWRS             output ' **** '
+         LA    R2,MSG12B
+         LA    R4,L'MSG12B
+         LR    R3,R4
+         BALR  R14,R15
+*
+         LA    R1,PWRS             output 'ERROR CODE IS'
+         LA    R2,MSG12C
+         LA    R4,L'MSG12C
+         LR    R3,R4
+         BALR  R14,R15
+*
+         LA    R1,PWRI             output error number
+         L     R2,CHKERRC
+         LA    R4,7
+         LR    R3,R4
+         BALR  R14,R15
+*
+         LA    R1,PWRS             output colon
+         LA    R2,MSG13
+         LA    R4,L'MSG13
+         LR    R3,R4
+         BALR  R14,R15
+*
+         CLI   CHKFILE,1           error message related to file i/O
+         BNE   NOFILE              no, goto nofile
+*
+         LA    R1,PWRS
+*
+         L     R2,CHKERRC
+         CH    R2,=H'1009'
+         BE    CM1009
+*
+         LA    R2,MSG14
+         LA    R3,L'MSG14
+         LR    R4,R3
+         BALR  R14,R15
+         B     CMSKIP
+*
+CM1009   DS    0H
+         LA    R2,MSG1009
+         LA    R3,L'MSG1009
+         LR    R4,R3
+         BALR  R14,R15
+         B     CMSKIP
+*
+CMSKIP   DS    0H
+         BAL   R6,SKIP1
+*
+         LA    R1,PWRS
+         LA    R2,MSPREF
+         LA    R3,L'MSPREF
+         LR    R4,R3
+         BALR  R14,R15
+*
+NOFILE   DS    0H
+         L     R2,CHKMSG
+         L     R3,CHKMSGL
+         LR    R4,R3
+         BALR  R14,R15
+*
+**********************************************************************
+*        INDICATE THE STATMNT # OF THE ERROR LOCATION, IF ASKED FOR
+*        (we don't have that without passnap)
+**********************************************************************
+*
+*        BAL   R6,PRNTLOC
+*
+CMNEXT   DS    0H
+         BAL   R6,SKIP1
+*
+         CLI   CHKITYPE,C'S'       system error (0Cx)
+         BNE   NOSYSERR            no, goto nosyserr
+*
+         LA    R1,PWRS
+         LA    R2,MSG16
+         LA    R3,L'MSG16
+         LR    R4,R3
+         BALR  R14,R15
+*
+         L     R4,CHKINTRP         write 6 bytes before and
+         SH    R4,=H'6'            after error psw
+         L     R2,0(R4)
+         LA    R3,8                lead to error is there)
+         BAL   R6,HEXWORD
+         L     R2,4(R4)
+         LA    R3,9
+         BAL   R6,HEXWORD
+         L     R2,8(R4)
+         BAL   R6,HEXWORD
+         BAL   R6,SKIP1
+*
+NOSYSERR DS    0H
+*
+         AIF   (&SYSTEM).SYS34
+*
+**********************************************************************
+*        PRINT THE ERRONEOUS VALUE AND THE RANGE
+**********************************************************************
+*
+PRNTRNG  DS    0H
+         CLI   CHKRANGE,1
+         BNE   SHOWINTZ            NO RANGE TO BE PRINTED
+*
+         LA    R1,PWRS
+         LA    R2,MSG4
+         LA    R3,L'MSG4
+         LR    R4,R3
+         BALR  R14,R15
+         LA    R1,PWRI
+         L     R2,CHKREGS+4*R2
+         LA    R3,8
+         BALR  R14,R15             PRINT THE OUT OF RANGE VALUE
+         LA    R1,PWRS
+         LA    R2,MSG5
+         LA    R4,L'MSG5
+         LR    R3,R4
+         BALR  R14,R15
+         LA    R1,PWRI
+         L     R2,CHKREGS+4*R0
+         LA    R3,8
+         BALR  R14,R15             PRINT LOWER BOUND (OF THE RANGE)
+         L     R2,CHKREGS+4*R1
+         LA    R3,8
+         BALR  R14,R15             AND THE UPPER BOUND
+         BAL   R6,SKIP1
+*
+.SYS34   ANOP
+*
+SHOWINTZ DS    0H
+         LM    R14,R12,SAVESHOW
+         BR    R14
+*
+*
+*
+*
+**************************************************************
+*
+*        Show Call Stack
+*        after certain runtime errors
+*
+**************************************************************
+*
+**************************************************************
+*        drop all base regs
+**************************************************************
+*
+         DROP  ,
+*
+SHOWSTAK DS    0H
+         USING SHOWSTAK,R15
+         STM   R14,R12,SAVESHOW
+         LR    R11,R15
+         DROP  R15
+         USING SHOWSTAK,R11
+         USING PASGLOB,R10
+*
+         L     R15,=V($PASCSP2)
+         BAL   R6,SKIP1
+*
+**************************************************************
+*        ueberschriftszeilen
+**************************************************************
+*
+         LA    R1,PWRS
+         LA    R2,MSG6
+         LA    R3,L'MSG6
+         LR    R4,R3
+         BALR  R14,R15
+*
+         BAL   R6,SKIP1
+*
+         LA    R1,PWRS
+         LA    R2,MSG7A
+         LA    R3,MSG7AL
+         LR    R4,R3
+         BALR  R14,R15
+*
+         BAL   R6,SKIP1
+*
+**************************************************************
+*        maximal 100 stack zeilen
+*        schalter fuer letzte zeile auf null
+**************************************************************
+*
+         LA    R7,100              SET MAX # OF LINKS TO BE TRACED
+         MVI   STAKLAST,0
+*
+**************************************************************
+*        hier startet die schleife
+*        wenn r13 = R12, sind wir oben angekommen,
+*        dann noch eine Zeile fuer rufer = pasmonn ausgeben
+**************************************************************
+*
+NXTLNK   DS    0H
+         CR    R13,R12             SEE IF END OF STACK
+         BNE   SHOWSTA1
+*
+         MVI   STAKLAST,1
+*
+SHOWSTA1 DS    0H
+         L     R1,CHKCURRP               ENTRY POINT OF CURRENT PROC
+         MVC   CALLED(20),14(R1)         MOVE CALLED'S NAME
+         LR    R5,R13                    addr of lower save area
+         CLI   STAKLAST,1
+         BNE   SHOWSTA2
+*
+         MVC   CALLER(22),=CL22'Pascal Monitor'
+         B     SHOWSTA3
+*
+SHOWSTA2 DS    0H
+         L     R13,4(R13)                go to higher save area
+         L     R1,16(R13)                ENTRY POINT OF current PROC
+         ST    R1,CHKCURRP               STORE CURRENT PROC
+         MVC   CALLER(20),14(R1)         MOVE CALLER'S 'NAME'
+*
+SHOWSTA3 DS    0H
+         LA    R1,PWRS
+         LA    R2,MSG7B
+         LA    R3,MSG7BL
+         LR    R4,R3
+         BALR  R14,R15
+*
+         L     R2,16(R5)           get current entry from lower sa
+         LA    R2,0(R2)            clean bits at left end
+         LA    R3,8
+         BAL   R6,HEXWORD          PRINT entry point of current proc
+*
+         LA    R1,PWRS
+         LA    R2,MSG7C
+         LA    R3,MSG7CL
+         LR    R4,R3
+         BALR  R14,R15
+*
+         CLI   STAKLAST,1
+         BE    SHOWSTAZ
+*
+         L     R3,16(R13)          get higher entry from higher sa
+         LA    R3,0(R3)            clean bits at left end
+         L     R2,12(R5)           get return address from lower sa
+         LA    R2,0(R2)            clean bits at left end
+         SR    R2,R3               subtract entry point = call offset
+         LA    R3,8
+         BAL   R6,HEXWORD          PRINT call offset
+*
+         LA    R1,PWRC
+         LA    R2,C')'
+         LA    R3,1
+         BALR  R14,R15
+*
+         BAL   R6,SKIP1
+*
+         BCT   R7,NXTLNK           NEXT LEVEL IF NOT EXHAUSTED
+*
+**************************************************************
+*        hier ende der schleife
+*        wenn wir wegen Anzahl aus der schleife rausfallen,
+*        dann noch eine entsprechende Hinweiszeile ausgeben
+**************************************************************
+*
+         LA    R1,PWRS
+         LA    R2,MSG7D
+         LA    R3,MSG7DL
+         LR    R4,R3
+         BALR  R14,R15
+*
+SHOWSTAZ DS    0H
+         LM    R14,R12,SAVESHOW
+         BR    R14
+*
+*
+*
+*
+**************************************************************
+*
+*        Show Some Addresses
+*        after certain runtime errors
+*
+**************************************************************
+*
+**************************************************************
+*        drop all base regs
+**************************************************************
+*
+         DROP  ,
+*
+SHOWADDR DS    0H
+         USING SHOWADDR,R15
+         STM   R14,R12,SAVESHOW
+         LR    R11,R15
+         DROP  R15
+         USING SHOWADDR,R11
+         USING PASGLOB,R10
+*
+         USING STACK,R12
+*
+         L     R15,=V($PASCSP2)
+*
+         BAL   R6,SKIP2
+*
+         LA    R2,MSG21
+         LA    R4,L'MSG21
+         BAL   R6,MSGLINE
+         LA    R1,PWRP             WRITE EPA of $PASENT
+         L     R2,CHKPASE
+         LA    R3,8
+         BALR  R14,R15
+         BAL   R6,SKIP1
+*
+         LA    R2,MSG22
+         LA    R4,L'MSG22
+         BAL   R6,MSGLINE
+         LA    R1,PWRP             WRITE BOTTOM OF STACK
+         L     R2,CHKREGS+4*R12
+         LA    R3,8
+         BALR  R14,R15
+         BAL   R6,SKIP1
+*
+         LA    R2,MSG23
+         LA    R4,L'MSG23
+         BAL   R6,MSGLINE
+         LA    R1,PWRP             WRITE CURRENT STACK FRAME
+         L     R2,CHKREGS+4*R13
+         LA    R3,8
+         BALR  R14,R15
+         BAL   R6,SKIP1
+*
+         LA    R2,MSG24
+         LA    R4,L'MSG24
+         BAL   R6,MSGLINE
+         LA    R1,PWRP             WRITE CURRENT HEAP PTR
+         L     R2,CHKHEAPP
+         LA    R3,8
+         BALR  R14,R15
+         BAL   R6,SKIP1
+*
+         LA    R2,MSG25
+         LA    R4,L'MSG25
+         BAL   R6,MSGLINE
+         LA    R1,PWRP             WRITE POINTER TO TOP OF HEAP
+         L     R2,CHKHEAPT
+         LA    R3,8
+         BALR  R14,R15
+         BAL   R6,SKIP2
+*
+SHOWADDZ DS    0H
+         LM    R14,R12,SAVESHOW
+         BR    R14
+*
+*
+*
+*
+**********************************************************************
+*        subroutine to print a msg line via CSP WRS
+**********************************************************************
+*
+MSGLINE  DS    0H
+         LA    R1,PWRS             WRITE-STRING
+         LR    R3,R4               SET FIELD-WIDTH
+         LR    R14,R6              SET RETURN ADDRESS
+         BR    R15                 GOTO CSP
+*
+**********************************************************************
+*        subroutine to print a hex word via CSP WRP
+**********************************************************************
+*
+HEXWORD  DS    0H
+         LA    R1,PWRP             runtime function = WRITE pointer
+         LR    R14,R6
+         BR    R15                 PRINT THE HEX NUMBER via CSP WRP
+*
+**********************************************************************
+*        call CSP SKP
+**********************************************************************
+*
+SKIP2    LA    R1,PSKP
+         LA    R2,2
+         LR    R14,R6              SET RETURN ADDRESS
+         BR    R15                 GOTO CSP
+*
+SKIP1    LA    R1,PSKP
+         LA    R2,1
+         LR    R14,R6              SET RETURN ADDRESS
+         BR    R15                 GOTO CSP
+*
+*
+*
+SAVESHOW DS    15F
+*
+STAKLAST DC    X'0'
+MSPREF   DC    C' **** '
+MSG1     DC    C' **** RUN ERROR AT LOCATION : '
+MSG2     DC    C' OF PROCEDURE : '
+MSG2PROC DS    CL20
+MSG3     DC    C' BETWEEN P_STATEMENTS : '
+MSG4     DC    C' **** THE OFFENDING VALUE :'
+MSG5     DC    C' IS NOT IN THE RANGE :'
+MSG6     DC    C' **** CALL STACK:'
+MSG7A    DC    C' CALLED                ENTRY                '
+         DC    C' CALLER                CALLOFFS'
+MSG7AL   EQU   *-MSG7A
+MSG7B    DC    C' '
+CALLED   DS    CL20
+         DC    C' ('
+MSG7BL   EQU   *-MSG7B
+MSG7C    DC    C')  CALLED BY  '
+CALLER   DS    CL20
+         DC    C' ('
+MSG7CL   EQU   *-MSG7C
+MSG7D    DC    C' ++++ THE CALL STACK LISTING IS'
+         DC    C' INCOMPLETE ++++'
+MSG7DL   EQU   *-MSG7D
+MSG8     DC    C' **** INTERRUPT PSW : '
+MSG9A    DC    C' **** REGS   0 -  3 : '
+MSG9B    DC    C' **** REGS   4 -  7 : '
+MSG9C    DC    C' **** REGS   8 - 11 : '
+MSG9D    DC    C' **** REGS  12 - 15 : '
+MSG12A   DC    C' **** CALL TO PROC $ERROR  '
+MSG12B   DC    C' **** '
+MSG12C   DC    C'ERROR CODE IS '
+MSG13    DC    C' : '
+MSG14    DC    C'OTHER FILE ERROR, SEE NEXT LINE'
+MSG15    DC    C' **** INTERRUPT ADDRESS AT  : '
+MSG16    DC    C' **** CODE AROUND ERROR PSW : '
+MSG1009  DC    C'SYNCHRONOUS I/O ERROR'
+MSG21    DC    C' **** ENTRY POINT $PASENT AT  : '
+MSG22    DC    C' **** BOTTOM OF RUNTIME STACK : '
+MSG23    DC    C' **** CURRENT STACK FRAME     : '
+MSG24    DC    C' **** CURRENT HEAP POINTER    : '
+MSG25    DC    C' **** POINTER TO TOP OF HEAP  : '
+*
+TRSHOW1  DC    CL80'TRACE: SHOWREG1 POSITION 1'
+TRSHOW2  DC    CL80'TRACE: SHOWREG1 POSITION 2'
+TRSHOW3  DC    CL80'TRACE: SHOWREG1 POSITION 3'
+TRSHOW4  DC    CL80'TRACE: SHOWREG1 POSITION 4'
+*
+XHEXBUF  DS    CL9                 UNPACKING BUFFER
+XHEXCHAR EQU   *-240               TRANSLATE TABLE FOR CODES
+         DC    C'0123456789ABCDEF'     X'F0' TO X'FF' ONLY
+*
+         LTORG
+*
+         DROP  ,
+*
+*
+*
+*
+*
+*
+**************************************************************
+*
+*        GLOBAL DEFINITIONS
+*
+*        REGISTER ASSIGNMENTS
+*
+**************************************************************
+*
+R0       EQU   0
+R1       EQU   1
+R2       EQU   2
+R3       EQU   3
+R4       EQU   4
+R5       EQU   5
+R6       EQU   6
+R7       EQU   7
+R8       EQU   8
+R9       EQU   9
+R10      EQU   10
+R11      EQU   11
+R12      EQU   12
+R13      EQU   13
+R14      EQU   14
+R15      EQU   15
+*
+**************************************************************
+*        CSP ROUTINE NUMBERS
+**************************************************************
+*
+PREW     EQU   4*4+40
+PWRI     EQU   6*4+40
+PWRC     EQU   9*4+40
+PWRS     EQU   10*4+40
+PWLN     EQU   22*4+40
+PXIT     EQU   29*4+40
+PSKP     EQU   34*4+40
+PWRP     EQU   37*4+40
+*
+**************************************************************
+*        FILE BLOCK FIELDS
+**************************************************************
+*
+FILNAM   EQU   0                   PASCAL NAME FOR FILE
+FILLNK   EQU   8                   LINK PTR TO NEXT FILE BLOCK
+FILPAS   EQU   12                  PTR TO PASCAL FILE VARIABLE
+FILBUF   EQU   16                  PTR TO I/O BUFFER
+FILLIM   EQU   20                  OUTPUT LINES LIMIT FOR FILE
+FILEND   EQU   24                  CURRENT BUFFER LENGTH (TEXTFILES)
+FILOPN   EQU   26                  OPEN/TEXT FLAGS
+FILEOF   EQU   27                  EOF FLAG
+FILPTR   EQU   28                  CURRENT CHAR POS (TEXTFILE)
+FILBEG   EQU   30                  CHAR START POS   (TEXTFILE)
+FILRSZ   EQU   28                  MAX RECORD SIZE (NON TEXTFILE)
+FILCSZ   EQU   30                  FILE COMP. SIZE (NON TEXTFILE)
+FILSTA   EQU   32                  File Status (Textfile)
+FILEOFP  EQU   33                  EOF FLAG IN PASCAL
+*                                  (neu, vorher in PASCAL FCB)
+FILEOLN  EQU   34                  EOLN FLAG IN PASCAL
+*                                  (neu, vorher in PASCAL FCB)
+FILDIR   EQU   35                  DIR (I(NPUT),O(UTPUT), U=INOUT)
+FILTERM  EQU   36                  TERMINAL FLAG
+FILRDBS  EQU   37                  READBUF SCHEDULED (Terminal file)
+FILMEM   EQU   40                  Member Name for PDS I/O (MVS only)
+FILDCB   EQU   48                  DCB POSITION IN BLOCK
+*                                  (was 32, when work started in 2016)
+FILDCBS  EQU   144                 SAVED DCB (FOR OPEN RETRY) 04.2017
+*
+**************************************************************
+*        READ/WRITE AND TEXT FLAG VALUES
+**************************************************************
+*
+READOPN  EQU   1
+WRITEOPN EQU   2
+TEXTFLAG EQU   4
+TEXTMOVE EQU   8
+*
+LCAFTMST EQU   80                  LOCAL VARIABLE AREA (PASCAL PROCS)
+FPRSAREA EQU   32                  FP REG SAVE AREA SIZE
+*
+SNPERR   EQU   100                 SNAPSHOT ERROR RETURN CODE
+*
+*
+         AGO   .XXX
+.XXX     ANOP
+*
+         END   $PASSNP

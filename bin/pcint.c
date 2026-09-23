@@ -81,6 +81,15 @@
 /*  23.08.2026 ! Oppolzer    ! allow comments in the PCODE input      */
 /*  23.08.2026 ! Oppolzer    ! New P-Codes ZAR and ZAE                */
 /*  06.09.2026 ! Oppolzer    ! New P-Code CRD (Function CARD)         */
+/*  10.09.2026 ! Oppolzer    ! Implement correct set comparisons      */
+/*             !             ! with new set implementation            */
+/*  19.09.2026 ! Oppolzer    ! set comparisons finished successfully  */
+/*  22.09.2026 ! Oppolzer    ! more set related instructions:         */
+/*             !             ! ZIC, ZED, ZMI, ZMA, ZNE                */
+/*             !             ! needed for INCLUDE/EXCLUDE and for     */
+/*             !             ! the set-related for loops              */
+/*  .......... ! ........    ! .....................................  */
+/*  .......... ! ........    ! .....................................  */
 /*  .......... ! ........    ! .....................................  */
 /*  .......... ! ........    ! .....................................  */
 /*  .......... ! ........    ! .....................................  */
@@ -3967,6 +3976,10 @@ static funtab ft [] =
             }                                 \
          }
 
+#define  IMPLERR(x)                           \
+                                              \
+         fprintf (stderr, (x));
+
 
 
 
@@ -4213,6 +4226,7 @@ static void int_ftn (global_store *gs,
          runtime_error (gs, FTNFUNCNDEF, funcname);
    }
 }
+
 
 
 
@@ -4463,9 +4477,784 @@ static int compare_char_array (char *wlinks,
 
 
 
+static int work_set_check (int len,
+                           unsigned char *sp,
+                           int nonzero)
+
+{
+   //-------------------------------------------------
+   // checks for zeroes or non-zeroes in given set
+   // if nonzero = 1, returns 1, if a nonzero byte is found
+   // otherwise 0
+   // if nonzero = 0, returns 0, if a nonzero byte is found
+   // otherwise 1
+   //-------------------------------------------------
+
+   for (; len > 0; len --, sp ++)
+   {
+      if (*sp != 0x00)
+         return nonzero;
+   }
+   return 1 - nonzero;
+}
+
+
+
+
+static int work_set_compare (int opnum,
+                             int len1,
+                             int offs1,
+                             unsigned char *sp1,
+                             int len2,
+                             int offs2,
+                             unsigned char *sp2,
+                             int maxend)
+
+/**********************************************************/
+/*                                                        */
+/*   compare sets (new implementation of 2024 to 2026)    */
+/*                                                        */
+/*   int opnum          = number of operation             */
+/*   int len1           = length of 1. operand            */
+/*   int offs1          = offset of 1. operand            */
+/*   unsigned char *sp1 = pointer to bit vector of 1. op  */
+/*   int len2           = length of 2. operand            */
+/*   int offs2          = offset of 2. operand            */
+/*   int maxend         = maximum end offset              */
+/*                                                        */
+/**********************************************************/
+
+{
+   int res = 0;
+   unsigned char *spw;
+   unsigned char *sp2w;
+   int offsw;
+   unsigned char uc1;
+   unsigned char uc2;
+
+   //------------------------------------------------------------
+   // general logic for all instructions:
+   // start on sp1
+   // increment offs1 until maxend is reached
+   // for every byte, check if it is present in sp1
+   // or sp2; if not, replace it with 0x00
+   // do the check require by the instruction
+   //------------------------------------------------------------
+
+   switch (opnum)
+   {
+      //-------------------------------------------------
+      // LEQ and GEQ handled by same logic here
+      // the operands are exchanged by the caller
+      //-------------------------------------------------
+
+      case XXX_LEQ:   /* comparison */
+      case XXX_GEQ:   /* comparison */
+
+#if 0
+
+         printf ("work_set_compare\n");
+         printf ("LEQ: offs1    = %d\n", offs1);
+         printf ("LEQ: offs2    = %d\n", offs2);
+         printf ("LEQ: len1     = %d\n", len1);
+         printf ("LEQ: len2     = %d\n", len2);
+
+#endif
+
+         for (spw = sp1, offsw = offs1;
+              offsw < maxend;
+              spw ++, offsw ++)
+         {
+            if (offsw >= offs1 + len1)
+               uc1 = 0x00;
+            else
+               uc1 = *spw;
+
+            if (offsw < offs2 || offsw >= offs2 + len2)
+               uc2 = 0x00;
+            else
+            {
+               sp2w = sp2 + offsw - offs2;
+               uc2 = *sp2w;
+            }
+
+#if 0
+
+            printf ("LEQ: offsw    = %d\n", offsw);
+            printf ("LEQ: spw      = %p\n", spw);
+            printf ("LEQ: sp2w     = %p\n", sp2w);
+            printf ("LEQ: uc1      = %x\n", uc1);
+            printf ("LEQ: uc2      = %x\n", uc2);
+
+#endif
+            if ((uc1 & (uc2 ^ 0xff)) != 0x00)
+               return 0;
+         }
+         res = 1;
+         break;
+
+      default:
+         IMPLERR ("+++ comparison: error in work_set_compare !!\n");
+         break;
+   }
+
+   return res;
+}
+
+
+
+
+static int work_set_compare_neu (int opnum,
+                                 int len1,
+                                 int offs1,
+                                 unsigned char *sp1,
+                                 int len2,
+                                 int offs2,
+                                 unsigned char *sp2,
+                                 int minoffs,
+                                 int maxend)
+
+/**********************************************************/
+/*                                                        */
+/*   compare sets (new implementation of 2024 to 2026)    */
+/*                                                        */
+/*   int opnum          = number of operation             */
+/*   int len1           = length of 1. operand            */
+/*   int offs1          = offset of 1. operand            */
+/*   unsigned char *sp1 = pointer to bit vector of 1. op  */
+/*   int len2           = length of 2. operand            */
+/*   int offs2          = offset of 2. operand            */
+/*   int maxend         = maximum end offset              */
+/*                                                        */
+/**********************************************************/
+
+{
+   int res = 0;
+   unsigned char *spw;
+   unsigned char *sp2w;
+   int offsw;
+   unsigned char uc1;
+   unsigned char uc2;
+   int stat1;
+   int stat2;
+   int fertig1;
+   int fertig2;
+   int gleich;
+   int korrekt;
+
+   //------------------------------------------------------------
+   // general logic for all instructions:
+   // start on sp1
+   // increment offs1 until maxend is reached
+   // for every byte, check if it is present in sp1
+   // or sp2; if not, replace it with 0x00
+   // do the check require by the instruction
+   //------------------------------------------------------------
+
+   switch (opnum)
+   {
+      //-------------------------------------------------
+      // EQU
+      // maxend is computed so that it covers both sets
+      //-------------------------------------------------
+
+      case XXX_EQU:   /* comparison */
+      case XXX_NEQ:   /* comparison */
+
+#if 0
+
+         printf ("work_set_compare_neu\n");
+         printf ("EQU: offs1    = %d\n", offs1);
+         printf ("EQU: offs2    = %d\n", offs2);
+         printf ("EQU: len1     = %d\n", len1);
+         printf ("EQU: len2     = %d\n", len2);
+         printf ("EQU: minoffs  = %d\n", minoffs);
+         printf ("EQU: maxend   = %d\n", maxend);
+
+#endif
+
+         stat1 = 0;
+         fertig1 = 0;
+         stat2 = 0;
+         fertig2 = 0;
+         for (offsw = minoffs;
+              offsw < maxend;
+              offsw ++)
+         {
+            if (! fertig1)
+            {
+               if (! stat1)
+               {
+                  stat1 = offsw >= offs1;
+                  spw = sp1 + offsw - offs1;
+               }
+               else
+               {
+                  spw ++;
+                  if (offsw >= offs1 + len1)
+                  {
+                     stat1 = 0;
+                     fertig1 = 1;
+                  }
+               }
+            }
+
+            if (! fertig2)
+            {
+               if (! stat2)
+               {
+                  stat2 = offsw >= offs2;
+                  sp2w = sp2 + offsw - offs2;
+               }
+               else
+               {
+                  sp2w ++;
+                  if (offsw >= offs2 + len2)
+                  {
+                     stat2 = 0;
+                     fertig2 = 1;
+                  }
+               }
+            }
+
+            if (stat1)
+               uc1 = *spw;
+            else
+               uc1 = 0x00;
+
+            if (stat2)
+               uc2 = *sp2w;
+            else
+               uc2 = 0x00;
+
+#if 0
+
+            printf ("EQU: offsw    = %d\n", offsw);
+            printf ("EQU: spw      = %p\n", spw);
+            printf ("EQU: sp2w     = %p\n", sp2w);
+            printf ("EQU: uc1      = %x\n", uc1);
+            printf ("EQU: uc2      = %x\n", uc2);
+
+#endif
+
+            if (uc1 != uc2)
+            {
+               if (opnum == XXX_EQU)
+                  return 0;
+               else
+                  return 1;
+            }
+         }
+
+         if (opnum == XXX_EQU)
+            return 1;
+         else
+            return 0;
+         break;
+
+      case XXX_LES:   /* comparison */
+      case XXX_GRT:   /* comparison */
+
+#if 0
+
+         printf ("work_set_compare_neu\n");
+         printf ("LES: offs1    = %d\n", offs1);
+         printf ("LES: offs2    = %d\n", offs2);
+         printf ("LES: len1     = %d\n", len1);
+         printf ("LES: len2     = %d\n", len2);
+         printf ("LES: minoffs  = %d\n", minoffs);
+         printf ("LES: maxend   = %d\n", maxend);
+
+#endif
+
+         stat1 = 0;
+         fertig1 = 0;
+         stat2 = 0;
+         fertig2 = 0;
+         gleich = 1;
+
+         for (offsw = minoffs;
+              offsw < maxend;
+              offsw ++)
+         {
+            if (! fertig1)
+            {
+               if (! stat1)
+               {
+                  stat1 = offsw >= offs1;
+                  spw = sp1 + offsw - offs1;
+               }
+               else
+               {
+                  spw ++;
+                  if (offsw >= offs1 + len1)
+                  {
+                     stat1 = 0;
+                     fertig1 = 1;
+                  }
+               }
+            }
+
+            if (! fertig2)
+            {
+               if (! stat2)
+               {
+                  stat2 = offsw >= offs2;
+                  sp2w = sp2 + offsw - offs2;
+               }
+               else
+               {
+                  sp2w ++;
+                  if (offsw >= offs2 + len2)
+                  {
+                     stat2 = 0;
+                     fertig2 = 1;
+                  }
+               }
+            }
+
+            if (stat1)
+               uc1 = *spw;
+            else
+               uc1 = 0x00;
+
+            if (stat2)
+               uc2 = *sp2w;
+            else
+               uc2 = 0x00;
+
+#if 0
+
+            printf ("LES: offsw    = %d\n", offsw);
+            printf ("LES: spw      = %p\n", spw);
+            printf ("LES: sp2w     = %p\n", sp2w);
+            printf ("LES: uc1      = %x\n", uc1);
+            printf ("LES: uc2      = %x\n", uc2);
+
+#endif
+
+            if (opnum == XXX_LES)
+            {
+               int x3;
+               korrekt = ((uc1 & (uc2 ^ 0xff)) == 0x00);
+               gleich = (gleich && (uc1 == uc2));
+            }
+            else
+            {
+               korrekt = ((uc2 & (uc1 ^ 0xff)) == 0x00);
+               gleich = (gleich && (uc2 == uc1));
+            }
+
+#if 0
+
+            printf ("LES: korrekt  = %d\n", korrekt);
+            printf ("LES: gleich   = %d\n", gleich);
+
+#endif
+
+            if (! korrekt)
+               return 0;
+         }
+
+         res = (gleich == 0);
+         break;
+
+      default:
+         IMPLERR ("+++ comparison: "
+                   "error in work_set_compare_neu !!\n");
+         break;
+   }
+
+   return res;
+}
+
+
+
+
+static int compare_set_new (int opnum,
+                            int len1,
+                            int offs1,
+                            unsigned char *sp1,
+                            int len2,
+                            int offs2,
+                            unsigned char *sp2)
+
+/**********************************************************/
+/*                                                        */
+/*   compare sets (new implementation of 2024 to 2026)    */
+/*                                                        */
+/*   int opnum          = number of operation             */
+/*   int len1           = length of 1. operand            */
+/*   int offs1          = offset of 1. operand            */
+/*   unsigned char *sp1 = pointer to bit vector of 1. op  */
+/*   int len2           = length of 2. operand            */
+/*   int offs2          = offset of 2. operand            */
+/*   unsigned char *sp2 = pointer to bit vector of 2. op  */
+/*                                                        */
+/**********************************************************/
+
+{
+   int res = 0;
+   int end1;
+   int end2;
+   int minoffs;
+   int maxend;
+
+
+   //------------------------------------------------------------
+   // general logic for all instructions:
+   // a) switch operands, if necessary (on symmetric operations)
+   // operand with a = operand with lower offset
+   // b) look, if operand ranges overlap (given offset and length)
+   // if yes, compute combined range and work on it
+   // if not, work on both operand ranges separately
+   // c) work combined means: check corresponding bytes etc.
+   // work separately means: check for zero or non-zero
+   //------------------------------------------------------------
+
+   switch (opnum)
+   {
+      //-------------------------------------------------
+      // EQU - symmetric
+      //-------------------------------------------------
+
+      case XXX_EQU:   /* comparison */
+
+#if 0
+
+         printf ("compare_set_new\n");
+         printf ("EQU: offs1    = %d\n", offs1);
+         printf ("EQU: offs2    = %d\n", offs2);
+         printf ("EQU: len1     = %d\n", len1);
+         printf ("EQU: len2     = %d\n", len2);
+
+#endif
+
+         if (offs2 <= offs1 + len1 && offs2 + len2 >= offs1)
+         {
+            minoffs = offs2;
+            if (offs1 < offs2)
+               minoffs = offs1;
+
+            end1 = offs1 + len1;
+            end2 = offs2 + len2;
+            maxend = end1;
+            if (end2 > maxend)
+               maxend = end2;
+
+            res = work_set_compare_neu (opnum,
+                                        len1,
+                                        offs1,
+                                        sp1,
+                                        len2,
+                                        offs2,
+                                        sp2,
+                                        minoffs,
+                                        maxend);
+         }
+         else
+         {
+            res = work_set_check (len1,
+                                  sp1,
+                                  0);
+            if (! res)
+            {
+               res = work_set_check (len2,
+                                     sp2,
+                                     0);
+            }
+         }
+
+         //-------------------------------------------------
+         // convert res to memcmp standards
+         //-------------------------------------------------
+
+         res = (res == 1 ? 0 : 1);
+         break;
+
+      case XXX_GEQ:   /* comparison */
+
+#if 0
+
+         printf ("compare_set_new\n");
+         printf ("GEQ: offs1    = %d\n", offs1);
+         printf ("GEQ: offs2    = %d\n", offs2);
+         printf ("GEQ: len1     = %d\n", len1);
+         printf ("GEQ: len2     = %d\n", len2);
+
+#endif
+         end2 = offs2 + len2;
+         maxend = end2;
+
+         if (offs2 <= offs1 + len1 && offs2 + len2 >= offs1)
+         {
+            res = work_set_compare (opnum,
+                                    len2,
+                                    offs2,
+                                    sp2,
+                                    len1,
+                                    offs1,
+                                    sp1,
+                                    maxend);
+         }
+         else
+         {
+            res = work_set_check (len2,
+                                  sp2,
+                                  0);
+         }
+
+         //-------------------------------------------------
+         // convert res to memcmp standards
+         //-------------------------------------------------
+
+         res = (res == 1 ? 1 : -1);
+         break;
+
+      case XXX_GRT:   /* comparison */
+
+         //-----------------------------------------------
+         // operanden duerfen nicht getauscht werden
+         // 1. ermitteln des kleinsten offsets
+         // und des groessten endes
+         // 2. wenn echte ueberlappung, work_set_compare oder
+         // aehnliche funktion
+         // 3. wenn nicht: operand 2 muss null sein,
+         // und operand1 muss mindestens ein element
+         // enthalten
+         //-----------------------------------------------
+
+         if (offs2 <= offs1 + len1 && offs2 + len2 >= offs1)
+         {
+            minoffs = offs2;
+            if (offs1 < offs2)
+               minoffs = offs1;
+
+            end1 = offs1 + len1;
+            end2 = offs2 + len2;
+            maxend = end1;
+            if (end2 > maxend)
+               maxend = end2;
+
+            res = work_set_compare_neu (opnum,
+                                        len1,
+                                        offs1,
+                                        sp1,
+                                        len2,
+                                        offs2,
+                                        sp2,
+                                        minoffs,
+                                        maxend);
+         }
+         else
+         {
+            res = work_set_check (len2,
+                                  sp2,
+                                  0);
+            if (! res)
+            {
+               res = work_set_check (len1,
+                                     sp1,
+                                     1);
+            }
+         }
+
+         //-------------------------------------------------
+         // convert res to memcmp standards
+         //-------------------------------------------------
+
+         res = (res == 1 ? 1 : -1);
+         break;
+
+      //-------------------------------------------------
+      // LEQ - all elements of set1 are in set2, too
+      //-------------------------------------------------
+
+      case XXX_LEQ:   /* comparison */
+
+#if 0
+
+         printf ("compare_set_new\n");
+         printf ("LEQ: offs1    = %d\n", offs1);
+         printf ("LEQ: offs2    = %d\n", offs2);
+         printf ("LEQ: len1     = %d\n", len1);
+         printf ("LEQ: len2     = %d\n", len2);
+
+#endif
+         end1 = offs1 + len1;
+         maxend = end1;
+
+         if (offs2 <= offs1 + len1 && offs2 + len2 >= offs1)
+         {
+            res = work_set_compare (opnum,
+                                    len1,
+                                    offs1,
+                                    sp1,
+                                    len2,
+                                    offs2,
+                                    sp2,
+                                    maxend);
+         }
+         else
+         {
+            res = work_set_check (len1,
+                                  sp1,
+                                  0);
+         }
+
+         //-------------------------------------------------
+         // convert res to memcmp standards
+         //-------------------------------------------------
+
+         res = (res == 1 ? -1 : 1);
+         break;
+
+      //-------------------------------------------------
+      // LES - similar to LEQ, but equal is not ok,
+      // equality gives a false result
+      //-------------------------------------------------
+      // this has to be done similar to EQU and NEQ,
+      // all bytes must be checked (bytes that do not
+      // exist physically are simulated to be zero).
+      // All bytes are checked for the LEQ condition,
+      // if one is found to be NOK, the result is false.
+      // If all are ok but the result was always EQU,
+      // the result is false, too.
+      //-------------------------------------------------
+
+      case XXX_LES:   /* comparison */
+
+         //-----------------------------------------------
+         // operanden duerfen nicht getauscht werden
+         // 1. ermitteln des kleinsten offsets
+         // und des groessten endes
+         // 2. wenn echte ueberlappung, work_set_compare oder
+         // aehnliche funktion
+         // 3. wenn nicht: operand 1 muss null sein,
+         // und operand2 muss mindestens ein element
+         // enthalten
+         //-----------------------------------------------
+
+         if (offs2 <= offs1 + len1 && offs2 + len2 >= offs1)
+         {
+            minoffs = offs2;
+            if (offs1 < offs2)
+               minoffs = offs1;
+
+            end1 = offs1 + len1;
+            end2 = offs2 + len2;
+            maxend = end1;
+            if (end2 > maxend)
+               maxend = end2;
+
+            res = work_set_compare_neu (opnum,
+                                        len1,
+                                        offs1,
+                                        sp1,
+                                        len2,
+                                        offs2,
+                                        sp2,
+                                        minoffs,
+                                        maxend);
+         }
+         else
+         {
+            res = work_set_check (len1,
+                                  sp1,
+                                  0);
+            if (! res)
+            {
+               res = work_set_check (len2,
+                                     sp2,
+                                     1);
+            }
+         }
+
+         //-------------------------------------------------
+         // convert res to memcmp standards
+         //-------------------------------------------------
+
+         res = (res == 1 ? -1 : 1);
+         break;
+
+      //-------------------------------------------------
+      // NEQ - symmetric
+      //-------------------------------------------------
+
+      case XXX_NEQ:   /* comparison */
+
+#if 0
+
+         printf ("compare_set_new\n");
+         printf ("EQU: offs1    = %d\n", offs1);
+         printf ("EQU: offs2    = %d\n", offs2);
+         printf ("EQU: len1     = %d\n", len1);
+         printf ("EQU: len2     = %d\n", len2);
+
+#endif
+
+         if (offs2 <= offs1 + len1 && offs2 + len2 >= offs1)
+         {
+            minoffs = offs2;
+            if (offs1 < offs2)
+               minoffs = offs1;
+
+            end1 = offs1 + len1;
+            end2 = offs2 + len2;
+            maxend = end1;
+            if (end2 > maxend)
+               maxend = end2;
+
+            res = work_set_compare_neu (opnum,
+                                        len1,
+                                        offs1,
+                                        sp1,
+                                        len2,
+                                        offs2,
+                                        sp2,
+                                        minoffs,
+                                        maxend);
+         }
+         else
+         {
+            res = work_set_check (len1,
+                                  sp1,
+                                  1);
+            if (! res)
+            {
+               res = work_set_check (len2,
+                                     sp2,
+                                     1);
+            }
+         }
+
+         //-------------------------------------------------
+         // convert res to memcmp standards
+         // nothing to do
+         //-------------------------------------------------
+
+         break;
+
+      default:
+         IMPLERR ("+++ comparison: error in compare_set_new !!\n");
+         break;
+   }
+
+#if 0
+
+   printf ("compare_set_new returns %d\n", res);
+
+#endif
+
+   return res;
+}
+
+
+
 
 static int do_comparison (global_store *gs,
                           sc_code *pcode,
+                          int opnum,
                           int *incr_ip)
 
 /**********************************************************/
@@ -4608,6 +5397,66 @@ static int do_comparison (global_store *gs,
          STACKTYPE (gs -> sp) = 'B';
 
          res = compare_set ('E', setp2, setp1, len2, len1);
+         break;
+
+      case 'X':
+
+         /************************************************/
+         /*   compare 2 set values                       */
+         /*   new set implementation                     */
+         /************************************************/
+
+         {
+            int *intp;
+            int *intp2;
+            char *charp;
+            char *charp2;
+            short *shortp;
+            int lens;
+            int offss;
+            int lens2;
+            int offss2;
+            unsigned char *ucp;
+            unsigned char *ucp2;
+
+            intp = ADDRSTACK (gs -> sp);
+            charp = ADDRSTOR (*intp);
+
+            (gs -> sp) -= 4;
+
+            intp2 = ADDRSTACK (gs -> sp);
+            charp2 = ADDRSTOR (*intp2);
+
+            //*******************************************
+            // Laenge und Offset vom Set holen
+            //*******************************************
+
+            shortp = (short *) charp;
+            lens = *shortp;
+            shortp ++;
+            offss = *shortp;
+            shortp ++;
+            ucp = (unsigned char *) shortp;
+
+            shortp = (short *) charp2;
+            lens2 = *shortp;
+            shortp ++;
+            offss2 = *shortp;
+            shortp ++;
+            ucp2 = (unsigned char *) shortp;
+
+            STACKTYPE (gs -> sp) = 'B';
+
+            res = compare_set_new (opnum,
+                                   lens2, offss2, ucp2,
+                                   lens, offss, ucp);
+#if 0
+            printf ("new set comparison, opnum = %d, result = %d\n",
+                     opnum, res);
+#endif
+
+         }
+
          break;
 
       case 'V':
@@ -4865,6 +5714,18 @@ static void int1 (global_store *gs)
    call_mst_element cme;
    sc_code *pcode_mst;
 
+   /************************************************/
+   /*   fuer ZMI usw.                              */
+   /************************************************/
+
+   int found;
+   unsigned char* setp_start;
+   unsigned char* setp_end;
+
+   /************************************************/
+   /*   Start ausfuehrbare ...                     */
+   /************************************************/
+
    pcode = gs -> code0 + gs -> ip;
    opnum = gs -> ot [pcode -> op] . opnum;
 
@@ -4971,7 +5832,7 @@ static void int1 (global_store *gs)
          }
          else
          {
-            BREMSE ("+++ default case !!\n");
+            BREMSE ("+++ default case 1 !!\n");
          }
 
          break;
@@ -5137,7 +5998,7 @@ static void int1 (global_store *gs)
                break;
 
             default:
-               BREMSE ("+++ default case !!\n");
+               BREMSE ("+++ default case 2 !!\n");
                break;
          }
 
@@ -5730,7 +6591,7 @@ static void int1 (global_store *gs)
          /*   compare values                             */
          /************************************************/
 
-         res = do_comparison (gs, pcode, &incr_ip);
+         res = do_comparison (gs, pcode, opnum, &incr_ip);
 
          /************************************************/
          /*   boolean value replaces stack position      */
@@ -5850,7 +6711,7 @@ static void int1 (global_store *gs)
          /*   compare values                             */
          /************************************************/
 
-         res = do_comparison (gs, pcode, &incr_ip);
+         res = do_comparison (gs, pcode, opnum, &incr_ip);
 
          /************************************************/
          /*   boolean value replaces stack position      */
@@ -5868,7 +6729,7 @@ static void int1 (global_store *gs)
          /*   compare values                             */
          /************************************************/
 
-         res = do_comparison (gs, pcode, &incr_ip);
+         res = do_comparison (gs, pcode, opnum, &incr_ip);
 
          /************************************************/
          /*   boolean value replaces stack position      */
@@ -5948,7 +6809,7 @@ static void int1 (global_store *gs)
                break;
 
             default:
-               BREMSE ("+++ default case !!\n");
+               BREMSE ("+++ default case 3 !!\n");
                break;
          }
 
@@ -6024,7 +6885,7 @@ static void int1 (global_store *gs)
                break;
 
             default:
-               BREMSE ("+++ default case !!\n");
+               BREMSE ("+++ default case 4 !!\n");
                break;
          }
 
@@ -6152,7 +7013,7 @@ static void int1 (global_store *gs)
          }
          else
          {
-            BREMSE ("+++ default case !!\n");
+            BREMSE ("+++ default case 5 !!\n");
          }
 
          break;
@@ -6304,7 +7165,7 @@ static void int1 (global_store *gs)
                break;
 
             default:
-               BREMSE ("+++ default case !!\n");
+               BREMSE ("+++ default case 6 !!\n");
                break;
          }
 
@@ -6316,7 +7177,7 @@ static void int1 (global_store *gs)
          /*   compare values                             */
          /************************************************/
 
-         res = do_comparison (gs, pcode, &incr_ip);
+         res = do_comparison (gs, pcode, opnum, &incr_ip);
 
          /************************************************/
          /*   boolean value replaces stack position      */
@@ -6334,7 +7195,7 @@ static void int1 (global_store *gs)
          /*   compare values                             */
          /************************************************/
 
-         res = do_comparison (gs, pcode, &incr_ip);
+         res = do_comparison (gs, pcode, opnum, &incr_ip);
 
          /************************************************/
          /*   boolean value replaces stack position      */
@@ -6393,7 +7254,7 @@ static void int1 (global_store *gs)
                break;
 
             default:
-               BREMSE ("+++ default case !!\n");
+               BREMSE ("+++ default case 7 !!\n");
                break;
          }
 
@@ -6441,7 +7302,7 @@ static void int1 (global_store *gs)
                break;
 
             default:
-               BREMSE ("+++ default case !!\n");
+               BREMSE ("+++ default case 8 !!\n");
                break;
          }
          break;
@@ -6779,7 +7640,7 @@ static void int1 (global_store *gs)
          /*   compare values                             */
          /************************************************/
 
-         res = do_comparison (gs, pcode, &incr_ip);
+         res = do_comparison (gs, pcode, opnum, &incr_ip);
 
          /************************************************/
          /*   boolean value replaces stack position      */
@@ -6860,7 +7721,7 @@ static void int1 (global_store *gs)
          }
          else
          {
-            BREMSE ("+++ default case !!\n");
+            BREMSE ("+++ default case 9 !!\n");
          }
 
          break;
@@ -6961,7 +7822,7 @@ static void int1 (global_store *gs)
                break;
 
             default:
-               BREMSE ("+++ default case !!\n");
+               BREMSE ("+++ default case a !!\n");
                break;
          }
 
@@ -7495,7 +8356,7 @@ static void int1 (global_store *gs)
                *doublep = dwert;
                break;
             default:
-               BREMSE ("+++ default case !!\n");
+               BREMSE ("+++ default case b !!\n");
                break;
          }
 
@@ -7575,7 +8436,7 @@ static void int1 (global_store *gs)
                   *((double *) storep) = dwert;
                   break;
                default:
-                  BREMSE ("+++ default case !!\n");
+                  BREMSE ("+++ default case c !!\n");
                   break;
             }
          }
@@ -8825,7 +9686,7 @@ static void int1 (global_store *gs)
          }
          else
          {
-            BREMSE ("+++ default case !!\n");
+            BREMSE ("+++ default case d !!\n");
          }
 
          break;
@@ -9046,6 +9907,131 @@ static void int1 (global_store *gs)
 
          break;
 
+      case XXX_ZEC:
+
+         //***********************************************************
+         //   ZEC = exclude the set element which is on SP
+         //   from the set, which is on SP - 4
+         //***********************************************************
+
+         wert1 = STACK_I (gs -> sp);
+         (gs -> sp) -= 4;
+         intp = ADDRSTACK (gs -> sp);
+         charp = ADDRSTOR (*intp);
+         (gs -> sp) -= 4;
+
+         //*******************************************
+         // Laenge und Offset vom Set holen
+         //*******************************************
+
+         shortp = (short *) charp;
+         lens = *shortp;
+         shortp ++;
+         offss = *shortp;
+
+         //*******************************************
+         // charp weitersetzen
+         //*******************************************
+
+         if (wert1 >= offss * 8 &&
+             wert1 < (offss + lens) * 8)
+         {
+            int diff_wert = wert1 - offss * 8;
+
+            int bytenr;
+            int byteoffs;
+            unsigned int byte;
+
+            setp = (unsigned char *) (charp + 4);
+
+            bytenr = diff_wert / 8;
+            byteoffs = diff_wert % 8;
+            byte = (0x80 >> byteoffs);
+            byte ^= 0xff;
+
+#if 0
+
+            fprintf (stderr, "ZIC: bytenr   = %d\n", bytenr);
+            fprintf (stderr, "ZIC: byteoffs = %d\n", byteoffs);
+            fprintf (stderr, "ZIC: byte     = %x\n", byte);
+            fprintf (stderr, "ZIC: setp     = %x\n", setp [bytenr]);
+
+#endif
+
+            setp [bytenr] &= byte;
+
+#if 0
+
+            fprintf (stderr, "ZIC: setp     = %x\n", setp [bytenr]);
+
+#endif
+
+         }
+
+         break;
+
+      case XXX_ZIC:
+
+         //***********************************************************
+         //   ZIC = include the set element which is on SP
+         //   into the set, which is on SP - 4
+         //***********************************************************
+
+         wert1 = STACK_I (gs -> sp);
+         (gs -> sp) -= 4;
+         intp = ADDRSTACK (gs -> sp);
+         charp = ADDRSTOR (*intp);
+         (gs -> sp) -= 4;
+
+         //*******************************************
+         // Laenge und Offset vom Set holen
+         //*******************************************
+
+         shortp = (short *) charp;
+         lens = *shortp;
+         shortp ++;
+         offss = *shortp;
+
+         //*******************************************
+         // charp weitersetzen
+         //*******************************************
+
+         if (wert1 >= offss * 8 &&
+             wert1 < (offss + lens) * 8)
+         {
+            int diff_wert = wert1 - offss * 8;
+
+            int bytenr;
+            int byteoffs;
+            unsigned int byte;
+
+            setp = (unsigned char *) (charp + 4);
+
+            bytenr = diff_wert / 8;
+            byteoffs = diff_wert % 8;
+            byte = (0x80 >> byteoffs);
+
+#if 0
+
+            fprintf (stderr, "ZIC: bytenr   = %d\n", bytenr);
+            fprintf (stderr, "ZIC: byteoffs = %d\n", byteoffs);
+            fprintf (stderr, "ZIC: byte     = %x\n", byte);
+            fprintf (stderr, "ZIC: setp     = %x\n", setp [bytenr]);
+
+#endif
+
+            setp [bytenr] |= byte;
+
+#if 0
+
+            fprintf (stderr, "ZIC: setp     = %x\n", setp [bytenr]);
+
+#endif
+
+         }
+
+         break;
+
       case XXX_ZIN:
 
          //**********************************************
@@ -9125,6 +10111,260 @@ static void int1 (global_store *gs)
          charp = (char *) intp;
          *intp = 0;
          *charp = bool;
+
+         break;
+
+      case XXX_ZMI:
+
+         //***********************************************************
+         //   ZMI = get the number of the first (smallest) element
+         //   in the set which is on SP and store that number at
+         //   the given address. Pop the address of the set and
+         //   leave 1 on the stack, if an element is found,
+         //   0 otherwise (for subsequent check with FJP).
+         //   0 can only occur with empty sets.
+         //***********************************************************
+
+         intp = ADDRSTACK (gs -> sp);
+         charp = ADDRSTOR (*intp);
+         found = 0;
+
+         //*******************************************
+         // Laenge und Offset vom Set holen
+         //*******************************************
+
+         shortp = (short *) charp;
+         lens = *shortp;
+         shortp ++;
+         offss = *shortp;
+
+#if 0
+
+         fprintf (stderr, "\n", wert1);
+         fprintf (stderr, "ZMI: lens  = %d\n", lens);
+         fprintf (stderr, "ZMI: offss = %d\n", offss);
+
+#endif
+
+         setp_start = (unsigned char *) (charp + 4);
+
+         for (setp = setp_start, setp_end = setp_start + lens;
+              setp < setp_end;
+              setp ++)
+         {
+            if (*setp != 0x00)
+            {
+               unsigned char uc = *setp;
+               wert1 = offss + (setp - setp_start);
+               wert1 *= 8;
+
+#if 0
+
+               fprintf (stderr, "ZMI: byten = %d\n", setp - setp_start);
+               fprintf (stderr, "ZMI: inh   = %x\n", uc);
+
+#endif
+
+               while (uc < 0x80)
+               {
+                  uc <<= 1;
+                  wert1 ++;
+               }
+
+#if 0
+
+               fprintf (stderr, "ZMI: wert1 = %d\n", wert1);
+               fprintf (stderr, "ZMI: found\n");
+
+#endif
+
+               found = 1;
+               break;
+            }
+         }
+
+         if (found)
+         {
+            disp = gs -> display [pcode -> p];
+            addr = disp + pcode -> q;
+            gs -> effadr = addr;
+            storep = ADDRSTOR (addr);
+            intp = (int *) storep;
+            *intp = wert1;
+         }
+
+         intp = ADDRSTACK (gs -> sp);
+         charp = (char *) intp;
+         *intp = 0;
+         *charp = found;
+
+         break;
+
+      case XXX_ZMA:
+
+         //***********************************************************
+         //   ZMA = get the number of the last (biggest) element
+         //   in the set which is on SP and store that number at
+         //   the given address. Pop the address of the set and
+         //   leave 1 on the stack, if an element is found,
+         //   0 otherwise (for subsequent check with FJP).
+         //   0 can only occur with empty sets.
+         //***********************************************************
+
+         break;
+
+      case XXX_ZNE:
+
+         //***********************************************************
+         //   ZNE = get the next element from the set
+         //   the set is at SP - 4 and the number of the last element
+         //   found is at SP ... this is used to implement FOR loops
+         //   with set. Store the number of the next element at
+         //   the given address. Pop the address of the set and
+         //   the number of the last element found and
+         //   leave 1 on the stack, if a next element is found,
+         //   0 otherwise (for subsequent check with FJP).
+         //***********************************************************
+
+         intp = ADDRSTACK (gs -> sp - 4);
+         charp = ADDRSTOR (*intp);
+         found = 0;
+
+         wert1 = STACK_I (gs -> sp);
+
+#if 0
+
+         fprintf (stderr, "\n", wert1);
+         fprintf (stderr, "ZNE: wert1 = %d\n", wert1);
+
+#endif
+
+         //*******************************************
+         // Laenge und Offset vom Set holen
+         //*******************************************
+
+         shortp = (short *) charp;
+         lens = *shortp;
+         shortp ++;
+         offss = *shortp;
+
+#if 0
+
+         fprintf (stderr, "ZNE: lens  = %d\n", lens);
+         fprintf (stderr, "ZNE: offss = %d\n", offss);
+
+#endif
+
+         setp_start = (unsigned char *) (charp + 4);
+
+         if (wert1 >= offss * 8 &&
+             wert1 < (offss + lens) * 8)
+         {
+            int diff_wert = wert1 - offss * 8;
+
+            int bytenr;
+            int byteoffs;
+            unsigned char uc;
+            unsigned char uc2;
+
+            setp = setp_start;
+
+            bytenr = diff_wert / 8;
+            byteoffs = diff_wert % 8;
+            uc = setp [bytenr];
+
+#if 0
+
+            fprintf (stderr, "ZNE: byten = %d\n", bytenr);
+            fprintf (stderr, "ZNE: byteo = %d\n", byteoffs);
+            fprintf (stderr, "ZNE: inh   = %x\n", uc);
+
+#endif
+
+            uc2 = (0x7f >> byteoffs);
+            uc &= uc2;
+
+#if 0
+
+            fprintf (stderr, "ZNE: inh   = %x\n", uc);
+
+#endif
+
+            if (uc != 0x00)
+            {
+               wert1 = offss + bytenr;
+               wert1 *= 8;
+
+               while (uc < 0x80)
+               {
+                  uc <<= 1;
+                  wert1 ++;
+               }
+
+#if 0
+
+               fprintf (stderr, "ZNE: wert1 = %d\n", wert1);
+               fprintf (stderr, "ZNE: found im gleichen byte\n");
+
+#endif
+
+               found = 1;
+            }
+            else
+            {
+               for (setp += bytenr + 1, setp_end = setp_start + lens;
+                    setp < setp_end;
+                    setp ++)
+               {
+                  unsigned char uc = *setp;
+
+#if 0
+
+                  fprintf (stderr, "ZNE: weitersuchen\n");
+                  fprintf (stderr, "ZNE: inh   = %x\n", uc);
+
+#endif
+
+                  if (*setp != 0x00)
+                  {
+                     wert1 = offss + (setp - setp_start);
+                     wert1 *= 8;
+
+                     while (uc < 0x80)
+                     {
+                        uc <<= 1;
+                        wert1 ++;
+                     }
+
+#if 0
+
+                     fprintf (stderr, "ZNE: wert1 = %d\n", wert1);
+                     fprintf (stderr, "ZNE: found in anderem byte\n");
+
+#endif
+
+                     found = 1;
+                     break;
+                  }
+               }
+            }
+         }
+
+         if (found)
+         {
+            disp = gs -> display [pcode -> p];
+            addr = disp + pcode -> q;
+            gs -> effadr = addr;
+            storep = ADDRSTOR (addr);
+            intp = (int *) storep;
+            *intp = wert1;
+         }
+
+         (gs -> sp) -= 4;
+         intp = ADDRSTACK (gs -> sp);
+         charp = (char *) intp;
+         *intp = 0;
+         *charp = found;
 
          break;
 

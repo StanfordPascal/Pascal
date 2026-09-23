@@ -702,9 +702,9 @@ program PCODE_TRANSLATOR ( PCODE , PCODE1 , PCODE2 , PCODE3 , OUTPUT ,
 
 
 
-const VERSION = '2023.01' ;        // Version for display message
-      VERSION2 = 0x2301 ;          // Version for load module
-      VERSION3 = 'XL2''2301''' ;   // Version for LIST002 listing
+const VERSION = '2023.03' ;        // Version for display message
+      VERSION2 = 0x2303 ;          // Version for load module
+      VERSION3 = 'XL2''2303''' ;   // Version for LIST002 listing
 
       //*****************************************
       // trace switches for different topics     

@@ -122,7 +122,7 @@
 #define INIT_CHAR_4    "\x81\x81\x81\x81"
 #define IDSIZE         20
 #define CIXMAX         400
-#define SETLENMAX      256
+#define SETLENMAX      32767
 #define CMDLINEMAX     1024
 #define STRINGSZMAX    32767
 #define ST_SAFETY      4096
@@ -616,11 +616,16 @@ static const filecb nullfcb_bin =
 #define XXX_ZAE   107
 #define XXX_ZAR   108
 #define XXX_ZDI   109
-#define XXX_ZIN   110
-#define XXX_ZIS   111
-#define XXX_ZMV   112
-#define XXX_ZMX   113
-#define XXX_ZUN   114
+#define XXX_ZEC   110
+#define XXX_ZIC   111
+#define XXX_ZIN   112
+#define XXX_ZIS   113
+#define XXX_ZMA   114
+#define XXX_ZMI   115
+#define XXX_ZMV   116
+#define XXX_ZMX   117
+#define XXX_ZNE   118
+#define XXX_ZUN   119
 
 
 
@@ -766,10 +771,15 @@ static opctab ot [] =
    { "ZAE", XXX_ZAE, 0, 'A' },    /* neu 2024.06: replaces ASE */
    { "ZAR", XXX_ZAR, 0, 'G' },    /* neu 2024.06: replaces ASR */
    { "ZDI", XXX_ZDI, 0, ' ' },    /* neu 2024.06: replaces DIF */
+   { "ZEC", XXX_ZEC, 0, ' ' },    /* neu 2026.10: exclude func */
+   { "ZIC", XXX_ZIC, 0, ' ' },    /* neu 2026.10: include func */
    { "ZIN", XXX_ZIN, 0, ' ' },    /* neu 2024.06: replaces INN */
    { "ZIS", XXX_ZIS, 0, ' ' },    /* neu 2024.06: replaces INT */
+   { "ZMA", XXX_ZMA, 0, 'B' },    /* neu 2026.10: max element  */
+   { "ZMI", XXX_ZMI, 0, 'B' },    /* neu 2026.10: min element  */
    { "ZMV", XXX_ZMV, 0, 'B' },    /* neu 2024.06: replaces SMV */
-   { "ZMX", XXX_ZMX, 0, 'B' },    /* neu 2024.06: ZMV plus */
+   { "ZMX", XXX_ZMX, 0, 'B' },    /* neu 2024.06: extended ZMV */
+   { "ZNE", XXX_ZNE, 0, 'B' },    /* neu 2026.10: next element */
    { "ZUN", XXX_ZUN, 0, ' ' },    /* neu 2024.06: replaces UNI */
    { NULL,  -1, 0, ' ' }
 };

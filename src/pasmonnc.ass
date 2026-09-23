@@ -4732,19 +4732,33 @@ RFVL1    DS    0H
          LTR   R15,R15             if actlen = zero
          BNP   RFVL2A              don't copy characters
 *
+*****************************************************************
+*        error in MVS version (did not show up in CMS)
+*        IC may not be executed after end of buffer, that is,
+*        when BCT will arrive at zero - opp - 08.01.2023
+*****************************************************************
+*
 RFVL2    DS    0H
          STC   R0,0(R2)            copy chars one by one
          LA    R14,1(R14)          increment source address
          LA    R2,1(R2)            increment target address
+         BCT   R15,RFVL21
+         B     RFVL2A
+RFVL21   DS    0H
          IC    R0,0(R14,AF)        load next input char
-         BCT   R15,RFVL2
+         B     RFVL2
+*
+*****************************************************************
+*        ready with read loop
+*        move R0 to PFILCOMP, if not eoln, or
+*        move Blank to PFILCOMP, if eoln
+*****************************************************************
 *
 RFVL2A   DS    0H
          CLI   FILEOLN(AE),TRUE    eoln ?
          BE    RFVL3
          STC   R0,PFILCOMP(AD)     set current char
          B     RFVZ
-*
 RFVL3    DS    0H
          LA    R0,FILBLA           end of line character
          STC   R0,PFILCOMP(AD)     set current char

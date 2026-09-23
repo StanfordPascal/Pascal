@@ -1045,7 +1045,6 @@ local function OPTIONS ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var
              if not SCB . ENDOFLINE and ( SCANCH <> ' ' ) and ( SCANCH
              <> TERMCH ) then
                begin
-                 WRITELN ( 'passcane aufruf 1' ) ;
                  PFDUMMY := PASSCANE ( SCB , 'W' , 'S' , 5 , ' ' , SCB
                             . LINENR , SCB . LINEPOS + 1 ) ;
                end (* then *) ;
@@ -1056,7 +1055,6 @@ local function OPTIONS ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var
            begin
              if SCANCH <> ',' then
                begin
-                 WRITELN ( 'passcane aufruf 2' ) ;
                  PFDUMMY := PASSCANE ( SCB , 'W' , 'S' , 3 , ' ' , SCB
                             . LINENR , SCB . LINEPOS + 1 ) ;
                end (* then *) ;
@@ -1096,7 +1094,6 @@ local function OPTIONS ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var
                      end (* then *)
                    else
                      begin
-                       WRITELN ( 'passcane aufruf 3' ) ;
                        PFDUMMY := PASSCANE ( SCB , 'W' , 'S' , 4 , ' '
                                   , SCB . LINENR , SCB . LINEPOS + 1 )
                                   ;
@@ -2399,7 +2396,6 @@ procedure PASSCAN ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB :
          SCB . DATEIENDE := SCB . DATEIENDE + 1 ;
          if SCB . DATEIENDE > 5 then
            begin
-             WRITELN ( 'passcane aufruf 4' ) ;
              PFDUMMY := PASSCANE ( SCB , 'F' , 'S' , 1 , ' ' , SCB .
                         LINENR , SCB . LINEPOS ) ;
            end (* then *) ;
@@ -2441,7 +2437,6 @@ procedure PASSCAN ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB :
                WRITELN ( 'zust not found line/Pos = ' , SCB . LINENR :
                          1 , '/' , SCB . LINEPOS : 1 , ' zust = ' ,
                          ZUST : 1 ) ;
-             WRITELN ( 'passcane aufruf 5' ) ;
              PFDUMMY := PASSCANE ( SCB , 'F' , 'S' , 2 , ' ' , SCB .
                         LINENR , SCB . LINEPOS ) ;
            end (* then *) ;
@@ -2458,7 +2453,6 @@ procedure PASSCAN ( var SCANINP : TEXT ; var SCANOUT : TEXT ; var SCB :
                end (* then *) ;
              if ( ZUST in [ 12 , 13 ] ) and SCB . ENDOFLINE then
                begin
-                 WRITELN ( 'passcane aufruf 6' ) ;
                  PFDUMMY := PASSCANE ( SCB , 'F' , 'S' , 6 , ' ' , SCB
                             . LINENR , SCB . LINEPOS ) ;
                  ALTZUST := 117 ;

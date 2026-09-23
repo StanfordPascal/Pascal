@@ -49,6 +49,10 @@ module $PASLIBX ;
 //                                                                  
 //  History:                                                        
 //                                                                  
+//  18.01.2024: found and fixed several errors in MODIFY_TREE       
+//  in SUCHE_HFRE, INS_HFRE_EQUAL and INS_HFRE_ABOVE and            
+//  inserted more diagnostic trace messages in case 2.2             
+//                                                                  
 //  25.05.2022: many new functions to support READSTR               
 //  and WRITESTR ... the functions are called $PASRSx               
 //  and $PASWSx ... the letter x corresponds to the type            
@@ -97,6 +101,10 @@ type CHARPTR = -> CHAR ;
 
      //**************************************************
      //  HFRE: Free Element innerhalb HANC               
+     //  FREELOW = naechst kleinere Luecke               
+     //  FREEEQ  = naechste Luecke gleicher Groesse      
+     //  LEN_FREELOW = Laenge der FREELOW-Luecke         
+     //  LEN_FREEEQ = Laenge der FREEEQ-Luecke           
      //**************************************************
 
      PHFRE = -> HFRE ;
@@ -109,6 +117,14 @@ type CHARPTR = -> CHAR ;
 
      //**************************************************
      //  HANC: Heap Element                              
+     //  der HANC fasst die aktiven Bereiche zusammen    
+     //  innerhalb des HANCs werden die Luecken in einer 
+     //  Art Baumstruktur verwaltet                      
+     //**************************************************
+     //  FWD, BWD = Pointer auf die Nachbar-HANCs        
+     //  AREA1, LEN_AREA1 = Adresse und Laenge des Ber.  
+     //  FREE1, LEN_FREE1 = Adresse und Laenge des 1.    
+     //                     freien Bereichs (Root Baum)  
      //**************************************************
 
      PHANC = -> HANC ;
@@ -125,6 +141,9 @@ type CHARPTR = -> CHAR ;
 
      //**************************************************
      //  Active Element                                  
+     //  jeder aktive Bereich wird durch diesen kleinen  
+     //  Bereich "geprefixt" ... dadurch kommt man       
+     //  immer zum aktiven HANC                          
      //**************************************************
 
      PACT = -> ACTIVE ;
@@ -155,6 +174,9 @@ static PLATF : PLATFORM ;
        //  heap control block                              
        //  zeiger auf heap control block (anfangs nil)     
        //  anzahl-felder fuer allocs und frees             
+       //**************************************************
+       //  hier: nur ein einziger Heap (HEAPCB,            
+       //  PHEAP zeigt auf HEAPCB)                         
        //**************************************************
 
        ANZ_ALLOCS : INTEGER ;
@@ -368,10 +390,20 @@ local procedure LISTE_DER_LUECKEN ( HANC : PHANC ) ;
            with PEQUAL -> do
              begin
                if SIZE <> SIZEALT then
-                 $ERROR ( 1102 ) ;
+                 begin
+                   WRITELN ( CHKENN , ' ' , 'Fehler bei ' , PEQUAL ,
+                             ' Groesse ' , SIZE ) ;
+                   $ERROR ( 1113 ) ;
+                 end (* then *) ;
                if PTRDIFF ( PEQUAL , PEQUALALT ) <= 0 then
-                 $ERROR ( 1103 ) ;
+                 begin
+                   WRITELN ( CHKENN , ' ' , 'Fehler bei ' , PEQUAL ,
+                             ' Groesse ' , SIZE ) ;
+                   $ERROR ( 1103 ) ;
+                 end (* then *) ;
                PEQUALALT := PEQUAL ;
+               if CHKENN = '-' then
+                 WRITE ( '  ' ) ;
                WRITELN ( CHKENN , ' ' , 'Luecke bei ' , PEQUAL ,
                          ' Groesse ' , SIZE ) ;
                if SIZE > 8 then
@@ -383,12 +415,20 @@ local procedure LISTE_DER_LUECKEN ( HANC : PHANC ) ;
            begin
              SIZE := PLAUF -> . LEN_FREELOW ;
              if SIZE >= SIZEALT then
-               $ERROR ( 1101 ) ;
+               begin
+                 WRITELN ( CHKENN , ' ' , 'Fehler bei ' , PLAUF ,
+                           ' Groesse ' , SIZE ) ;
+                 $ERROR ( 1102 ) ;
+               end (* then *)
            end (* then *)
          else
            begin
              if PLAUF -> . FREELOW <> NIL then
-               $ERROR ( 1101 ) ;
+               begin
+                 WRITELN ( CHKENN , ' ' , 'Fehler bei ' , PLAUF ,
+                           ' Groesse ' , SIZE ) ;
+                 $ERROR ( 1101 ) ;
+               end (* then *) ;
              SIZE := 0 ;
            end (* else *) ;
          SIZEALT := SIZE ;
@@ -551,6 +591,7 @@ local procedure MODIFY_TREE ( MODUS : CHAR ; HANC_ACT : PHANC ; SIZE :
        ADRDIFF : INTEGER ;
        PLAUF_SUCH : PHFRE ;
        VMODUS2 : CHAR ;
+       PFIRST : PHFRE ;
 
 
    procedure MODIFY_PRIOR ( PNEU : PHFRE ; VORG_MODUS : CHAR ; HANC_ACT
@@ -691,6 +732,15 @@ local procedure MODIFY_TREE ( MODUS : CHAR ; HANC_ACT : PHANC ; SIZE :
                 end (* tag/ca *) ;
           'T' , 'V' :
             begin
+              if TRLEVEL >= 3 then
+                begin
+                  WRITELN ( 'in INS_HFRE_ABOVE' ) ;
+                  WRITELN ( 'plauf     = ' , PLAUF ) ;
+                  WRITELN ( '->freelow = ' , PLAUF -> . FREELOW ) ;
+                  WRITELN ( '->len.... = ' , PLAUF -> . LEN_FREELOW ) ;
+                  WRITELN ( 'SIZE_FREE = ' , SIZE_FREE ) ;
+                  WRITELN ( 'vorg_mod. = ' , VORG_MODUS ) ;
+                end (* then *) ;
               PFREEN -> . FREELOW := PLAUF -> . FREELOW ;
               PFREEN -> . FREEEQ := NIL ;
               if SIZE_FREE > 8 then
@@ -747,11 +797,17 @@ local procedure MODIFY_TREE ( MODUS : CHAR ; HANC_ACT : PHANC ; SIZE :
       end (* SUCHE_HFRE_NACH_GROE *) ;
 
 
-   procedure SUCHE_HFRE ;
+   procedure SUCHE_HFRE ( var PLAUFALT : PHFRE ; SIZE_FREE : INTEGER )
+                        ;
 
       var PLAUFX : PHFRE ;
 
       begin (* SUCHE_HFRE *)
+        if TRLEVEL >= 3 then
+          begin
+            WRITELN ( 'Anfang von suche_hfre' ) ;
+            WRITELN ( 'suche_hfre: plaufalt  = ' , PLAUFALT ) ;
+          end (* then *) ;
         if PLAUFALT <> NIL then
           begin
             SIZE_ALT := PLAUFALT -> . LEN_FREELOW ;
@@ -760,38 +816,60 @@ local procedure MODIFY_TREE ( MODUS : CHAR ; HANC_ACT : PHANC ; SIZE :
         else
           begin
             SIZE_ALT := HANC_ACT -> . LEN_FREE1 ;
-            PLAUFALT := HANC_ACT -> . FREE1 ;
-            PLAUFX := PLAUFALT ;
+            PLAUFX := HANC_ACT -> . FREE1 ;
           end (* else *) ;
         while TRUE do
           with PLAUFX -> do
             begin
+              if TRLEVEL >= 3 then
+                begin
+                  WRITELN ( 'suche_hfre: plaufx    = ' , PLAUFX ) ;
+                  WRITELN ( 'suche_hfre: size_alt  = ' , SIZE_ALT ) ;
+                  WRITELN ( 'suche_hfre: size_free = ' , SIZE_FREE ) ;
+                end (* then *) ;
 
-        //****************************************
-        // schauen ob size von plaufx >= der      
-        // geforderten groesse ist                
-        // falls ja, passt diese stelle           
-        //****************************************
+        //************************************************************
+        // schauen ob size von plaufx kleiner als                     
+        // die geforderte groesse ist (oder gleich)                   
+        // falls ja, passt diese stelle                               
+        //************************************************************
+        // es wird in jedem Fall PLAUFALT zurueckgemeldet             
+        //************************************************************
+        // PLAUFALT kann auch NIL sein, falls gleich das erste        
+        // gefundene Free-Element die richtige Laenge hat (diese      
+        // kann auch 8 sein)                                          
+        //************************************************************
 
               if SIZE_ALT <= SIZE_FREE then
                 break ;
 
-        //****************************************
-        // falls nein, weiterschalten zu          
-        // naechst tieferem element               
-        //****************************************
+        //*************************************************
+        // falls nein, PLAUFALT erst mal weitersetzen      
+        //*************************************************
+        // wenn FREELOW = nil, ist PLAUFALT ok,            
+        // aber es geht nicht mehr weiter                  
+        //*************************************************
 
+              PLAUFALT := PLAUFX ;
               if FREELOW = NIL then
                 break ;
+
+        //*************************************************
+        // andernfalls SIZE_ALT neu setzen                 
+        // und weiter zu naechstem Element                 
+        //*************************************************
+
               if SIZE_ALT > 8 then
                 SIZE_ALT := LEN_FREELOW
               else
                 SIZE_ALT := 0 ;
-              PLAUFALT := PLAUFX ;
               PLAUFX := FREELOW ;
             end (* with *) ;
-        if PLAUFALT = NIL then
-          $ERROR ( 1111 ) ;
+        if TRLEVEL >= 3 then
+          begin
+            WRITELN ( 'Ende von suche_hfre' ) ;
+            WRITELN ( 'suche_hfre: plaufalt  = ' , PLAUFALT ) ;
+          end (* then *) ;
       end (* SUCHE_HFRE *) ;
 
 
@@ -900,11 +978,11 @@ local procedure MODIFY_TREE ( MODUS : CHAR ; HANC_ACT : PHANC ; SIZE :
    begin (* MODIFY_TREE *)
      if TRLEVEL >= 3 then
        begin
-         WRITELN ( 'modify_tree: modus = ' , MODUS ) ;
-         WRITELN ( 'modify_tree: plaufact = ' , PLAUFACT ) ;
-         WRITELN ( 'modify_tree: hanc_act = ' , HANC_ACT ) ;
-         WRITELN ( 'modify_tree: size = ' , SIZE ) ;
-         WRITELN ( 'modify_tree: plauf = ' , PLAUF ) ;
+         WRITELN ( 'modify_tree: modus      = ' , MODUS ) ;
+         WRITELN ( 'modify_tree: plaufact   = ' , PLAUFACT ) ;
+         WRITELN ( 'modify_tree: hanc_act   = ' , HANC_ACT ) ;
+         WRITELN ( 'modify_tree: size       = ' , SIZE ) ;
+         WRITELN ( 'modify_tree: plauf      = ' , PLAUF ) ;
        end (* then *) ;
 
      //*****************************************************
@@ -920,6 +998,11 @@ local procedure MODIFY_TREE ( MODUS : CHAR ; HANC_ACT : PHANC ; SIZE :
      //*****************************************************
 
        'A' : begin
+               if TRLEVEL >= 3 then
+                 begin
+                   WRITELN ( 'vor SUCHE_HFRE_NACH_GROESSE' ) ;
+                   LISTE_DER_LUECKEN ( HANC_ACT ) ;
+                 end (* then *) ;
                SUCHE_HFRE_NACH_GROESSE ;
 
      //***************************************
@@ -936,16 +1019,18 @@ local procedure MODIFY_TREE ( MODUS : CHAR ; HANC_ACT : PHANC ; SIZE :
                if TRLEVEL >= 3 then
                  begin
                    WRITELN ( 'nach SUCHE_HFRE_NACH_GROESSE' ) ;
-                   WRITELN ( 'modify_tree: modus = ' , MODUS ) ;
-                   WRITELN ( 'modify_tree: hanc_act = ' , HANC_ACT ) ;
-                   WRITELN ( 'modify_tree: size_free = ' , SIZE_FREE )
+                   WRITELN ( 'modify_tree: modus       = ' , MODUS ) ;
+                   WRITELN ( 'modify_tree: hanc_act    = ' , HANC_ACT )
                              ;
-                   WRITELN ( 'modify_tree: size = ' , SIZE ) ;
-                   WRITELN ( 'modify_tree: plauf = ' , PLAUF ) ;
-                   WRITELN ( 'modify_tree: plauf/len_freelow = ' ,
-                             PLAUF -> . LEN_FREELOW ) ;
-                   WRITELN ( 'modify_tree: plaufalt = ' , PLAUFALT ) ;
-                   WRITELN ( 'modify_tree: vorg_modus = ' , VORG_MODUS
+                   WRITELN ( 'modify_tree: size_free   = ' , SIZE_FREE
+                             ) ;
+                   WRITELN ( 'modify_tree: size        = ' , SIZE ) ;
+                   WRITELN ( 'modify_tree: plauf       = ' , PLAUF ) ;
+                   WRITELN ( 'modify_tree: len_freelow = ' , PLAUF -> .
+                             LEN_FREELOW ) ;
+                   WRITELN ( 'modify_tree: plaufalt    = ' , PLAUFALT )
+                             ;
+                   WRITELN ( 'modify_tree: vorg_modus  = ' , VORG_MODUS
                              ) ;
                  end (* then *) ;
 
@@ -965,24 +1050,22 @@ local procedure MODIFY_TREE ( MODUS : CHAR ; HANC_ACT : PHANC ; SIZE :
                    if TRLEVEL >= 3 then
                      WRITELN ( 'modify_tree: fall 1' ) ;
 
-     //****************************************
-     // sonderfall: free element ist immer     
-     // noch groesser als das naechst tiefere  
-     // ist auch dann der fall, wenn es        
-     // gar kein tieferes element mehr gibt    
-     //****************************************
+     //*************************************************************
+     // sonderfall: free element ist immer noch groesser als das    
+     // naechst tiefere                                             
+     // ist auch dann der fall, wenn es gar kein tieferes element   
+     // mehr gibt                                                   
+     //*************************************************************
 
                    if PLAUF -> . FREEEQ = NIL then
                      begin
                        if TRLEVEL >= 3 then
                          WRITELN ( 'modify_tree: fall 1.1' ) ;
 
-     //*********************************
-     // es gibt auch keine nachbarn mit 
-     // derselben laenge, d.h. das      
-     // element aendert seinen platz    
-     // ueberhaupt nicht                
-     //*********************************
+     //*************************************************************
+     // es gibt auch keine nachbarn mit derselben laenge, d.h. das  
+     // element aendert seinen platz ueberhaupt nicht               
+     //*************************************************************
 
                        PFREEN := PTRADD ( PLAUF , SIZE ) ;
                        COPY_HFRE ( PLAUF , PFREEN , SIZE_FREE ) ;
@@ -994,12 +1077,11 @@ local procedure MODIFY_TREE ( MODUS : CHAR ; HANC_ACT : PHANC ; SIZE :
                        if TRLEVEL >= 3 then
                          WRITELN ( 'modify_tree: fall 1.2' ) ;
 
-     //************************************
-     // leider gibt es nachbarn; also      
-     // rechten nachbarn nach vorne holen  
-     // und das geaenderte element eine    
-     // ebene tiefer einsortieren          
-     //************************************
+     //*************************************************************
+     // leider gibt es nachbarn; also:                              
+     // rechten nachbarn nach vorne holen und das geaenderte element
+     // eine ebene tiefer einsortieren                              
+     //*************************************************************
 
                        PNACHB := PLAUF -> . FREEEQ ;
                        CHAIN_PRIOR ( PNACHB , VORG_MODUS , HANC_ACT ,
@@ -1024,14 +1106,12 @@ local procedure MODIFY_TREE ( MODUS : CHAR ; HANC_ACT : PHANC ; SIZE :
                    return
                  end (* then *) ;
 
-     //**************************************
-     // die neue laenge des elements ist     
-     // kleiner oder gleich der laenge des   
-     // elements eine ebene tiefer           
-     //**************************************
-     // zuerst wird das element am aktuellen 
-     // platz entfernt                       
-     //**************************************
+     //*************************************************************
+     // die neue laenge des elements ist kleiner oder gleich        
+     // der laenge des elements eine ebene tiefer                   
+     //*************************************************************
+     // zuerst wird das element am aktuellen platz entfernt         
+     //*************************************************************
 
                if PLAUF -> . FREEEQ <> NIL then
                  begin
@@ -1052,101 +1132,138 @@ local procedure MODIFY_TREE ( MODUS : CHAR ; HANC_ACT : PHANC ; SIZE :
                                  PLAUFALT , PLAUF -> . LEN_FREELOW ) ;
                  end (* else *) ;
 
-     //**************************************
-     // wenn die neue groesse null ist,      
-     // sind wir schon fertig                
-     //**************************************
+     //*************************************************************
+     // wenn die neue groesse null ist, sind wir schon fertig       
+     //*************************************************************
 
                if SIZE_FREE = 0 then
                  return ;
 
-     //**************************************
-     // andernfalls muss das neue element    
-     // an der passenden stelle wieder       
-     // eingefuegt werden                    
-     //**************************************
-     // plaufalt ist entweder nil, dann      
-     // stehen wir noch ganz oben, oder      
-     // plaufalt ist der vorgaenger          
-     // von pfreen ...                       
-     //**************************************
+     //*************************************************************
+     // andernfalls muss das neue element an der passenden stelle   
+     // wieder eingefuegt werden                                    
+     //*************************************************************
+     // plaufalt ist entweder nil, dann stehen wir noch ganz oben,  
+     // oder plaufalt ist der vorgaenger von pfreen ...             
+     //*************************************************************
 
                if TRLEVEL >= 3 then
                  begin
                    WRITELN ( 'vor SUCHE_HFRE' ) ;
-                   WRITELN ( 'modify_tree: modus = ' , MODUS ) ;
-                   WRITELN ( 'modify_tree: hanc_act = ' , HANC_ACT ) ;
-                   WRITELN ( 'modify_tree: size_free = ' , SIZE_FREE )
+                   LISTE_DER_LUECKEN ( HANC_ACT ) ;
+                   WRITELN ( 'modify_tree: modus       = ' , MODUS ) ;
+                   WRITELN ( 'modify_tree: hanc_act    = ' , HANC_ACT )
                              ;
-                   WRITELN ( 'modify_tree: size = ' , SIZE ) ;
-                   WRITELN ( 'modify_tree: plauf = ' , PLAUF ) ;
-                   WRITELN ( 'modify_tree: plaufalt = ' , PLAUFALT ) ;
-                   WRITELN ( 'modify_tree: vorg_modus = ' , VORG_MODUS
+                   WRITELN ( 'modify_tree: size_free   = ' , SIZE_FREE
+                             ) ;
+                   WRITELN ( 'modify_tree: size        = ' , SIZE ) ;
+                   WRITELN ( 'modify_tree: plauf       = ' , PLAUF ) ;
+                   WRITELN ( 'modify_tree: plaufalt    = ' , PLAUFALT )
+                             ;
+                   WRITELN ( 'modify_tree: vorg_modus  = ' , VORG_MODUS
                              ) ;
                  end (* then *) ;
-               SUCHE_HFRE ;
-               if PLAUFALT = HANC_ACT -> . FREE1 then
+
+     //*************************************************************
+     // SUCHE_HFRE stellt PLAUFALT so, dass das neue Free-Element   
+     // in der Liste dahinter eingefuegt werden kann                
+     // Entweder (bei SIZE_ALT = SIZE_FREE) mit INS_HFRE_EQUAL      
+     // oder andernfalls mit INS_HFRE_ABOVE                         
+     //*************************************************************
+
+               SUCHE_HFRE ( PLAUFALT , SIZE_FREE ) ;
+               if PLAUFALT = NIL then
                  VMODUS2 := 'T'
                else
-                 VMODUS2 := 'V' ;
+                 if PLAUFALT = HANC_ACT -> . FREE1 then
+                   VMODUS2 := 'T'
+                 else
+                   VMODUS2 := 'V' ;
                if TRLEVEL >= 3 then
                  begin
                    WRITELN ( 'nach SUCHE_HFRE' ) ;
-                   WRITELN ( 'modify_tree: modus = ' , MODUS ) ;
-                   WRITELN ( 'modify_tree: hanc_act = ' , HANC_ACT ) ;
-                   WRITELN ( 'modify_tree: size_free = ' , SIZE_FREE )
+                   WRITELN ( 'modify_tree: modus       = ' , MODUS ) ;
+                   WRITELN ( 'modify_tree: hanc_act    = ' , HANC_ACT )
                              ;
-                   WRITELN ( 'modify_tree: size = ' , SIZE ) ;
-                   WRITELN ( 'modify_tree: plauf = ' , PLAUF ) ;
-                   WRITELN ( 'modify_tree: plaufalt = ' , PLAUFALT ) ;
-                   WRITELN ( 'modify_tree: vorg_modus = ' , VORG_MODUS
+                   WRITELN ( 'modify_tree: size_free   = ' , SIZE_FREE
                              ) ;
-                   WRITELN ( 'modify_tree: vmodus2 = ' , VMODUS2 ) ;
+                   WRITELN ( 'modify_tree: size        = ' , SIZE ) ;
+                   WRITELN ( 'modify_tree: plauf       = ' , PLAUF ) ;
+                   WRITELN ( 'modify_tree: plaufalt    = ' , PLAUFALT )
+                             ;
+                   WRITELN ( 'modify_tree: vorg_modus  = ' , VORG_MODUS
+                             ) ;
+                   WRITELN ( 'modify_tree: vmodus2     = ' , VMODUS2 )
+                             ;
+                   WRITELN ( 'vor Einfuegung' ) ;
+                   LISTE_DER_LUECKEN ( HANC_ACT ) ;
                  end (* then *) ;
 
-     //**************************************
-     // bei allen elementen vorher war       
-     // LEN_FREELOW groesser; jetzt ist      
-     // erstmals LEN_FREELOW kleiner gleich  
-     // oder FREELOW nil                     
-     //**************************************
-     // bei gleicher laenge:                 
-     // einsortieren nach adressen           
-     // in genau dieser liste                
-     //**************************************
-     // bei kleinerer laenge:                
-     // neue liste aufbauen vor der          
-     // gefundenen liste                     
-     //**************************************
-     // in beiden faellen ist vmodus2        
-     // zu beachten (d.h. das gefundene      
-     // plaufalt koennte direkt am           
-     // hanc dranhaengen)                    
-     //**************************************
-     // das ist m.E. die einzige Stelle,     
-     // wo uebrigbleibende Luecken der       
-     // Laenge 8 entstehen koennen; diese    
-     // werden auch nie mehr recyclet        
-     //**************************************
+     //***********************************************************
+     // bei allen elementen vorher war LEN_FREELOW groesser;      
+     // jetzt ist erstmals LEN_FREELOW kleiner gleich             
+     // oder FREELOW nil                                          
+     //***********************************************************
+     // bei gleicher laenge:                                      
+     // einsortieren nach adressen in genau dieser liste          
+     //***********************************************************
+     // bei kleinerer laenge:                                     
+     // neue liste aufbauen vor der gefundenen liste              
+     //***********************************************************
+     // in beiden faellen ist vmodus2 zu beachten                 
+     // (d.h. das gefundene plaufalt koennte direkt am            
+     // hanc dranhaengen)                                         
+     //***********************************************************
+     // das ist m.E. die einzige Stelle, wo uebrigbleibende       
+     // Luecken der Laenge 8 entstehen koennen; diese werden      
+     // auch nie mehr recyclet                                    
+     //***********************************************************
+     // PFREEN und COPY_HFRE erzeugen das neue (verkuerzte)       
+     // FREE-Element ... die INS-Funktion fuegt es dann in den    
+     // Baum an der richtigen Stelle ein                          
+     //***********************************************************
 
                if SIZE_ALT = SIZE_FREE then
                  begin
+                   if TRLEVEL >= 3 then
+                     begin
+                       WRITELN ( 'SIZE_ALT = SIZE_FREE' ) ;
+                       WRITELN ( 'COPY_HFRE und INS_HFRE_EQUAL' ) ;
+                       WRITELN ( 'SIZE      = ' , SIZE ) ;
+                       WRITELN ( 'plauf     = ' , PLAUF ) ;
+                       WRITELN ( 'plaufalt  = ' , PLAUFALT ) ;
+                       WRITELN ( 'SIZE_ALT  = ' , SIZE_ALT ) ;
+                       WRITELN ( 'SIZE_FREE = ' , SIZE_FREE ) ;
+                     end (* then *) ;
                    PFREEN := PTRADD ( PLAUF , SIZE ) ;
                    COPY_HFRE ( PLAUF , PFREEN , SIZE_FREE ) ;
-                   INS_HFRE_EQUAL ( PFREEN , SIZE_FREE , PLAUFALT ,
+                   if PLAUFALT = NIL then
+                     PFIRST := HANC_ACT -> . FREE1
+                   else
+                     PFIRST := PLAUFALT -> . FREELOW ;
+                   INS_HFRE_EQUAL ( PFREEN , SIZE_FREE , PFIRST ,
                                     PLAUFALT , VMODUS2 ) ;
                    return ;
                  end (* then *) ;
 
-     //**************************************
-     // andernfalls: der neue bereich        
-     // muss ueber dem gefundenen            
-     // einsortiert werden (neue laenge)     
-     //**************************************
+     //***********************************************************
+     // andernfalls: der neue bereich muss ueber dem gefundenen   
+     // einsortiert werden (neue laenge)                          
+     //***********************************************************
 
+               if TRLEVEL >= 3 then
+                 begin
+                   WRITELN ( 'SIZE_ALT <> SIZE_FREE' ) ;
+                   WRITELN ( 'COPY_HFRE und INS_HFRE_ABOVE' ) ;
+                   WRITELN ( 'SIZE      = ' , SIZE ) ;
+                   WRITELN ( 'plauf     = ' , PLAUF ) ;
+                   WRITELN ( 'plaufalt  = ' , PLAUFALT ) ;
+                   WRITELN ( 'SIZE_ALT  = ' , SIZE_ALT ) ;
+                   WRITELN ( 'SIZE_FREE = ' , SIZE_FREE ) ;
+                 end (* then *) ;
                PFREEN := PTRADD ( PLAUF , SIZE ) ;
                COPY_HFRE ( PLAUF , PFREEN , SIZE_FREE ) ;
-               INS_HFRE_ABOVE ( PFREEN , SIZE , NIL , PLAUFALT ,
+               INS_HFRE_ABOVE ( PFREEN , SIZE_FREE , NIL , PLAUFALT ,
                                 VMODUS2 ) ;
              end (* tag/ca *) ;
 
@@ -1311,8 +1428,7 @@ local function ALLOC_AREA ( SIZE : INTEGER ) : VOIDPTR ;
      //**************************************************
      //  Suchen in der Liste der vorhandenen HANCs,      
      //  ob es einen mit einer passenden Luecke gibt;    
-     //  Start mit PHEAPCC ->. LAST                      
-     //                                                  
+     //  Start mit PHEAPC ->. LAST                       
      //**************************************************
      //  wenn passender HANC gefunden, wird dieser       
      //  an das Ende der Liste geholt (damit voll        
